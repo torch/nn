@@ -75,8 +75,8 @@ static int nn_(SpatialMaxPooling_updateOutput)(lua_State *L)
         *op = maxval;
 
         // store location of max (x,y)
-        *indyp = (int)(maxindex / dW)+1;
-        *indxp = (maxindex % dW) +1;
+        *indyp = (int)(maxindex / kW)+1;
+        *indxp = (maxindex % kW) +1;
       }
     }
   }

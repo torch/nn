@@ -17,9 +17,10 @@ function Concat:get(index)
 end
 
 function Concat:updateOutput(input)
+   local outs = {}
    for i=1,#self.modules do
       local currentOutput = self.modules[i]:updateOutput(input)
-      
+      outs[i] = currentOutput
       if i == 1 then
          self.size:resize(currentOutput:dim()):copy(currentOutput:size())
       else
@@ -29,8 +30,9 @@ function Concat:updateOutput(input)
    self.output:resize(self.size)
    
    local offset = 1
-   for _,module in ipairs(self.modules) do
-      local currentOutput = module:updateOutput(input)
+   for i,module in ipairs(self.modules) do
+      --local currentOutput = module:updateOutput(input)
+      local currentOutput = outs[i]
       self.output:narrow(self.dimension, offset, currentOutput:size(self.dimension)):copy(currentOutput)
       offset = offset + currentOutput:size(self.dimension)
    end
@@ -116,4 +118,25 @@ function Concat:parameters()
       end
    end
    return w,gw
+end
+
+function Concat:__tostring__()
+   local tab = '  '
+   local line = '\n'
+   local next = '  |`-> '
+   local ext = '  |    '
+   local extlast = '       '
+   local last = '   ... -> '
+   local str = 'nn.Concat'
+   str = str .. ' {' .. line .. tab .. 'input'
+   for i=1,#self.modules do
+      if i == self.modules then
+         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
+      else
+         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. ext)
+      end
+   end
+   str = str .. line .. tab .. last .. 'output'
+   str = str .. line .. '}'
+   return str
 end

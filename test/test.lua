@@ -812,15 +812,19 @@ function nntest.SpatialSubSampling()
 end
 
 function nntest.SpatialMaxPooling()
-   local fanin = math.random(1,4)
-   local osizex = math.random(1,20)
-   local osizey = math.random(1,20)
-   local mx = math.random(2,4)
-   local my = math.random(2,4)
-   local sizex = osizex*mx
-   local sizey = osizey*my
-   local module = nn.SpatialMaxPooling(mx,my,mx,my)
-   local input = torch.rand(fanin,sizey,sizex)
+   local from = math.random(1,10)
+   local to = math.random(1,10)
+   local ki = math.random(1,10)
+   local kj = math.random(1,10)
+   local si = math.random(1,4)
+   local sj = math.random(1,4)
+   local outi = math.random(10,20)
+   local outj = math.random(10,20)
+   local ini = (outi-1)*si+ki
+   local inj = (outj-1)*sj+kj
+
+   local module = nn.SpatialMaxPooling(ki,kj,si,sj)
+   local input = lab.rand(from,ini,inj)
 
    local err = jac.testJacobian(module, input)
    mytester:assertlt(err, precision, 'error on state ')
