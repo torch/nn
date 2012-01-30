@@ -1,5 +1,4 @@
 require 'torch'
-require 'random'
 
 local mytester = torch.Tester()
 local jac
@@ -113,7 +112,7 @@ function nntest.Threshold()
    local ink = math.random(5,10)
    local input = torch.Tensor(ink, inj, ini):zero()
 
-   local module = nn.Threshold(random.uniform(-2,2),random.uniform(-2,2))
+   local module = nn.Threshold(torch.uniform(-2,2),torch.uniform(-2,2))
 
    local err = nn.Jacobian.testJacobian(module, input)
    mytester:assertlt(err, precision, 'error on state ')
@@ -165,7 +164,7 @@ function nntest.Power()
    local ini = math.random(5,10)
    local inj = math.random(5,10)
    local ink = math.random(5,10)
-   local pw = random.uniform()*math.random(1,10)
+   local pw = torch.uniform()*math.random(1,10)
    local input = torch.Tensor(ink, inj, ini):zero()
 
    local module = nn.Power(pw)
@@ -404,7 +403,7 @@ function nntest.Mean()
    local inj = math.random(10,20)
    local ink = math.random(10,20)
    local input = torch.Tensor(ini,inj,ink):zero()
-   local module = nn.Mean(random.random(1,3))
+   local module = nn.Mean(torch.random(1,3))
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
@@ -824,7 +823,7 @@ function nntest.SpatialMaxPooling()
    local inj = (outj-1)*sj+kj
 
    local module = nn.SpatialMaxPooling(ki,kj,si,sj)
-   local input = lab.rand(from,ini,inj)
+   local input = torch.rand(from,ini,inj)
 
    local err = jac.testJacobian(module, input)
    mytester:assertlt(err, precision, 'error on state ')
@@ -861,7 +860,7 @@ function nntest.Sum()
    local inj = math.random(10,20)
    local ink = math.random(10,20)
    local input = torch.Tensor(ini,inj,ink):zero()
-   local module = nn.Sum(random.random(1,3))
+   local module = nn.Sum(torch.random(1,3))
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
