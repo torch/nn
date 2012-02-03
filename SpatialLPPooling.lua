@@ -21,12 +21,27 @@ function SpatialLPPooling:__init(nInputPlane, pnorm, kW, kH, dW, dH)
    end
    self:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(nInputPlane), kW, kH, dW, dH))
    if pnorm == 2 then
-      self:add(nn.Sqrt())
+      self:add(nn.Sqrt(0.01))
    else
       self:add(nn.Power(1/pnorm))
    end
 
    self:get(2).bias:zero()
    self:get(2).weight:fill(1/(kW*kH))
-   self:get(2).accGradParameters = nil
+end
+
+-- we have to override some stuff to avoid nonsense happening
+function SpatialLPPooling:reset()
+end
+
+function SpatialLPPooling:accGradParameters()
+end
+
+function SpatialLPPooling:accUpdateGradParameters()
+end
+
+function SpatialLPPooling:zeroGradParameters()
+end
+
+function SpatialLPPooling:updateParameters()
 end

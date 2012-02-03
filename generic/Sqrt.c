@@ -5,12 +5,13 @@
 static int nn_(Sqrt_updateOutput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
+  real bias = luaT_getfieldchecknumber(L,1,"bias");
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_(Tensor_id));
 
   THTensor_(resizeAs)(output, input);
 
   TH_TENSOR_APPLY2(real, output, real, input,		\
-		   *output_data = sqrt(*input_data););
+		   *output_data = sqrt(*input_data + bias););
 
   return 1;
 }
