@@ -17,7 +17,7 @@ function SpatialSubtractiveNormalization:__init(nInputPlane, kernel)
    end
 
    -- normalize kernel
-   self.kernel:div(self.kernel:sumall() * self.nInputPlane)
+   self.kernel:div(self.kernel:sum() * self.nInputPlane)
 
    -- padding values
    local padH = math.floor(self.kernel:size(1)/2)

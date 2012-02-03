@@ -118,7 +118,7 @@ function nn.Jacobian.testJacobian (module, input, minval, maxval)
    local jac_fprop = nn.Jacobian.forward(module,input)
    local jac_bprop = nn.Jacobian.backward(module,input)
    local error = jac_fprop-jac_bprop
-   return error:abs():maxall()
+   return error:abs():max()
 end
 
 function nn.Jacobian.testJacobianParameters (module, input, param, dparam, minval, maxval)
@@ -130,7 +130,7 @@ function nn.Jacobian.testJacobianParameters (module, input, param, dparam, minva
    local jac_bprop = nn.Jacobian.backward(module, input, param, dparam)
    local jac_fprop = nn.Jacobian.forward(module, input, param)
    local error = jac_fprop - jac_bprop
-   return error:abs():maxall()
+   return error:abs():max()
 end
 
 function nn.Jacobian.testJacobianUpdateParameters (module, input, param, minval, maxval)
@@ -143,7 +143,7 @@ function nn.Jacobian.testJacobianUpdateParameters (module, input, param, minval,
    local params_fprop = nn.Jacobian.forwardUpdate(module, input, param)
 
    local error = params_fprop - params_bprop
-   return error:abs():maxall()
+   return error:abs():max()
 end
 
 function nn.Jacobian.testIO(module,input, minval, maxval)
@@ -177,7 +177,7 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
 
    local errf = fo - fo2
    local errb = bo - bo2
-   return errf:abs():maxall(), errb:abs():maxall()
+   return errf:abs():max(), errb:abs():max()
 end
 
 function nn.Jacobian.testAllUpdate(module, input, weight, gradWeight)

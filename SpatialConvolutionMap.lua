@@ -65,8 +65,8 @@ function SpatialConvolutionMap:__init(conMatrix, kW, kH, dW, dH)
    self.dW = dW
    self.dH = dH
    self.connTable = conMatrix
-   self.nInputPlane = self.connTable:select(2,1):maxall()
-   self.nOutputPlane = self.connTable:select(2,2):maxall()
+   self.nInputPlane = self.connTable:select(2,1):max()
+   self.nOutputPlane = self.connTable:select(2,2):max()
 
    self.weight = torch.Tensor(self.connTable:size(1), kH, kW)
    self.bias = torch.Tensor(self.nOutputPlane)

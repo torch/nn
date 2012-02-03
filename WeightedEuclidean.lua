@@ -46,7 +46,7 @@ function WeightedEuclidean:updateOutput(input)
       self.temp:copy(input):add(-1,self.templates:select(2,o))
       self.temp:cmul(self.temp)
       self.temp:cmul(self.diagCov:select(2,o)):cmul(self.diagCov:select(2,o))
-      self.output[o] = math.sqrt(self.temp:sumall())
+      self.output[o] = math.sqrt(self.temp:sum())
    end
    return self.output
 end
