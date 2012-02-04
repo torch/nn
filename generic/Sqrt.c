@@ -5,7 +5,7 @@
 static int nn_(Sqrt_updateOutput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
-  real bias = luaT_getfieldchecknumber(L,1,"bias");
+  real bias = luaT_getfieldchecknumber(L,1,"eps");
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_(Tensor_id));
 
   THTensor_(resizeAs)(output, input);

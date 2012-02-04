@@ -1,4 +1,4 @@
-local MarginRankingCriterion, parent = torch.class('nn.MarginRankingCriterion', 'nn.Module')
+local MarginRankingCriterion, parent = torch.class('nn.MarginRankingCriterion', 'nn.Criterion')
 
 function MarginRankingCriterion:__init(margin)
    parent.__init(self)

@@ -1,5 +1,4 @@
-local HingeEmbeddingCriterion, parent = 
-	torch.class('nn.HingeEmbeddingCriterion', 'nn.Module')
+local HingeEmbeddingCriterion, parent = torch.class('nn.HingeEmbeddingCriterion', 'nn.Criterion')
 
 function HingeEmbeddingCriterion:__init(margin)
    parent.__init(self)

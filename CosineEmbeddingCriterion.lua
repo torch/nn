@@ -1,4 +1,4 @@
-local CosineEmbeddingCriterion, parent = torch.class('nn.CosineEmbeddingCriterion', 'nn.Module')
+local CosineEmbeddingCriterion, parent = torch.class('nn.CosineEmbeddingCriterion', 'nn.Criterion')
 
 function CosineEmbeddingCriterion:__init(margin)
    parent.__init(self)
