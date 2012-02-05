@@ -6,6 +6,7 @@ function Sqrt:__init(b)
 end
 
 function Sqrt:updateOutput(input)
+   self.eps = self.eps or 0
    return input.nn.Sqrt_updateOutput(self,input)
 end
 
