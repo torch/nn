@@ -1340,7 +1340,7 @@ module = nn.SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH])
 </file>
 
 Applies a 2D convolution over an input image composed of several input planes. The ''input'' tensor in
-''forward(input)'' is expected to be a 3D tensor (''width x height x nInputPlane'').
+''forward(input)'' is expected to be a 3D tensor (''nInputPlane x height x width'').
 
 The parameters are the following:
   * ''nInputPlane'': The number of expected input planes in the image given into ''forward()''.
@@ -1354,7 +1354,7 @@ Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
 add proper padding in images.
 
-If the input image is a 3D tensor ''nInputPlane x width x height'', the output image size
+If the input image is a 3D tensor ''nInputPlane x height x width'', the output image size
 will be ''nOutputPlane x owidth x oheight'' where
 <file lua>
 owidth  = (width  - kW) / dW + 1
@@ -1440,7 +1440,7 @@ module = nn.SpatialSubSampling(nInputPlane, kW, kH, [dW], [dH])
 </file>
 
 Applies a 2D sub-sampling over an input image composed of several input planes. The ''input'' tensor in
-''forward(input)'' is expected to be a 3D tensor (''nInputPlane x width x height''). The number of output
+''forward(input)'' is expected to be a 3D tensor (''nInputPlane x height x width''). The number of output
 planes will be the same as ''nInputPlane''.
 
 The parameters are the following:
@@ -1454,8 +1454,8 @@ Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
 add proper padding in images.
 
-If the input image is a 3D tensor ''width x height x nInputPlane'', the output image size
-will be ''owidth x oheight x nInputPlane'' where
+If the input image is a 3D tensor ''nInputPlane x height x width'', the output image size
+will be ''nInputPlane x oheight x owidth'' where
 <file lua>
 owidth  = (width  - kW) / dW + 1
 oheight = (height - kH) / dH + 1 .
