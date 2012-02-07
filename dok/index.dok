@@ -409,10 +409,8 @@ This function should returns two tables. One for the learnable
 parameters ''{weights}'' and another for the gradients of the energy
 wrt to the learnable parameters ''{gradWeights}''.
 
-For custom modules, it is a good idea to also override this
-function. By default none of the built-in functions/modules use this
-function call, but it is especialy useful when one wants to obtain a
-global view of the whole network.
+Custom modules should override this function if they use learnable
+parameters that are stored in tensors.
 
 =====  Containers =====
 {{anchor:nn.Containers}}
