@@ -66,7 +66,7 @@ end
 
 function SpatialSubtractiveNormalization:updateOutput(input)
    -- compute side coefficients
-   if (input:size(3) ~= self.coef:size(2)) or (input:size(2) ~= self.coef:size(1)) then
+   if (input:size(3) ~= self.coef:size(3)) or (input:size(2) ~= self.coef:size(2)) then
       local ones = input.new():resizeAs(input):fill(1)
       self.coef = self.meanestimator:updateOutput(ones)
       self.coef = self.coef:clone()
