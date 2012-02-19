@@ -17,7 +17,7 @@ function DotProduct:updateGradInput(input, gradOutput)
    local gw1=self.gradInput[1];
    local gw2=self.gradInput[2];
    gw1:resizeAs(v1) 
-   gw2:resizeAs(v1)
+   gw2:resizeAs(v2)
 
    gw1:copy( v2)
    gw1:mul(gradOutput[1])
