@@ -131,6 +131,9 @@ function Module:cuda()
    return self:type('torch.CudaTensor')
 end
 
+function Module:reset()
+end
+
 function Module:getParameters()
    -- get parameters
    local parameters,gradParameters = self:parameters()

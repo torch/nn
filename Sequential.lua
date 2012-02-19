@@ -89,6 +89,12 @@ function Sequential:share(mlp,...)
    end
 end
 
+function Sequential:reset(stdv)
+   for i=1,#self.modules do
+      self.modules[i]:reset(stdv)
+   end
+end
+
 function Sequential:parameters()
    local function tinsert(to, from)
       if type(from) == 'table' then
