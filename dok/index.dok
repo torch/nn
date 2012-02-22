@@ -805,7 +805,7 @@ then an ''nxq'' matrix would be output.
 Outputs the Euclidean distance of the input to ''outputDimension'' centers,
 i.e. this layer has the weights ''c_i'', ''i'' = ''1'',..,''outputDimension'', where
 ''c_i'' are vectors of dimension ''inputDimension''. Output dimension ''j'' is
-''|| c_i - x||^2'', where ''x'' is the input.
+''|| c_j - x ||'', where ''x'' is the input.
 
 ====  WeightedEuclidean ====
 {{anchor:nn.WeightedEuclidean}}
