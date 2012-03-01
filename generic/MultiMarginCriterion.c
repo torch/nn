@@ -84,7 +84,6 @@ static int nn_(MultiMarginCriterion_updateGradInput)(lua_State *L)
   long t, d;
   real target_;
   real g;
-  real sum;
 
   THArgCheck((input->nDimension == 1) || (input->nDimension == 2), 2, "vector or matrix expected");
 

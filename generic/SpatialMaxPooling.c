@@ -91,8 +91,6 @@ static int nn_(SpatialMaxPooling_updateGradInput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
   THTensor *gradOutput = luaT_checkudata(L, 3, torch_(Tensor_id));
-  int kW = luaT_getfieldcheckint(L, 1, "kW");
-  int kH = luaT_getfieldcheckint(L, 1, "kH");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
   THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_(Tensor_id));

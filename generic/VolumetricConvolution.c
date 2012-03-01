@@ -16,7 +16,6 @@ static int nn_(VolumetricConvolution_updateOutput)(lua_State *L)
   luaL_argcheck(L, input->nDimension == 4, 2, "4D tensor expected");
 
   long nOutputPlane = weight->size[0];
-  long nInputPlane  = weight->size[1];
   long kT           = weight->size[2];
   long kH           = weight->size[3];
   long kW           = weight->size[4];
@@ -47,7 +46,6 @@ static int nn_(VolumetricConvolution_updateOutput)(lua_State *L)
 
 static int nn_(VolumetricConvolution_updateGradInput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));  
   THTensor *gradOutput = luaT_checkudata(L, 3, torch_(Tensor_id));  
   int dT = luaT_getfieldcheckint(L, 1, "dT");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
@@ -77,7 +75,6 @@ static int nn_(VolumetricConvolution_accGradParameters)(lua_State *L)
   int dH = luaT_getfieldcheckint(L, 1, "dH");
   int nOutputPlane = luaT_getfieldcheckint(L, 1, "nOutputPlane");
 
-  THTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", torch_(Tensor_id));
   THTensor *gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_(Tensor_id));
   THTensor *gradBias = luaT_getfieldcheckudata(L, 1, "gradBias", torch_(Tensor_id));
   

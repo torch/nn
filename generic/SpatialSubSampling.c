@@ -59,8 +59,6 @@ static int nn_(SpatialSubSampling_updateOutput)(lua_State *L)
 
   for(p = 0; p < nbatch; p++)
   {
-    //input_data += p*nInputPlane*inputWidth*inputHeight;
-    //output_data += p*nInputPlane*outputHeight*outputWidth;
     for(k = 0; k < nInputPlane; k++)
     {
       real *ptr_output;
@@ -72,32 +70,32 @@ static int nn_(SpatialSubSampling_updateOutput)(lua_State *L)
       /* Initialize to the bias */
       real z = bias_data[k];
       for(i = 0; i < outputWidth*outputHeight; i++)
-	output_data[i] = z;
+        output_data[i] = z;
       
       /* For all output pixels... */
       ptr_output = output_data;
       for(yy = 0; yy < outputHeight; yy++)
       {
-	for(xx = 0; xx < outputWidth; xx++)
-	{
-	  // Compute the mean of the input image...
-	  real *ptr_input = input_data+yy*dH*inputWidth+xx*dW;
-	  real sum = 0;
-	  long kx, ky;
+        for(xx = 0; xx < outputWidth; xx++)
+        {
+          /* Compute the mean of the input image... */
+          real *ptr_input = input_data+yy*dH*inputWidth+xx*dW;
+          real sum = 0;
+          long kx, ky;
 
-	  for(ky = 0; ky < kH; ky++)
-	  {
-	    for(kx = 0; kx < kW; kx++)
-	      sum += ptr_input[kx];
-	    ptr_input += inputWidth; // next input line
-	  }
+          for(ky = 0; ky < kH; ky++)
+          {
+            for(kx = 0; kx < kW; kx++)
+              sum += ptr_input[kx];
+            ptr_input += inputWidth; /* next input line */
+          }
 	  
-	  // Update output
-	  *ptr_output++ += the_weight*sum;
-	}
+          /* Update output */
+          *ptr_output++ += the_weight*sum;
+        }
       }
 
-      // Next input/output plane
+      /* Next input/output plane */
       output_data += outputWidth*outputHeight;
       input_data += inputWidth*inputHeight;
     }
@@ -144,12 +142,10 @@ static int nn_(SpatialSubSampling_updateGradInput)(lua_State *L)
   gradInput_data = THTensor_(data)(gradInput);
   gradOutput_data = THTensor_(data)(gradOutput);
 
-  long i, k, p;
+  long k, p;
 
   for(p = 0; p < nbatch; p++)
   {
-    //gradInput_data += p*nInputPlane*inputWidth*inputHeight;
-    //gradOutput_data += p*nInputPlane*outputWidth*outputHeight;
     for(k = 0; k < nInputPlane; k++)
     {
       real the_weight = weight_data[k];
@@ -158,19 +154,19 @@ static int nn_(SpatialSubSampling_updateGradInput)(lua_State *L)
       
       for(yy = 0; yy < outputHeight; yy++)
       {
-	for(xx = 0; xx < outputWidth; xx++)
-	{
-	  real *ptr_gradInput = gradInput_data+yy*dH*inputWidth+xx*dW;
-	  real z = *ptr_gradOutput++ * the_weight;
-	  long kx, ky;
+        for(xx = 0; xx < outputWidth; xx++)
+        {
+          real *ptr_gradInput = gradInput_data+yy*dH*inputWidth+xx*dW;
+          real z = *ptr_gradOutput++ * the_weight;
+          long kx, ky;
 	  
-	  for(ky = 0; ky < kH; ky++)
-	  {
-	    for(kx = 0; kx < kW; kx++)
-	      ptr_gradInput[kx] += z;
-	    ptr_gradInput += inputWidth;
-	  }    
-	}
+          for(ky = 0; ky < kH; ky++)
+          {
+            for(kx = 0; kx < kW; kx++)
+              ptr_gradInput[kx] += z;
+            ptr_gradInput += inputWidth;
+          }    
+        }
       }
       gradOutput_data += outputWidth*outputHeight;
       gradInput_data += inputWidth*inputHeight;
@@ -219,8 +215,6 @@ static int nn_(SpatialSubSampling_accGradParameters)(lua_State *L)
   long i, k, p;
   for(p = 0; p < nbatch; p++)
   {
-    //input_data += p*nInputPlane*inputWidth*inputHeight;
-    //gradOutput_data += p*nInputPlane*inputWidth*inputHeight;
     for(k = 0; k < nInputPlane; k++)
     {
       real *ptr_gradOutput = gradOutput_data;
@@ -229,25 +223,25 @@ static int nn_(SpatialSubSampling_accGradParameters)(lua_State *L)
 
       sum = 0;
       for(i = 0; i < outputWidth*outputHeight; i++)
-	sum += gradOutput_data[i];
+        sum += gradOutput_data[i];
       gradBias_data[k] += scale*sum;
 
       sum = 0;
       for(yy = 0; yy < outputHeight; yy++)
       {
-	for(xx = 0; xx < outputWidth; xx++)
-	{
-	  real *ptr_input = input_data+yy*dH*inputWidth+xx*dW;
-	  real z = *ptr_gradOutput++;
-	  long kx, ky;
+        for(xx = 0; xx < outputWidth; xx++)
+        {
+          real *ptr_input = input_data+yy*dH*inputWidth+xx*dW;
+          real z = *ptr_gradOutput++;
+          long kx, ky;
 
-	  for(ky = 0; ky < kH; ky++)
-	  {
-	    for(kx = 0; kx < kW; kx++)
-	      sum += z * ptr_input[kx];
-	    ptr_input += inputWidth;
-	  }    
-	}
+          for(ky = 0; ky < kH; ky++)
+          {
+            for(kx = 0; kx < kW; kx++)
+              sum += z * ptr_input[kx];
+            ptr_input += inputWidth;
+          }    
+        }
       }
       gradWeight_data[k] += scale*sum;
       gradOutput_data += outputWidth*outputHeight;
