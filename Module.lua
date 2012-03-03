@@ -22,7 +22,7 @@ function Module:updateOutput(input)
 end
 
 function Module:forward(input)
-   return self:updateOutput(input, target)
+   return self:updateOutput(input)
 end
 
 function Module:backward(input, gradOutput)
@@ -211,4 +211,14 @@ function Module:getParameters()
 
    -- return new flat vector that contains all discrete parameters
    return flatParameters, flatGradParameters
+end
+
+function Module:__call__(input, gradOutput)
+   self:forward(input)
+   if gradOutput then
+      self:backward(input, gradOutput)
+      return self.output, self.gradInput
+   else
+      return self.output
+   end
 end
