@@ -67,6 +67,28 @@ function ParallelTable:share(mlp,...)
    end
 end
 
+function ParallelTable:parameters()
+   local function tinsert(to, from)
+      if type(from) == 'table' then
+         for i=1,#from do
+            tinsert(to,from[i])
+         end
+      else
+         table.insert(to,from)
+      end
+   end
+   local w = {}
+   local gw = {}
+   for i=1,#self.modules do
+      local mw,mgw = self.modules[i]:parameters()
+      if mw then
+         tinsert(w,mw)
+         tinsert(gw,mgw)
+      end
+   end
+   return w,gw
+end
+
 function ParallelTable:__tostring__()
    local tab = '  '
    local line = '\n'

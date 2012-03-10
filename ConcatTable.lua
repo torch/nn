@@ -69,4 +69,45 @@ function ConcatTable:share(mlp,...)
    end
 end
 
+function ConcatTable:parameters()
+   local function tinsert(to, from)
+      if type(from) == 'table' then
+         for i=1,#from do
+            tinsert(to,from[i])
+         end
+      else
+         table.insert(to,from)
+      end
+   end
+   local w = {}
+   local gw = {}
+   for i=1,#self.modules do
+      local mw,mgw = self.modules[i]:parameters()
+      if mw then
+         tinsert(w,mw)
+         tinsert(gw,mgw)
+      end
+   end
+   return w,gw
+end
 
+function ConcatTable:__tostring__()
+   local tab = '  '
+   local line = '\n'
+   local next = '  |`-> '
+   local ext = '  |    '
+   local extlast = '       '
+   local last = '   ... -> '
+   local str = 'nn.ConcatTable'
+   str = str .. ' {' .. line .. tab .. 'input'
+   for i=1,#self.modules do
+      if i == self.modules then
+         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
+      else
+         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. ext)
+      end
+   end
+   str = str .. line .. tab .. last .. 'output'
+   str = str .. line .. '}'
+   return str
+end
