@@ -49,3 +49,9 @@ end
 function Criterion:cuda()
    return self:type('torch.CudaTensor')
 end
+
+function Criterion:__call__(input, target)
+   self.output = self:forward(input, target)
+   self.gradInput = self:backward(input, target)
+   return self.output, self.gradInput
+end
