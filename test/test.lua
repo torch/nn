@@ -837,7 +837,7 @@ function nntest.SpatialLPPooling()
    local fanin = math.random(1,4)
    local osizex = math.random(1,4)
    local osizey = math.random(1,4)
-   local p = math.random(1,4)
+   local p = 2
    local mx = math.random(2,8)
    local my = math.random(2,8)
    local dx = math.random(2,mx)
