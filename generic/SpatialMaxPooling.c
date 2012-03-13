@@ -38,7 +38,7 @@ static int nn_(SpatialMaxPooling_updateOutput)(lua_State *L)
 
   // compute max pooling for each input slice
   long k;
-#pragma omp parallel private(k)
+#pragma omp parallel for private(k)
   for (k = 0; k < nslices; k++) {
     // pointers to slices
     real *input_p = input_data + k*iwidth*iheight;
