@@ -38,6 +38,7 @@ static int nn_(SpatialMaxPooling_updateOutput)(lua_State *L)
 
   // compute max pooling for each input slice
   long k;
+#pragma omp parallel private(k)
   for (k = 0; k < nslices; k++) {
     // pointers to slices
     real *input_p = input_data + k*iwidth*iheight;
@@ -56,9 +57,9 @@ static int nn_(SpatialMaxPooling_updateOutput)(lua_State *L)
         real *indxp = indx_p + i*owidth + j;
 
         // compute local max:
-	long maxindex = -1;
-	real maxval = -THInf;
-	long tcntr = 0;
+      	long maxindex = -1;
+      	real maxval = -THInf;
+      	long tcntr = 0;
         int x,y;
         for(y = 0; y < kH; y++) {
           for(x = 0; x < kW; x++) {
@@ -130,8 +131,8 @@ static int nn_(SpatialMaxPooling_updateGradInput)(lua_State *L)
     for(i = 0; i < oheight; i++) {
       for(j = 0; j < owidth; j++) {
         // retrieve position of max
- 	long maxi = *(indy_p + i*owidth + j) - 1 + i*dH;
- 	long maxj = *(indx_p + i*owidth + j) - 1 + j*dW;
+       	long maxi = *(indy_p + i*owidth + j) - 1 + i*dH;
+       	long maxj = *(indx_p + i*owidth + j) - 1 + j*dW;
 
         // update gradient
         *(gradInput_p + maxi*iwidth + maxj) += *(gradOutput_p + i*owidth + j);

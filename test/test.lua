@@ -4,6 +4,7 @@ local mytester = torch.Tester()
 local jac
 
 local precision = 1e-5
+local expprecision = 1e-4
 
 local nntest = {}
 local nntestx = {}
@@ -347,7 +348,7 @@ function nntest.LogSoftmax()
    local module = nn.LogSoftMax()
 
    local err = jac.testJacobian(module,input)
-   mytester:assertlt(err,precision, 'error on state ')
+   mytester:assertlt(err,expprecision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
@@ -459,7 +460,7 @@ function nntest.Softmax()
    local module = nn.SoftMax()
 
    local err = jac.testJacobian(module,input)
-   mytester:assertlt(err,precision, 'error on state ')
+   mytester:assertlt(err,expprecision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
@@ -473,7 +474,7 @@ function nntest.Softmin()
    local module = nn.SoftMin()
 
    local err = jac.testJacobian(module,input)
-   mytester:assertlt(err,precision, 'error on state ')
+   mytester:assertlt(err,expprecision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')

@@ -2,24 +2,9 @@
 #define TH_GENERIC_FILE "generic/SpatialConvolution.c"
 #else
 
-static void nn_(convolution_updateOutput_)(THTensor *input, THTensor *output, THTensor *weight, THTensor *bias, int dH, int dW)
-{
-  /* add bias */
-  long i;
-  THTensor *outn = THTensor_(new)();
-  for (i=0; i<bias->size[0]; i++) {
-    THTensor_(select)(outn,output,0,i);
-    THTensor_(fill)(outn, THTensor_(get1d)(bias, i));
-  }
-  THTensor_(free)(outn);
-
-  /* do convolutions */
-  THTensor_(conv2Dmv)(output, 1.0, 1.0, input, weight, dH, dW, "V","X");
-}
-
 static int nn_(SpatialConvolution_updateOutput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));  
+  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
 
@@ -47,49 +32,59 @@ static int nn_(SpatialConvolution_updateOutput)(lua_State *L)
   if (input->nDimension == 3)
   {
     THTensor_(resize3d)(output, nOutputPlane, outputHeight, outputWidth);
-/*     printf("\n*************\nstochastic\n"); */
-/*     printf("no=%d\n",output->nDimension); */
-/*     printf("no=%ld,%ld,%ld\n",nOutputPlane,outputHeight,outputWidth); */
-/*     printf("ni=%d\n",input->nDimension); */
-    nn_(convolution_updateOutput_)(input,output,weight,bias,dH,dW);
-/*    printf("stochastic\n");*/
+    /* add bias */
+    long i;
+    /*THTensor *outn = THTensor_(new)();*/
+    real* bias_data = THTensor_(data)(bias);
+    real* output_data = THTensor_(data)(output);
+#pragma omp parallel for private(i)
+    for (i=0; i<bias->size[0]; i++)
+    {
+      /*THTensor_(select)(outn,output,0,i);*/
+      /*TH_TENSOR_APPLY(real,outn, *outn_data = bias_data[i];);*/
+      real *ptr_output = output_data + i*outputWidth*outputHeight;
+      long j;
+      for(j = 0; j < outputWidth*outputHeight; j++)
+      ptr_output[j] = bias_data[i];
+    }
+    /*THTensor_(free)(outn);*/
+    
+    /* do convolutions */
+    THTensor_(conv2Dmv)(output, 1.0, 1.0, input, weight, dH, dW, "V","X");
   }
   else
   {
     THTensor_(resize4d)(output, input->size[0], nOutputPlane, outputHeight, outputWidth);
-    THTensor *outn = THTensor_(new)();
-    THTensor *inpn = THTensor_(new)();
-    long i;
-    for (i=0; i<input->size[0]; i++)
+
+    real* bias_data = THTensor_(data)(bias);
+    real* output_data = THTensor_(data)(output);
+
+    long p;
+#pragma omp parallel for private(p)
+    for (p=0; p<input->size[0]; p++)
     {
-      THTensor_(select)(outn,output,0,i);
-      THTensor_(select)(inpn,input,0,i);
-      nn_(convolution_updateOutput_)(inpn,outn,weight,bias,dH,dW);
+      /* BIAS */
+      long i;
+      for (i=0; i<bias->size[0]; i++)
+      {
+        real *ptr_output = output_data + p*nOutputPlane*outputWidth*outputHeight + i*outputWidth*outputHeight;
+        long j;
+        for(j = 0; j < outputWidth*outputHeight; j++)
+          ptr_output[j] = bias_data[i];
+      }
     }
-    THTensor_(free)(outn);
-    THTensor_(free)(inpn);
+
+    /* do convolutions */
+    THTensor_(conv2Dmm)(output, 1.0, 1.0, input, weight, dH, dW, "V","X");
   }
-
-/*   /\* add bias *\/ */
-/*   long i; */
-/*   THTensor *outn = THTensor_(new)(); */
-/*   for (i=0; i<bias->size[0]; i++) { */
-/*     THTensor_(select)(outn,output,0,i); */
-/*     THTensor_(fill)(outn, THTensor_(get1d)(bias, i)); */
-/*   } */
-/*   THTensor_(free)(outn); */
-
-/*   /\* do convolutions *\/ */
-/*   THTensor_(conv2Dmv)(output, 1.0, 1.0, input, weight, dH, dW, "vx"); */
-
   return 1;
 }
 
 
 static int nn_(SpatialConvolution_updateGradInput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));  
-  THTensor *gradOutput = luaT_checkudata(L, 3, torch_(Tensor_id));  
+  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
+  THTensor *gradOutput = luaT_checkudata(L, 3, torch_(Tensor_id));
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
   int nOutputPlane = luaT_getfieldcheckint(L, 1, "nOutputPlane");
@@ -102,48 +97,18 @@ static int nn_(SpatialConvolution_updateGradInput)(lua_State *L)
   /* gradient to input */
   THTensor *tweight = THTensor_(newTranspose)(weight,0,1);
 
-  if(input->nDimension == 3)
+  if (input->nDimension == 3)
   {
-    THTensor_(conv2Dmv)(gradInput, 0.0, 1.0, gradOutput, tweight, dH, dW, "F", "C");
+    THTensor_(conv2Dmv)(gradInput, 0.0, 1.0, gradOutput, tweight, dH, dW, "F","C");
   }
   else
   {
-
-    THTensor_(resizeAs)(gradInput,input);
-    THTensor *outn = THTensor_(new)();
-    THTensor *inpn = THTensor_(new)();
-    long i;
-    for (i=0; i<input->size[0]; i++)
-    {
-      THTensor_(select)(outn,gradOutput,0,i);
-      THTensor_(select)(inpn,gradInput,0,i);
-      THTensor_(conv2Dmv)(inpn, 0.0, 1.0, outn, tweight, dH, dW, "F", "C");
-    }
-    THTensor_(free)(outn);
-    THTensor_(free)(inpn);
+    THTensor_(conv2Dmm)(gradInput, 0.0, 1.0, gradOutput, tweight, dH, dW, "F","C");
   }
   THTensor_(free)(tweight);
-
   return 1;
 }
 
-static void nn_(convolution_accGradParameters_)(THTensor *input, THTensor *gradOutput, THTensor *gradWeight, THTensor *gradBias, real scale, int dH, int dW)
-{
-  long k;
-
-  /* gradient to bias */
-  real *gradBias_data = THTensor_(data)(gradBias);
-  THTensor* gradOutSlice = THTensor_(new)();
-  for(k = 0; k < gradOutput->size[0]; k++)
-  {
-    THTensor_(select)(gradOutSlice, gradOutput, 0, k);
-    gradBias_data[k] += scale*THTensor_(sumall)(gradOutSlice);
-  }
-  THTensor_(free)(gradOutSlice);
-
-  /* gradient to kernels */
-  THTensor_(conv2DRevger)(gradWeight, 1.0, scale, input, gradOutput, dH, dW);
-}
 
 static int nn_(SpatialConvolution_accGradParameters)(lua_State *L)
 {
@@ -156,28 +121,59 @@ static int nn_(SpatialConvolution_accGradParameters)(lua_State *L)
 
   THTensor *gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_(Tensor_id));
   THTensor *gradBias = luaT_getfieldcheckudata(L, 1, "gradBias", torch_(Tensor_id));
-  
+
   THArgCheck( nOutputPlane == gradOutput->size[input->nDimension == 4 ? 1 : 0], 1, "Number of output features is not equal to nOutputPlane" );
 
-  if(input->nDimension == 3)
+  int dimw = 2;
+  int dimh = 1;
+
+  if (input->nDimension == 4)
   {
-    nn_(convolution_accGradParameters_)(input,gradOutput,gradWeight,gradBias,scale,dH,dW);
+    dimw++;
+    dimh++;
+  }
+
+  /* gradient to bias */
+  real *gradBias_data = THTensor_(data)(gradBias);
+  real *gradOutput_data = THTensor_(data)(gradOutput);
+  long noutSlice = gradOutput->size[dimh]*gradOutput->size[dimw];
+  /*THTensor* gradOutSlice = THTensor_(new)();*/
+
+  if (input->nDimension == 3)
+  {
+    long k;
+#pragma omp parallel for private(k)
+    for(k = 0; k < nOutputPlane; k++)
+    {
+      /*THTensor_(select)(gradOutSlice, gradOutput, 0, k);*/
+      real *ptr_gradOutput = gradOutput_data + k*noutSlice;
+      long l;
+      for(l = 0; l < noutSlice; l++)
+        gradBias_data[k] += scale*ptr_gradOutput[l];
+    }
+    
+    /* gradient to kernels */
+    THTensor_(conv2DRevger)(gradWeight, 1.0, scale, input, gradOutput, dH, dW);
   }
   else
   {
-    THTensor *outn = THTensor_(new)();
-    THTensor *inpn = THTensor_(new)();
-    long i;
-    for (i=0; i<input->size[0]; i++)
+    long k;
+#pragma omp parallel for private(k)
+    for(k = 0; k < nOutputPlane; k++)
     {
-      THTensor_(select)(outn,gradOutput,0,i);
-      THTensor_(select)(inpn,input,0,i);
-      nn_(convolution_accGradParameters_)(inpn,outn,gradWeight,gradBias,scale,dH,dW);
+      long p;
+      for(p = 0; p < input->size[0]; p++)
+      { 
+        /* BIAS */
+        real *ptr_gradOutput = gradOutput_data + p*nOutputPlane*noutSlice + k*noutSlice;
+        long l;
+        for(l = 0; l < noutSlice; l++)
+          gradBias_data[k] += scale*ptr_gradOutput[l];
+      }
     }
-    THTensor_(free)(outn);
-    THTensor_(free)(inpn);
+    /* gradient to kernels */
+    THTensor_(conv2DRevgerm)(gradWeight, 1.0, scale, input, gradOutput, dH, dW);
   }
-
   return 0;
 }
 
