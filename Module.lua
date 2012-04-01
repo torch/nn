@@ -81,6 +81,7 @@ function Module:updateParameters(learningRate)
 end
 
 function Module:share(mlp, ...)
+   local arg = {...}
    for i,v in ipairs(arg) do
       if self[v] ~= nil then
          self[v]:set(mlp[v])
