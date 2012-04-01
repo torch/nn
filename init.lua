@@ -35,6 +35,7 @@ torch.include('nn', 'CosineDistance.lua')
 torch.include('nn', 'DotProduct.lua')  
 
 torch.include('nn', 'Exp.lua')
+torch.include('nn', 'Log.lua')
 torch.include('nn', 'HardTanh.lua')
 torch.include('nn', 'LogSigmoid.lua')
 torch.include('nn', 'LogSoftMax.lua')
