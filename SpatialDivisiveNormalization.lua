@@ -18,9 +18,6 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
       error('<SpatialDivisiveNormalization> averaging kernel must have ODD dimensions')
    end
 
-   -- normalize kernel
-   self.kernel:div(self.kernel:sum() * self.nInputPlane)
-
    -- padding values
    local padH = math.floor(self.kernel:size(1)/2)
    local padW = padH
@@ -62,6 +59,7 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
 
    -- set kernel and bias
    if kdim == 2 then
+      self.kernel:div(self.kernel:sum() * self.nInputPlane)
       for i = 1,self.nInputPlane do 
          self.meanestimator.modules[2].weight[i] = self.kernel
          self.stdestimator.modules[3].weight[i] = self.kernel
@@ -69,6 +67,7 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
       self.meanestimator.modules[2].bias:zero()
       self.stdestimator.modules[3].bias:zero()
    else
+      self.kernel:div(self.kernel:sum() * math.sqrt(self.nInputPlane))
       for i = 1,self.nInputPlane do 
          self.meanestimator.modules[2].weight[i]:copy(self.kernel)
          self.meanestimator.modules[3].weight[i]:copy(self.kernel)

@@ -63,6 +63,7 @@ torch.include('nn', 'TemporalConvolution.lua')
 torch.include('nn', 'TemporalSubSampling.lua')
 torch.include('nn', 'SpatialSubtractiveNormalization.lua')
 torch.include('nn', 'SpatialDivisiveNormalization.lua')
+torch.include('nn', 'SpatialContrastiveNormalization.lua')
 torch.include('nn', 'SpatialZeroPadding.lua')
 
 torch.include('nn', 'VolumetricConvolution.lua')
