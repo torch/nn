@@ -61,7 +61,7 @@ Some important remarks:
 Building a simple neural network can be achieved by constructing an available layer.
 A linear neural network (perceptron!) is built only in one line:
 <file lua>
-nn = nn.Linear(10,1) -- perceptron with 10 inputs
+mlp = nn.Linear(10,1) -- perceptron with 10 inputs
 </file>
 
 More complex neural networks are easily built using container classes

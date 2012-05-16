@@ -2,20 +2,24 @@ local Reshape, parent = torch.class('nn.Reshape', 'nn.Module')
 
 function Reshape:__init(...)
    parent.__init(self)
+   local arg = {...}
+
    self.size = torch.LongStorage()
    self.batchsize = torch.LongStorage()
-   local n = select('#', ...)
-   if n == 1 and torch.typename(select(1, ...)) == 'torch.LongStorage' then
-      self.size:resize(#select(1, ...)):copy(select(1, ...))
+   local n = #arg
+   if n == 1 and torch.typename(arg[1]) == 'torch.LongStorage' then
+      self.size:resize(#arg[1]):copy(arg[1])
    else
       self.size:resize(n)
-      self.batchsize:resize(n+1)
-      self.nelement = 1
       for i=1,n do
-         self.size[i] = select(i, ...)
-         self.batchsize[i+1] = select(i, ...)
-         self.nelement = self.nelement * self.size[i]
+         self.size[i] = arg[i]
       end
+   end
+   self.nelement = 1
+   self.batchsize:resize(#self.size+1)
+   for i=1,#self.size do
+      self.nelement = self.nelement * self.size[i]
+      self.batchsize[i+1] = self.size[i]
    end
 end
 

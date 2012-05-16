@@ -4,9 +4,10 @@ LookupTable.__version = 2
 
 function LookupTable:__init(nIndex, ...)
    parent.__init(self)
+   local arg = {...}
 
-   if select('#', ...) == 1 and type(select(1, ...)) ~= "number" then
-      local size = select(1, ...)
+   if select('#', ...) == 1 and type(arg[1]) ~= "number" then
+      local size = arg[1]
       self.size = torch.LongStorage(#size + 1)
       for i=1,#size do
          self.size[i+1] = size[i]
@@ -14,7 +15,7 @@ function LookupTable:__init(nIndex, ...)
    else
       self.size = torch.LongStorage(select('#', ...)+1)
       for i=1,select('#',...) do
-         self.size[i+1] = select(i, ...)
+         self.size[i+1] = arg[i]
       end
    end
 
