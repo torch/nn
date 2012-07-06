@@ -97,11 +97,10 @@ function nn.hessian.enable()
    nn.hessian.initDiagHessianParameters = initDiagHessianParameters
 
    ----------------------------------------------------------------------
-   -- MODULE
+   -- Module
    ----------------------------------------------------------------------
    function nn.Module.updateDiagHessianInput(self, input, diagHessianOutput)
-      self.diagHessianInput = self.diagHessianInput or diagHessianOutput
-      return self.diagHessianInput
+      error(torch.typename(self) .. ':updateDiagHessianInput() is undefined')
    end
 
    function nn.Module.accDiagHessianParameters(self, input, diagHessianOutput)
@@ -111,7 +110,7 @@ function nn.hessian.enable()
    end
 
    ----------------------------------------------------------------------
-   -- SEQUENTIAL
+   -- Sequential
    ----------------------------------------------------------------------
    function nn.Sequential.initDiagHessianParameters(self)
       for i=1,#self.modules do
@@ -145,15 +144,14 @@ function nn.hessian.enable()
    end
 
    ----------------------------------------------------------------------
-   -- CRITERION
+   -- Criterion
    ----------------------------------------------------------------------
    function nn.Criterion.updateDiagHessianInput(self, input, diagHessianOutput)
-      self.diagHessianInput = self.diagHessianInput or self.output.new()
-      return self.diagHessianInput
+      error(torch.typename(self) .. ':updateDiagHessianInput() is undefined')
    end
 
    ----------------------------------------------------------------------
-   -- MSECRITERION
+   -- MSECriterion
    ----------------------------------------------------------------------
    function nn.MSECriterion.updateDiagHessianInput(self, input, target)
       self.diagHessianInput = self.diagHessianInput or input.new()
@@ -165,12 +163,17 @@ function nn.hessian.enable()
       return self.diagHessianInput
    end
 
-   function nn.WeightedMSECriterion.updateDiagHessianInput(self,input,target)
-      return nn.MSECriterion.updateDiagHessianInput(self,input,target)
+   ----------------------------------------------------------------------
+   -- ClassNLLCriterion
+   ----------------------------------------------------------------------
+   function nn.ClassNLLCriterion.updateDiagHessianInput(self, input, target)
+      self.diagHessianInput = self.diagHessianInput or input.new()
+      self.diagHessianInput:resizeAs(input):fill(0)
+      return self.diagHessianInput
    end
 
    ----------------------------------------------------------------------
-   -- LINEAR
+   -- Linear
    ----------------------------------------------------------------------
    function nn.Linear.updateDiagHessianInput(self, input, diagHessianOutput)
       updateDiagHessianInput(self, input, diagHessianOutput, {'weight'}, {'weightSq'})
@@ -218,10 +221,36 @@ function nn.hessian.enable()
    end
 
    ----------------------------------------------------------------------
-   -- TANH
+   -- SpatialMaxPooling
+   ----------------------------------------------------------------------
+   function nn.SpatialMaxPooling.updateDiagHessianInput(self, input, diagHessianOutput)
+      updateDiagHessianInput(self, input, diagHessianOutput,{},{})
+      return self.diagHessianInput
+   end
+
+   ----------------------------------------------------------------------
+   -- LogSoftMax
+   ----------------------------------------------------------------------
+   function nn.LogSoftMax.updateDiagHessianInput(self, input, diagHessianOutput)
+      updateDiagHessianInputPointWise(self, input, diagHessianOutput)
+      return self.diagHessianInput
+   end
+
+   ----------------------------------------------------------------------
+   -- Tanh
    ----------------------------------------------------------------------
    function nn.Tanh.updateDiagHessianInput(self, input, diagHessianOutput)
-      updateDiagHessianInputPointWise(self,input, diagHessianOutput)
+      updateDiagHessianInputPointWise(self, input, diagHessianOutput)
+      return self.diagHessianInput
+   end
+
+   ----------------------------------------------------------------------
+   -- Reshape
+   ----------------------------------------------------------------------
+   function nn.Reshape.updateDiagHessianInput(self, input, diagHessianOutput)
+      self.diagHessianInput = self.diagHessianInput or input.new()
+      diagHessianOutput = diagHessianOutput:contiguous()
+      self.diagHessianInput:set(diagHessianOutput):resizeAs(input)
       return self.diagHessianInput
    end
 
