@@ -9,7 +9,7 @@ nn.hessian = {}
 -- Hessian code is still experimental,
 -- and deactivated by default
 ----------------------------------------------------------------------
-function nn.hessian.activate()
+function nn.hessian.enable()
 
    local function accDiagHessianParameters(module, input, diagHessianOutput, gw, hw)
       if #gw ~= #hw then
