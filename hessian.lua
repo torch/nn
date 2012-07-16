@@ -164,15 +164,6 @@ function nn.hessian.enable()
    end
 
    ----------------------------------------------------------------------
-   -- ClassNLLCriterion
-   ----------------------------------------------------------------------
-   function nn.ClassNLLCriterion.updateDiagHessianInput(self, input, target)
-      self.diagHessianInput = self.diagHessianInput or input.new()
-      self.diagHessianInput:resizeAs(input):fill(0)
-      return self.diagHessianInput
-   end
-
-   ----------------------------------------------------------------------
    -- Linear
    ----------------------------------------------------------------------
    function nn.Linear.updateDiagHessianInput(self, input, diagHessianOutput)
@@ -221,25 +212,25 @@ function nn.hessian.enable()
    end
 
    ----------------------------------------------------------------------
-   -- SpatialMaxPooling
+   -- Tanh
    ----------------------------------------------------------------------
-   function nn.SpatialMaxPooling.updateDiagHessianInput(self, input, diagHessianOutput)
-      updateDiagHessianInput(self, input, diagHessianOutput,{},{})
-      return self.diagHessianInput
-   end
-
-   ----------------------------------------------------------------------
-   -- LogSoftMax
-   ----------------------------------------------------------------------
-   function nn.LogSoftMax.updateDiagHessianInput(self, input, diagHessianOutput)
+   function nn.Tanh.updateDiagHessianInput(self, input, diagHessianOutput)
       updateDiagHessianInputPointWise(self, input, diagHessianOutput)
       return self.diagHessianInput
    end
 
    ----------------------------------------------------------------------
-   -- Tanh
+   -- Square
    ----------------------------------------------------------------------
-   function nn.Tanh.updateDiagHessianInput(self, input, diagHessianOutput)
+   function nn.Square.updateDiagHessianInput(self, input, diagHessianOutput)
+      updateDiagHessianInputPointWise(self, input, diagHessianOutput)
+      return self.diagHessianInput
+   end
+
+   ----------------------------------------------------------------------
+   -- Sqrt
+   ----------------------------------------------------------------------
+   function nn.Sqrt.updateDiagHessianInput(self, input, diagHessianOutput)
       updateDiagHessianInputPointWise(self, input, diagHessianOutput)
       return self.diagHessianInput
    end
