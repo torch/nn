@@ -7,7 +7,7 @@ function SpatialContrastiveNormalization:__init(nInputPlane, kernel, threshold, 
    self.nInputPlane = nInputPlane or 1
    self.kernel = kernel or torch.Tensor(9,9):fill(1)
    self.threshold = threshold or 1e-4
-   self.thresval = thresval or 1e-4
+   self.thresval = thresval or threshold or 1e-4
    local kdim = self.kernel:nDimension()
 
    -- check args
@@ -22,7 +22,7 @@ function SpatialContrastiveNormalization:__init(nInputPlane, kernel, threshold, 
    self.normalizer = nn.Sequential()
    self.normalizer:add(nn.SpatialSubtractiveNormalization(self.nInputPlane, self.kernel))
    self.normalizer:add(nn.SpatialDivisiveNormalization(self.nInputPlane, self.kernel,
-                                                       self.threshold, self.threshval))
+                                                       self.threshold, self.thresval))
 end
 
 function SpatialContrastiveNormalization:updateOutput(input)

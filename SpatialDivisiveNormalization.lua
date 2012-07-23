@@ -7,7 +7,7 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
    self.nInputPlane = nInputPlane or 1
    self.kernel = kernel or torch.Tensor(9,9):fill(1)
    self.threshold = threshold or 1e-4
-   self.thresval = thresval or 1e-4
+   self.thresval = thresval or threshold or 1e-4
    local kdim = self.kernel:nDimension()
 
    -- check args
