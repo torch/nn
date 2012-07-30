@@ -7,6 +7,9 @@ function Sum:__init(dimension)
 end
 
 function Sum:updateOutput(input)
+   if type(self.output) == 'number' then
+      self.output = input.new()
+   end
    input.torch.sum(self.output, input, self.dimension)
    self.output = self.output:select(self.dimension, 1)
    return self.output
