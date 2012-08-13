@@ -4,10 +4,10 @@
 
 static int nn_(Min_updateOutput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   int dimension = luaT_getfieldcheckint(L, 1, "dimension")-1;
-  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_(Tensor_id));
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_(Tensor_id));
+  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
+  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   THLongStorage *dim;
   long i;
@@ -43,11 +43,11 @@ static int nn_(Min_updateOutput)(lua_State *L)
 
 static int nn_(Min_updateGradInput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
-  THTensor *gradOutput = luaT_checkudata(L, 3, torch_(Tensor_id));
-  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_(Tensor_id));
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
+  THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
+  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
   int dimension  = luaT_getfieldcheckint(L, 1, "dimension")-1;
-  THTensor *gradInput  = luaT_getfieldcheckudata(L, 1, "gradInput", torch_(Tensor_id));
+  THTensor *gradInput  = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
   THTensor *gradOutputPlusOneDim;
   THLongStorage *dim, *str;
@@ -92,7 +92,7 @@ static const struct luaL_Reg nn_(Min__) [] = {
 
 static void nn_(Min_init)(lua_State *L)
 {
-  luaT_pushmetaclass(L, torch_(Tensor_id));
+  luaT_pushmetatable(L, torch_Tensor);
   luaT_registeratname(L, nn_(Min__), "nn");
   lua_pop(L,1);
 }

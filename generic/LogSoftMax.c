@@ -4,8 +4,8 @@
 
 static int nn_(LogSoftMax_updateOutput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_(Tensor_id));
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
+  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
   real *input_data, *output_data;
   long nframe = 0, dim = 0;
   long t, d;
@@ -54,9 +54,9 @@ static int nn_(LogSoftMax_updateOutput)(lua_State *L)
 
 static int nn_(LogSoftMax_updateGradInput)(lua_State *L)
 {
-  THTensor *gradOutput = luaT_checkudata(L, 3, torch_(Tensor_id));
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_(Tensor_id));
-  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_(Tensor_id));
+  THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
+  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
+  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
   real *gradInput_data, *gradOutput_data, *output_data;
   long nframe = 0, dim = 0;
   long t, d;
@@ -103,7 +103,7 @@ static const struct luaL_Reg nn_(LogSoftMax__) [] = {
 
 void nn_(LogSoftMax_init)(lua_State *L)
 {
-  luaT_pushmetaclass(L, torch_(Tensor_id));
+  luaT_pushmetatable(L, torch_Tensor);
   luaT_registeratname(L, nn_(LogSoftMax__), "nn");
   lua_pop(L,1);
 }

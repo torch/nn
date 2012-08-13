@@ -4,7 +4,7 @@
 
 static int nn_(MultiMarginCriterion_updateOutput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));  
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);  
   int sizeAverage = luaT_getfieldcheckboolean(L, 1, "sizeAverage");
   real *input_data, *target_data;
   long nframe, dim;
@@ -27,7 +27,7 @@ static int nn_(MultiMarginCriterion_updateOutput)(lua_State *L)
   {
     nframe = input->size[0];
     dim = input->size[1];
-    target = luaT_checkudata(L, 3, torch_(Tensor_id));
+    target = luaT_checkudata(L, 3, torch_Tensor);
     THArgCheck((target->nDimension == 1) && (target->size[0] == nframe), 3, "inconsistent target size");
     target = THTensor_(newContiguous)(target);
   }
@@ -73,9 +73,9 @@ static int nn_(MultiMarginCriterion_updateOutput)(lua_State *L)
 
 static int nn_(MultiMarginCriterion_updateGradInput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   int sizeAverage = luaT_getfieldcheckboolean(L, 1, "sizeAverage");
-  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_(Tensor_id));
+  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
   real *input_data;
   real *gradInput_data;
   real *target_data;
@@ -99,7 +99,7 @@ static int nn_(MultiMarginCriterion_updateGradInput)(lua_State *L)
   {
     nframe = input->size[0];
     dim = input->size[1];
-    target = luaT_checkudata(L, 3, torch_(Tensor_id));
+    target = luaT_checkudata(L, 3, torch_Tensor);
     THArgCheck((target->nDimension == 1) && (target->size[0] == nframe), 3, "inconsistent target size");
     target = THTensor_(newContiguous)(target);
   }
@@ -153,7 +153,7 @@ static const struct luaL_Reg nn_(MultiMarginCriterion__) [] = {
 
 static void nn_(MultiMarginCriterion_init)(lua_State *L)
 {
-  luaT_pushmetaclass(L, torch_(Tensor_id));
+  luaT_pushmetatable(L, torch_Tensor);
   luaT_registeratname(L, nn_(MultiMarginCriterion__), "nn");
   lua_pop(L,1);
 }

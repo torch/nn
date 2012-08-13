@@ -4,8 +4,8 @@
 
 static int nn_(MSECriterion_updateOutput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));  
-  THTensor *target = luaT_checkudata(L, 3, torch_(Tensor_id));  
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);  
+  THTensor *target = luaT_checkudata(L, 3, torch_Tensor);  
   int sizeAverage = luaT_getfieldcheckboolean(L, 1, "sizeAverage");
   real sum;
 
@@ -26,10 +26,10 @@ static int nn_(MSECriterion_updateOutput)(lua_State *L)
 
 static int nn_(MSECriterion_updateGradInput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
-  THTensor *target = luaT_checkudata(L, 3, torch_(Tensor_id));
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
+  THTensor *target = luaT_checkudata(L, 3, torch_Tensor);
   int sizeAverage = luaT_getfieldcheckboolean(L, 1, "sizeAverage");
-  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_(Tensor_id));
+  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
   real norm = (sizeAverage ? 2./((real)THTensor_(nElement)(input)) : 2.);
 
   THTensor_(resizeAs)(gradInput, input);
@@ -46,7 +46,7 @@ static const struct luaL_Reg nn_(MSECriterion__) [] = {
 
 static void nn_(MSECriterion_init)(lua_State *L)
 {
-  luaT_pushmetaclass(L, torch_(Tensor_id));
+  luaT_pushmetatable(L, torch_Tensor);
   luaT_registeratname(L, nn_(MSECriterion__), "nn");
   lua_pop(L,1);
 }

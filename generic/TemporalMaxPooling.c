@@ -4,11 +4,11 @@
 
 static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   int kW = luaT_getfieldcheckint(L, 1, "kW");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
-  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_(Tensor_id));
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_(Tensor_id));
+  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
+  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   luaL_argcheck(L, input->nDimension == 2, 2, "2D tensor expected");
   luaL_argcheck(L, input->size[0] >= kW, 2, "input sequence smaller than kernel size");
@@ -68,11 +68,11 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
 
 static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
-  THTensor *gradOutput = luaT_checkudata(L, 3, torch_(Tensor_id));
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
+  THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
   int dW = luaT_getfieldcheckint(L, 1, "dW");
-  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_(Tensor_id));
-  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_(Tensor_id));
+  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
+  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
   // get contiguous gradOutput
   gradOutput = THTensor_(newContiguous)(gradOutput);
@@ -119,7 +119,7 @@ static const struct luaL_Reg nn_(TemporalMaxPooling__) [] = {
 
 static void nn_(TemporalMaxPooling_init)(lua_State *L)
 {
-  luaT_pushmetaclass(L, torch_(Tensor_id));
+  luaT_pushmetatable(L, torch_Tensor);
   luaT_registeratname(L, nn_(TemporalMaxPooling__), "nn");
   lua_pop(L,1);
 }

@@ -4,8 +4,8 @@
 
 static int nn_(Tanh_updateOutput)(lua_State *L)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_(Tensor_id));
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_(Tensor_id));
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
+  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   THTensor_(resizeAs)(output, input);
 
@@ -30,15 +30,14 @@ static int nn_(Tanh_updateOutput)(lua_State *L)
   ptr_output[i] = tanh(ptr_input[i]);
     }
   }
-      
   return 1;
 }
 
 static int nn_(Tanh_updateGradInput)(lua_State *L)
 {
-  THTensor *gradOutput = luaT_checkudata(L, 3, torch_(Tensor_id));
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_(Tensor_id));
-  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_(Tensor_id));
+  THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
+  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
+  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
   THTensor_(resizeAs)(gradInput, output);
 
@@ -83,7 +82,7 @@ static const struct luaL_Reg nn_(Tanh__) [] = {
 
 static void nn_(Tanh_init)(lua_State *L)
 {
-  luaT_pushmetaclass(L, torch_(Tensor_id));
+  luaT_pushmetatable(L, torch_Tensor);
   luaT_registeratname(L, nn_(Tanh__), "nn");
   lua_pop(L,1);
 
