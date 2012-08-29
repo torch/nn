@@ -369,8 +369,8 @@ function nn.hessian.enable()
    end
 
    ----------------------------------------------------------------------
-   -- Avoid multiple calls to activate()
+   -- Avoid multiple calls to enable()
    ----------------------------------------------------------------------
-   function nn.hessian.activate()
+   function nn.hessian.enable()
    end
 end

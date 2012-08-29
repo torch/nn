@@ -1013,6 +1013,23 @@ function nntest.TemporalSubSampling()
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntestx.TemporalMaxPooling()
+   local from = math.random(1,10)
+   local ki = math.random(1,10)
+   local si = math.random(1,4)
+   local outi = math.random(10,20)
+   local ini = (outi-1)*si+ki
+   local module = nn.TemporalMaxPooling(ki, si)
+   local input = torch.Tensor(ini, from):zero()
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+end
+
 function nntest.VolumetricConvolution()
    local from = math.random(2,5)
    local to = math.random(2,5)
