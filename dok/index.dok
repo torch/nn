@@ -268,6 +268,9 @@ situations.
 Keep in mind that, this function uses a simple trick to achieve its
 goal and it might not be valid for a custom module.
 
+Also note that compared to accGradParameters(), the gradients are not retained 
+for future use. 
+
 <file lua>
 function Module:accUpdateGradParameters(input, gradOutput, lr)
    local gradWeight = self.gradWeight
