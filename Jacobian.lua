@@ -168,7 +168,7 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
    -- read module
    local m = torch.DiskFile('tmp.bin'):binary():readObject()
    m:forward(input)
-   module:zeroGradParameters()
+   m:zeroGradParameters()
    m:updateGradInput(input,go)
    m:accGradParameters(input,go)
    -- cleanup
