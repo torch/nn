@@ -336,7 +336,7 @@ function nn.hessian.enable()
       local flatParameters = flatten(parameters)
       local flatGradParameters = flatten(gradParameters)
       local flatHessianParameters
-      if hessianParameters[1] then
+      if hessianParameters and hessianParameters[1] then
          flatHessianParameters = flatten(hessianParameters)
       end
 
