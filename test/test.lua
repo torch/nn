@@ -82,10 +82,10 @@ function nntest.Log()
    local input = torch.Tensor(ini,inj,ink):zero()
    local module = nn.Log()
 
-   local err = jac.testJacobian(module,input)
+   local err = jac.testJacobian(module,input, 0.1, 10)
    mytester:assertlt(err,precision, 'error on state ')
 
-   local ferr,berr = jac.testIO(module,input)
+   local ferr,berr = jac.testIO(module,input, 0.1, 10)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end

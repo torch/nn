@@ -40,7 +40,7 @@ static int nn_(Square_updateGradInput)(lua_State *L)
       !THTensor_(isContiguous)(gradInput))
   {
     TH_TENSOR_APPLY3(real, gradInput, real, gradOutput, real, input,  \
-         *gradInput_data  = (*gradOutput_data) * (*input_data););
+         *gradInput_data  = 2.0 * (*gradOutput_data) * (*input_data););
   }
   else
   {
