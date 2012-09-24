@@ -184,14 +184,12 @@ function Module:getParameters()
 			   parameters[k]:stride())
       end
 
-      for k, v in pairs(storages) do -- we could remove this loop
+      for k, v in pairs(storages) do
          flatParameters[{{v+1,v+k:size()}}]:copy(torch.Tensor():set(k))
       end
-      print('crap')
       for k = 1,flatUsedParameters:nElement() do
          flatUsedParameters[k] = flatParameters[k+cumSumOfHoles[k] ]
       end
-      print('0')
       return flatUsedParameters
    end
 
