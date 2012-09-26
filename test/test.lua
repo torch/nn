@@ -879,6 +879,19 @@ function nntest.SpatialMaxPooling()
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+
+   -- batch
+   local nbatch = math.random(2,5)
+   input = torch.rand(nbatch,from,ini,inj)
+   module = nn.SpatialMaxPooling(ki,kj,si,sj)
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state (Batch) ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+
 end
 
 function nntest.SpatialLPPooling()
@@ -1226,9 +1239,9 @@ if not nn then
    mytester:run()
 else
    jac = nn.Jacobian
-   function nn.test()
+   function nn.test(tests)
       -- randomize stuff
       math.randomseed(os.time())
-      mytester:run()
+      mytester:run(tests)
    end
 end
