@@ -16,7 +16,7 @@ static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
 #pragma omp parallel for private(nip)
   for(nip = 0; nip < nInputPlane; nip++)
   {
-    int kw, kh, y, x;
+    int kw, kh, y;
     for(kh = 0; kh < kH; kh++)
     {
       for(kw = 0; kw < kW; kw++)
