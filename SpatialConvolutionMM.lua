@@ -1,17 +1,12 @@
 local SpatialConvolutionMM, parent = torch.class('nn.SpatialConvolutionMM', 'nn.Module')
 
-function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH)
+function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH)
    parent.__init(self)
-
-   dW = dW or 1
-   dH = dH or 1
 
    self.nInputPlane = nInputPlane
    self.nOutputPlane = nOutputPlane
    self.kW = kW
    self.kH = kH
-   self.dW = dW
-   self.dH = dH
 
    self.weight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
    self.bias = torch.Tensor(nOutputPlane)
