@@ -678,15 +678,13 @@ end
 function nntest.SpatialConvolutionMM()
    local from = math.random(1,10)
    local to = math.random(1,10)
-   local ki = math.random(1,10)
-   local kj = math.random(1,10)
-   local si = math.random(1,4)
-   local sj = math.random(1,4)
+   local ki = math.random(1,5)
+   local kj = math.random(1,5)
    local outi = math.random(10,20)
    local outj = math.random(10,20)
-   local ini = (outi-1)*si+ki
-   local inj = (outj-1)*sj+kj
-   local module = nn.SpatialConvolutionMM(from, to, ki, kj, si, sj)
+   local ini = outi-1+ki
+   local inj = outj-1+kj
+   local module = nn.SpatialConvolutionMM(from, to, ki, kj)
    local input = torch.Tensor(from, inj, ini):zero()
 
    -- stochastic
@@ -722,9 +720,9 @@ function nntest.SpatialConvolutionMM()
    local batch = math.random(2,5)
    outi = math.random(4,8)
    outj = math.random(4,8)
-   ini = (outi-1)*si+ki
-   inj = (outj-1)*sj+kj
-   module = nn.SpatialConvolutionMM(from, to, ki, kj, si, sj)
+   ini = outi-1+ki
+   inj = outj-1+kj
+   module = nn.SpatialConvolutionMM(from, to, ki, kj)
    input = torch.Tensor(batch,from,inj,ini):zero()
 
    local err = jac.testJacobian(module, input)
@@ -845,8 +843,8 @@ end
 
 function nntest.SpatialSubSamplingBatchCompare()
    local from = math.random(1,10)
-   local ki = math.random(1,10)
-   local kj = math.random(1,10)
+   local ki = math.random(1,5)
+   local kj = math.random(1,5)
    local si = math.random(1,4)
    local sj = math.random(1,4)
    local outi = math.random(10,20)
@@ -861,8 +859,8 @@ end
 
 function nntest.SpatialSubSampling()
    local from = math.random(1,10)
-   local ki = math.random(1,10)
-   local kj = math.random(1,10)
+   local ki = math.random(1,5)
+   local kj = math.random(1,5)
    local si = math.random(1,4)
    local sj = math.random(1,4)
    local outi = math.random(10,20)
@@ -941,10 +939,9 @@ function nntest.SpatialSubSampling()
 end
 
 function nntest.SpatialMaxPooling()
-   local from = math.random(1,10)
-   local to = math.random(1,10)
-   local ki = math.random(1,10)
-   local kj = math.random(1,10)
+   local from = math.random(1,5)
+   local ki = math.random(1,5)
+   local kj = math.random(1,5)
    local si = math.random(1,4)
    local sj = math.random(1,4)
    local outi = math.random(10,20)
@@ -1070,7 +1067,7 @@ function nntest.TemporalConvolution()
 end
 
 function nntest.TemporalSubSampling()
-   local from = math.random(1,10)
+   local from = math.random(1,5)
    local ki = math.random(1,10)
    local si = math.random(1,4)
    local outi = math.random(10,20)
