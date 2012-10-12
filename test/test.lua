@@ -795,7 +795,7 @@ function nntest.SpatialConvolutionMap()
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
 end
 
-function batchcompare(smod, sin, plist)
+local function batchcompare(smod, sin, plist)
    local bs = torch.LongStorage(sin:size():size()+1)
    bs[1] = 1
    for i=1,sin:size():size() do bs[i+1] = sin:size()[i] end

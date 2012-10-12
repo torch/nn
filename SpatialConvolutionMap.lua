@@ -54,7 +54,7 @@ function nn.tables.random(nin, nout, nto)
    return tbl
 end
 
-function constructTableRev(conMatrix)
+local function constructTableRev(conMatrix)
    local conMatrixL = conMatrix:type('torch.LongTensor')
    -- Construct reverse lookup connection table
    local thickness = conMatrixL:select(2,2):max()
