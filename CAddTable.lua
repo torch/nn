@@ -16,7 +16,7 @@ end
 
 function CAddTable:updateGradInput(input, gradOutput)
    for i=1,#input do
-      self.gradInput[i] = self.gradInput[i] or torch.Tensor()
+      self.gradInput[i] = self.gradInput[i] or input[1].new()
       self.gradInput[i]:resizeAs(input[i])
       self.gradInput[i]:copy(gradOutput)
    end

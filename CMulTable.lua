@@ -15,12 +15,13 @@ function CMulTable:updateOutput(input)
 end
 
 function CMulTable:updateGradInput(input, gradOutput)
-   local tout = torch.Tensor():resizeAs(self.output)
+   self.tout = self.tout or input[1].new()
+   self.tout:resizeAs(self.output)
    for i=1,#input do
-      self.gradInput[i] = self.gradInput[i] or torch.Tensor()
+      self.gradInput[i] = self.gradInput[i] or input[1].new()
       self.gradInput[i]:resizeAs(input[i]):copy(gradOutput)
-      tout:copy(self.output):cdiv(input[i])
-      self.gradInput[i]:cmul(tout)
+      self.tout:copy(self.output):cdiv(input[i])
+      self.gradInput[i]:cmul(self.tout)
    end
    return self.gradInput
 end
