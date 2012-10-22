@@ -29,15 +29,11 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
    self.meanestimator = nn.Sequential()
    self.meanestimator:add(nn.SpatialZeroPadding(padW, padW, padH, padH))
    if kdim == 2 then
-      self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                      self.kernel:size(2), self.kernel:size(1)))
+      self.meanestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, self.kernel:size(2), self.kernel:size(1)))
    else
-      self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                      self.kernel:size(1), 1))
-      self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                      1, self.kernel:size(1)))
+      self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane), self.kernel:size(1), 1))
+      self.meanestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, 1, self.kernel:size(1)))
    end
-   self.meanestimator:add(nn.Sum(1))
    self.meanestimator:add(nn.Replicate(self.nInputPlane))
 
    -- create convolutional std estimator
@@ -45,15 +41,11 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
    self.stdestimator:add(nn.Square())
    self.stdestimator:add(nn.SpatialZeroPadding(padW, padW, padH, padH))
    if kdim == 2 then
-      self.stdestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                     self.kernel:size(2), self.kernel:size(1)))
+      self.stdestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, self.kernel:size(2), self.kernel:size(1)))
    else
-      self.stdestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                     self.kernel:size(1), 1))
-      self.stdestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                     1, self.kernel:size(1)))
+      self.stdestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane), self.kernel:size(1), 1))
+      self.stdestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, 1, self.kernel:size(1)))
    end
-   self.stdestimator:add(nn.Sum(1))
    self.stdestimator:add(nn.Replicate(self.nInputPlane))
    self.stdestimator:add(nn.Sqrt())
 
@@ -61,8 +53,8 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
    if kdim == 2 then
       self.kernel:div(self.kernel:sum() * self.nInputPlane)
       for i = 1,self.nInputPlane do 
-         self.meanestimator.modules[2].weight[i] = self.kernel
-         self.stdestimator.modules[3].weight[i] = self.kernel
+         self.meanestimator.modules[2].weight[1][i] = self.kernel
+         self.stdestimator.modules[3].weight[1][i] = self.kernel
       end
       self.meanestimator.modules[2].bias:zero()
       self.stdestimator.modules[3].bias:zero()
@@ -70,9 +62,9 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
       self.kernel:div(self.kernel:sum() * math.sqrt(self.nInputPlane))
       for i = 1,self.nInputPlane do 
          self.meanestimator.modules[2].weight[i]:copy(self.kernel)
-         self.meanestimator.modules[3].weight[i]:copy(self.kernel)
+         self.meanestimator.modules[3].weight[1][i]:copy(self.kernel)
          self.stdestimator.modules[3].weight[i]:copy(self.kernel)
-         self.stdestimator.modules[4].weight[i]:copy(self.kernel)
+         self.stdestimator.modules[4].weight[1][i]:copy(self.kernel)
       end
       self.meanestimator.modules[2].bias:zero()
       self.meanestimator.modules[3].bias:zero()

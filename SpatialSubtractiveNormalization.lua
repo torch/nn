@@ -30,27 +30,23 @@ function SpatialSubtractiveNormalization:__init(nInputPlane, kernel)
    self.meanestimator = nn.Sequential()
    self.meanestimator:add(nn.SpatialZeroPadding(padW, padW, padH, padH))
    if kdim == 2 then
-      self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                      self.kernel:size(2), self.kernel:size(1)))
+      self.meanestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, self.kernel:size(2), self.kernel:size(1)))
    else
-      self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                      self.kernel:size(1), 1))
-      self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane),
-                                                      1, self.kernel:size(1)))
+      self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane), self.kernel:size(1), 1))
+      self.meanestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, 1, self.kernel:size(1)))
    end
-   self.meanestimator:add(nn.Sum(1))
    self.meanestimator:add(nn.Replicate(self.nInputPlane))
 
    -- set kernel and bias
    if kdim == 2 then
       for i = 1,self.nInputPlane do 
-         self.meanestimator.modules[2].weight[i] = self.kernel
+         self.meanestimator.modules[2].weight[1][i] = self.kernel
       end
       self.meanestimator.modules[2].bias:zero()
    else
       for i = 1,self.nInputPlane do 
          self.meanestimator.modules[2].weight[i]:copy(self.kernel)
-         self.meanestimator.modules[3].weight[i]:copy(self.kernel)
+         self.meanestimator.modules[3].weight[1][i]:copy(self.kernel)
       end
       self.meanestimator.modules[2].bias:zero()
       self.meanestimator.modules[3].bias:zero()
