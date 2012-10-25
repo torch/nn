@@ -26,7 +26,7 @@ end
 function Reshape:updateOutput(input)
    input = input:contiguous()
    local nelement = input:nElement()
-   if nelement == self.nelement then
+   if nelement == self.nelement and input:size(1) ~= 1 then
       self.output:set(input):resize(self.size)
    else
       self.batchsize[1] = input:size(1)
