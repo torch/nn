@@ -12,25 +12,25 @@ function SpatialLPPooling:__init(nInputPlane, pnorm, kW, kH, dW, dH)
    self.dH = dH
 
    self.nInputPlane = nInputPlane
-   self.learnKernel = learnKernel
 
    if pnorm == 2 then
       self:add(nn.Square())
    else
       self:add(nn.Power(pnorm))
    end
-   self:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(nInputPlane), kW, kH, dW, dH))
+   self:add(nn.SpatialSubSampling(nInputPlane, kW, kH, dW, dH))
    if pnorm == 2 then
-      self:add(nn.Sqrt(1e-7))
+      self:add(nn.Sqrt())
    else
       self:add(nn.Power(1/pnorm))
    end
 
    self:get(2).bias:zero()
-   self:get(2).weight:fill(1/(kW*kH))
+   self:get(2).weight:fill(1)
 end
 
--- we have to override some stuff to avoid nonsense happening
+-- the module is a Sequential: by default, it'll try to learn the parameters
+-- of the sub sampler: we avoid that by redefining its methods.
 function SpatialLPPooling:reset()
 end
 
