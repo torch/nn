@@ -110,22 +110,18 @@ end
 function SpatialConvolutionMap:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
-      self.weight:apply(function()
-			   return torch.uniform(-stdv, stdv)
-			end)
-      self.bias:apply(function()
-			 return torch.uniform(-stdv, stdv)
-		      end)
+      self.weight:uniform(-stdv, stdv)
+      self.bias:uniform(-stdv, stdv)
    else
       local ninp = torch.Tensor(self.nOutputPlane):zero()
       for i=1,self.connTable:size(1) do ninp[self.connTable[i][2]] =  ninp[self.connTable[i][2]]+1 end
       for k=1,self.connTable:size(1) do
-	 stdv = 1/math.sqrt(self.kW*self.kH*ninp[self.connTable[k][2]])
-	 self.weight:select(1,k):apply(function() return torch.uniform(-stdv,stdv) end)
+         stdv = 1/math.sqrt(self.kW*self.kH*ninp[self.connTable[k][2]])
+         self.weight:select(1,k):uniform(-stdv,stdv)
       end
       for k=1,self.bias:size(1) do
-	 stdv = 1/math.sqrt(self.kW*self.kH*ninp[k])
-	 self.bias[k] = torch.uniform(-stdv,stdv)
+         stdv = 1/math.sqrt(self.kW*self.kH*ninp[k])
+         self.bias[k] = torch.uniform(-stdv,stdv)
       end
    end
 end

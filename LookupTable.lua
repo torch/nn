@@ -29,9 +29,7 @@ end
 
 function LookupTable:reset(stdv)
    stdv = stdv or 1
-   self.weight:apply(function()
-                        return torch.normal(0, stdv)
-                     end)
+   self.weight:normal(0, stdv)
 end
 
 function LookupTable:updateOutput(input)

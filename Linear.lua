@@ -17,15 +17,8 @@ function Linear:reset(stdv)
    else
       stdv = 1./math.sqrt(self.weight:size(2))
    end
-
-   -- we do this so the initialization is exactly
-   -- the same than in previous torch versions
-   for i=1,self.weight:size(1) do
-      self.weight:select(1, i):apply(function()
-                                        return torch.uniform(-stdv, stdv)
-                                     end)
-      self.bias[i] = torch.uniform(-stdv, stdv)
-   end
+   self.weight:uniform(-stdv, stdv)
+   self.bias:uniform(-stdv, stdv)
 end
 
 function Linear:updateOutput(input)

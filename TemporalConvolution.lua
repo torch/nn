@@ -24,12 +24,8 @@ function TemporalConvolution:reset(stdv)
    else
       stdv = 1/math.sqrt(self.kW*self.inputFrameSize)
    end
-   self.weight:apply(function()
-                        return torch.uniform(-stdv, stdv)
-                     end)
-   self.bias:apply(function()
-                      return torch.uniform(-stdv, stdv)
-                   end)   
+   self.weight:uniform(-stdv, stdv)
+   self.bias:uniform(-stdv, stdv)
 end
 
 function TemporalConvolution:updateOutput(input)
