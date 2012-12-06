@@ -40,10 +40,16 @@ function nn.Jacobian.backwardUpdate (module, input, param)
    local jacobian = torch.Tensor(param:nElement(),dout:nElement()):zero()
 
    -- original param
-   local origparam = param:clone()
+   local params = module:parameters()
+   local origparams = {}
+   for j=1,#params do
+      table.insert(origparams, params[j]:clone())
+   end
 
    for i=1,sdout:nElement() do
-      param:copy(origparam)
+      for j=1,#params do
+         params[j]:copy(origparams[j])
+      end
       dout:zero()
       sdout[i] = 1
       local din = module:updateGradInput(input, dout)
@@ -51,7 +57,9 @@ function nn.Jacobian.backwardUpdate (module, input, param)
       jacobian:select(2,i):copy(param)
    end
 
-   param:copy(origparam)
+   for j=1,#params do
+      params[j]:copy(origparams[j])
+   end
 
    return jacobian
 end
