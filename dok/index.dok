@@ -415,6 +415,15 @@ wrt to the learnable parameters ''{gradWeights}''.
 Custom modules should override this function if they use learnable
 parameters that are stored in tensors.
 
+==== [{flatParameters}, {flatGradParameters}] getParameters() ====
+{{anchor:nn.Module.getParameters}}
+
+This function should returns two tables. One for the flattened learnable
+parameters ''{flatParameters}'' and another for the gradients of the energy
+wrt to the learnable parameters ''{flatGradParameters}''.
+
+Custom moduels should not override this function. They should instead override [[#nn.Module.getParameters|parameters(...)]] which is, in turn, called by the present function.
+
 =====  Containers =====
 {{anchor:nn.Containers}}
 
