@@ -1,16 +1,17 @@
 #ifndef TH_GENERIC_FILE
-#define TH_GENERIC_FILE "generic/SpatialConvolutionMap.c"
+#define TH_GENERIC_FILE "generic/SpatialFullConvolutionMap.c"
 #else
 
-static int nn_(SpatialConvolutionMap_updateOutput)(lua_State *L)
+static int nn_(SpatialFullConvolutionMap_updateOutput)(lua_State *L)
 {
- THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
+  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   int kW = luaT_getfieldcheckint(L, 1, "kW");
   int kH = luaT_getfieldcheckint(L, 1, "kH");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
   int nInputPlane = luaT_getfieldcheckint(L, 1, "nInputPlane");
   int nOutputPlane = luaT_getfieldcheckint(L, 1, "nOutputPlane");
+
 
   THTensor *connTable = luaT_getfieldcheckudata(L, 1, "connTable", torch_Tensor);
   THTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
@@ -19,11 +20,11 @@ static int nn_(SpatialConvolutionMap_updateOutput)(lua_State *L)
 
   luaL_argcheck(L, input->nDimension == 3, 2, "3D tensor expected");
   luaL_argcheck(L, input->size[0] >= nInputPlane, 2, "invalid number of input planes");
-  luaL_argcheck(L, input->size[2] >= kW && input->size[1] >= kH, 2, "input image smaller than kernel size");
+
 
   THTensor_(resize3d)(output, nOutputPlane,
-                      (input->size[1] - kH) / dH + 1,
-                      (input->size[2] - kW) / dW + 1);
+                      (input->size[1] - 1) * dH + kH,
+                      (input->size[2] - 1) * dW + kW);
 
   // contiguous
   input = THTensor_(newContiguous)(input);
@@ -63,11 +64,11 @@ static int nn_(SpatialConvolutionMap_updateOutput)(lua_State *L)
 
       if (o == p)
         {
-          THTensor_(validXCorr2Dptr)(output_data + o*output_w*output_h,
-                                  1.0,
-                                  input_data + i*input_w*input_h, input_h, input_w,
-                                  weight_data + k*weight_w*weight_h, weight_h, weight_w,
-                                  dH, dW);
+          THTensor_(fullConv2Dptr)(output_data + o*output_w*output_h,
+				   1.0,
+				   input_data + i*input_w*input_h, input_h, input_w,
+				   weight_data + k*weight_w*weight_h, weight_h, weight_w,
+				   dH, dW);
         }
     }
   }
@@ -79,7 +80,7 @@ static int nn_(SpatialConvolutionMap_updateOutput)(lua_State *L)
   return 1;
 }
 
-static int nn_(SpatialConvolutionMap_updateGradInput)(lua_State *L)
+static int nn_(SpatialFullConvolutionMap_updateGradInput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
@@ -127,11 +128,11 @@ static int nn_(SpatialConvolutionMap_updateGradInput)(lua_State *L)
           if (i == p)
             {
               // gradient to input
-              THTensor_(fullConv2Dptr)(gradInput_data + i*input_w*input_h,
-                                    1.0,
-                                    gradOutput_data + o*output_w*output_h,  output_h,  output_w,
-                                    weight_data + k*weight_w*weight_h, weight_h, weight_w,
-                                    dH, dW);
+              THTensor_(validXCorr2Dptr)(gradInput_data + i*input_w*input_h,
+					 1.0,
+					 gradOutput_data + o*output_w*output_h,  output_h,  output_w,
+					 weight_data + k*weight_w*weight_h, weight_h, weight_w,
+					 dH, dW);
             }
         }
     }
@@ -143,7 +144,7 @@ static int nn_(SpatialConvolutionMap_updateGradInput)(lua_State *L)
   return 1;
 }
 
-static int nn_(SpatialConvolutionMap_accGradParameters)(lua_State *L)
+static int nn_(SpatialFullConvolutionMap_accGradParameters)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
@@ -196,8 +197,8 @@ static int nn_(SpatialConvolutionMap_accGradParameters)(lua_State *L)
       // gradient to kernel
       THTensor_(validXCorr2DRevptr)(gradWeight_data + k*weight_w*weight_h,
                                  scale,
-                                 input_data + i*input_w*input_h, input_h, input_w,
                                  gradOutput_data + o*output_w*output_h, output_h, output_w,
+                                 input_data + i*input_w*input_h, input_h, input_w,
                                  dH, dW);
     }
 
@@ -207,17 +208,17 @@ static int nn_(SpatialConvolutionMap_accGradParameters)(lua_State *L)
   return 0;
 }
 
-static const struct luaL_Reg nn_(SpatialConvolutionMap__) [] = {
-  {"SpatialConvolutionMap_updateOutput", nn_(SpatialConvolutionMap_updateOutput)},
-  {"SpatialConvolutionMap_updateGradInput", nn_(SpatialConvolutionMap_updateGradInput)},
-  {"SpatialConvolutionMap_accGradParameters", nn_(SpatialConvolutionMap_accGradParameters)},
+static const struct luaL_Reg nn_(SpatialFullConvolutionMapStuff__) [] = {
+  {"SpatialFullConvolutionMap_updateOutput", nn_(SpatialFullConvolutionMap_updateOutput)},
+  {"SpatialFullConvolutionMap_updateGradInput", nn_(SpatialFullConvolutionMap_updateGradInput)},
+  {"SpatialFullConvolutionMap_accGradParameters", nn_(SpatialFullConvolutionMap_accGradParameters)},
   {NULL, NULL}
 };
 
-static void nn_(SpatialConvolutionMap_init)(lua_State *L)
+static void nn_(SpatialFullConvolutionMap_init)(lua_State *L)
 {
   luaT_pushmetatable(L, torch_Tensor);
-  luaT_registeratname(L, nn_(SpatialConvolutionMap__), "nn");
+  luaT_registeratname(L, nn_(SpatialFullConvolutionMapStuff__), "nn");
   lua_pop(L,1);
 }
 

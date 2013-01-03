@@ -74,6 +74,12 @@
 #include "generic/SpatialConvolution.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/SpatialFullConvolution.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SpatialFullConvolutionMap.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/SpatialConvolutionMM.c"
 #include "THGenerateFloatTypes.h"
 
@@ -93,6 +99,9 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/MultiLabelMarginCriterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/L1Cost.c"
 #include "THGenerateFloatTypes.h"
 
 DLL_EXPORT int luaopen_libnn(lua_State *L)
@@ -124,6 +133,8 @@ DLL_EXPORT int luaopen_libnn(lua_State *L)
   nn_FloatTemporalSubSampling_init(L);
   nn_FloatTemporalMaxPooling_init(L);
   nn_FloatSpatialConvolution_init(L);
+  nn_FloatSpatialFullConvolution_init(L);
+  nn_FloatSpatialFullConvolutionMap_init(L);
   nn_FloatSpatialConvolutionMM_init(L);
   nn_FloatSpatialConvolutionMap_init(L);
   nn_FloatSpatialSubSampling_init(L);
@@ -131,6 +142,7 @@ DLL_EXPORT int luaopen_libnn(lua_State *L)
   nn_FloatVolumetricConvolution_init(L);
   nn_FloatMultiMarginCriterion_init(L);
   nn_FloatMultiLabelMarginCriterion_init(L);
+  nn_FloatL1Cost_init(L);
 
   nn_DoubleMin_init(L);
   nn_DoubleMax_init(L);
@@ -155,6 +167,8 @@ DLL_EXPORT int luaopen_libnn(lua_State *L)
   nn_DoubleTemporalSubSampling_init(L);
   nn_DoubleTemporalMaxPooling_init(L);
   nn_DoubleSpatialConvolution_init(L);
+  nn_DoubleSpatialFullConvolution_init(L);
+  nn_DoubleSpatialFullConvolutionMap_init(L);
   nn_DoubleSpatialConvolutionMM_init(L);
   nn_DoubleSpatialConvolutionMap_init(L);
   nn_DoubleSpatialSubSampling_init(L);
@@ -162,6 +176,7 @@ DLL_EXPORT int luaopen_libnn(lua_State *L)
   nn_DoubleVolumetricConvolution_init(L);
   nn_DoubleMultiMarginCriterion_init(L);
   nn_DoubleMultiLabelMarginCriterion_init(L);
+  nn_DoubleL1Cost_init(L);
 
   return 1;
 }
