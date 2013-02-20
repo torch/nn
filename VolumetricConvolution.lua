@@ -30,12 +30,17 @@ function VolumetricConvolution:reset(stdv)
    else
       stdv = 1/math.sqrt(self.kT*self.kW*self.kH*self.nInputPlane)
    end
-   self.weight:apply(function()
-                        return torch.uniform(-stdv, stdv)
-                     end)
-   self.bias:apply(function()
-                      return torch.uniform(-stdv, stdv)
-                   end)   
+   if nn.oldSeed then
+      self.weight:apply(function()
+         return torch.uniform(-stdv, stdv)
+      end)
+      self.bias:apply(function()
+         return torch.uniform(-stdv, stdv)
+      end)
+   else
+      self.weight:uniform(-stdv, stdv)
+      self.bias:uniform(-stdv, stdv)
+   end
 end
 
 function VolumetricConvolution:updateOutput(input)

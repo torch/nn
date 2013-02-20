@@ -20,11 +20,14 @@ function Euclidean:reset(stdv)
    else
       stdv = 1./math.sqrt(self.weight:size(1))
    end
-
-   for i=1,self.weight:size(2) do
-      self.weight:select(2, i):apply(function()
-                                        return torch.uniform(-stdv, stdv)
-                                     end)
+   if nn.oldSeed then
+      for i=1,self.weight:size(2) do
+         self.weight:select(2, i):apply(function()
+            return torch.uniform(-stdv, stdv)
+         end)
+      end
+   else
+      self.weight:uniform(-stdv, stdv)
    end
 end
 

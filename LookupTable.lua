@@ -29,9 +29,13 @@ end
 
 function LookupTable:reset(stdv)
    stdv = stdv or 1
-   self.weight:apply(function()
-                        return torch.normal(0, stdv)
-                     end)
+   if nn.oldSeed then
+      self.weight:apply(function()
+         return torch.normal(0, stdv)
+      end)
+   else
+      self.weight:normal(0, stdv)
+   end
 end
 
 function LookupTable:updateOutput(input)

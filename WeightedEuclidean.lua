@@ -30,13 +30,15 @@ function WeightedEuclidean:reset(stdv)
    else
       stdv = 1./math.sqrt(self.templates:size(1))
    end
-
-   for i=1,self.templates:size(2) do
-      self.templates:select(2, i):apply(function()
-                                        return torch.uniform(-stdv, stdv)
-                                     end)
+   if nn.oldSeed then
+      for i=1,self.templates:size(2) do
+         self.templates:select(2, i):apply(function()
+            return torch.uniform(-stdv, stdv)
+         end)
+      end
+   else
+      self.templates:uniform(-stdv, stdv)
    end
-
    self.diagCov:fill(1)
 end
 
