@@ -1,8 +1,8 @@
 local Copy, parent = torch.class('nn.Copy', 'nn.Module')
 
 function Copy:__init(intype, outtype)
-   intype = intype or torch.getmetatable(torch.Tensor.__typename)
-   outtype = outtype or torch.getmetatable(torch.Tensor.__typename)
+   intype = intype or torch.Tensor.__typename
+   outtype = outtype or torch.Tensor.__typename
 
    parent.__init(self)
    self.gradInput = torch.getmetatable(intype).new()
