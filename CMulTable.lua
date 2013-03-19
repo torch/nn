@@ -14,7 +14,7 @@ function CMulTable:updateOutput(input)
    return self.output
 end
 
-function CMulTable:updateGradInput(input, gradOutput)
+function CMulTable:updateGradInput_efficient(input, gradOutput)
    self.tout = self.tout or input[1].new()
    self.tout:resizeAs(self.output)
    for i=1,#input do
@@ -25,3 +25,17 @@ function CMulTable:updateGradInput(input, gradOutput)
    end
    return self.gradInput
 end
+
+function CMulTable:updateGradInput(input, gradOutput)
+   for i=1,#input do
+      self.gradInput[i] = self.gradInput[i] or input[1].new()
+      self.gradInput[i]:resizeAs(input[i]):copy(gradOutput)
+      for j=1,#input do
+         if i~=j then
+            self.gradInput[i]:cmul(input[j])
+         end
+      end
+   end
+   return self.gradInput
+end
+
