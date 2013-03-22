@@ -14,8 +14,10 @@ function SpatialConvolutionCUDA:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH
    self.dH = dH
 
    self.weight = torch.Tensor(nInputPlane, kH, kW, nOutputPlane)
+   self.bias = torch.Tensor(nOutputPlane)
    self.gradWeight = torch.Tensor(nInputPlane, kH, kW, nOutputPlane)
-   
+   self.gradBias = torch.Tensor(nOutputPlane)
+  
    self:reset()
 end
 
@@ -26,25 +28,36 @@ function SpatialConvolutionCUDA:reset(stdv)
       stdv = 1/math.sqrt(self.kW*self.kH*self.nInputPlane)
    end
    self.weight:uniform(-stdv, stdv)
+   self.bias:uniform(-stdv, stdv)
 end
 
 function SpatialConvolutionCUDA:updateOutput(input)
-   return input.nn.SpatialConvolutionCUDA_updateOutput(self, input)
+   input.nn.SpatialConvolutionCUDA_updateOutput(self, input)
+   for i = 1,self.nOutputPlane do
+      self.output[i]:add(self.bias[i])
+   end
+   return self.output
 end
 
 function SpatialConvolutionCUDA:updateGradInput(input, gradOutput)
-   return input.nn.SpatialConvolutionCUDA_updateGradInput(self, input, gradOutput)
+   input.nn.SpatialConvolutionCUDA_updateGradInput(self, input, gradOutput)
+   return self.gradInput
 end
 
 function SpatialConvolutionCUDA:accGradParameters(input, gradOutput, scale)
-   return input.nn.SpatialConvolutionCUDA_accGradParameters(self, input, gradOutput, scale)
+   input.nn.SpatialConvolutionCUDA_accGradParameters(self, input, gradOutput, scale)
+   for i = 1,self.nOutputPlane do
+      self.gradBias:narrow(1,i,1):add(scale * gradOutput[i]:sum() )
+   end
 end
 
+-- this routine copies weight+bias from a regular SpatialConvolution module
 function SpatialConvolutionCUDA:copy(sc)
    local weight = sc.weight:clone()
    weight:resize(sc.nOutputPlane, sc.nInputPlane * sc.kH * sc.kW)
    weight = weight:t():contiguous()
    weight:resize(sc.nInputPlane, sc.kH, sc.kW, sc.nOutputPlane)
    self.weight:copy(weight)
+   self.bias:copy(sc.bias)
 end
 
