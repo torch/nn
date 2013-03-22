@@ -10,8 +10,6 @@ function SpatialMaxPoolingCUDA:__init(kW, kH, dW, dH)
    self.kH = kH
    self.dW = dW
    self.dH = dH
-
-   self.indices = torch.Tensor()
 end
 
 function SpatialMaxPoolingCUDA:updateOutput(input)
