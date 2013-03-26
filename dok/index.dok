@@ -2341,6 +2341,7 @@ m=nn.CAddTable()
  6
  6
 [torch.DoubleTensor of dimension 5]
+</file>
 
 
 ==== CSubTable ====
