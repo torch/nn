@@ -7,7 +7,7 @@ function CMul:__init(inputSize)
    self.gradWeight = torch.Tensor(inputSize)
    
    -- state
-   self.gradInput:resize(inputSize)
+   -- self.gradInput:resize(inputSize)
    self.output:resize(inputSize) 
 
    self:reset()
@@ -25,6 +25,7 @@ end
 
 function CMul:updateGradInput(input, gradOutput)
    if self.gradInput then
+      self.gradInput:resizeAs(input)
       self.gradInput:zero()
       self.gradInput:addcmul(1, self.weight, gradOutput)
       return self.gradInput
