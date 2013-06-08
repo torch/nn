@@ -1,6 +1,6 @@
 local SpatialConvolutionCUDA, parent = torch.class('nn.SpatialConvolutionCUDA', 'nn.Module')
 
-function SpatialConvolutionCUDA:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH)
+function SpatialConvolutionCUDA:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padding)
    parent.__init(self)
 
    dW = dW or 1
@@ -12,6 +12,7 @@ function SpatialConvolutionCUDA:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH
    self.kH = kH
    self.dW = dW
    self.dH = dH
+   self.padding = padding or 0
 
    self.weight = torch.Tensor(nInputPlane, kH, kW, nOutputPlane)
    self.bias = torch.Tensor(nOutputPlane)
