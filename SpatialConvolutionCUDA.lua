@@ -1,10 +1,11 @@
 local SpatialConvolutionCUDA, parent = torch.class('nn.SpatialConvolutionCUDA', 'nn.Module')
 
-function SpatialConvolutionCUDA:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padding)
+function SpatialConvolutionCUDA:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padding, partialSum)
    parent.__init(self)
 
    dW = dW or 1
    dH = dH or 1
+   partialSum = partialSum or 0
 
    self.nInputPlane = nInputPlane
    self.nOutputPlane = nOutputPlane
@@ -13,9 +14,11 @@ function SpatialConvolutionCUDA:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH
    self.dW = dW
    self.dH = dH
    self.padding = padding or 0
+   self.partialSum = partialSum
 
    self.weight = torch.Tensor(nInputPlane, kH, kW, nOutputPlane)
    self.bias = torch.Tensor(nOutputPlane)
+   self.gradWeightPartial = torch.Tensor(nInputPlane, kH, kW, nOutputPlane)
    self.gradWeight = torch.Tensor(nInputPlane, kH, kW, nOutputPlane)
    self.gradBias = torch.Tensor(nOutputPlane)
   
@@ -48,6 +51,9 @@ end
 function SpatialConvolutionCUDA:accGradParameters(input, gradOutput, scale)
    scale = scale or 1
    input.nn.SpatialConvolutionCUDA_accGradParameters(self, input, gradOutput, scale)
+   if self.partialSum > 0 then
+      self.gradWeight:add(self.gradWeightPartial:sum(1):resizeAs(self.gradWeight))
+   end
    for i = 1,self.nOutputPlane do
       self.gradBias:narrow(1,i,1):add(scale * gradOutput[i]:sum() )
    end
