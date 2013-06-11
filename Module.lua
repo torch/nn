@@ -25,9 +25,10 @@ function Module:forward(input)
    return self:updateOutput(input)
 end
 
-function Module:backward(input, gradOutput)
+function Module:backward(input, gradOutput, scale)
+   scale = scale or 1
    self:updateGradInput(input, gradOutput)
-   self:accGradParameters(input, gradOutput)
+   self:accGradParameters(input, gradOutput, scale)
    return self.gradInput
 end
 
