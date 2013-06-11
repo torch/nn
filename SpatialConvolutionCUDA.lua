@@ -46,6 +46,7 @@ function SpatialConvolutionCUDA:updateGradInput(input, gradOutput)
 end
 
 function SpatialConvolutionCUDA:accGradParameters(input, gradOutput, scale)
+   scale = scale or 1
    input.nn.SpatialConvolutionCUDA_accGradParameters(self, input, gradOutput, scale)
    for i = 1,self.nOutputPlane do
       self.gradBias:narrow(1,i,1):add(scale * gradOutput[i]:sum() )
