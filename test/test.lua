@@ -340,21 +340,21 @@ function nntest.WeightedEuclidean()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
-function nntest.WeightedMSECriterion()
-   local from  = math.random(100,200)
-   local input = torch.Tensor(from):zero()
-   local target = torch.randn(from)
-   local weight = torch.randn(from)
-   local cri = nn.WeightedMSECriterion(weight)
-   local module = nn.CriterionModule(cri,target)
+--function nntest.WeightedMSECriterion()
+--   local from  = math.random(100,200)
+--   local input = torch.Tensor(from):zero()
+--   local target = torch.randn(from)
+--   local weight = torch.randn(from)
+--   local cri = nn.WeightedMSECriterion(weight)
+--   local module = nn.CriterionModule(cri,target)
 
-   local err = jac.testJacobian(module, input)
-   mytester:assertlt(err, precision, 'error on state ')
+-- local err = jac.testJacobian(module, input)
+--   mytester:assertlt(err, precision, 'error on state ')
    
-   local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
-end
+--   local ferr, berr = jac.testIO(module, input)
+--   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+--   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+--end
 
 function nntest.LogSigmoid()
    local ini = math.random(10,20)
