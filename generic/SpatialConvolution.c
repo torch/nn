@@ -12,70 +12,79 @@ static int nn_(SpatialConvolution_updateOutput)(lua_State *L)
   THTensor *bias = luaT_getfieldcheckudata(L, 1, "bias", torch_Tensor);
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
-  luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
-
   int dimw = 2;
   int dimh = 1;
+
+  luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
+
   if (input->nDimension == 4) {
     dimw++;
     dimh++;
   }
 
-  long nOutputPlane = weight->size[0];
-  long kW           = weight->size[3];
-  long kH           = weight->size[2];
-  long inputWidth   = input->size[dimw];
-  long inputHeight  = input->size[dimh];
-  long outputWidth  = (inputWidth - kW) / dW + 1;
-  long outputHeight = (inputHeight - kH) / dH + 1;
-
-  if (input->nDimension == 3)
   {
-    THTensor_(resize3d)(output, nOutputPlane, outputHeight, outputWidth);
-    /* add bias */
-    long i;
-    /*THTensor *outn = THTensor_(new)();*/
-    real* bias_data = THTensor_(data)(bias);
-    real* output_data = THTensor_(data)(output);
-#pragma omp parallel for private(i)
-    for (i=0; i<bias->size[0]; i++)
-    {
-      /*THTensor_(select)(outn,output,0,i);*/
-      /*TH_TENSOR_APPLY(real,outn, *outn_data = bias_data[i];);*/
-      real *ptr_output = output_data + i*outputWidth*outputHeight;
-      long j;
-      for(j = 0; j < outputWidth*outputHeight; j++)
-      ptr_output[j] = bias_data[i];
-    }
-    /*THTensor_(free)(outn);*/
-    
-    /* do convolutions */
-    THTensor_(conv2Dmv)(output, 1.0, 1.0, input, weight, dH, dW, "V","X");
-  }
-  else
-  {
-    THTensor_(resize4d)(output, input->size[0], nOutputPlane, outputHeight, outputWidth);
+    long nOutputPlane = weight->size[0];
+    long kW           = weight->size[3];
+    long kH           = weight->size[2];
+    long inputWidth   = input->size[dimw];
+    long inputHeight  = input->size[dimh];
+    long outputWidth  = (inputWidth - kW) / dW + 1;
+    long outputHeight = (inputHeight - kH) / dH + 1;
 
-    real* bias_data = THTensor_(data)(bias);
-    real* output_data = THTensor_(data)(output);
-
-    long p;
-#pragma omp parallel for private(p)
-    for (p=0; p<input->size[0]; p++)
+    if (input->nDimension == 3)
     {
-      /* BIAS */
       long i;
+      real* bias_data;
+      real* output_data;
+
+      THTensor_(resize3d)(output, nOutputPlane, outputHeight, outputWidth);
+      /* add bias */
+      bias_data = THTensor_(data)(bias);
+      output_data = THTensor_(data)(output);
+
+#pragma omp parallel for private(i)
       for (i=0; i<bias->size[0]; i++)
       {
-        real *ptr_output = output_data + p*nOutputPlane*outputWidth*outputHeight + i*outputWidth*outputHeight;
+        /*THTensor_(select)(outn,output,0,i);*/
+        /*TH_TENSOR_APPLY(real,outn, *outn_data = bias_data[i];);*/
+        real *ptr_output = output_data + i*outputWidth*outputHeight;
         long j;
         for(j = 0; j < outputWidth*outputHeight; j++)
           ptr_output[j] = bias_data[i];
       }
+      /*THTensor_(free)(outn);*/
+      
+      /* do convolutions */
+      THTensor_(conv2Dmv)(output, 1.0, 1.0, input, weight, dH, dW, "V","X");
     }
+    else
+    {
+      real* bias_data;
+      real* output_data; 
+      long p;
 
-    /* do convolutions */
-    THTensor_(conv2Dmm)(output, 1.0, 1.0, input, weight, dH, dW, "V","X");
+      THTensor_(resize4d)(output, input->size[0], nOutputPlane, outputHeight, outputWidth);
+      
+      bias_data = THTensor_(data)(bias);
+      output_data = THTensor_(data)(output);
+      
+#pragma omp parallel for private(p)
+      for (p=0; p<input->size[0]; p++)
+      {
+        /* BIAS */
+        long i;
+        for (i=0; i<bias->size[0]; i++)
+        {
+          real *ptr_output = output_data + p*nOutputPlane*outputWidth*outputHeight + i*outputWidth*outputHeight;
+          long j;
+          for(j = 0; j < outputWidth*outputHeight; j++)
+            ptr_output[j] = bias_data[i];
+        }
+      }
+      
+      /* do convolutions */
+      THTensor_(conv2Dmm)(output, 1.0, 1.0, input, weight, dH, dW, "V","X");
+    }
   }
   return 1;
 }
@@ -92,10 +101,12 @@ static int nn_(SpatialConvolution_updateGradInput)(lua_State *L)
   THTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
+  THTensor *tweight;
+
   THArgCheck( nOutputPlane == gradOutput->size[input->nDimension == 4 ? 1 : 0], 1, "Number of output features is not equal to nOutputPlane" );
 
   /* gradient to input */
-  THTensor *tweight = THTensor_(newTranspose)(weight,0,1);
+  tweight = THTensor_(newTranspose)(weight,0,1);
 
   if (input->nDimension == 3)
   {
@@ -122,10 +133,14 @@ static int nn_(SpatialConvolution_accGradParameters)(lua_State *L)
   THTensor *gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_Tensor);
   THTensor *gradBias = luaT_getfieldcheckudata(L, 1, "gradBias", torch_Tensor);
 
-  THArgCheck( nOutputPlane == gradOutput->size[input->nDimension == 4 ? 1 : 0], 1, "Number of output features is not equal to nOutputPlane" );
-
   int dimw = 2;
   int dimh = 1;
+
+  real *gradBias_data;
+  real *gradOutput_data;
+  long noutSlice;
+
+  THArgCheck( nOutputPlane == gradOutput->size[input->nDimension == 4 ? 1 : 0], 1, "Number of output features is not equal to nOutputPlane" );
 
   if (input->nDimension == 4)
   {
@@ -134,9 +149,9 @@ static int nn_(SpatialConvolution_accGradParameters)(lua_State *L)
   }
 
   /* gradient to bias */
-  real *gradBias_data = THTensor_(data)(gradBias);
-  real *gradOutput_data = THTensor_(data)(gradOutput);
-  long noutSlice = gradOutput->size[dimh]*gradOutput->size[dimw];
+  gradBias_data = THTensor_(data)(gradBias);
+  gradOutput_data = THTensor_(data)(gradOutput);
+  noutSlice = gradOutput->size[dimh]*gradOutput->size[dimw];
   /*THTensor* gradOutSlice = THTensor_(new)();*/
 
   if (input->nDimension == 3)
