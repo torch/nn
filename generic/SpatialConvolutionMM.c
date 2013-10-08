@@ -61,12 +61,13 @@ static void nn_(SpatialConvolutionMM_updateOutput_frame)(THTensor *input, THTens
                                                          long nOutputPlane, long outputWidth, long outputHeight)
 {
   long i;
+  THTensor *output2d;
 
   nn_(unfolded_copy)(finput, input, kW, kH, nInputPlane, inputWidth, inputHeight, outputWidth, outputHeight);
 
-  THTensor *output2d = THTensor_(newWithStorage2d)(output->storage, output->storageOffset,
-                                                   nOutputPlane, -1,
-                                                   outputHeight*outputWidth, -1);
+  output2d = THTensor_(newWithStorage2d)(output->storage, output->storageOffset,
+                                         nOutputPlane, -1,
+                                         outputHeight*outputWidth, -1);
 
   for(i = 0; i < nOutputPlane; i++)
     THVector_(fill)(output->storage->data+output->storageOffset+output->stride[0]*i, THTensor_(get1d)(bias, i), outputHeight*outputWidth);
@@ -87,23 +88,31 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
   THTensor *bias = luaT_getfieldcheckudata(L, 1, "bias", torch_Tensor);
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
-  luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
-
   int dimf = 0;
   int dimw = 2;
   int dimh = 1;
+
+  long nInputPlane;
+  long inputWidth;
+  long inputHeight;
+  long nOutputPlane;
+  long outputWidth;
+  long outputHeight;
+
+  luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
+
   if (input->nDimension == 4) {
     dimf++;
     dimw++;
     dimh++;
   }
 
-  long nInputPlane = input->size[dimf];
-  long inputWidth   = input->size[dimw];
-  long inputHeight  = input->size[dimh];
-  long nOutputPlane = weight->size[0];
-  long outputWidth  = (inputWidth - kW) + 1;
-  long outputHeight = (inputHeight - kH) + 1;
+  nInputPlane = input->size[dimf];
+  inputWidth   = input->size[dimw];
+  inputHeight  = input->size[dimh];
+  nOutputPlane = weight->size[0];
+  outputWidth  = (inputWidth - kW) + 1;
+  outputHeight = (inputHeight - kH) + 1;
 
   if(input->nDimension == 3)
   {
@@ -126,7 +135,7 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
     THStorage_(clearFlag)(input->storage, TH_STORAGE_REFCOUNTED);
     THStorage_(clearFlag)(output->storage, TH_STORAGE_REFCOUNTED);
     THStorage_(clearFlag)(finput->storage, TH_STORAGE_REFCOUNTED);
-//    mkl_set_num_threads(1);
+
 #pragma omp parallel for private(t)
     for(t = 0; t < T; t++)
     {
@@ -147,7 +156,6 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
     THStorage_(setFlag)(output->storage, TH_STORAGE_REFCOUNTED);
     THStorage_(setFlag)(finput->storage, TH_STORAGE_REFCOUNTED);
   }
-//  mkl_set_num_threads(4);
 
   return 1;
 }
@@ -227,15 +235,15 @@ static void nn_(SpatialConvolutionMM_accGradParameters_frame)(THTensor *gradOutp
                                                               real scale)
 {
   long i;
-
+  THTensor *gradOutputPlane = THTensor_(new)();
   THTensor *gradOutput2d = THTensor_(newWithStorage2d)(gradOutput->storage, gradOutput->storageOffset,
                                                        gradOutput->size[0], -1,
                                                        gradOutput->size[1]*gradOutput->size[2], -1);
+
   THTensor_(transpose)(finput, finput, 0, 1);
   THTensor_(addmm)(gradWeight, 1, gradWeight, scale, gradOutput2d, finput);
   THTensor_(transpose)(finput, finput, 0, 1);
 
-  THTensor *gradOutputPlane = THTensor_(new)();
   for(i = 0; i < gradBias->size[0]; i++)
   {
     long k;
