@@ -30,7 +30,7 @@ static int nn_(SpatialConvolutionMap_updateOutput)(lua_State *L)
   long weight_h;
   long weight_w;
 
-  long p, k;
+  long p;
   int nweight;
 
 
@@ -66,7 +66,7 @@ static int nn_(SpatialConvolutionMap_updateOutput)(lua_State *L)
   for (p = 0; p < nOutputPlane; p++) {
     /* add bias */
     real *ptr_output = output_data + p*output_w*output_h;
-    long j;
+    long j,k;
     for(j = 0; j < output_h*output_w; j++)
       ptr_output[j] = bias_data[p];
 

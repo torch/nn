@@ -18,7 +18,7 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
   real *output_data;
   real *indices_data;
 
-  long t, x, y;
+  long t, y;
 
   luaL_argcheck(L, input->nDimension == 2, 2, "2D tensor expected");
   luaL_argcheck(L, input->size[0] >= kW, 2, "input sequence smaller than kernel size");
@@ -53,6 +53,7 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
       /* compute local max: */
       long maxindex = -1;
       real maxval = -THInf;
+      long x;
       for(x = 0; x < kW; x++)
       {
         real val = ip[x*framesize+y];
