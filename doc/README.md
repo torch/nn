@@ -535,10 +535,11 @@ for i=1,10000 do     -- Train for a few iterations
  print(err)
 end
 ```
-## Simple layers ##
 <a name="nn.simplelayers.dok"/>
-### Linear ###
+## Simple layers ##
+
 <a name="nn.Linear"/>
+### Linear ###
 
 `module` = `Linear(inputDimension,outputDimension)`
 
