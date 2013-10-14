@@ -54,3 +54,5 @@ SET(luasrc ${luasrc} test/test.lua)
 ADD_TORCH_PACKAGE(nn "${src}" "${luasrc}")
 
 TARGET_LINK_LIBRARIES(nn luaT TH)
+
+INSTALL(DIRECTORY "doc" DESTINATION "${Torch_INSTALL_LUA_PATH_SUBDIR}/nn")
