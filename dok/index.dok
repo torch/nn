@@ -1377,6 +1377,45 @@ output[i][j][k] = bias[k]
                                     * input[dW*(i-1)+s)][dH*(j-1)+t][l]
 </file>
 
+====  VolumetricConvolution ====
+{{anchor:nn.VolumetricConvolution}}
+
+<file lua>
+module = nn.VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH [, dT, dW, dH])
+</file>
+
+Applies a 3D convolution over an input image composed of several input planes. The ''input'' tensor in
+''forward(input)'' is expected to be a 4D tensor (''nInputPlane x time x height x width'').
+
+The parameters are the following:
+  * ''nInputPlane'': The number of expected input planes in the image given into ''forward()''.
+  * ''nOutputPlane'': The number of output planes the convolution layer will produce.
+  * ''kT'': The kernel size of the convolution in time
+  * ''kW'': The kernel width of the convolution
+  * ''kH'': The kernel height of the convolution
+  * ''dT'': The step of the convolution in the time dimension. Default is ''1''.
+  * ''dW'': The step of the convolution in the width dimension. Default is ''1''.
+  * ''dH'': The step of the convolution in the height dimension. Default is ''1''.
+
+Note that depending of the size of your kernel, several (of the last)
+columns or rows of the input image might be lost. It is up to the user to
+add proper padding in images.
+
+If the input image is a 4D tensor ''nInputPlane x time x height x width'', the output image size
+will be ''nOutputPlane x otime x owidth x oheight'' where
+<file lua>
+otime   = (time  - kT) / dT + 1
+owidth  = (width  - kW) / dW + 1
+oheight = (height - kH) / dH + 1 .
+</file>
+
+The parameters of the convolution can be found in ''self.weight'' (Tensor of
+size ''nOutputPlane x nInputPlane x kT x kH x kW'') and ''self.bias'' (Tensor of
+size ''nOutputPlane''). The corresponding gradients can be found in
+''self.gradWeight'' and ''self.gradBias''.
+
+</file>
+
 ====  SpatialConvolutionMap ====
 {{anchor:nn.SpatialConvolutionMap}}
 
