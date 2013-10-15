@@ -1436,6 +1436,17 @@ Applies 2D max-pooling operation in ''kWxkH'' regions by step size
 ''dWxdH'' steps. The number of output features is equal to the number of
 input planes.
 
+==== VoulmetricMaxPooling ====
+{{anchor:nn.VolumetricMaxPooling}}
+
+<file lua>
+module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH])
+</file>
+
+Applies 3D max-pooling operation in ''kTxkWxkH'' regions by step size
+''dTxdWxdH'' steps. The number of output features is equal to the number of
+input planes.
+
 ====  SpatialSubSampling ====
 {{anchor:nn.SpatialSubSampling}}
 
