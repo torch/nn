@@ -1378,6 +1378,43 @@ output[i][j][k] = bias[k]
                                     * input[dW*(i-1)+s)][dH*(j-1)+t][l]
 ```
 
+<a name="nn.VolumetricConvolution"/>
+### VolumetricConvolution ###
+
+```lua
+module = nn.VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH [, dT, dW, dH])
+```
+
+Applies a 3D convolution over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 4D tensor (`nInputPlane x time x height x width`).
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `nOutputPlane`: The number of output planes the convolution layer will produce.
+  * `kT`: The kernel size of the convolution in time
+  * `kW`: The kernel width of the convolution
+  * `kH`: The kernel height of the convolution
+  * `dT`: The step of the convolution in the time dimension. Default is `1`.
+  * `dW`: The step of the convolution in the width dimension. Default is `1`.
+  * `dH`: The step of the convolution in the height dimension. Default is `1`.
+
+Note that depending of the size of your kernel, several (of the last)
+columns or rows of the input image might be lost. It is up to the user to
+add proper padding in images.
+
+If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
+will be `nOutputPlane x otime x owidth x oheight` where
+```lua
+otime   = (time  - kT) / dT + 1
+owidth  = (width  - kW) / dW + 1
+oheight = (height - kH) / dH + 1 .
+```
+
+The parameters of the convolution can be found in `self.weight` (Tensor of
+size `nOutputPlane x nInputPlane x kT x kH x kW`) and `self.bias` (Tensor of
+size `nOutputPlane`). The corresponding gradients can be found in
+`self.gradWeight` and `self.gradBias`.
+
 <a name="nn.SpatialConvolutionMap"/>
 ### SpatialConvolutionMap ###
 
@@ -1435,6 +1472,17 @@ module = nn.SpatialMaxPooling(kW, kH [, dW, dH])
 
 Applies 2D max-pooling operation in `kWxkH` regions by step size
 `dWxdH` steps. The number of output features is equal to the number of
+input planes.
+
+<a name="nn.VolumetricMaxPooling"/>
+### VolumetricMaxPooling ###
+
+```lua
+module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH])
+```
+
+Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
+`dTxdWxdH` steps. The number of output features is equal to the number of
 input planes.
 
 <a name="nn.SpatialSubSampling"/>
@@ -2871,8 +2919,8 @@ for example, as long as required operators/methods are implemented.
 
 `StochasticGradient` has several field which have an impact on a call to [train()](#nn.StochasticGradientTrain).
 
-  * `learningRate`: This is the learning rate used during training. The update of the parameters will be ''parameters = parameters - learningRate * parameters_gradient`. Default value is `0.01''.
-  * `learningRateDecay`: The learning rate decay. If non-zero, the learning rate (note: the field learningRate will not change value) will be computed after each iteration (pass over the dataset) with: ''current_learning_rate =learningRate / (1 + iteration * learningRateDecay)''
+  * `learningRate`: This is the learning rate used during training. The update of the parameters will be `parameters = parameters - learningRate * parameters_gradient`. Default value is `0.01`.
+  * `learningRateDecay`: The learning rate decay. If non-zero, the learning rate (note: the field learningRate will not change value) will be computed after each iteration (pass over the dataset) with: `current_learning_rate =learningRate / (1 + iteration * learningRateDecay)`
   * `maxIteration`: The maximum number of iteration (passes over the dataset). Default is `25`.
   * `shuffleIndices`: Boolean which says if the examples will be randomly sampled or not. Default is `true`. If `false`, the examples will be taken in the order of the dataset.
   * `hookExample`: A possible hook function which will be called (if non-nil) during training after each example forwarded and backwarded through the network. The function takes `(self, example)` as parameters. Default is `nil`.
