@@ -5,7 +5,7 @@ function PairwiseDistance:__init(p)
 
    -- state
    self.gradInput = {torch.Tensor(), torch.Tensor()}
-   self.output = torch.Tensor()
+   self.output = torch.Tensor(1)
    self.norm=p
 end 
   
