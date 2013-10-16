@@ -30,10 +30,11 @@ static void nn_(VolumetricMaxPooling_updateOutput_frame)(real *input_p, real *ou
 	  
 	  /* compute local max: */
 	  real maxval = -THInf;
+	  int x,y,z;
+
 	  *indzp = -1;
 	  *indyp = -1;
 	  *indxp = -1;
-	  int x,y,z;
 	  for(z=0; z < kT; z++)
 	  {
 	    for(y = 0; y < kH; y++)
