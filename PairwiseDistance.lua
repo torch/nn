@@ -20,6 +20,10 @@ function PairwiseDistance:updateOutput(input)
       --local diff = torch.add(input[1], -1, input[2])
       diff:add(input[1], -1, input[2])
 
+      if math.mod(self.norm, 2) == 1 then
+         diff:abs()
+      end
+
       self.output:resize(input[1]:size(1))
       self.output:zero()
       self.output:add(diff:pow(self.norm):sum(2))
