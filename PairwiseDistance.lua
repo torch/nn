@@ -19,10 +19,7 @@ function PairwiseDistance:updateOutput(input)
       local diff = self.diff:zero()
       --local diff = torch.add(input[1], -1, input[2])
       diff:add(input[1], -1, input[2])
-
-      if math.mod(self.norm, 2) == 1 then
-         diff:abs()
-      end
+      diff:abs()
 
       self.output:resize(input[1]:size(1))
       self.output:zero()
@@ -47,6 +44,25 @@ function PairwiseDistance:updateGradInput(input, gradOutput)
    self.gradInput[1]:add(-1, input[2])
    if self.norm==1 then
      self.gradInput[1]:apply(mathsign)
+   else
+     -- See here for derivative of p-norm:
+     -- d/dx_k(||x||_p) = (x_k * abs(x_k)^(p-2)) / (||x||_p)^(p-1)
+     -- http://en.wikipedia.org/wiki/Norm_(mathematics)
+     self.gradInput[1]:cmul(torch.abs(self.gradInput[1]):pow(self.norm-2))
+     if input[1]:dim() == 1 then
+        -- Avoid the expand for dimension 1
+        self.gradInput[1]:mul(math.pow(self.output[1],-(self.norm-1)))
+     elseif input[1]:dim() == 2 then
+        -- This is a little messy...  But it does work
+        self.outExpand = self.outExpand or self.output.new()
+        self.outExpand:resize(self.output:size(1), 1)
+        self.outExpand:copy(self.output)
+        self.outExpand:pow(-(self.norm-1))
+        self.gradInput[1]:cmul(self.outExpand:expand(self.gradInput[1]:size(1),
+           self.gradInput[1]:size(2)))
+     else
+        error('input must be vector or matrix')
+     end
    end
    if input[1]:dim() == 1 then
       self.gradInput[1]:mul(gradOutput[1])
