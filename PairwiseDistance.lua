@@ -48,7 +48,7 @@ function PairwiseDistance:updateGradInput(input, gradOutput)
      -- See here for derivative of p-norm:
      -- d/dx_k(||x||_p) = (x_k * abs(x_k)^(p-2)) / (||x||_p)^(p-1)
      -- http://en.wikipedia.org/wiki/Norm_(mathematics)
-     self.gradInput[1]:cmul(torch.abs(self.gradInput[1]):pow(self.norm-2))
+     self.gradInput[1]:cmul(self.gradInput[1]:clone():abs():pow(self.norm-2))
      if input[1]:dim() == 1 then
         -- Avoid the expand for dimension 1
         self.gradInput[1]:mul(math.pow(self.output[1],-(self.norm-1)))
