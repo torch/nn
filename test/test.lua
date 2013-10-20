@@ -1536,7 +1536,7 @@ function nntest.PairwiseDistance()
    -- I assume both SplitTable and Sequential do not have bugs, otherwise this
    -- test will break.
    for p = 1,4 do  -- test a few Lp norms
-      -- TEST CASE 1: non-batch inputs
+      -- TEST CASE 1: non-batch input, same code path but includes a resize
       local ini = math.random(10,20)
       local input = torch.Tensor(2, ini):zero()
       local module = nn.Sequential()
@@ -1550,7 +1550,8 @@ function nntest.PairwiseDistance()
       mytester:asserteq(ferr, 0, torch.typename(module)..' - i/o forward err ')
       mytester:asserteq(berr, 0, torch.typename(module)..' - i/o backward err ')
 
-      -- Also check that the forward prop result is correct
+      -- Also check that the forward prop result is correct.
+      input = torch.rand(2, ini)
       err = torch.dist(input:select(1,1), input:select(1,2), p) - 
         module:forward(input)[1]
       mytester:assertlt(err,precision, ' error on non-batch fprop ') 
@@ -1567,7 +1568,7 @@ function nntest.PairwiseDistance()
       err = jac.testJacobian(module,input)
       mytester:assertlt(err,precision, ' error on state ')
 
-      -- Also check that the forward prop result is correct
+      -- Also check that the forward prop result is correct.
       -- manually calculate each distance separately
       local inputa = torch.rand(inj,ini)
       local inputb = torch.rand(inj,ini)
