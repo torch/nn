@@ -9,25 +9,26 @@ static int nn_(SparseLinear_updateOutput)(lua_State *L)
   THTensor * weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
   THTensor * bias = luaT_getfieldcheckudata(L, 1, "bias", torch_Tensor);
   THTensor * output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
-  long dim = weight->size[0]; /* number of weights.. */
+  long dim = weight->size[1]; /* number of weights.. */
 
   THTensor_(copy)(output, bias);
-  for(i = 0; i < input->size[1]; i++)
+  for(i = 0; i < input->size[0]; i++)
   {
-    long offset = (long)(THTensor_(get2d)(input, 0, i))-1;
-    
+    long offset = (long)(THTensor_(get2d)(input, i, 0)) - 1;
     if(offset >= 0 && offset < dim) /* make sure indices are in bounds.. */
     {
-      real val = THTensor_(get2d)(input, 1, i);
-      THBlas_(axpy)(output->size[0], 
-                    val, 
-                    THTensor_(data)(weight)+offset*weight->stride[0],
-                    weight->stride[1], 
-                    THTensor_(data)(output), 
-                    output->stride[0]);
+        real val = THTensor_(get2d)(input, i, 1);
+        THBlas_(axpy)(output->size[0], 
+                      val, 
+                      THTensor_(data)(weight)+offset*weight->stride[1],
+                      weight->stride[0], 
+                      THTensor_(data)(output), 
+                      output->stride[0]);
     }
-    else
-      luaL_error(L, "index out of bound");
+    else {
+        printf("\nOutput: %d not between 0 and %d\n", offset, dim-1);
+        luaL_error(L, "index out of bound");
+    }
   }
   return 1;
 }
@@ -43,29 +44,31 @@ static int nn_(SparseLinear_accGradParameters)(lua_State *L)
   THTensor * gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_Tensor);
   THTensor * lastInput = luaT_getfieldcheckudata(L, 1, "lastInput", torch_Tensor);
   real weightDecay = luaT_getfieldchecknumber(L, 1, "weightDecay");
-  long dim = gradWeight->size[0]; /* number of weights.. */
+  long dim = gradWeight->size[1]; /* number of weights.. */
 
-  for(i = 0; i < input->size[1]; i++)
+  for(i = 0; i < input->size[0]; i++)
   {
-    long offset = (long)(THTensor_(get2d)(input, 0, i))-1;
+      long offset = (long)(THTensor_(get2d)(input, i, 0)) - 1;
 
-    if(offset >= 0 && offset < dim) /* make sure indices are in bounds.. */
-    {
-      real val = scale*THTensor_(get2d)(input, 1, i);
-      THBlas_(scal)(gradOutput->size[0],
-                    0, 
-                    THTensor_(data)(gradWeight)+offset*gradWeight->stride[0],
-                    gradWeight->stride[1]); /* zero */
-
-      THBlas_(axpy)(gradOutput->size[0], 
-                    val, 
-                    THTensor_(data)(gradOutput), 
-                    gradOutput->stride[0], 
-                    THTensor_(data)(gradWeight)+offset*gradWeight->stride[0], 
-                    gradWeight->stride[1]);
-    }
-    else
-      luaL_error(L, "index out of bound");
+      if(offset >= 0 && offset < dim) /* make sure indices are in bounds.. */
+      {
+          real val = scale*THTensor_(get2d)(input, i, 1);
+          THBlas_(scal)(gradOutput->size[0],
+                        0, 
+                        THTensor_(data)(gradWeight)+offset*gradWeight->stride[1],
+                        gradWeight->stride[0]); /* zero */
+          
+          THBlas_(axpy)(gradOutput->size[0], 
+                        val, 
+                        THTensor_(data)(gradOutput), 
+                        gradOutput->stride[0], 
+                        THTensor_(data)(gradWeight)+offset*gradWeight->stride[1], 
+                        gradWeight->stride[0]);
+      }
+      else {
+          printf("\nAccG: %d not between 0 and %d\n", offset, dim-1);
+          luaL_error(L, "index out of bound");
+      }
   }
   
   THTensor_(cadd)(gradBias, gradBias, 1, gradOutput); 
@@ -89,24 +92,26 @@ int nn_(SparseLinear_updateParameters)(lua_State *L)
   THTensor * gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_Tensor);
   THTensor * lastInput = luaT_getfieldcheckudata(L, 1, "lastInput", torch_Tensor);
   
-  long dim = weight->size[0]; /* number of weights.. */
+  long dim = weight->size[1]; /* number of weights.. */
   THTensor_(cadd)(bias, bias, -learningRate, gradBias);
   
-  for(i = 0; i < lastInput->size[1]; i++) 
+  for(i = 0; i < lastInput->size[0]; i++) 
   {
-    long offset = (long)(THTensor_(get2d)(lastInput, 0, i))-1;
-    
-    if(offset >= 0 && offset < dim) /* make sure indices are in bounds.. */
-    {
-      THBlas_(axpy)(bias->size[0], 
-                    -learningRate, 
-                    THTensor_(data)(gradWeight)+offset*gradWeight->stride[0], 
-                    gradWeight->stride[1], 
-                    THTensor_(data)(weight)+offset*weight->stride[0], 
-                    weight->stride[1]);
-    }
-    else
-      luaL_error(L, "index out of bound");
+      long offset = (long)(THTensor_(get2d)(lastInput, i, 0)) - 1;
+      
+      if(offset >= 0 && offset < dim) /* make sure indices are in bounds.. */
+      {
+          THBlas_(axpy)(bias->size[0], 
+                        -learningRate, 
+                        THTensor_(data)(gradWeight)+offset*gradWeight->stride[1], 
+                        gradWeight->stride[0], 
+                        THTensor_(data)(weight)+offset*weight->stride[1], 
+                        weight->stride[0]);
+      }
+      else {
+          printf("\nUpdateP: %d not between 0 and %d\n", offset, dim-1);
+          luaL_error(L, "index out of bound");
+      }
   }
   return 0;
 }

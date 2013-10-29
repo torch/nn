@@ -102,5 +102,6 @@ include('WeightedMSECriterion.lua')
 include('StochasticGradient.lua')
 
 include('Jacobian.lua')
+include('SparseJacobian.lua')
 include('hessian.lua')
 include('test.lua')
