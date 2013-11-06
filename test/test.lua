@@ -387,21 +387,20 @@ function nntest.WeightedEuclidean()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
--- function nntest.WeightedMSECriterion()
+--function nntest.WeightedMSECriterion()
 --   local from  = math.random(100,200)
 --   local input = torch.Tensor(from):zero()
 --   local target = torch.randn(from)
 --   local weight = torch.randn(from)
 --   local cri = nn.WeightedMSECriterion(weight)
 --   local module = nn.CriterionModule(cri,target)
-
---   local err = jac.testJacobian(module, input)
+-- local err = jac.testJacobian(module, input)
 --   mytester:assertlt(err, precision, 'error on state ')
    
---   local ferr, berr = jac.testIO(module, input) 
+--   local ferr, berr = jac.testIO(module, input)
 --   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
 --   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
--- end
+--end
 
 function nntest.LogSigmoid()
    local ini = math.random(10,20)
@@ -1347,10 +1346,10 @@ function nntest.TemporalSubSampling()
 end
 
 function nntest.TemporalMaxPooling()
-   local from = math.random(1,10)
-   local ki = math.random(1,10)
-   local si = math.random(1,4)
-   local outi = math.random(10,20)
+   local from = math.random(10,10)
+   local ki = math.random(5,10)
+   local si = math.random(1,2)
+   local outi = math.random(50,90)
    local ini = (outi-1)*si+ki
    local module = nn.TemporalMaxPooling(ki, si)
    local input = torch.Tensor(ini, from):zero()
@@ -1406,6 +1405,32 @@ function nntest.VolumetricConvolution()
                          'error on bias [%s]', t))
    end
    
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+end
+
+function nntest.VolumetricMaxPooling()
+   local from = math.random(2,5)
+   local to = from
+   local kt = math.random(3,7)
+   local ki = math.random(3,7)
+   local kj = math.random(3,7)
+   local st = math.random(2,4)
+   local si = math.random(2,4)
+   local sj = math.random(2,4)
+   local outt = math.random(3,7)
+   local outi = math.random(3,7)
+   local outj = math.random(3,7)
+   local int = (outt-1)*st+kt
+   local ini = (outi-1)*si+ki
+   local inj = (outj-1)*sj+kj
+   local module = nn.VolumetricMaxPooling(kt, ki, kj, st, si, sj)
+   local input = torch.Tensor(from, int, inj, ini):zero()
+   
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+      
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')

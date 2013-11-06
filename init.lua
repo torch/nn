@@ -75,6 +75,7 @@ include('SpatialContrastiveNormalization.lua')
 include('SpatialZeroPadding.lua')
 
 include('VolumetricConvolution.lua')
+include('VolumetricMaxPooling.lua')
 
 include('ParallelTable.lua')
 include('ConcatTable.lua')

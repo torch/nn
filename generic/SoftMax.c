@@ -31,11 +31,13 @@ static int nn_(SoftMax_updateOutput)(lua_State *L)
   for(t = 0; t < nframe; t++)
   {
     real inputMax = -THInf;
+    accreal sum;
+
     for(d = 0; d < dim; d++) {
       if (input_data[d] >= inputMax) inputMax = input_data[d];
     }
 
-    accreal sum = 0;
+    sum = 0;
     for(d = 0; d < dim; d++) {
       real z = THExpMinusApprox(inputMax - input_data[d]);
       output_data[d] = z;

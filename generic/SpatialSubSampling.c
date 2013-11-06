@@ -20,21 +20,29 @@ static int nn_(SpatialSubSampling_updateOutput)(lua_State *L)
   real *output_data;
   real *input_data;
 
-  luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
-
   int dimw = 2;
   int dimh = 1;
   long nbatch = 1;
+
+  long inputWidth;
+  long inputHeight;
+  long outputWidth;
+  long outputHeight;
+
+  long k;
+
+  luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
+
   if (input->nDimension == 4) {
     nbatch = input->size[0];
     dimw++;
     dimh++;
   }
 
-  long inputWidth = input->size[dimw];
-  long inputHeight = input->size[dimh];
-  long outputWidth = (inputWidth - kW) / dW + 1;
-  long outputHeight = (inputHeight - kH) / dH + 1;
+  inputWidth = input->size[dimw];
+  inputHeight = input->size[dimh];
+  outputWidth = (inputWidth - kW) / dW + 1;
+  outputHeight = (inputHeight - kH) / dH + 1;
 
   luaL_argcheck(L, input->size[dimh-1] == nInputPlane, 2, "invalid number of input planes");
   luaL_argcheck(L, inputWidth >= kW && inputHeight >= kH, 2, "input image smaller than kernel size");
@@ -48,7 +56,6 @@ static int nn_(SpatialSubSampling_updateOutput)(lua_State *L)
   input_data = THTensor_(data)(input);
   output_data = THTensor_(data)(output);
   
-  long k;
 #pragma omp parallel for private(k)
   for(k = 0; k < nInputPlane; k++)
   {
@@ -70,7 +77,7 @@ static int nn_(SpatialSubSampling_updateOutput)(lua_State *L)
       {
         for(xx = 0; xx < outputWidth; xx++)
         {
-          // Compute the mean of the input image...
+          /* Compute the mean of the input image... */
           real *ptr_input = input_data + p*nInputPlane*inputWidth*inputHeight + k*inputWidth*inputHeight + yy*dH*inputWidth+xx*dW;
           real sum = 0;
           long kx, ky;
@@ -79,9 +86,9 @@ static int nn_(SpatialSubSampling_updateOutput)(lua_State *L)
           {
             for(kx = 0; kx < kW; kx++)
               sum += ptr_input[kx];
-            ptr_input += inputWidth; // next input line
+            ptr_input += inputWidth; /* next input line */
           }
-          // Update output
+          /* Update output */
           *ptr_output++ += the_weight*sum;
         }
       }
@@ -108,20 +115,31 @@ static int nn_(SpatialSubSampling_updateGradInput)(lua_State *L)
   int dimw = 2;
   int dimh = 1;
   long nbatch = 1;
+
+  long inputWidth;
+  long inputHeight;
+  long outputWidth;
+  long outputHeight;
+
+  real *weight_data;
+  real *gradOutput_data;
+  real *input_data, *gradInput_data;
+
+  long k;
+
   if (input->nDimension == 4) {
     nbatch = input->size[0];
     dimw++;
     dimh++;
   }
 
-  long inputWidth = input->size[dimw];
-  long inputHeight = input->size[dimh];
-  long outputWidth = (inputWidth - kW) / dW + 1;
-  long outputHeight = (inputHeight - kH) / dH + 1;
+  inputWidth = input->size[dimw];
+  inputHeight = input->size[dimh];
+  outputWidth = (inputWidth - kW) / dW + 1;
+  outputHeight = (inputHeight - kH) / dH + 1;
 
-  real *weight_data = THTensor_(data)(weight);
-  real *gradOutput_data = THTensor_(data)(gradOutput);
-  real *input_data, *gradInput_data;
+  weight_data = THTensor_(data)(weight);
+  gradOutput_data = THTensor_(data)(gradOutput);
 
   input_data = THTensor_(data)(input);
 
@@ -129,7 +147,6 @@ static int nn_(SpatialSubSampling_updateGradInput)(lua_State *L)
   gradInput_data = THTensor_(data)(gradInput);
   gradOutput_data = THTensor_(data)(gradOutput);
 
-  long k;
 #pragma omp parallel for private(k)
   for(k = 0; k < nInputPlane; k++)
   {
@@ -184,26 +201,37 @@ static int nn_(SpatialSubSampling_accGradParameters)(lua_State *L)
   long nbatch = 1;
   long dimw = 2;
   long dimh = 1;
+
+  long inputWidth;
+  long inputHeight;
+  long outputWidth;
+  long outputHeight;
+
+  real *gradWeight_data;
+  real *gradBias_data;
+  real *gradOutput_data;
+  real *input_data;
+
+  long k;
+
   if (input->nDimension == 4) {
     dimw++;
     dimh++;
     nbatch = input->size[0];
   }
 
-  long inputWidth = input->size[dimw];
-  long inputHeight = input->size[dimh];
-  long outputWidth = (inputWidth - kW) / dW + 1;
-  long outputHeight = (inputHeight - kH) / dH + 1;
+  inputWidth = input->size[dimw];
+  inputHeight = input->size[dimh];
+  outputWidth = (inputWidth - kW) / dW + 1;
+  outputHeight = (inputHeight - kH) / dH + 1;
 
-  real *gradWeight_data = THTensor_(data)(gradWeight);
-  real *gradBias_data = THTensor_(data)(gradBias);
-  real *gradOutput_data = THTensor_(data)(gradOutput);
-  real *input_data;
+  gradWeight_data = THTensor_(data)(gradWeight);
+  gradBias_data = THTensor_(data)(gradBias);
+  gradOutput_data = THTensor_(data)(gradOutput);
 
   input = THTensor_(newContiguous)(input);
   input_data = THTensor_(data)(input);
 
-  long k;
 #pragma omp parallel for private(k)
   for(k = 0; k < nInputPlane; k++)
   {
@@ -213,9 +241,9 @@ static int nn_(SpatialSubSampling_accGradParameters)(lua_State *L)
       real *ptr_gradOutput = gradOutput_data + p*nInputPlane*outputHeight*outputWidth + k*outputWidth*outputHeight;
       real sum;
       long xx, yy;
+      long i;
 
       sum = 0;
-      long i;
       for(i = 0; i < outputWidth*outputHeight; i++)
         sum += ptr_gradOutput[i];
       gradBias_data[k] += scale*sum;

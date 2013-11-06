@@ -15,30 +15,33 @@ static int nn_(VolumetricConvolution_updateOutput)(lua_State *L)
 
   luaL_argcheck(L, input->nDimension == 4, 2, "4D tensor expected");
 
-  long nOutputPlane = weight->size[0];
-  long kT           = weight->size[2];
-  long kH           = weight->size[3];
-  long kW           = weight->size[4];
-  long inputDepth   = input->size[1];
-  long inputHeight  = input->size[2];
-  long inputWidth   = input->size[3];
-  long outputDepth  = (inputDepth - kT) / dT + 1;
-  long outputWidth  = (inputWidth - kW) / dW + 1;
-  long outputHeight = (inputHeight - kH) / dH + 1;
+  {
+    long nOutputPlane = weight->size[0];
+    long kT           = weight->size[2];
+    long kH           = weight->size[3];
+    long kW           = weight->size[4];
+    long inputDepth   = input->size[1];
+    long inputHeight  = input->size[2];
+    long inputWidth   = input->size[3];
+    long outputDepth  = (inputDepth - kT) / dT + 1;
+    long outputWidth  = (inputWidth - kW) / dW + 1;
+    long outputHeight = (inputHeight - kH) / dH + 1;
+    THTensor *outn = THTensor_(new)();
+    long i;
 
-  THTensor_(resize4d)(output, nOutputPlane, outputDepth, outputHeight, outputWidth);
+    THTensor_(resize4d)(output, nOutputPlane, outputDepth, outputHeight, outputWidth);
+  
+    /* add bias */
+    for (i=0; i<bias->size[0]; i++) {
+      THTensor_(select)(outn,output,0,i);
+      THTensor_(fill)(outn, THTensor_(get1d)(bias, i));
+    }
 
-  /* add bias */
-  long i;
-  THTensor *outn = THTensor_(new)();
-  for (i=0; i<bias->size[0]; i++) {
-    THTensor_(select)(outn,output,0,i);
-    THTensor_(fill)(outn, THTensor_(get1d)(bias, i));
+    THTensor_(free)(outn);
+
+    /* do convolutions */
+    THTensor_(conv3Dmv)(output, 1.0, 1.0, input, weight, dT, dH, dW, "V", "X");
   }
-  THTensor_(free)(outn);
-
-  /* do convolutions */
-  THTensor_(conv3Dmv)(output, 1.0, 1.0, input, weight, dT, dH, dW, "V", "X");
 
   return 1;
 }
@@ -54,11 +57,12 @@ static int nn_(VolumetricConvolution_updateGradInput)(lua_State *L)
 
   THTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
+  THTensor *tweight;
   
   THArgCheck( nOutputPlane == gradOutput->size[0], 1, "Number of output features is not equal to nOutputPlane" );
 
   /* gradient to input */
-  THTensor *tweight = THTensor_(newTranspose)(weight,0,1);
+  tweight = THTensor_(newTranspose)(weight,0,1);
   THTensor_(conv3Dmv)(gradInput, 0.0, 1.0, gradOutput, tweight, dT, dH, dW, "F", "C");
   THTensor_(free)(tweight);
 
@@ -77,14 +81,16 @@ static int nn_(VolumetricConvolution_accGradParameters)(lua_State *L)
 
   THTensor *gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_Tensor);
   THTensor *gradBias = luaT_getfieldcheckudata(L, 1, "gradBias", torch_Tensor);
+
+  long k;
+  real *gradBias_data;
+  THTensor* gradOutSlice;
   
   THArgCheck( nOutputPlane == gradOutput->size[0], 1, "Number of output features is not equal to nOutputPlane" );
 
-  long k;
-
   /* gradient to bias */
-  real *gradBias_data = THTensor_(data)(gradBias);
-  THTensor* gradOutSlice = THTensor_(new)();
+  gradBias_data = THTensor_(data)(gradBias);
+  gradOutSlice = THTensor_(new)();
   for(k = 0; k < nOutputPlane; k++)
   {
     THTensor_(select)(gradOutSlice, gradOutput, 0, k);
