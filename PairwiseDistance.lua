@@ -86,3 +86,18 @@ function PairwiseDistance:updateGradInput(input, gradOutput)
    self.gradInput[2]:zero():add(-1, self.gradInput[1])
    return self.gradInput
 end
+
+-- save away Module:type(type) for later use.
+PairwiseDistance._parent_type = parent.type
+
+-- Fix the bug where tmp = nn.PairwiseDistance:cuda() fails to convert table
+-- contents.  We could, and probably should, change Module.lua to loop over
+-- and convert all the table elements in a module, but that might have 
+-- repercussions, so this is a safer solution.
+function PairwiseDistance:type(type)
+   self:_parent_type(type)  -- Call the parent (Module) type function
+   -- Now convert the left over table elements
+   self.gradInput[1] = self.gradInput[1]:type(type)
+   self.gradInput[2] = self.gradInput[2]:type(type)
+end
+
