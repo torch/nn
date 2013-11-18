@@ -99,5 +99,6 @@ function PairwiseDistance:type(type)
    -- Now convert the left over table elements
    self.gradInput[1] = self.gradInput[1]:type(type)
    self.gradInput[2] = self.gradInput[2]:type(type)
+   return self
 end
 
