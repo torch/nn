@@ -10,7 +10,7 @@ static int nn_(SoftPlus_updateOutput)(lua_State *L)
   THTensor_(resizeAs)(output, input);
 
   TH_TENSOR_APPLY2(real, output, real, input,               \
-                   *output_data = log1p(exp(*input_data));)
+                   *output_data = THLog1p(exp(*input_data));)
     
     return 1;
 }
