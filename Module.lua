@@ -152,6 +152,9 @@ function Module:getParameters()
    -- this function flattens arbitrary lists of parameters,
    -- even complex shared ones
    local function flatten(parameters)
+      if not parameters or #parameters == 0 then -- if there are no parameters, return an empty tensor
+          return torch.Tensor()
+      end
       local Tensor = parameters[1].new
 
       local storages = {}
