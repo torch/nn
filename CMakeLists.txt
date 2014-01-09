@@ -12,7 +12,7 @@ ENDIF(MSVC)
 
 # Stay C89 strict
 IF("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c89 -pedantic")
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic")
 ENDIF()
 
 # OpenMP support?
