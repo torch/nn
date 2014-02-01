@@ -350,6 +350,16 @@ function nntest.SparseLinear()
 
    local err = sjac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err,precision, 'error on bias [direct update] ')
+   
+   for t,err in pairs(sjac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on weight [%s]', t))
+   end
+
+   for t,err in pairs(sjac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on bias [%s]', t))
+   end
 
    local ferr, berr = sjac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
