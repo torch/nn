@@ -35,6 +35,44 @@ function nn.SparseJacobian.backward (module, input, param, dparam)
    return jacobian
 end
 
+
+function nn.SparseJacobian.backwardUpdate (module, input, param)
+
+   -- output deriv
+   module:forward(input)
+   local dout = module.output.new():resizeAs(module.output)
+   -- 1D view
+   local sdout = module.output.new(dout:storage(),1,dout:nElement())
+   -- jacobian matrix to calculate
+   local jacobian = torch.Tensor(param:nElement(),dout:nElement()):zero()
+
+   -- original param
+   local params = module:parameters()
+   local origparams = {}
+   for j=1,#params do
+      table.insert(origparams, params[j]:clone())
+   end
+
+   for i=1,sdout:nElement() do
+      -- Reset parameters
+      for j=1,#params do
+         params[j]:copy(origparams[j])
+      end
+      dout:zero()
+      sdout[i] = 1
+      module:zeroGradParameters()
+      local din = module:updateGradInput(input, dout)
+      module:accUpdateGradParameters(input, dout, 1)
+      jacobian:select(2,i):copy(param)
+   end
+
+   for j=1,#params do
+      params[j]:copy(origparams[j])
+   end
+
+   return jacobian
+end
+
 function nn.SparseJacobian.forward(module, input, param)
    local doparam = 0
    if param then
@@ -81,6 +119,33 @@ function nn.SparseJacobian.forward(module, input, param)
    return jacobian
 end
 
+function nn.SparseJacobian.forwardUpdate(module, input, param)
+   -- perturbation amount
+   local small = 1e-6
+   -- 1D view of input
+   --local tst = param:storage()
+   local sin =  param.new(param):resize(param:nElement())--param.new(tst,1,tst:size())
+   -- jacobian matrix to calculate
+   local jacobian = torch.Tensor():resize(param:nElement(),module:forward(input):nElement())
+   
+   local outa = torch.Tensor(jacobian:size(2))
+   local outb = torch.Tensor(jacobian:size(2))
+   
+   for i=1,sin:nElement() do      
+      sin[i] = sin[i] - small
+      outa:copy(module:forward(input))
+      sin[i] = sin[i] + 2*small
+      outb:copy(module:forward(input))
+      sin[i] = sin[i] - small
+
+      outb:add(-1,outa):div(2*small)
+      jacobian:select(1,i):copy(outb)
+      jacobian:select(1,i):mul(-1)
+      jacobian:select(1,i):add(sin[i])
+   end
+   return jacobian
+end
+
 function nn.SparseJacobian.testJacobian (module, input, minval, maxval)
    minval = minval or -2
    maxval = maxval or 2
@@ -101,6 +166,19 @@ function nn.SparseJacobian.testJacobianParameters (module, input, param, dparam,
    local jac_bprop = nn.SparseJacobian.backward(module, input, param, dparam)
    local jac_fprop = nn.SparseJacobian.forward(module, input, param)
    local error = jac_fprop - jac_bprop
+   return error:abs():max()
+end
+
+function nn.SparseJacobian.testJacobianUpdateParameters (module, input, param, minval, maxval)
+   minval = minval or -2
+   maxval = maxval or 2
+   local inrange = maxval - minval
+   input:select(2,2):copy(torch.rand(input:size(1)):mul(inrange):add(minval))
+   param:copy(torch.rand(param:nElement()):mul(inrange):add(minval))
+   local params_bprop = nn.SparseJacobian.backwardUpdate(module, input, param)
+   local params_fprop = nn.SparseJacobian.forwardUpdate(module, input, param)
+
+   local error = params_fprop - params_bprop
    return error:abs():max()
 end
 

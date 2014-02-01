@@ -238,8 +238,8 @@ function nntest.Sqrt()
 end
 
 function nntest.Linear()
-   local ini = math.random(50,70)
-   local inj = math.random(50,70)
+   local ini = math.random(5,7)
+   local inj = math.random(5,7)
    local input = torch.Tensor(ini):zero()
    local module = nn.Linear(ini,inj)
 
@@ -335,7 +335,7 @@ function nntest.SparseLinear()
    local err = (expected - actual):abs():max()
    mytester:assertle(err, precision, 'error on result')
 
-   -- Jacobian
+   -- Jacobian 1D
    local err = sjac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
 
@@ -345,6 +345,12 @@ function nntest.SparseLinear()
    local err = sjac.testJacobianParameters(module, input, module.bias, module.gradBias)
    mytester:assertlt(err,precision, 'error on bias ')
    
+   local err = sjac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+   local err = sjac.testJacobianUpdateParameters(module, input, module.bias)
+   mytester:assertlt(err,precision, 'error on bias [direct update] ')
+
    local ferr, berr = sjac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')

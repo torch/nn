@@ -53,10 +53,6 @@ static int nn_(SparseLinear_accGradParameters)(lua_State *L)
       if(offset >= 0 && offset < dim) /* make sure indices are in bounds.. */
       {
           real val = scale*THTensor_(get2d)(input, i, 1);
-          THBlas_(scal)(gradOutput->size[0],
-                        0, 
-                        THTensor_(data)(gradWeight)+offset*gradWeight->stride[1],
-                        gradWeight->stride[0]); /* zero */
           
           THBlas_(axpy)(gradOutput->size[0], 
                         val, 
@@ -71,7 +67,7 @@ static int nn_(SparseLinear_accGradParameters)(lua_State *L)
       }
   }
   
-  THTensor_(cadd)(gradBias, gradBias, 1, gradOutput); 
+  THTensor_(cadd)(gradBias, gradBias, scale, gradOutput); 
   
   if(weightDecay != 0)
     THTensor_(cadd)(gradWeight, gradWeight, weightDecay, weight);
