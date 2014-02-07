@@ -635,7 +635,7 @@ gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
 
-![](abs.png)
+![](doc/abs.png)
 
 ### Add ###
 ![](anchor:nn.Add)
@@ -1044,7 +1044,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](exp.png)
+![](doc/exp.png)
 
 
 <a name="nn.Square"/>
@@ -1061,7 +1061,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](square.png)
+![](doc/square.png)
 
 <a name="nn.Sqrt"/>
 ### Sqrt ###
@@ -1077,7 +1077,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](sqrt.png)
+![](doc/sqrt.png)
 
 <a name="nn.Power"/>
 ### Power ###
@@ -1095,7 +1095,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](power.png)
+![](doc/power.png)
 
 <a name="nn.transfer.dok"/>
 ## Transfer Function Layers ##
@@ -1121,7 +1121,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](htanh.png)
+![](doc/htanh.png)
 
 
 <a name="nn.HardShrink"/>
@@ -1147,7 +1147,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](hshrink.png)
+![](doc/hshrink.png)
 
 <a name="nn.SoftShrink"/>
 ### SoftShrink ###
@@ -1172,7 +1172,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](sshrink.png)
+![](doc/sshrink.png)
 
 
 <a name="nn.SoftMax"/>
@@ -1193,7 +1193,7 @@ oo=m:forward(ii)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'})
 gnuplot.grid(true)
 ```
-![](softmax.png)
+![](doc/softmax.png)
 
 <a name="nn.SoftMin"/>
 ### SoftMin ###
@@ -1213,7 +1213,7 @@ oo=m:forward(ii)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'})
 gnuplot.grid(true)
 ```
-![](softmin.png)
+![](doc/softmin.png)
 
 <a name="nn.SoftPlus"/>
 ### SoftPlus ###
@@ -1232,7 +1232,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'},{'gradInput',gi,'+-'})
 gnuplot.grid(true)
 ```
-![](softplus.png)
+![](doc/softplus.png)
 
 <a name="nn.SoftSign"/>
 ### SoftSign ###
@@ -1250,7 +1250,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](softsign.png)
+![](doc/softsign.png)
 
 <a name="nn.LogSigmoid"/>
 ### LogSigmoid ###
@@ -1269,7 +1269,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'},{'gradInput',gi,'+-'})
 gnuplot.grid(true)
 ```
-![](logsigmoid.png)
+![](doc/logsigmoid.png)
 
 
 <a name="nn.LogSoftMax"/>
@@ -1289,7 +1289,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'},{'gradInput',gi,'+-'})
 gnuplot.grid(true)
 ```
-![](logsoftmax.png)
+![](doc/logsoftmax.png)
 
 <a name="nn.Sigmoid"/>
 ### Sigmoid ###
@@ -1308,7 +1308,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](sigmoid.png)
+![](doc/sigmoid.png)
 
 <a name="nn.Tanh"/>
 ### Tanh ###
@@ -1325,7 +1325,7 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](tanh.png)
+![](doc/tanh.png)
 
 <a name="nn.convlayers.dok"/>
 ## Convolutional layers ##
