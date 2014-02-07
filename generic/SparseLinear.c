@@ -26,7 +26,7 @@ static int nn_(SparseLinear_updateOutput)(lua_State *L)
                       output->stride[0]);
     }
     else {
-        printf("\nOutput: %d not between 0 and %d\n", offset, dim-1);
+        printf("\nupdateOutput: %ld not between 1 and %ld\n", offset+1, dim);
         luaL_error(L, "index out of bound");
     }
   }
@@ -62,7 +62,7 @@ static int nn_(SparseLinear_accGradParameters)(lua_State *L)
                         gradWeight->stride[0]);
       }
       else {
-          printf("\nAccG: %d not between 0 and %d\n", offset, dim-1);
+          printf("\naccGradParameters: %ld not between 1 and %ld\n", offset+1, dim);
           luaL_error(L, "index out of bound");
       }
   }
@@ -105,7 +105,7 @@ int nn_(SparseLinear_updateParameters)(lua_State *L)
                         weight->stride[0]);
       }
       else {
-          printf("\nUpdateP: %d not between 0 and %d\n", offset, dim-1);
+          printf("\nupdateParameters: %ld not between 1 and %ld\n", offset+1, dim);
           luaL_error(L, "index out of bound");
       }
   }
