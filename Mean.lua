@@ -7,7 +7,7 @@ function Mean:__init(dimension)
 end
 
 function Mean:updateOutput(input)
-   input.torch.mean(self.output, input, self.dimension)
+   self.output:mean(input, self.dimension)
    self.output = self.output:select(self.dimension, 1)
    return self.output
 end
