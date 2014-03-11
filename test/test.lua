@@ -1660,5 +1660,6 @@ else
       -- randomize stuff
       math.randomseed(os.time())
       mytester:run(tests)
+      return mytester
    end
 end
