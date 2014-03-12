@@ -27,3 +27,10 @@ function DotProduct:updateGradInput(input, gradOutput)
 
    return self.gradInput
 end
+
+function DotProduct:type(type)
+   for i, tensor in ipairs(self.gradInput) do
+       self.gradInput[i] = tensor:type(type)
+   end
+   return parent.type(self, type)
+end
