@@ -1,6 +1,6 @@
 local LookupTable, parent = torch.class('nn.LookupTable', 'nn.Module')
 
-LookupTable.__version = 2
+LookupTable.__version = 3
 
 function LookupTable:__init(nIndex, ...)
    parent.__init(self)
@@ -20,6 +20,12 @@ function LookupTable:__init(nIndex, ...)
    end
 
    self.size[1] = nIndex
+   
+   batchSize = torch.LongTensor(#self.size + 1)
+   batchSize:narrow(1, 2,#self.size):copy(self.size)
+   batchSize[1] = 1
+   self.batchSize = batchSize:storage()
+   
    self.weight = torch.Tensor(self.size)
    self.gradWeight = torch.Tensor(self.size):zero()
    self.inputs = {}
@@ -39,12 +45,27 @@ function LookupTable:reset(stdv)
 end
 
 function LookupTable:updateOutput(input)
-   local nIndex = input:size(1)
-   self.size[1] = nIndex
-   self.output:resize(self.size)
+   if input:dim() == 1 then
+      local nIndex = input:size(1)
+      self.size[1] = nIndex
+      self.output:resize(self.size)
 
-   for i=1,nIndex do
-      self.output:select(1, i):copy(self.weight:select(1, input[i]))
+      for i=1,nIndex do
+         self.output:select(1, i):copy(self.weight:select(1, input[i]))
+      end
+   elseif input:dim() == 2 then
+      local nExample = input:size(1)
+      local nIndex = input:size(2)
+      self.batchSize[1] = nExample
+      self.batchSize[2] = nIndex
+      self.output:resize(self.batchSize)
+      
+      for i=1,nExample do
+         local output = self.output:select(1, i)
+         for j=1,nIndex do
+            output:select(1, j):copy(self.weight:select(1, input[j]))
+         end
+      end
    end
 
    return self.output
