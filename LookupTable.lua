@@ -26,6 +26,17 @@ function LookupTable:__init(nIndex, ...)
    batchSize[1] = 1
    self.batchSize = batchSize:storage()
    
+   -- set to true to scale updates inverse-proportionally to 
+   -- number of times each index was used since last update.
+   -- less forward/backwards --> higher learning rate (because these are 
+   -- downscaled proportionally to batch size using scale, in criterion, 
+   -- or learning rate))
+   self.fairScale = false
+   -- when this is true, assumes that learningRate, scale or criterion
+   -- already scales the resulting update doing the equivalent of 
+   -- dividing it by the number of examples in the batch.
+   self.batchScaled = true
+   
    self.weight = torch.Tensor(self.size)
    self.gradWeight = torch.Tensor(self.size):zero()
    self.inputs = {}
@@ -76,22 +87,25 @@ function LookupTable:zeroGradParameters()
       self.gradWeight:select(1, k):zero()
    end
    self.inputs = {}
+   self.nBackward = 0
 end
 
 function LookupTable:accGradParameters(input, gradOutput, scale)
    if input:dim() == 1 then
+      self.nBackward = self.nBackward + 1
       for i=1,input:size(1) do
          local k = input[i]
-         self.inputs[k] = true
+         self.inputs[k] = (self.inputs[k] or 0) + 1
          self.gradWeight:select(1, k):add(scale, gradOutput:select(1, i))
       end
    elseif input:dim() == 2 then
+      self.nBackward = self.nBackward + input:size(1)
       for i=1,input:size(1) do
          local input = input:select(1, i)
          local gradOutput = gradOutput:select(1, i)
          for j=1,input:size(1) do
             local k = input[j]
-            self.input[k] = true
+            self.input[k] = (self.inputs[k] or 0) + 1
             self.gradWeight:select(1, k):add(scale, gradOutput:select(1, j))
          end
       end
@@ -108,16 +122,34 @@ function LookupTable:accUpdateGradParameters(input, gradOutput, lr)
          local input = input:select(1, i)
          local gradOutput = gradOutput:select(1, i)
          for j=1,input:size(2) do
-            self.weight:select(1, input[j]):add(-lr, gradOutput:select(1, j))
+            scale = self:getFairScale(nBackward)
+            self.weight:select(1, input[j]):add(-lr*scale, gradOutput:select(1, j))
          end
       end
    end
 end
 
 function LookupTable:updateParameters(learningRate)
-   for k,_ in pairs(self.inputs) do
-      self.weight:select(1, k):add(-learningRate, self.gradWeight:select(1, k))
+   if not self.fairScale then
+      for k,_ in pairs(self.inputs) do
+         self.weight:select(1, k):add(-learningRate, self.gradWeight:select(1, k))
+      end
+   else
+      for k,nBackward in pairs(self.inputs) do
+         scale = self:getFairScale(nBackward)
+         self.weight:select(1, k):add(-learningRate*scale, self.gradWeight:select(1, k))
+      end
    end
+end
+
+function LookupTable:getFairScale(nBackward)
+   local scale 
+   if self.batchScaled then 
+      scale = self.nBackward/nBackward
+   else
+      scale = 1/nBackward
+   end
+   return scale
 end
 
 -- we do not need to accumulate parameters when sharing
