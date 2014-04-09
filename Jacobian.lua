@@ -1,6 +1,7 @@
 nn.Jacobian = {}
 
-function nn.Jacobian.backward (module, input, param, dparam)
+function nn.Jacobian.backward(module, input, param, dparam, scale)
+   scale = scale or 1
    local doparam = 0
    if param then
       doparam = 1
@@ -19,17 +20,17 @@ function nn.Jacobian.backward (module, input, param, dparam)
       sdout[i] = 1
       module:zeroGradParameters()
       local din = module:updateGradInput(input, dout)
-      module:accGradParameters(input, dout)
+      module:accGradParameters(input, dout, scale)
       if doparam == 1 then
-	 jacobian:select(2,i):copy(dparam)
+         jacobian:select(2,i):copy(dparam)
       else
-	 jacobian:select(2,i):copy(din)
+         jacobian:select(2,i):copy(din)
       end
    end
    return jacobian
 end
 
-function nn.Jacobian.backwardUpdate (module, input, param)
+function nn.Jacobian.backwardUpdate(module, input, param)
 
    -- output deriv
    module:forward(input)
