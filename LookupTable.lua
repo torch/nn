@@ -79,16 +79,38 @@ function LookupTable:zeroGradParameters()
 end
 
 function LookupTable:accGradParameters(input, gradOutput, scale)
-   for i=1,input:size(1) do
-      local k = input[i]
-      self.inputs[k] = true
-      self.gradWeight:select(1, k):add(scale, gradOutput:select(1, i))
+   if input:dim() == 1 then
+      for i=1,input:size(1) do
+         local k = input[i]
+         self.inputs[k] = true
+         self.gradWeight:select(1, k):add(scale, gradOutput:select(1, i))
+      end
+   elseif input:dim() == 2 then
+      for i=1,input:size(1) do
+         local input = input:select(1, i)
+         local gradOutput = gradOutput:select(1, i)
+         for j=1,input:size(1) do
+            local k = input[j]
+            self.input[k] = true
+            self.gradWeight:select(1, k):add(scale, gradOutput:select(1, j))
+         end
+      end
    end
 end
 
 function LookupTable:accUpdateGradParameters(input, gradOutput, lr)
-   for i=1,input:size(1) do
-      self.weight:select(1, input[i]):add(-lr, gradOutput:select(1, i))
+   if input:dim() == 1 then
+      for i=1,input:size(1) do
+         self.weight:select(1, input[i]):add(-lr, gradOutput:select(1, i))
+      end
+   elseif input:dim() == 2 then 
+      for i=1,input:size(1) do
+         local input = input:select(1, i)
+         local gradOutput = gradOutput:select(1, i)
+         for j=1,input:size(2) do
+            self.weight:select(1, input[j]):add(-lr, gradOutput:select(1, j))
+         end
+      end
    end
 end
 
