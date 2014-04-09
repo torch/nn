@@ -22,7 +22,7 @@ function LookupTable:__init(nIndex, ...)
    self.size[1] = nIndex
    
    batchSize = torch.LongTensor(#self.size + 1)
-   batchSize:narrow(1, 2,#self.size):copy(self.size)
+   batchSize:narrow(1, 2,#self.size):copy(torch.LongTensor(self.size))
    batchSize[1] = 1
    self.batchSize = batchSize:storage()
    
@@ -60,7 +60,6 @@ function LookupTable:updateOutput(input)
       local nIndex = input:size(1)
       self.size[1] = nIndex
       self.output:resize(self.size)
-
       for i=1,nIndex do
          self.output:select(1, i):copy(self.weight:select(1, input[i]))
       end
@@ -91,6 +90,7 @@ function LookupTable:zeroGradParameters()
 end
 
 function LookupTable:accGradParameters(input, gradOutput, scale)
+   scale = scale or 1
    if input:dim() == 1 then
       self.nBackward = self.nBackward + 1
       for i=1,input:size(1) do
