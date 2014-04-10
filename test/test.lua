@@ -1684,7 +1684,6 @@ function nntest.LookupTable()
                          '2D error on weight [%s]', t))
    end
 
-
    -- IO
    module.gradInput = torch.Tensor(3,4):zero() --fixes an error
    local ferr,berr = jac.testIO(module,input,minval,maxval)
