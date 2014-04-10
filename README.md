@@ -1715,7 +1715,7 @@ Given a 1D input, the output tensors are concatenated,
 generating a `size1 x size2 x ... x sizeN x n` tensor, where `n`
 is the size of a 1D `input` tensor. 
 
-Again, with a 1D input, when only `size1` is provided, the `forward(input)` is equivalent to 
+Again with a 1D input, when only `size1` is provided, the `forward(input)` is equivalent to 
 performing the following matrix-matrix multiplication in an efficient manner:
 ```lua
 M P
@@ -1742,7 +1742,7 @@ Outputs something like:
 ```
 Note that the first column vector is the same than the 3rd one!
 
-Given 2D input tensor of size `m x n`, the output is a `m x size1 x size2 x ... x sizeN x n` 
+Given a 2D input tensor of size `m x n`, the output is a `m x size1 x size2 x ... x sizeN x n` 
 tensor, where `m` is then number of samples in 
 the batch and `n` is the number of indices per sample.
 
