@@ -72,7 +72,9 @@ function LookupTable:updateOutput(input)
       
       for i=1,nExample do
          local output = self.output:select(1, i)
+         local input = input:select(1, i)
          for j=1,nIndex do
+            --print('test', i, j, input[j], output:size(), self.weight:size())
             output:select(1, j):copy(self.weight:select(1, input[j]))
          end
       end
@@ -105,7 +107,7 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
          local gradOutput = gradOutput:select(1, i)
          for j=1,input:size(1) do
             local k = input[j]
-            self.input[k] = (self.inputs[k] or 0) + 1
+            self.inputs[k] = (self.inputs[k] or 0) + 1
             self.gradWeight:select(1, k):add(scale, gradOutput:select(1, j))
          end
       end
@@ -115,15 +117,24 @@ end
 function LookupTable:accUpdateGradParameters(input, gradOutput, lr)
    if input:dim() == 1 then
       for i=1,input:size(1) do
-         self.weight:select(1, input[i]):add(-lr, gradOutput:select(1, i))
+         local k = input[j]
+         local scale = 1
+         if self.fairScale then
+            scale = self:getFairScale(self.inputs[k])
+         end
+         self.weight:select(1, input[i]):add(-lr*scale, gradOutput:select(1, i))
       end
    elseif input:dim() == 2 then 
       for i=1,input:size(1) do
          local input = input:select(1, i)
          local gradOutput = gradOutput:select(1, i)
-         for j=1,input:size(2) do
-            scale = self:getFairScale(nBackward)
-            self.weight:select(1, input[j]):add(-lr*scale, gradOutput:select(1, j))
+         for j=1,input:size(1) do
+            local k = input[j]
+            local scale = 1
+            if self.fairScale then
+               scale = self:getFairScale(self.inputs[k])
+            end
+            self.weight:select(1, k):add(-lr*scale, gradOutput:select(1, j))
          end
       end
    end
