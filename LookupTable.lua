@@ -26,17 +26,6 @@ function LookupTable:__init(nIndex, ...)
    batchSize[1] = 1
    self.batchSize = batchSize:storage()
    
-   -- set to true to scale updates inverse-proportionally to 
-   -- number of times each index was used since last update.
-   -- less forward/backwards --> higher learning rate (because these are 
-   -- downscaled proportionally to batch size using scale, in criterion, 
-   -- or learning rate))
-   self.fairScale = false
-   -- when this is true, assumes that learningRate, scale or criterion
-   -- already scales the resulting update doing the equivalent of 
-   -- dividing it by the number of examples in the batch.
-   self.batchScaled = true
-   
    self.weight = torch.Tensor(self.size)
    self.gradWeight = torch.Tensor(self.size):zero()
    self.inputs = {}
@@ -74,7 +63,6 @@ function LookupTable:updateOutput(input)
          local output = self.output:select(1, i)
          local input = input:select(1, i)
          for j=1,nIndex do
-            --print('test', i, j, input[j], output:size(), self.weight:size())
             output:select(1, j):copy(self.weight:select(1, input[j]))
          end
       end
