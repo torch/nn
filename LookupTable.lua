@@ -1,6 +1,6 @@
 local LookupTable, parent = torch.class('nn.LookupTable', 'nn.Module')
 
-LookupTable.__version = 2
+LookupTable.__version = 3
 
 function LookupTable:__init(nIndex, ...)
    parent.__init(self)
@@ -20,6 +20,12 @@ function LookupTable:__init(nIndex, ...)
    end
 
    self.size[1] = nIndex
+   
+   batchSize = torch.LongTensor(#self.size + 1)
+   batchSize:narrow(1, 2,#self.size):copy(torch.LongTensor(self.size))
+   batchSize[1] = 1
+   self.batchSize = batchSize:storage()
+   
    self.weight = torch.Tensor(self.size)
    self.gradWeight = torch.Tensor(self.size):zero()
    self.inputs = {}
@@ -39,12 +45,27 @@ function LookupTable:reset(stdv)
 end
 
 function LookupTable:updateOutput(input)
-   local nIndex = input:size(1)
-   self.size[1] = nIndex
-   self.output:resize(self.size)
-
-   for i=1,nIndex do
-      self.output:select(1, i):copy(self.weight:select(1, input[i]))
+   if input:dim() == 1 then
+      local nIndex = input:size(1)
+      self.size[1] = nIndex
+      self.output:resize(self.size)
+      for i=1,nIndex do
+         self.output:select(1, i):copy(self.weight:select(1, input[i]))
+      end
+   elseif input:dim() == 2 then
+      local nExample = input:size(1)
+      local nIndex = input:size(2)
+      self.batchSize[1] = nExample
+      self.batchSize[2] = nIndex
+      self.output:resize(self.batchSize)
+      
+      for i=1,nExample do
+         local output = self.output:select(1, i)
+         local input = input:select(1, i)
+         for j=1,nIndex do
+            output:select(1, j):copy(self.weight:select(1, input[j]))
+         end
+      end
    end
 
    return self.output
@@ -55,26 +76,63 @@ function LookupTable:zeroGradParameters()
       self.gradWeight:select(1, k):zero()
    end
    self.inputs = {}
+   self.nBackward = 0
 end
 
 function LookupTable:accGradParameters(input, gradOutput, scale)
-   for i=1,input:size(1) do
-      local k = input[i]
-      self.inputs[k] = true
-      self.gradWeight:select(1, k):add(scale, gradOutput:select(1, i))
+   scale = scale or 1
+   if input:dim() == 1 then
+      self.nBackward = self.nBackward + 1
+      for i=1,input:size(1) do
+         local k = input[i]
+         self.inputs[k] = (self.inputs[k] or 0) + 1
+         self.gradWeight:select(1, k):add(scale, gradOutput:select(1, i))
+      end
+   elseif input:dim() == 2 then
+      self.nBackward = self.nBackward + input:size(1)
+      for i=1,input:size(1) do
+         local input = input:select(1, i)
+         local gradOutput = gradOutput:select(1, i)
+         for j=1,input:size(1) do
+            local k = input[j]
+            self.inputs[k] = (self.inputs[k] or 0) + 1
+            self.gradWeight:select(1, k):add(scale, gradOutput:select(1, j))
+         end
+      end
    end
 end
 
 function LookupTable:accUpdateGradParameters(input, gradOutput, lr)
-   for i=1,input:size(1) do
-      self.weight:select(1, input[i]):add(-lr, gradOutput:select(1, i))
+   if input:dim() == 1 then
+      for i=1,input:size(1) do
+         local k = input[j]
+         local kscale = self:scaleUpdateByKey(k)
+         self.weight:select(1, input[i]):add(-lr*kscale, gradOutput:select(1, i))
+      end
+   elseif input:dim() == 2 then 
+      for i=1,input:size(1) do
+         local input = input:select(1, i)
+         local gradOutput = gradOutput:select(1, i)
+         for j=1,input:size(1) do
+            local k = input[j]
+            local kscale = self:scaleUpdateByKey(k)
+            self.weight:select(1, k):add(-lr*kscale, gradOutput:select(1, j))
+         end
+      end
    end
 end
 
 function LookupTable:updateParameters(learningRate)
-   for k,_ in pairs(self.inputs) do
-      self.weight:select(1, k):add(-learningRate, self.gradWeight:select(1, k))
+   for k,nBackward in pairs(self.inputs) do
+      local kscale = self:scaleUpdateByKey(k)
+      self.weight:select(1, k):add(-learningRate*kscale, self.gradWeight:select(1, k))
    end
+end
+
+-- scale the update for each key
+function LookupTable:scaleUpdateByKey(inputKey)
+   -- default is to perform no key-based scalling
+   return 1
 end
 
 -- we do not need to accumulate parameters when sharing

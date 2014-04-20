@@ -1706,22 +1706,24 @@ module = nn.LookupTable(nIndex, size1, [size2], [size3], ...)
 ```
 
 This layer is a particular case of a convolution, where the width of the convolution would be `1`.
-When calling `forward(input)`, it assumes `input` is a 1D tensor filled with indices. Indices start
+When calling `forward(input)`, it assumes `input` is a 1D or 2D tensor filled with indices. 
+If the input is a matrix, then each row is assumed to be an input sample of given batch. Indices start
 at `1` and can go up to `nIndex`. For each index, it outputs a corresponding `Tensor` of size
-specified by `sizes` (an `LongStorage`) or `size1 x size2 x...`.
+specified by `sizes` (a `LongStorage`) or `size1 x size2 x...`.
 
-The output tensors are concatenated, generating a `size1 x size2 x ... x sizeN x n` tensor, where `n`
-is the size of the `input` tensor.
+Given a 1D input, the output tensors are concatenated, 
+generating a `size1 x size2 x ... x sizeN x n` tensor, where `n`
+is the size of a 1D `input` tensor. 
 
-When only `size1` is provided, this is equivalent to do the following matrix-matrix multiplication
-in an efficient manner:
+Again with a 1D input, when only `size1` is provided, the `forward(input)` is equivalent to 
+performing the following matrix-matrix multiplication in an efficient manner:
 ```lua
 M P
 ```
 where `M` is a 2D matrix `size1 x nIndex` containing the parameters of the lookup-table and
 `P` is a 2D matrix, where each column vector `i` is a zero vector except at index `input[i]` where it is `1`.
 
-Example:
+1D example:
 ```lua
  -- a lookup table containing 10 tensors of size 3
  module = nn.LookupTable(10, 3) 
@@ -1739,6 +1741,37 @@ Outputs something like:
 [torch.Tensor of dimension 3x4]
 ```
 Note that the first column vector is the same than the 3rd one!
+
+Given a 2D input tensor of size `m x n`, the output is a `m x size1 x size2 x ... x sizeN x n` 
+tensor, where `m` is then number of samples in 
+the batch and `n` is the number of indices per sample.
+
+2D example:
+```lua
+ -- a lookup table containing 10 tensors of size 3
+ module = nn.LookupTable(10, 3) 
+
+ -- a batch of 2 samples of 4 indices each
+ input = torch.Tensor({{1,2,4,5},{4,3,2,10}})
+ print(module:forward(input))
+```
+
+Outputs something like:
+```lua
+(1,.,.) = 
+ -0.0570 -1.5354  1.8555
+ -0.9067  1.3392  0.6275
+  1.9662  0.4645 -0.8111
+  0.1103  1.7811  1.5969
+
+(2,.,.) = 
+  1.9662  0.4645 -0.8111
+  0.0026 -1.4547 -0.5154
+ -0.9067  1.3392  0.6275
+ -0.0193 -0.8641  0.7396
+[torch.DoubleTensor of dimension 2x4x3]
+```
+
 
 <a name="nn.TableLayers"/>
 ## Layers for manipulating tables ##
