@@ -1,0 +1,7 @@
+language: c
+compiler:
+  - gcc
+  - clang
+before_script: curl -s https://raw.githubusercontent.com/torch/ezinstall/master/install-deps | bash
+script: curl -s https://raw.githubusercontent.com/torch/ezinstall/master/install-luajit+torch | bash
+after_script: luajit -lnn -e "nn.test()"
