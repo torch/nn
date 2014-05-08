@@ -15,10 +15,12 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   THTensor *outputWindow, *inputWindow;
-  int nInputFrame, nOutputFrame, nBatchFrame;
-  long k;
+  int nInputFrame, nOutputFrame;
+  long k, i;
+  
   int dimS = 0; // sequence dimension
   int dimF = 1; // feature dimension
+  int nBatchFrame = 1;
   
   luaL_argcheck(L, input->nDimension == 2 || input->nDimension == 3, 2, "2D or 3D(batch mode) tensor expected");
   
@@ -26,6 +28,7 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
   {
     dimS = 1;
     dimF = 2;
+    nBatchFrame = input->size[0];
   }
   luaL_argcheck(L, input->size[dimF] == inputFrameSize, 2, "invalid input frame size");
   luaL_argcheck(L, input->size[dimS] >= kW, 2, "input sequence smaller than kernel size");
@@ -33,46 +36,95 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
   input = THTensor_(newContiguous)(input);
   outputWindow = THTensor_(new)();
   inputWindow = THTensor_(new)();
+  outputSample = THTensor_(new)();
+  inputSample = THTensor_(new)();
 
-  nInputFrame = input->size[0];
+  nInputFrame = input->size[dimS];
   nOutputFrame = (nInputFrame - kW) / dW + 1;
 
-  THTensor_(resize2d)(output,
-                      nOutputFrame,
-                      outputFrameSize);
-
-  /* bias first */
-  for(k = 0; k < nOutputFrame; k++)
+  if (input->nDimension == 2)
   {
-    THTensor_(select)(outputWindow, output, 0, k);
-    THTensor_(copy)(outputWindow, bias);
-  }
+    THTensor_(resize2d)(output,
+                        nOutputFrame,
+                        outputFrameSize);
 
-  /* ouch */
-  for(k = 0; nOutputFrame > 0; k++)
+    /* bias first */
+    for(k = 0; k < nOutputFrame; k++)
+    {
+      THTensor_(select)(outputWindow, output, 0, k);
+      THTensor_(copy)(outputWindow, bias);
+    }
+
+    /* ouch */
+    for(k = 0; nOutputFrame > 0; k++)
+    {
+      long outputFrameStride = (kW-1)/dW+1;
+      long inputFrameStride = outputFrameStride*dW;
+      long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
+      nOutputFrame -= nFrame;
+
+      THTensor_(setStorage2d)(inputWindow, input->storage,
+                              input->storageOffset+k*dW*input->size[1],
+                              nFrame, inputFrameStride*input->size[1],
+                              kW*input->size[1], 1);
+
+      THTensor_(setStorage2d)(outputWindow, output->storage, 
+                              output->storageOffset + k*output->size[1],
+                              nFrame, outputFrameStride*output->size[1],
+                              output->size[1], 1);
+
+      THTensor_(transpose)(weight, NULL, 0, 1);
+      THTensor_(addmm)(outputWindow, 1, outputWindow, 1, inputWindow, weight);
+      THTensor_(transpose)(weight, NULL, 0, 1);
+    }
+  else
   {
-    long outputFrameStride = (kW-1)/dW+1;
-    long inputFrameStride = outputFrameStride*dW;
-    long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
-    nOutputFrame -= nFrame;
+    THTensor_(resize3d)(output,
+                        nBatchFrame,
+                        nOutputFrame,
+                        outputFrameSize);
+    
+    for(i = 0; i < nBatchFrame; i++)
+    {
+      THTensor_(select)(outputSample, output, 0, i);
+      THTensor_(select)(inputSample, input, 0, i);
+      
+      /* bias first */
+      for(k = 0; k < nOutputFrame; k++)
+      {
+        THTensor_(select)(outputWindow, outputSample, 0, k);
+        THTensor_(copy)(outputWindow, bias);
+      }
 
-    THTensor_(setStorage2d)(inputWindow, input->storage,
-                            input->storageOffset+k*dW*input->size[1],
-                            nFrame, inputFrameStride*input->size[1],
-                            kW*input->size[1], 1);
+      /* ouch */
+      for(k = 0; nOutputFrame > 0; k++)
+      {
+        long outputFrameStride = (kW-1)/dW+1;
+        long inputFrameStride = outputFrameStride*dW;
+        long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
+        nOutputFrame -= nFrame;
 
-    THTensor_(setStorage2d)(outputWindow, output->storage, 
-                            output->storageOffset + k*output->size[1],
-                            nFrame, outputFrameStride*output->size[1],
-                            output->size[1], 1);
+        THTensor_(setStorage2d)(inputWindow, inputSample->storage,
+                                inputSample->storageOffset+k*dW*inputSample->size[1],
+                                nFrame, inputFrameStride*inputSample->size[1],
+                                kW*inputSample->size[1], 1);
 
-    THTensor_(transpose)(weight, NULL, 0, 1);
-    THTensor_(addmm)(outputWindow, 1, outputWindow, 1, inputWindow, weight);
-    THTensor_(transpose)(weight, NULL, 0, 1);
+        THTensor_(setStorage2d)(outputWindow, outputSample->storage, 
+                                outputSample->storageOffset + k*outputSample->size[1],
+                                nFrame, outputFrameStride*outputSample->size[1],
+                                outputSample->size[1], 1);
+
+        THTensor_(transpose)(weight, NULL, 0, 1);
+        THTensor_(addmm)(outputWindow, 1, outputWindow, 1, inputWindow, weight);
+        THTensor_(transpose)(weight, NULL, 0, 1);
+      }
+    }
   }
 
   THTensor_(free)(outputWindow);
   THTensor_(free)(inputWindow);
+  THTensor_(free)(outputSample);
+  THTensor_(free)(inputSample);
   THTensor_(free)(input);
 
   return 1;
