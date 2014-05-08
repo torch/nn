@@ -14,7 +14,7 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
   THTensor *bias = luaT_getfieldcheckudata(L, 1, "bias", torch_Tensor);
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
-  THTensor *outputWindow, *inputWindow;
+  THTensor *outputWindow, *inputWindow, *outputSample, *inputSample;
   int nInputFrame, nOutputFrame;
   long k, i;
   
@@ -77,6 +77,7 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
       THTensor_(addmm)(outputWindow, 1, outputWindow, 1, inputWindow, weight);
       THTensor_(transpose)(weight, NULL, 0, 1);
     }
+  }
   else
   {
     THTensor_(resize3d)(output,
