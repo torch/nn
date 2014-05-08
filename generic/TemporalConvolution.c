@@ -9,18 +9,26 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int inputFrameSize = luaT_getfieldcheckint(L, 1, "inputFrameSize");
   int outputFrameSize = luaT_getfieldcheckint(L, 1, "outputFrameSize");
-
+  
   THTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
   THTensor *bias = luaT_getfieldcheckudata(L, 1, "bias", torch_Tensor);
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   THTensor *outputWindow, *inputWindow;
-  int nInputFrame, nOutputFrame;
+  int nInputFrame, nOutputFrame, nBatchFrame;
   long k;
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
   
-  luaL_argcheck(L, input->nDimension == 2, 2, "2D tensor expected");
-  luaL_argcheck(L, input->size[1] == inputFrameSize, 2, "invalid input frame size");
-  luaL_argcheck(L, input->size[0] >= kW, 2, "input sequence smaller than kernel size");
+  luaL_argcheck(L, input->nDimension == 2 || input->nDimension == 3, 2, "2D or 3D(batch mode) tensor expected");
+  
+  if (input->nDimension == 3) 
+  {
+    dimS = 1;
+    dimF = 2;
+  }
+  luaL_argcheck(L, input->size[dimF] == inputFrameSize, 2, "invalid input frame size");
+  luaL_argcheck(L, input->size[dimS] >= kW, 2, "input sequence smaller than kernel size");
 
   input = THTensor_(newContiguous)(input);
   outputWindow = THTensor_(new)();
