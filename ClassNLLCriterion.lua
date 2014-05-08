@@ -29,7 +29,7 @@ function ClassNLLCriterion:updateGradInput(input, target)
 
   if input:dim() == 1 then
       self.gradInput[target] = -1
-   else
+  else
       local z = -1
       if self.sizeAverage then
          z = z / target:size(1)
