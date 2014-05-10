@@ -1350,6 +1350,19 @@ function nntest.TemporalConvolution()
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- 2D matches 1D
+   local output = module:forward(input)
+   local outputGrad = torch.randn(output:size())
+   local inputGrad = module:backward(input, outputGrad)
+   
+   local input1D = input:select(1, 1)
+   local output1D = module:forward(input1D)
+   local outputGrad1D = outputGrad:select(1, 1)
+   local inputGrad1D = module:backward(input1D, outputGrad1D)
+   
+   mytester:assertTensorEq(output:select(1,1) output1D, 0.000001, 'error on 2D vs 1D forward)')
+   mytester:assertTensorEq(inputGrad:select(1,1) inputGrad1D, 0.000001, 'error on 2D vs 1D backward)')
 end
 
 function nntest.TemporalSubSampling()
