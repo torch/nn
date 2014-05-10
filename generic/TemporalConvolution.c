@@ -237,48 +237,107 @@ static int nn_(TemporalConvolution_accGradParameters)(lua_State *L)
   real scale = luaL_optnumber(L, 4, 1);
   int kW = luaT_getfieldcheckint(L, 1, "kW");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
-  long nInputFrame = input->size[0];
-  long nOutputFrame = gradOutput->size[0];
+  long nInputFrame;
+  long nOutputFrame;
 
   THTensor *gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_Tensor);
   THTensor *gradBias = luaT_getfieldcheckudata(L, 1, "gradBias", torch_Tensor);
 
   THTensor *gradOutputWindow;
   THTensor *inputWindow;
-  long k;
+  long k, i;
+  
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
+  
+  if (gradOutput->nDimension == 3) 
+  {
+    dimS = 1;
+    dimF = 2;
+  }
+  
+  nInputFrame = input->size[dimS];
+  nOutputFrame = gradOutput->size[dimS];
 
   input = THTensor_(newContiguous)(input);
   gradOutputWindow = THTensor_(new)();
   inputWindow = THTensor_(new)();
   
-  /* bias first */
-  for(k = 0; k < nOutputFrame; k++)
+  if (input->nDimension == 2)
   {
-    THTensor_(select)(gradOutputWindow, gradOutput, 0, k);
-    THTensor_(cadd)(gradBias, gradBias, scale, gradOutputWindow);
+    /* bias first */
+    for(k = 0; k < nOutputFrame; k++)
+    {
+      THTensor_(select)(gradOutputWindow, gradOutput, 0, k);
+      THTensor_(cadd)(gradBias, gradBias, scale, gradOutputWindow);
+    }
+
+    /* ouch */
+    for(k = 0; nOutputFrame > 0; k++)
+    {
+      long outputFrameStride = (kW-1)/dW+1;
+      long inputFrameStride = outputFrameStride*dW;
+      long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
+      nOutputFrame -= nFrame;
+
+      THTensor_(setStorage2d)(inputWindow, input->storage,
+                              input->storageOffset+k*dW*input->size[1],
+                              nFrame, inputFrameStride*input->size[1],
+                              kW*input->size[1], 1);
+
+      THTensor_(setStorage2d)(gradOutputWindow, gradOutput->storage, 
+                              gradOutput->storageOffset + k*gradOutput->size[1],
+                              nFrame, outputFrameStride*gradOutput->size[1],
+                              gradOutput->size[1], 1);
+
+      THTensor_(transpose)(gradOutputWindow, NULL, 0, 1);
+      THTensor_(addmm)(gradWeight, 1, gradWeight, scale, gradOutputWindow, inputWindow);
+      THTensor_(transpose)(gradOutputWindow, NULL, 0, 1);
+    }
   }
-
-  /* ouch */
-  for(k = 0; nOutputFrame > 0; k++)
+  else
   {
-    long outputFrameStride = (kW-1)/dW+1;
-    long inputFrameStride = outputFrameStride*dW;
-    long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
-    nOutputFrame -= nFrame;
+    THTensor *gradOutputSample = THTensor_(new)();
+    THTensor *inputSample = THTensor_(new)();
+    int nBatchFrame = input->size[0];
+    
+    for(i = 0; i < nBatchFrame; i++)
+    {
+      THTensor_(select)(gradOutputSample, gradOutput, 0, i);
+      THTensor_(select)(inputSample, input, 0, i);
+      
+      /* bias first */
+      for(k = 0; k < nOutputFrame; k++)
+      {
+        THTensor_(select)(gradOutputWindow, gradOutputSample, 0, k);
+        THTensor_(cadd)(gradBias, gradBias, scale, gradOutputWindow);
+      }
 
-    THTensor_(setStorage2d)(inputWindow, input->storage,
-                            input->storageOffset+k*dW*input->size[1],
-                            nFrame, inputFrameStride*input->size[1],
-                            kW*input->size[1], 1);
+      /* ouch */
+      for(k = 0; nOutputFrame > 0; k++)
+      {
+        long outputFrameStride = (kW-1)/dW+1;
+        long inputFrameStride = outputFrameStride*dW;
+        long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
+        nOutputFrame -= nFrame;
 
-    THTensor_(setStorage2d)(gradOutputWindow, gradOutput->storage, 
-                            gradOutput->storageOffset + k*gradOutput->size[1],
-                            nFrame, outputFrameStride*gradOutput->size[1],
-                            gradOutput->size[1], 1);
+        THTensor_(setStorage2d)(inputWindow, inputSample->storage,
+                                input->storageOffset+k*dW*inputSample->size[1],
+                                nFrame, inputFrameStride*inputSample->size[1],
+                                kW*inputSample->size[1], 1);
 
-    THTensor_(transpose)(gradOutputWindow, NULL, 0, 1);
-    THTensor_(addmm)(gradWeight, 1, gradWeight, scale, gradOutputWindow, inputWindow);
-    THTensor_(transpose)(gradOutputWindow, NULL, 0, 1);
+        THTensor_(setStorage2d)(gradOutputWindow, gradOutputSample->storage, 
+                                gradOutputSample->storageOffset + k*gradOutputSample->size[1],
+                                nFrame, outputFrameStride*gradOutputSample->size[1],
+                                gradOutputSample->size[1], 1);
+
+        THTensor_(transpose)(gradOutputWindow, NULL, 0, 1);
+        THTensor_(addmm)(gradWeight, 1, gradWeight, scale, gradOutputWindow, inputWindow);
+        THTensor_(transpose)(gradOutputWindow, NULL, 0, 1);
+      }
+    }
+    THTensor_(free)(gradOutputSample);
+    THTensor_(free)(inputSample);
   }
 
   THTensor_(free)(gradOutputWindow);
