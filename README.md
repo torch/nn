@@ -1746,7 +1746,7 @@ Outputs something like:
 Note that the first column vector is the same than the 3rd one!
 
 Given a 2D input tensor of size `m x n`, the output is a `m x size1 x size2 x ... x sizeN x n` 
-tensor, where `m` is then number of samples in 
+tensor, where `m` is the number of samples in 
 the batch and `n` is the number of indices per sample.
 
 2D example:
