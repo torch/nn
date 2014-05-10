@@ -1283,6 +1283,7 @@ function nntest.Tanh()
 end
 
 function nntest.TemporalConvolution()
+   -- 1D
    local from = math.random(1,10)
    local to = math.random(1,10)
    local ki = math.random(1,10)
@@ -1317,9 +1318,51 @@ function nntest.TemporalConvolution()
                          'error on bias [%s]', t))
    end
    
+   -- 2D
+   local nBatchFrame = 8
+   local input = torch.Tensor(nBatchFrame, ini, from):zero()
+   
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+   
+   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+   mytester:assertlt(err , precision, 'error on weight ')
+   
+   local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+   mytester:assertlt(err , precision, 'error on bias ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err , precision, 'error on weight [direct update]')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+   mytester:assertlt(err , precision, 'error on bias [direct update]')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on weight [%s]', t))
+   end
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on bias [%s]', t))
+   end
+   
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- 2D matches 1D
+   local output = module:forward(input)
+   local outputGrad = torch.randn(output:size())
+   local inputGrad = module:backward(input, outputGrad)
+   
+   local input1D = input:select(1, 1)
+   local output1D = module:forward(input1D)
+   local outputGrad1D = outputGrad:select(1, 1)
+   local inputGrad1D = module:backward(input1D, outputGrad1D)
+   
+   mytester:assertTensorEq(output:select(1,1) output1D, 0.000001, 'error on 2D vs 1D forward)')
+   mytester:assertTensorEq(inputGrad:select(1,1) inputGrad1D, 0.000001, 'error on 2D vs 1D backward)')
 end
 
 function nntest.TemporalSubSampling()
