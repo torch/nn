@@ -1582,7 +1582,7 @@ module = nn.TemporalConvolution(inputFrameSize, outputFrameSize, kW, [dW])
 ```
 
 Applies a 1D convolution over an input sequence composed of `nInputFrame` frames. The `input` tensor in
-`forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`).
+`forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`).
 
 The parameters are the following:
   * `inputFrameSize`: The input frame size expected in sequences given into `forward()`.
@@ -1594,18 +1594,21 @@ Note that depending of the size of your kernel, several (of the last)
 frames of the sequence might be lost. It is up to the user to add proper padding frames in the input
 sequences.
 
-If the input sequence is a 2D tensor `inputFrameSize x nInputFrame`, the output sequence will be
+If the input sequence is a 2D tensor of dimension `inputFrameSize x nInputFrame`, the output sequence will be
 `nOutputFrame x outputFrameSize` where
 ```lua
 nOutputFrame = (nInputFrame - kW) / dW + 1
 ```
+
+If the input sequence is a 3D tensor of dimension `nBatchFrame x inputFrameSize x nInputFrame`, the output sequence will be
+`nBatchFrame x nOutputFrame x outputFrameSize`.
 
 The parameters of the convolution can be found in `self.weight` (Tensor of
 size `outputFrameSize x (inputFrameSize x kW) `) and `self.bias` (Tensor of
 size `outputFrameSize`). The corresponding gradients can be found in
 `self.gradWeight` and `self.gradBias`.
 
-The output value of the layer can be precisely described as:
+For a 2D input, the output value of the layer can be precisely described as:
 ```lua
 output[i][t] = bias[i]
   + sum_j sum_{k=1}^kW weight[j][k][i]
