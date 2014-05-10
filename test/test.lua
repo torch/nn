@@ -1283,6 +1283,7 @@ function nntest.Tanh()
 end
 
 function nntest.TemporalConvolution()
+   -- 1D
    local from = math.random(1,10)
    local to = math.random(1,10)
    local ki = math.random(1,10)
@@ -1291,6 +1292,35 @@ function nntest.TemporalConvolution()
    local ini = (outi-1)*si+ki
    local module = nn.TemporalConvolution(from, to, ki,si)
    local input = torch.Tensor(ini, from):zero()
+   
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+   
+   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+   mytester:assertlt(err , precision, 'error on weight ')
+   
+   local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+   mytester:assertlt(err , precision, 'error on bias ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err , precision, 'error on weight [direct update]')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+   mytester:assertlt(err , precision, 'error on bias [direct update]')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on weight [%s]', t))
+   end
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on bias [%s]', t))
+   end
+   
+   -- 2D
+   local nBatchFrame = 8
+   local input = torch.Tensor(nBatchFrame, ini, from):zero()
    
    local err = jac.testJacobian(module, input)
    mytester:assertlt(err, precision, 'error on state ')
