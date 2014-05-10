@@ -165,7 +165,7 @@ static int nn_(TemporalConvolution_updateGradInput)(lua_State *L)
   THTensor_(resizeAs)(gradInput, input);
   THTensor_(zero)(gradInput);
 
-  if (input->nDimension == 2)
+  if (gradOutput->nDimension == 2)
   {
     /* ouch */
     for(k = 0; nOutputFrame > 0; k++)
@@ -194,7 +194,7 @@ static int nn_(TemporalConvolution_updateGradInput)(lua_State *L)
     THTensor *gradInputSample = THTensor_(new)();
     int nBatchFrame = input->size[0];
     
-    for(i = 0; nBatchFrame > 0; i++)
+    for(i = 0; i < nBatchFrame; i++)
     {
       THTensor_(select)(gradOutputSample, gradOutput, 0, i);
       THTensor_(select)(gradInputSample, gradInput, 0, i);
@@ -250,7 +250,7 @@ static int nn_(TemporalConvolution_accGradParameters)(lua_State *L)
   input = THTensor_(newContiguous)(input);
   gradOutputWindow = THTensor_(new)();
   inputWindow = THTensor_(new)();
-
+  
   /* bias first */
   for(k = 0; k < nOutputFrame; k++)
   {
