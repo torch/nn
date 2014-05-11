@@ -2,14 +2,14 @@
 # Modules #
 
 Modules are bricks to build neural networks. A [Module](#nn.Module) is a neural network
-by itself, but it can be combined with other networks using [container classes](#nn.Containers) to create
+by itself, but it can be combined with other networks using [container classes](containers.md#nn.Containers) to create
 complex neural networks.
 
 <a name="nn.Module"/>
 ## Module ##
 
 `Module` is an abstract class which defines fundamental methods necessary
-for a training a neural network. Modules are [serializable](..:torch:file#torch.file.serialization).
+for a training a neural network. Modules are [serializable](https://github.com/torch/torch7/blob/master/doc/serialization.md#serialization).
 
 Modules contain two states variables: [output](#nn.ModuleOutput) and
 [gradInput](#nn.ModuleGradInput).
@@ -19,8 +19,8 @@ Modules contain two states variables: [output](#nn.ModuleOutput) and
 
 Takes an `input` object, and computes the corresponding `output` of the
 module. In general `input` and `output` are
-[Tensors](..:torch:tensor). However, some special sub-classes
-like [table layers](#nn.TableLayers) might expect something else. Please,
+[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md). However, some special sub-classes
+like [table layers](table.md#nn.TableLayers) might expect something else. Please,
 refer to each module specification for further information.
 
 After a `forward()`, the [ouput](#nn.ModuleOutput) state variable should
@@ -41,8 +41,8 @@ This is necessary for optimization reasons. If you do not respect
 this rule, `backward()` will compute incorrect gradients.
 
 In general `input` and `gradOutput`  and `gradInput` are
-[Tensors](..:torch:tensor). However, some special sub-classes
-like [table layers](#nn.TableLayers) might expect something else. Please,
+[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md). However, some special sub-classes
+like [table layers](table.md#nn.TableLayers) might expect something else. Please,
 refer to each module specification for further information.
 
 A _backpropagation step_ consist in computing two kind of gradients
@@ -151,7 +151,7 @@ to) the parameters with the same names in the given module `mlp`.
 The parameters have to be Tensors. This function is typically used if
 you want to have modules that share the same weights or biases.
 
-Note that this function if called on a [Container](#nn.Containers)
+Note that this function if called on a [Container](containers.md#nn.Containers)
 module will share the same parameters for all the contained modules as
 well.
 
@@ -212,7 +212,7 @@ print(mlp2:get(1).bias[1])
 
 This function converts all the parameters of a module to the given
 `type`. The `type` can be one of the types defined for
-[torch.Tensor](..:torch:tensor).
+[torch.Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
 <a name="nn.Module.float"/>
 ### float() ###
@@ -237,8 +237,9 @@ a `Module`. The object pointer is _never_ supposed to change. However, its
 contents (including its size if it is a Tensor) are supposed to change.
 
 In general state variables are
-[Tensors](..:torch:tensor). However, some special sub-classes
-like [table layers](#nn.TableLayers) contain something else. Please,
+[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md). 
+However, some special sub-classes
+like [table layers](table.md#nn.TableLayers) contain something else. Please,
 refer to each module specification for further information.
 
 <a name="nn.Module.output"/>
