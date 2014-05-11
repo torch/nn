@@ -1,8 +1,8 @@
 <a name="nn.simplelayers.dok"/>
-## Simple layers ##
+# Simple layers #
 
 <a name="nn.Linear"/>
-### Linear ###
+## Linear ##
 
 `module` = `Linear(inputDimension,outputDimension)`
 
@@ -38,7 +38,7 @@ applying the linear transformation is performed with:
 ```
 
 <a name="nn.SparseLinear"/>
-### SparseLinear ###
+## SparseLinear ##
 
 `module` = `SparseLinear(inputDimension,outputDimension)`
 
@@ -80,7 +80,7 @@ indices should not exceed the stated dimesions of the input to the
 layer (10000 in the example).
 
 <a name="nn.Abs"/>
-### Abs ###
+## Abs ##
 
 `module` = `Abs()`
 
@@ -96,9 +96,9 @@ gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
 
-![](doc/abs.png)
+![](image/abs.png)
 
-### Add ###
+## Add ##
 ![](anchor:nn.Add)
 
 `module` = `Add(inputDimension,scalar)`
@@ -145,7 +145,7 @@ to produce the output _y_.
 
 
 <a name="nn.Mul"/>
-### Mul ###
+## Mul ##
 
 `module` = `Mul(inputDimension)`
 
@@ -184,7 +184,7 @@ gives the output:
 i.e. the network successfully learns the input `x` has been scaled by
 pi.
 
-### CMul ###
+## CMul ##
 ![](anchor:nn.CMul)
 
 `module` = `CMul(inputDimension)`
@@ -231,7 +231,7 @@ those scaling factors to produce the output _y_.
 
 
 <a name="nn.Max"/>
-### Max ###
+## Max ##
 
 `module` = `Max(dimension)`
 
@@ -241,7 +241,7 @@ then an `nxq` matrix would be output.
 
 
 <a name="nn.Min"/>
-### Min ###
+## Min ##
 
 `module` = `Min(dimension)`
 
@@ -251,7 +251,7 @@ then an `nxq` matrix would be output.
 
 
 <a name="nn.Mean"/>
-### Mean ###
+## Mean ##
 
 `module` = `Mean(dimension)`
 
@@ -260,7 +260,7 @@ Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2`
 then an `nxq` matrix would be output.
 
 <a name="nn.Sum"/>
-### Sum ###
+## Sum ##
 
 `module` = `Sum(dimension)`
 
@@ -270,7 +270,7 @@ then an `nxq` matrix would be output.
 
 
 <a name="nn.Euclidean"/>
-### Euclidean ###
+## Euclidean ##
 
 `module` = `Euclidean(inputDimension,outputDimension)`
 
@@ -280,7 +280,7 @@ i.e. this layer has the weights `c_i`, `i` = `1`,..,`outputDimension`, where
 `|| c_j - x ||`, where `x` is the input.
 
 <a name="nn.WeightedEuclidean"/>
-### WeightedEuclidean ###
+## WeightedEuclidean ##
 
 `module` = `WeightedEuclidean(inputDimension,outputDimension)`
 
@@ -290,7 +290,7 @@ features of the input space for each center.
 
 
 <a name="nn.Copy"/>
-### Copy ###
+## Copy ##
 
 `module` = `Copy(inputType,outputType)`
 
@@ -299,7 +299,7 @@ type from `inputType` to `outputType`.
 
 
 <a name="nn.Narrow"/>
-### Narrow ###
+## Narrow ##
 
 `module` = `Narrow(dimension, offset, length)`
 
@@ -308,7 +308,7 @@ Narrow is application of
 module.
 
 <a name="nn.Replicate"/>
-### Replicate ###
+## Replicate ##
 
 `module` = `Replicate(nFeature)`
 
@@ -355,7 +355,7 @@ torch> =o
 
 
 <a name="nn.Reshape"/>
-### Reshape ###
+## Reshape ##
 
 `module` = `Reshape(dimension1, dimension2, ..)`
 
@@ -421,7 +421,7 @@ Example:
 
 
 <a name="nn.Select"/>
-### Select ###
+## Select ##
 
 Selects a dimension and index of a  `nxpxqx..`  Tensor.
 
@@ -456,9 +456,9 @@ gives the output:
 [torch.Tensor of dimension 5]
 ```
 
-This can be used in conjunction with [Concat](#nn.Concat)
+This can be used in conjunction with [Concat](containers.md#nn.Concat)
 to emulate the behavior 
-of [Parallel](#nn.Parallel), or to select various parts of an input Tensor to 
+of [Parallel](containers.md#nn.Parallel), or to select various parts of an input Tensor to 
 perform operations on. Here is a fairly complicated example:
 ```lua
 
@@ -492,7 +492,7 @@ end
 ```
 
 <a name="nn.Exp"/>
-### Exp ###
+## Exp ##
 
 Applies the `exp` function element-wise to the input Tensor,
 thus outputting a Tensor of the same dimension.
@@ -505,11 +505,11 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/exp.png)
+![](image/exp.png)
 
 
 <a name="nn.Square"/>
-### Square ###
+## Square ##
 
 Takes the square of each element.
 
@@ -522,10 +522,10 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/square.png)
+![](image/square.png)
 
 <a name="nn.Sqrt"/>
-### Sqrt ###
+## Sqrt ##
 
 Takes the square root of each element.
 
@@ -538,10 +538,10 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/sqrt.png)
+![](image/sqrt.png)
 
 <a name="nn.Power"/>
-### Power ###
+## Power ##
 
 `module` = `Power(p)`
 
@@ -556,5 +556,5 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/power.png)
+![](image/power.png)
 
