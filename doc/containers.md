@@ -1,8 +1,8 @@
 <a name="nn.Containers"/>
-## Containers ##
+# Containers #
 
 <a name="nn.Concat"/>
-### Concat ###
+## Concat ##
 
 ```lua
 module = nn.Concat(dim)
@@ -33,7 +33,7 @@ which gives the output:
 
 
 <a name="nn.Sequential"/>
-### Sequential ###
+## Sequential ##
 
 Sequential provides a means to plug layers together
 in a feed-forward fully connected manner.
@@ -55,11 +55,11 @@ which gives the output:
 ```
 
 <a name="nn.Parallel"/>
-### Parallel ###
+## Parallel ##
 
 `module` = `Parallel(inputDimension,outputDimension)`
 
-Creates a container module that applies its `ith` child module to the  `ith` slice of the input Tensor by using [select](..:torch:tensor#torch.tensor.select) 
+Creates a container module that applies its `ith` child module to the  `ith` slice of the input Tensor by using [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index) 
 on dimension `inputDimension`. It concatenates the results of its contained modules together along dimension `outputDimension`.
 
 Example:
@@ -109,3 +109,11 @@ for i=1,10000 do     -- Train for a few iterations
  print(err)
 end
 ```
+<a name="nn.TableContainers"/>
+## Table Containers ##
+While the above containers are used for manipulating input [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md), table containers are used for manipulating tables :
+ * [ConcatTable](table.md#nn.ConcatTable>)
+ * [SequentialTable](table.md#nn.SequentialTable)
+ * [ParallelTable](table.md#nn.ParallelTable)
+
+These, along with all other modules for manipulating tables can be found [here](doc/table.md).
