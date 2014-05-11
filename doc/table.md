@@ -1,12 +1,12 @@
 <a name="nn.TableLayers"/>
-## Layers for manipulating tables ##
+# Layers for manipulating tables #
 
 This set of modules allows the manipulation of  Tables
 through the layers of a neural network.
 This allows one to build very rich architectures.
 
 Table-based modules work by supporting forward and backward methods that can accept 
-tables as inputs. It turns out that the usual [Sequential](#nn.Sequential) module can do this, so all that is needed is other child modules that take advantage of such tables.
+tables as inputs. It turns out that the usual [Sequential](containers.md#nn.Sequential) module can do this, so all that is needed is other child modules that take advantage of such tables.
 ```lua
 mlp = nn.Sequential();
 t={x,y,z}
@@ -15,10 +15,10 @@ pred=mlp:forward{x,y,z}      -- This is equivalent to the line before
 ```
 
 <a name="nn.ConcatTable"/>
-### ConcatTable ###
+## ConcatTable ##
 
 ConcatTable is a container module that applies each member module to 
-the same input Tensor.
+the same input [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
 
 Example:
 ```lua
@@ -44,7 +44,7 @@ which gives the output:
 ```
 
 <a name="nn.ParallelTable"/>
-### ParallelTable ###
+## ParallelTable ##
 
 ParallelTable is a container module that, in its `forward` method, applies the `ith` member module to the `ith` input, and outputs a table of the set of outputs. 
 
@@ -75,11 +75,12 @@ which gives the output:
 ```
 
 <a name="nn.SplitTable"/>
-### SplitTable ###
+## SplitTable ##
 
 `module` = `SplitTable(dimension)`
 
-Creates a module that takes a Tensor as input and outputs several tables, splitting the Tensor along dimension `dimension`.
+Creates a module that takes a [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor)
+as input and outputs several tables, splitting the Tensor along dimension `dimension`.
 
 Example 1:
 ```lua
@@ -180,11 +181,13 @@ end
 ```
 
 <a name="nn.JoinTable"/>
-### JoinTable ###
+## JoinTable ##
 
 `module` = `JoinTable(dimension)`
 
-Creates a module that takes a list of Tensors as input and outputs a Tensor by joining them together along dimension `dimension`.
+Creates a module that takes a list of Tensors as input and outputs a 
+[Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor)
+by joining them together along dimension `dimension`.
 
 Example:
 ```lua
@@ -259,7 +262,7 @@ end
 ```
 
 <a name="nn.Identity"/>
-### Identity ###
+## Identity ##
 
 `module` = `Identity()`
 
@@ -312,7 +315,7 @@ end
 ```
 
 <a name="nn.PairwiseDistance"/>
-### PairwiseDistance ###
+## PairwiseDistance ##
 
 `module` = `PairwiseDistance(p)` creates a module that takes a table of two vectors as input and outputs the distance between them using the `p`-norm. 
 
@@ -395,7 +398,7 @@ end
 ```
 
 <a name="nn.DotProduct"/>
-### DotProduct ###
+## DotProduct ##
 
 `module` = `DotProduct()` creates a module that takes a table of two vectors as input and outputs the dot product between them.
 
@@ -488,7 +491,7 @@ end
 
 
 <a name="nn.CosineDistance"/>
-### CosineDistance ###
+## CosineDistance ##
 
 `module` = `CosineDistance()` creates a module that takes a table of two vectors as input and outputs the cosine distance between them.
 
@@ -562,7 +565,7 @@ end
 
 
 <a name="nn.CriterionTable"/>
-### CriterionTable ###
+## CriterionTable ##
 
 `module` = `CriterionTable(criterion)`
 
@@ -612,7 +615,7 @@ end
 ```
 
 <a name="nn.CAddTable"/>
-### CAddTable ###
+## CAddTable ##
 
 Takes a table of tensors and outputs summation of all tensors.
 
@@ -654,7 +657,7 @@ m=nn.CAddTable()
 
 
 <a name="nn.CSubTable"/>
-### CSubTable ###
+## CSubTable ##
 
 Takes a table with two tensor and returns the component-wise
 subtraction between them.
@@ -671,7 +674,7 @@ m=nn.CSubTable()
 ```
 
 <a name="nn.CMulTable"/>
-### CMulTable ###
+## CMulTable ##
 
 Takes a table of tensors and outputs the multiplication of all of them.
 
@@ -689,7 +692,7 @@ m=nn.CMulTable()
 ```
 
 <a name="nn.CDivTable"/>
-### CDivTable ###
+## CDivTable ##
 
 Takes a table with two tensor and returns the component-wise
 division between them.
