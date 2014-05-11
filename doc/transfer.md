@@ -1,8 +1,8 @@
 <a name="nn.transfer.dok"/>
-## Transfer Function Layers ##
+# Transfer Function Layers #
 
 <a name="nn.HardTanh"/>
-### HardTanh ###
+## HardTanh ##
 
 Applies the `HardTanh` function element-wise to the input Tensor,
 thus outputting a Tensor of the same dimension.
@@ -22,16 +22,16 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/htanh.png)
+![](image/htanh.png)
 
 
 <a name="nn.HardShrink"/>
-### HardShrink ###
+## HardShrink ##
 
 `module = nn.HardShrink(lambda)`
 
 Applies the hard shrinkage function element-wise to the input
-[Tensor](..:torch:Tensor). The output is the same size as the input.
+[Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md). The output is the same size as the input.
 
 `HardShrinkage` operator is defined as:
 
@@ -48,15 +48,15 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/hshrink.png)
+![](image/hshrink.png)
 
 <a name="nn.SoftShrink"/>
-### SoftShrink ###
+## SoftShrink ##
 
 `module = nn.SoftShrink(lambda)`
 
 Applies the hard shrinkage function element-wise to the input
-[Tensor](..:torch:Tensor). The output is the same size as the input.
+[Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md). The output is the same size as the input.
 
 `HardShrinkage` operator is defined as:
 
@@ -73,11 +73,11 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/sshrink.png)
+![](image/sshrink.png)
 
 
 <a name="nn.SoftMax"/>
-### SoftMax ###
+## SoftMax ##
 
 Applies the `Softmax` function to an n-dimensional input Tensor,
 rescaling them so that the elements of the n-dimensional output Tensor
@@ -94,10 +94,10 @@ oo=m:forward(ii)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/softmax.png)
+![](image/softmax.png)
 
 <a name="nn.SoftMin"/>
-### SoftMin ###
+## SoftMin ##
 
 Applies the `Softmin` function to an n-dimensional input Tensor,
 rescaling them so that the elements of the n-dimensional output Tensor
@@ -114,7 +114,7 @@ oo=m:forward(ii)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/softmin.png)
+![](image/softmin.png)
 
 <a name="nn.SoftPlus"/>
 ### SoftPlus ###
@@ -133,10 +133,10 @@ gi=m:backward(ii,go)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'},{'gradInput',gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/softplus.png)
+![](image/softplus.png)
 
 <a name="nn.SoftSign"/>
-### SoftSign ###
+## SoftSign ##
 
 Applies the `SoftSign` function to an n-dimensioanl input Tensor.
 
@@ -151,10 +151,10 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/softsign.png)
+![](image/softsign.png)
 
 <a name="nn.LogSigmoid"/>
-### LogSigmoid ###
+## LogSigmoid ##
 
 Applies the `LogSigmoid` function to an n-dimensional input Tensor.
 
@@ -170,11 +170,11 @@ gi=m:backward(ii,go)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'},{'gradInput',gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/logsigmoid.png)
+![](image/logsigmoid.png)
 
 
 <a name="nn.LogSoftMax"/>
-### LogSoftMax ###
+## LogSoftMax ##
 
 Applies the `LogSoftmax` function to an n-dimensional input Tensor.
 
@@ -190,10 +190,10 @@ gi=m:backward(ii,go)
 gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'},{'gradInput',gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/logsoftmax.png)
+![](image/logsoftmax.png)
 
 <a name="nn.Sigmoid"/>
-### Sigmoid ###
+## Sigmoid ##
 
 Applies the `Sigmoid` function element-wise to the input Tensor,
 thus outputting a Tensor of the same dimension.
@@ -209,10 +209,10 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/sigmoid.png)
+![](image/sigmoid.png)
 
 <a name="nn.Tanh"/>
-### Tanh ###
+## Tanh ##
 
 Applies the `Tanh` function element-wise to the input Tensor,
 thus outputting a Tensor of the same dimension.
@@ -226,5 +226,5 @@ gi=m:backward(ii,go)
 gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
-![](doc/tanh.png)
+![](image/tanh.png)
 
