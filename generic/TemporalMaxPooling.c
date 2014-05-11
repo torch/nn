@@ -40,11 +40,6 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
   /* get contiguous input */
   input = THTensor_(newContiguous)(input);
 
-  /* get raw pointers */
-  input_data = THTensor_(data)(input);
-  output_data = THTensor_(data)(output);
-  indices_data = THTensor_(data)(indices);
-
   if (input->nDimension == 2)
   {
     /* resize output */
@@ -52,6 +47,12 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
 
     /* indices will contain index locations for each output point */
     THTensor_(resize2d)(indices, noframe, framesize);
+    
+    /* get raw pointers */
+    input_data = THTensor_(data)(input);
+    output_data = THTensor_(data)(output);
+    indices_data = THTensor_(data)(indices);
+    
     for(t = 0; t < noframe; t++)
     {
       real *ip = input_data + t*framesize*dW;
@@ -91,6 +92,12 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
 
     /* indices will contain index locations for each output point */
     THTensor_(resize3d)(indices, nbframe, noframe, framesize);
+    
+    /* get raw pointers */
+    input_data = THTensor_(data)(input);
+    output_data = THTensor_(data)(output);
+    indices_data = THTensor_(data)(indices);
+    
     for(i = 0; i < nbframe; i++)
     {
       real *inputSample_data = input_data + i*niframe*framesize;
