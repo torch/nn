@@ -8,19 +8,19 @@ function. [AbsCriterion](#nn.AbsCriterion) and
 [ClassNLLCriterion](#nn.ClassNLLCriterion) is the criterion of choice when
 dealing with classification.
 
-Criterions are [serializable](..:torch:file#torch.file.serialization).
+Criterions are [serializable](https://github.com/torch/torch7/blob/master/doc/file.md#serialization-methods).
 
 <a name="nn.Criterion"/>
 ## Criterion ##
 
 This is an abstract class which declares methods defined in all criterions.
-This class is [serializable](..:torch:file#torch.file.serialization).
+This class is [serializable](https://github.com/torch/torch7/blob/master/doc/file.md#serialization-methods).
 
 <a name="nn.Criterion.forward"/>
 ### [output] forward(input, target) ###
 
 Given an `input` and a `target`, compute the loss function associated to the criterion and return the
-result. In general `input` and `target` are [tensors](..:torch:tensor), but some specific criterions
+result. In general `input` and `target` are [tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md), but some specific criterions
 might require some other type of object.
 
 The `output` returned should be a scalar in general.
