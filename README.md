@@ -1660,6 +1660,23 @@ which gives:
 -0.63871422284166
 ```
 
+<a name="nn.TemporalMaxPooling"/>
+### TemporalMaxPooling ###
+
+```lua
+module = nn.TemporalMaxPooling(kW, [dW])
+```
+
+Applies 1D max-pooling operation in `kW` regions by step size
+`dW` steps. Input sequence composed of `nInputFrame` frames. The `input` tensor in
+`forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) 
+or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`).
+
+If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be
+`nOutputFrame x inputFrameSize` where
+```lua
+nOutputFrame = (nInputFrame - kW) / dW + 1
+```
 
 <a name="nn.TemporalSubSampling"/>
 ### TemporalSubSampling ###
