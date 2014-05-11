@@ -11,12 +11,12 @@ which does the job for you is provided as standard.
 ## StochasticGradient ##
 
 `StochasticGradient` is a high-level class for training [neural networks](#nn.Module), using a stochastic gradient
-algorithm. This class is [serializable](..:torch:file#torch.file.serialization).
+algorithm. This class is [serializable](https://github.com/torch/torch7/blob/master/doc/serialization.md#serialization).
 
 <a name="nn.StochasticGradient"/>
 ### StochasticGradient(module, criterion) ###
 
-Create a `StochasticGradient` class, using the given [Module](#nn.Module) and [Criterion](#nn.Criterion).
+Create a `StochasticGradient` class, using the given [Module](module.md#nn.Module) and [Criterion](criterion.md#nn.Criterion).
 The class contains [several parameters](#nn.StochasticGradientParameters) you might want to set after initialization.
 
 <a name="nn.StochasticGradientTrain"/>
@@ -34,9 +34,9 @@ An `example` has to be an object which implements the operator
 `example[field]`, where `field` might take the value `1` (input features)
 or `2` (corresponding label which will be given to the criterion). 
 The input is usually a Tensor (except if you use special kind of gradient modules,
-like [table layers](#nn.TableLayers)). The label type depends of the criterion.
-For example, the [MSECriterion](#nn.MSECriterion) expects a Tensor, but the
-[ClassNLLCriterion](#nn.ClassNLLCriterion) except a integer number (the class).
+like [table layers](table.md#nn.TableLayers)). The label type depends of the criterion.
+For example, the [MSECriterion](criterion.md#nn.MSECriterion) expects a Tensor, but the
+[ClassNLLCriterion](criterion.md#nn.ClassNLLCriterion) except a integer number (the class).
 
 Such a dataset is easily constructed by using Lua tables, but it could any `C` object
 for example, as long as required operators/methods are implemented. 
