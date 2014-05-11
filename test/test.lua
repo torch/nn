@@ -1361,8 +1361,8 @@ function nntest.TemporalConvolution()
    local outputGrad1D = outputGrad:select(1, 1)
    local inputGrad1D = module:backward(input1D, outputGrad1D)
    
-   mytester:assertTensorEq(output:select(1,1) output1D, 0.000001, 'error on 2D vs 1D forward)')
-   mytester:assertTensorEq(inputGrad:select(1,1) inputGrad1D, 0.000001, 'error on 2D vs 1D backward)')
+   mytester:assertTensorEq(output:select(1,1), output1D, 0.000001, 'error on 2D vs 1D forward)')
+   mytester:assertTensorEq(inputGrad:select(1,1), inputGrad1D, 0.000001, 'error on 2D vs 1D backward)')
 end
 
 function nntest.TemporalSubSampling()
