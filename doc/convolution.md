@@ -1,17 +1,19 @@
 <a name="nn.convlayers.dok"/>
-## Convolutional layers ##
+# Convolutional layers #
 
-SpatialConvolution and SpatialSubsampling apply to inputs with
-two-dimensional relationships (e.g. images).  TemporalConvolution and
-TemporalSubsampling apply to sequences with a one-dimensional
-relationship (e.g. strings of some kind).
+Spatial [modules](module.md#module) like [SpatialConvolution](#nn.SpatialConvolution) 
+and [SpatialSubSampling](#nn.SpatialSubSampling) apply to inputs with
+two-dimensional relationships (e.g. images). Temporal `modules` like 
+[TemporalConvolution](#nn.TemporalConvolution) and
+[TemporalSubSampling](#nn.TemporalSubSampling) apply to sequences with a one-dimensional
+relationship (e.g. sequences of words, phonemes and letters. Strings of some kind).
 
-For spatial convolutional layers, the input is supposed to be 3D. The
+For spatial layers, the input is supposed to be 3D (excluding the batch dimension). The
 first dimension is the number of features, the last two dimenstions
-are spatial.
+are spatial (e.g. `height x width`).
 
 <a name="nn.SpatialConvolution"/>
-### SpatialConvolution ###
+## SpatialConvolution ##
 
 ```lua
 module = nn.SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH])
@@ -52,7 +54,7 @@ output[i][j][k] = bias[k]
 ```
 
 <a name="nn.VolumetricConvolution"/>
-### VolumetricConvolution ###
+## VolumetricConvolution ##
 
 ```lua
 module = nn.VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH [, dT, dW, dH])
@@ -89,7 +91,7 @@ size `nOutputPlane`). The corresponding gradients can be found in
 `self.gradWeight` and `self.gradBias`.
 
 <a name="nn.SpatialConvolutionMap"/>
-### SpatialConvolutionMap ###
+## SpatialConvolutionMap ##
 
 ```lua
 module = nn.SpatialConvolutionMap(connectionMatrix, kW, kH, [dW], [dH])
@@ -103,7 +105,7 @@ using a [full connection table](#nn.tables.full). One can specify
 different types of connection tables.
 
 <a name="nn.tables.full"/>
-#### Full Connection Table ####
+### Full Connection Table ###
 
 `table = nn.tables.full(nin,nout)`
 
@@ -111,7 +113,7 @@ This is a precomputed table that specifies connections between every
 input and output node.
 
 <a name="nn.tables.onetoone"/>
-#### One to One Connection Table ####
+### One to One Connection Table ###
 
 `table = nn.tables.oneToOne(n)`
 
@@ -119,7 +121,7 @@ This is a precomputed table that specifies a single connection to each
 output node from corresponding input node.
 
 <a name="nn.tables.random"/>
-#### Random Connection Table ####
+### Random Connection Table ###
 
 `table = nn.tables.random(nin,nout, nto)`
 
@@ -128,7 +130,7 @@ This table is randomly populated such that each output unit has
 number of outgoing connections to each input node if possible.
 
 <a name="nn.SpatialLPPooling"/>
-### SpatialLPPooling ###
+## SpatialLPPooling ##
 
 ```lua
 module = nn.SpatialLPPooling(nInputPlane, pnorm, kW, kH, [dW], [dH])
@@ -137,7 +139,7 @@ module = nn.SpatialLPPooling(nInputPlane, pnorm, kW, kH, [dW], [dH])
 Computes the `p` norm in a convolutional manner on a set of 2D input planes.
 
 <a name="nn.SpatialMaxPooling"/>
-### SpatialMaxPooling ###
+## SpatialMaxPooling ##
 
 ```lua
 module = nn.SpatialMaxPooling(kW, kH [, dW, dH])
@@ -148,7 +150,7 @@ Applies 2D max-pooling operation in `kWxkH` regions by step size
 input planes.
 
 <a name="nn.VolumetricMaxPooling"/>
-### VolumetricMaxPooling ###
+## VolumetricMaxPooling ##
 
 ```lua
 module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH])
@@ -159,7 +161,7 @@ Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
 input planes.
 
 <a name="nn.SpatialSubSampling"/>
-### SpatialSubSampling ###
+## SpatialSubSampling ##
 
 ```lua
 module = nn.SpatialSubSampling(nInputPlane, kW, kH, [dW], [dH])
@@ -199,7 +201,7 @@ output[i][j][k] = bias[k]
 ```
 
 <a name="nn.SpatialZeroPadding"/>
-### SpatialZeroPadding ###
+## SpatialZeroPadding ##
 
 ```lua
 module = nn.SpatialZeroPadding(padLeft, padRight, padTop, padBottom)
@@ -209,7 +211,7 @@ Each feature map of a given input is padded with specified number of
 zeros. If padding values are negative, then input is cropped.
 
 <a name="nn.SpatialSubtractiveNormalization"/>
-### SpatialSubtractiveNormalization ###
+## SpatialSubtractiveNormalization ##
 
 ```lua
 module = nn.SpatialSubtractiveNormalization(ninputplane, kernel)
@@ -243,10 +245,10 @@ processed = m:forward(lena)
 w1=image.display(lena)
 w2=image.display(processed)
 ```
-![](lena.jpg)![](lenap.jpg)
+![](image/lena.jpg)![](image/lenap.jpg)
 
 <a name="nn.TemporalConvolution"/>
-### TemporalConvolution ###
+## TemporalConvolution ##
 
 ```lua
 module = nn.TemporalConvolution(inputFrameSize, outputFrameSize, kW, [dW])
@@ -332,7 +334,7 @@ which gives:
 ```
 
 <a name="nn.TemporalMaxPooling"/>
-### TemporalMaxPooling ###
+## TemporalMaxPooling ##
 
 ```lua
 module = nn.TemporalMaxPooling(kW, [dW])
@@ -350,7 +352,7 @@ nOutputFrame = (nInputFrame - kW) / dW + 1
 ```
 
 <a name="nn.TemporalSubSampling"/>
-### TemporalSubSampling ###
+## TemporalSubSampling ##
 
 ```lua
 module = nn.TemporalSubSampling(inputFrameSize, kW, [dW])
@@ -386,7 +388,7 @@ output[i][t] = bias[i] + weight[i] * sum_{k=1}^kW input[i][dW*(t-1)+k)]
 ```
 
 <a name="nn.LookupTable"/>
-### LookupTable ###
+## LookupTable ##
 
 ```lua
 module = nn.LookupTable(nIndex, sizes)
