@@ -1352,9 +1352,9 @@ function nntest.TemporalConvolution()
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
    
    -- 2D matches 1D
-   local output = module:forward(input)
+   local output = module:forward(input):clone()
    local outputGrad = torch.randn(output:size())
-   local inputGrad = module:backward(input, outputGrad)
+   local inputGrad = module:backward(input, outputGrad):clone()
    
    local input1D = input:select(1, 1)
    local output1D = module:forward(input1D)
