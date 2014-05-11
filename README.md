@@ -1594,13 +1594,13 @@ Note that depending of the size of your kernel, several (of the last)
 frames of the sequence might be lost. It is up to the user to add proper padding frames in the input
 sequences.
 
-If the input sequence is a 2D tensor of dimension `inputFrameSize x nInputFrame`, the output sequence will be
+If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be
 `nOutputFrame x outputFrameSize` where
 ```lua
 nOutputFrame = (nInputFrame - kW) / dW + 1
 ```
 
-If the input sequence is a 3D tensor of dimension `nBatchFrame x inputFrameSize x nInputFrame`, the output sequence will be
+If the input sequence is a 3D tensor of dimension `nBatchFrame x nInputFrame x inputFrameSize`, the output sequence will be
 `nBatchFrame x nOutputFrame x outputFrameSize`.
 
 The parameters of the convolution can be found in `self.weight` (Tensor of
@@ -1610,9 +1610,9 @@ size `outputFrameSize`). The corresponding gradients can be found in
 
 For a 2D input, the output value of the layer can be precisely described as:
 ```lua
-output[i][t] = bias[i]
-  + sum_j sum_{k=1}^kW weight[j][k][i]
-                                * input[j][dW*(t-1)+k)]
+output[t][i] = bias[i]
+  + sum_j sum_{k=1}^kW weight[i][j][k]
+                                * input[dW*(t-1)+k)][j]
 ```
 
 Here is a simple example:
@@ -1620,7 +1620,7 @@ Here is a simple example:
 ```lua
 inp=5;  -- dimensionality of one sequence element 
 outp=1; -- number of derived features for one sequence element
-kw=1;   -- kernel only operates on one sequence element at once
+kw=1;   -- kernel only operates on one sequence element per step
 dw=1;   -- we step once and go on to the next sequence element
 
 mlp=nn.TemporalConvolution(inp,outp,kw,dw)
@@ -1660,6 +1660,23 @@ which gives:
 -0.63871422284166
 ```
 
+<a name="nn.TemporalMaxPooling"/>
+### TemporalMaxPooling ###
+
+```lua
+module = nn.TemporalMaxPooling(kW, [dW])
+```
+
+Applies 1D max-pooling operation in `kW` regions by step size
+`dW` steps. Input sequence composed of `nInputFrame` frames. The `input` tensor in
+`forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) 
+or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`).
+
+If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be
+`nOutputFrame x inputFrameSize` where
+```lua
+nOutputFrame = (nInputFrame - kW) / dW + 1
+```
 
 <a name="nn.TemporalSubSampling"/>
 ### TemporalSubSampling ###
@@ -1715,7 +1732,7 @@ at `1` and can go up to `nIndex`. For each index, it outputs a corresponding `Te
 specified by `sizes` (a `LongStorage`) or `size1 x size2 x...`.
 
 Given a 1D input, the output tensors are concatenated, 
-generating a `size1 x size2 x ... x sizeN x n` tensor, where `n`
+generating a `n x size1 x size2 x ... x sizeN` tensor, where `n`
 is the size of a 1D `input` tensor. 
 
 Again with a 1D input, when only `size1` is provided, the `forward(input)` is equivalent to 
@@ -1731,21 +1748,21 @@ where `M` is a 2D matrix `size1 x nIndex` containing the parameters of the looku
  -- a lookup table containing 10 tensors of size 3
  module = nn.LookupTable(10, 3) 
 
- input = torch.Tensor(4)
- input[1] = 1; input[2] = 2; input[3] = 1; input[4] = 10;
+ input = torch.Tensor{1,2,1,10}
  print(module:forward(input))
 ```
 
 Outputs something like:
 ```lua
--0.1784  2.2045 -0.1784 -0.2475
--1.0120  0.0537 -1.0120 -0.2148
--1.2840  0.8685 -1.2840 -0.2792
-[torch.Tensor of dimension 3x4]
+-1.4415 -0.1001 -0.1708
+-0.6945 -0.4350  0.7977
+-1.4415 -0.1001 -0.1708
+-0.0745  1.9275  1.0915
+[torch.DoubleTensor of dimension 4x3]
 ```
-Note that the first column vector is the same than the 3rd one!
+Note that the first row vector is the same as the 3rd one!
 
-Given a 2D input tensor of size `m x n`, the output is a `m x size1 x size2 x ... x sizeN x n` 
+Given a 2D input tensor of size `m x n`, the output is a `m x n x size1 x size2 x ... x sizeN` 
 tensor, where `m` is the number of samples in 
 the batch and `n` is the number of indices per sample.
 

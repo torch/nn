@@ -19,54 +19,119 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
   real *indices_data;
 
   long t, y;
+  
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
 
-  luaL_argcheck(L, input->nDimension == 2, 2, "2D tensor expected");
-  luaL_argcheck(L, input->size[0] >= kW, 2, "input sequence smaller than kernel size");
-
+  luaL_argcheck(L, input->nDimension == 2 || input->nDimension == 3, 2, "2D or 3D(batch mode) tensor expected");
+  
+  if (input->nDimension == 3) 
+  {
+    dimS = 1;
+    dimF = 2;
+  }
+  luaL_argcheck(L, input->size[dimS] >= kW, 2, "input sequence smaller than kernel size");
+  
   /* sizes */
-  niframe = input->size[0];
-  framesize = input->size[1];
+  niframe = input->size[dimS];
+  framesize = input->size[dimF];
   noframe = (niframe - kW) / dW + 1;
-
+   
   /* get contiguous input */
   input = THTensor_(newContiguous)(input);
 
-  /* resize output */
-  THTensor_(resize2d)(output, noframe, framesize);
-
-  /* indices will contain index locations for each output point */
-  THTensor_(resize2d)(indices, noframe, framesize);
-
-  /* get raw pointers */
-  input_data = THTensor_(data)(input);
-  output_data = THTensor_(data)(output);
-  indices_data = THTensor_(data)(indices);
-
-  for(t = 0; t < noframe; t++)
+  if (input->nDimension == 2)
   {
-    real *ip = input_data + t*framesize*dW;
-    real *op = output_data + t*framesize;
-    real *xp = indices_data + t*framesize;
-#pragma omp parallel for private(y)
-    for(y = 0; y < framesize; y++)
+    /* resize output */
+    THTensor_(resize2d)(output, noframe, framesize);
+
+    /* indices will contain index locations for each output point */
+    THTensor_(resize2d)(indices, noframe, framesize);
+    
+    /* get raw pointers */
+    input_data = THTensor_(data)(input);
+    output_data = THTensor_(data)(output);
+    indices_data = THTensor_(data)(indices);
+    
+    for(t = 0; t < noframe; t++)
     {
-      /* compute local max: */
-      long maxindex = -1;
-      real maxval = -THInf;
-      long x;
-      for(x = 0; x < kW; x++)
+      real *ip = input_data + t*framesize*dW;
+      real *op = output_data + t*framesize;
+      real *xp = indices_data + t*framesize;
+#pragma omp parallel for private(y)
+      for(y = 0; y < framesize; y++)
       {
-        real val = ip[x*framesize+y];
-        if (val > maxval)
+        /* compute local max: */
+        long maxindex = -1;
+        real maxval = -THInf;
+        long x;
+        for(x = 0; x < kW; x++)
         {
-          maxval = val;
-          maxindex = x;
+          real val = ip[x*framesize+y];
+          if (val > maxval)
+          {
+            maxval = val;
+            maxindex = x;
+          }
+        }
+
+        /* set output to local max */
+        op[y] = maxval;
+        xp[y] = (real)maxindex;
+      }
+    }
+  }
+  else
+  {
+    /* number of batch frames */
+    long nbframe = input->size[0];
+    long i;
+    
+    /* resize output */
+    THTensor_(resize3d)(output, nbframe, noframe, framesize);
+
+    /* indices will contain index locations for each output point */
+    THTensor_(resize3d)(indices, nbframe, noframe, framesize);
+    
+    /* get raw pointers */
+    input_data = THTensor_(data)(input);
+    output_data = THTensor_(data)(output);
+    indices_data = THTensor_(data)(indices);
+    
+    for(i = 0; i < nbframe; i++)
+    {
+      real *inputSample_data = input_data + i*niframe*framesize;
+      real *outputSample_data = output_data + i*noframe*framesize;
+      real *indicesSample_data = indices_data + i*noframe*framesize;
+      
+      for(t = 0; t < noframe; t++)
+      {
+        real *ip = inputSample_data + t*framesize*dW;
+        real *op = outputSample_data + t*framesize;
+        real *xp = indicesSample_data + t*framesize;
+        
+#pragma omp parallel for private(y)
+        for(y = 0; y < framesize; y++)
+        {
+          /* compute local max: */
+          long maxindex = -1;
+          real maxval = -THInf;
+          long x;
+          for(x = 0; x < kW; x++)
+          {
+            real val = ip[x*framesize+y];
+            if (val > maxval)
+            {
+              maxval = val;
+              maxindex = x;
+            }
+          }
+
+          /* set output to local max */
+          op[y] = maxval;
+          xp[y] = (real)maxindex;
         }
       }
-
-      /* set output to local max */
-      op[y] = maxval;
-      xp[y] = (real)maxindex;
     }
   }
 
@@ -84,6 +149,7 @@ static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
   THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
+  long niframe;
   int noframe;
   long framesize;
 
@@ -100,26 +166,65 @@ static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
   THTensor_(resizeAs)(gradInput, input);
   THTensor_(zero)(gradInput);
 
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
+  
+  if (input->nDimension == 3) 
+  {
+    dimS = 1;
+    dimF = 2;
+  }
   /* sizes */
-  noframe = gradOutput->size[0];
-  framesize = gradOutput->size[1];
+  niframe = input->size[dimS];
+  noframe = gradOutput->size[dimS];
+  framesize = gradOutput->size[dimF];
 
   /* get raw pointers */
   gradInput_data = THTensor_(data)(gradInput);
   gradOutput_data = THTensor_(data)(gradOutput);
   indices_data = THTensor_(data)(indices);
 
-  for(t = 0; t < noframe; t++)
+  if (input->nDimension == 2)
   {
-    real *gip = gradInput_data + t*framesize*dW;
-    real *gop = gradOutput_data + t*framesize;
-    real *xp = indices_data + t*framesize;
-#pragma omp parallel for private(y)
-    for(y = 0; y < framesize; y++)
+    for(t = 0; t < noframe; t++)
     {
-      /* compute local max: */
-      long maxindex = (long)xp[y];
-      gip[maxindex*framesize+y] += gop[y];
+      real *gip = gradInput_data + t*framesize*dW;
+      real *gop = gradOutput_data + t*framesize;
+      real *xp = indices_data + t*framesize;
+#pragma omp parallel for private(y)
+      for(y = 0; y < framesize; y++)
+      {
+        /* compute local max: */
+        long maxindex = (long)xp[y];
+        gip[maxindex*framesize+y] += gop[y];
+      }
+    }
+  }
+  else
+  {
+    /* number of batch frames */
+    long nbframe = input->size[0];
+    long i;
+      
+    for(i = 0; i < nbframe; i++)
+    {
+      real *gradInputSample_data = gradInput_data + i*niframe*framesize;
+      real *gradOutputSample_data = gradOutput_data + i*noframe*framesize;
+      real *indicesSample_data = indices_data + i*noframe*framesize;
+      
+      for(t = 0; t < noframe; t++)
+      {
+        real *gip = gradInputSample_data + t*framesize*dW;
+        real *gop = gradOutputSample_data + t*framesize;
+        real *xp = indicesSample_data + t*framesize;
+#pragma omp parallel for private(y)
+        for(y = 0; y < framesize; y++)
+        {
+          /* compute local max: */
+          long maxindex = (long)xp[y];
+          gip[maxindex*framesize+y] += gop[y];
+        }
+      }
     }
   }
 
