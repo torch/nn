@@ -149,6 +149,7 @@ static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
   THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
+  long niframe;
   int noframe;
   long framesize;
 
@@ -165,26 +166,65 @@ static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
   THTensor_(resizeAs)(gradInput, input);
   THTensor_(zero)(gradInput);
 
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
+  
+  if (input->nDimension == 3) 
+  {
+    dimS = 1;
+    dimF = 2;
+  }
   /* sizes */
-  noframe = gradOutput->size[0];
-  framesize = gradOutput->size[1];
+  niframe = input->size[dimS];
+  noframe = gradOutput->size[dimS];
+  framesize = gradOutput->size[dimF];
 
   /* get raw pointers */
   gradInput_data = THTensor_(data)(gradInput);
   gradOutput_data = THTensor_(data)(gradOutput);
   indices_data = THTensor_(data)(indices);
 
-  for(t = 0; t < noframe; t++)
+  if (input->nDimension == 2)
   {
-    real *gip = gradInput_data + t*framesize*dW;
-    real *gop = gradOutput_data + t*framesize;
-    real *xp = indices_data + t*framesize;
-#pragma omp parallel for private(y)
-    for(y = 0; y < framesize; y++)
+    for(t = 0; t < noframe; t++)
     {
-      /* compute local max: */
-      long maxindex = (long)xp[y];
-      gip[maxindex*framesize+y] += gop[y];
+      real *gip = gradInput_data + t*framesize*dW;
+      real *gop = gradOutput_data + t*framesize;
+      real *xp = indices_data + t*framesize;
+#pragma omp parallel for private(y)
+      for(y = 0; y < framesize; y++)
+      {
+        /* compute local max: */
+        long maxindex = (long)xp[y];
+        gip[maxindex*framesize+y] += gop[y];
+      }
+    }
+  }
+  else
+  {
+    /* number of batch frames */
+    long nbframe = input->size[0];
+    long i;
+      
+    for(i = 0; i < nbframe; i++)
+    {
+      real *gradInputSample_data = gradInput_data + i*niframe*framesize;
+      real *gradOutputSample_data = gradOutput_data + i*noframe*framesize;
+      real *indicesSample_data = indices_data + i*noframe*framesize;
+      
+      for(t = 0; t < noframe; t++)
+      {
+        real *gip = gradInputSample_data + t*framesize*dW;
+        real *gop = gradOutputSample_data + t*framesize;
+        real *xp = indicesSample_data + t*framesize;
+#pragma omp parallel for private(y)
+        for(y = 0; y < framesize; y++)
+        {
+          /* compute local max: */
+          long maxindex = (long)xp[y];
+          gip[maxindex*framesize+y] += gop[y];
+        }
+      }
     }
   }
 
