@@ -1594,13 +1594,13 @@ Note that depending of the size of your kernel, several (of the last)
 frames of the sequence might be lost. It is up to the user to add proper padding frames in the input
 sequences.
 
-If the input sequence is a 2D tensor of dimension `inputFrameSize x nInputFrame`, the output sequence will be
+If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be
 `nOutputFrame x outputFrameSize` where
 ```lua
 nOutputFrame = (nInputFrame - kW) / dW + 1
 ```
 
-If the input sequence is a 3D tensor of dimension `nBatchFrame x inputFrameSize x nInputFrame`, the output sequence will be
+If the input sequence is a 3D tensor of dimension `nBatchFrame x nInputFrame x inputFrameSize`, the output sequence will be
 `nBatchFrame x nOutputFrame x outputFrameSize`.
 
 The parameters of the convolution can be found in `self.weight` (Tensor of
@@ -1610,9 +1610,9 @@ size `outputFrameSize`). The corresponding gradients can be found in
 
 For a 2D input, the output value of the layer can be precisely described as:
 ```lua
-output[i][t] = bias[i]
-  + sum_j sum_{k=1}^kW weight[j][k][i]
-                                * input[j][dW*(t-1)+k)]
+output[t][i] = bias[i]
+  + sum_j sum_{k=1}^kW weight[i][j][k]
+                                * input[dW*(t-1)+k)][j]
 ```
 
 Here is a simple example:
@@ -1620,7 +1620,7 @@ Here is a simple example:
 ```lua
 inp=5;  -- dimensionality of one sequence element 
 outp=1; -- number of derived features for one sequence element
-kw=1;   -- kernel only operates on one sequence element at once
+kw=1;   -- kernel only operates on one sequence element per step
 dw=1;   -- we step once and go on to the next sequence element
 
 mlp=nn.TemporalConvolution(inp,outp,kw,dw)
