@@ -2842,6 +2842,18 @@ loss(x,y) = forward(x,y) = 1-cos(x1, x2), if y=1
 </verbatim>
 
 <a name="nn.MarginRankingCriterion"/>
+
+## BCECriterion ##
+```lua
+criterion = nn.BCECriterion()
+```
+
+Creates a criterion that measures the Binary Cross Entropy between the target and the output:
+
+crossentropy(t,o) = -(t * log(o) + (1 - t) * log(1 - o))
+
+This is used for measuring the error of a reconstruction in for example an auto-encoder.
+
 ## MarginRankingCriterion ##
 
 ```lua
