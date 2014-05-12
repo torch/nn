@@ -403,13 +403,13 @@ function nntest.WeightedEuclidean()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
-local function criterionJacobianTest(cri, input, target)
+local function criterionJacobianTest1D(cri, input, target)
    local eps = 1e-6
    local fx = cri:forward(input, target)
    local dfdx = cri:backward(input, target)
    -- for each input perturbation, do central difference
-   local centraldiff_dfdx = torch.Tensor(100)
-   for i=1,100 do
+   local centraldiff_dfdx = torch.Tensor():resizeAs(dfdx)
+   for i=1,input:size(1) do
       -- f(xi + h)
       input[i] = input[i] + eps
       local fx1 = cri:forward(input, target)
@@ -433,21 +433,21 @@ function nntest.MSECriterion()
    local input = torch.rand(100)
    local target = input:clone():add(torch.rand(100))
    local cri = nn.MSECriterion()
-   criterionJacobianTest(cri, input, target)   
+   criterionJacobianTest1D(cri, input, target)   
 end
 
 function nntest.WeightedMSECriterion()
    local input = torch.rand(100)
    local target = input:clone():add(torch.rand(100))
    local cri = nn.WeightedMSECriterion(torch.rand(100))
-   criterionJacobianTest(cri, input, target)
+   criterionJacobianTest1D(cri, input, target)
 end
 
 function nntest.BCECriterion()
    local input = torch.rand(100)
    local target = input:clone():add(torch.rand(100))
    local cri = nn.BCECriterion()
-   criterionJacobianTest(cri, input, target)
+   criterionJacobianTest1D(cri, input, target)
 end
 
 function nntest.LogSigmoid()
