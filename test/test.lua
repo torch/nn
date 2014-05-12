@@ -403,20 +403,45 @@ function nntest.WeightedEuclidean()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
---function nntest.WeightedMSECriterion()
---   local from  = math.random(100,200)
---   local input = torch.Tensor(from):zero()
---   local target = torch.randn(from)
---   local weight = torch.randn(from)
---   local cri = nn.WeightedMSECriterion(weight)
---   local module = nn.CriterionModule(cri,target)
--- local err = jac.testJacobian(module, input)
---   mytester:assertlt(err, precision, 'error on state ')
-   
---   local ferr, berr = jac.testIO(module, input)
---   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
---   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
---end
+local function criterionJacobianTest(cri, input, target)
+   local eps = 1e-6
+   local fx = cri:forward(input, target)
+   local dfdx = cri:backward(input, target)
+   -- for each input perturbation, do central difference
+   local centraldiff_dfdx = torch.Tensor(100)
+   for i=1,100 do
+      -- f(xi + h)
+      input[i] = input[i] + eps
+      local fx1 = cri:forward(input, target)
+      -- f(xi - h)
+      input[i] = input[i] - 2*eps
+      local fx2 = cri:forward(input, target)   
+      -- f'(xi) = (f(xi + h) - f(xi - h)) / 2h
+      local cdfx = (fx1 - fx2) / (2*eps)
+      -- store f' in appropriate place
+      centraldiff_dfdx[i] = cdfx
+      -- reset input[i]
+      input[i] = input[i] + eps
+   end
+
+   -- compare centraldiff_dfdx with :backward()
+   local err = (centraldiff_dfdx - dfdx):abs():max()
+   mytester:assertlt(err, precision, 'error in difference between central difference and :backward')
+end
+
+function nntest.MSECriterion()
+   local input = torch.rand(100)
+   local target = input:clone():add(torch.rand(100))
+   local cri = nn.MSECriterion()
+   criterionJacobianTest(cri, input, target)   
+end
+
+function nntest.WeightedMSECriterion()
+   local input = torch.rand(100)
+   local target = input:clone():add(torch.rand(100))
+   local cri = nn.WeightedMSECriterion(torch.rand(100))
+   criterionJacobianTest(cri, input, target)
+end
 
 function nntest.LogSigmoid()
    local ini = math.random(10,20)
