@@ -30,6 +30,7 @@ function LookupTable:__init(nIndex, ...)
    self.gradWeight = torch.Tensor(self.size):zero()
    self.inputs = {}
 
+   self.nBackward = 0
    self:reset()
 end
 
