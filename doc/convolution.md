@@ -1,251 +1,35 @@
 <a name="nn.convlayers.dok"/>
 # Convolutional layers #
 
-Spatial [modules](module.md#module) like [SpatialConvolution](#nn.SpatialConvolution) 
-and [SpatialSubSampling](#nn.SpatialSubSampling) apply to inputs with
-two-dimensional relationships (e.g. images). Temporal `modules` like 
-[TemporalConvolution](#nn.TemporalConvolution) and
-[TemporalSubSampling](#nn.TemporalSubSampling) apply to sequences with a one-dimensional
-relationship (e.g. sequences of words, phonemes and letters. Strings of some kind).
+A convolution is an integral that expresses the amount of overlap of one function `g` as it is shifted over another function `f`. It therefore "blends" one function with another. The neural network package supports convolution, pooling, subsampling and other relevant facilities. These are divided base on the dimensionality of the input and output [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor):
+ * [Temporal Modules](#nn.TemporalModules) apply to sequences with a one-dimensional relationship 
+(e.g. sequences of words, phonemes and letters. Strings of some kind).
+   * [TemporalConvolution](#nn.TemporalConvolution) : a 1D convolution over an input sequence ;
+   * [TemporalSubSampling](#nn.TemporalSubSampling) : a 1D sub-sampling over an input sequence ;
+   * [TemporalMaxPooling](#nn.TemporalMaxPooling) : a 1D max-pooling operation over an input sequence ;
+   * [LookupTable](#nn.LookupTable) : a convolution of width `1`, commonly used for word embeddings ;
+ * [Spatial Modules](#nn.SpatialModules) apply to inputs with two-dimensional relationships (e.g. images):
+   * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
+   * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
+   * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
+   * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
+   * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
+   * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
+   * [SpatialSubtractiveNormalization](#nn.SpatialSubtractiveNormalization) : a spatial subtraction operation on a series of 2D inputs using
+a kernel for computing the weighted average in a neighborhood ;
+ * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
+   * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
+   * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
 
-For spatial layers, the input is supposed to be 3D (excluding the batch dimension). The
-first dimension is the number of features, the last two dimenstions
-are spatial (e.g. `height x width`).
+<a name="nn.TemporalModules"/>
+## Temporal Modules ##
+Excluding and optional first batch dimension, temporal layers expect a 2D Tensor as input. The
+first dimension is the number of frames in the sequence (e.g. `nInputFrame`), the last dimenstion
+is the number of features per frame (e.g. `inputFrameSize`). The output will normally have the same number 
+of dimensions, although the size of each dimension may change. These are commonly used for processing acoustic signals or sequences of words, i.e. in Natural Language Processing. 
 
-<a name="nn.SpatialConvolution"/>
-## SpatialConvolution ##
-
-```lua
-module = nn.SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH])
-```
-
-Applies a 2D convolution over an input image composed of several input planes. The `input` tensor in
-`forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`).
-
-The parameters are the following:
-  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
-  * `nOutputPlane`: The number of output planes the convolution layer will produce.
-  * `kW`: The kernel width of the convolution
-  * `kH`: The kernel height of the convolution
-  * `dW`: The step of the convolution in the width dimension. Default is `1`.
-  * `dH`: The step of the convolution in the height dimension. Default is `1`.
-
-Note that depending of the size of your kernel, several (of the last)
-columns or rows of the input image might be lost. It is up to the user to
-add proper padding in images.
-
-If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
-will be `nOutputPlane x owidth x oheight` where
-```lua
-owidth  = (width  - kW) / dW + 1
-oheight = (height - kH) / dH + 1 .
-```
-
-The parameters of the convolution can be found in `self.weight` (Tensor of
-size `nOutputPlane x nInputPlane x kH x kW`) and `self.bias` (Tensor of
-size `nOutputPlane`). The corresponding gradients can be found in
-`self.gradWeight` and `self.gradBias`.
-
-The output value of the layer can be precisely described as:
-```lua
-output[i][j][k] = bias[k]
-  + sum_l sum_{s=1}^kW sum_{t=1}^kH weight[s][t][l][k]
-                                    * input[dW*(i-1)+s)][dH*(j-1)+t][l]
-```
-
-<a name="nn.VolumetricConvolution"/>
-## VolumetricConvolution ##
-
-```lua
-module = nn.VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH [, dT, dW, dH])
-```
-
-Applies a 3D convolution over an input image composed of several input planes. The `input` tensor in
-`forward(input)` is expected to be a 4D tensor (`nInputPlane x time x height x width`).
-
-The parameters are the following:
-  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
-  * `nOutputPlane`: The number of output planes the convolution layer will produce.
-  * `kT`: The kernel size of the convolution in time
-  * `kW`: The kernel width of the convolution
-  * `kH`: The kernel height of the convolution
-  * `dT`: The step of the convolution in the time dimension. Default is `1`.
-  * `dW`: The step of the convolution in the width dimension. Default is `1`.
-  * `dH`: The step of the convolution in the height dimension. Default is `1`.
-
-Note that depending of the size of your kernel, several (of the last)
-columns or rows of the input image might be lost. It is up to the user to
-add proper padding in images.
-
-If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
-will be `nOutputPlane x otime x owidth x oheight` where
-```lua
-otime   = (time  - kT) / dT + 1
-owidth  = (width  - kW) / dW + 1
-oheight = (height - kH) / dH + 1 .
-```
-
-The parameters of the convolution can be found in `self.weight` (Tensor of
-size `nOutputPlane x nInputPlane x kT x kH x kW`) and `self.bias` (Tensor of
-size `nOutputPlane`). The corresponding gradients can be found in
-`self.gradWeight` and `self.gradBias`.
-
-<a name="nn.SpatialConvolutionMap"/>
-## SpatialConvolutionMap ##
-
-```lua
-module = nn.SpatialConvolutionMap(connectionMatrix, kW, kH, [dW], [dH])
-```
-
-This class is a generalization of
-[nn.SpatialConvolution](#nn.SpatialConvolution). It uses a geenric
-connection table between input and output features. The
-[nn.SpatialConvolution](#nn.SpatialConvolution) is equivalent to
-using a [full connection table](#nn.tables.full). One can specify
-different types of connection tables.
-
-<a name="nn.tables.full"/>
-### Full Connection Table ###
-
-`table = nn.tables.full(nin,nout)`
-
-This is a precomputed table that specifies connections between every
-input and output node.
-
-<a name="nn.tables.onetoone"/>
-### One to One Connection Table ###
-
-`table = nn.tables.oneToOne(n)`
-
-This is a precomputed table that specifies a single connection to each
-output node from corresponding input node.
-
-<a name="nn.tables.random"/>
-### Random Connection Table ###
-
-`table = nn.tables.random(nin,nout, nto)`
-
-This table is randomly populated such that each output unit has
-`nto` incoming connections. The algorihtm tries to assign uniform
-number of outgoing connections to each input node if possible.
-
-<a name="nn.SpatialLPPooling"/>
-## SpatialLPPooling ##
-
-```lua
-module = nn.SpatialLPPooling(nInputPlane, pnorm, kW, kH, [dW], [dH])
-```
-
-Computes the `p` norm in a convolutional manner on a set of 2D input planes.
-
-<a name="nn.SpatialMaxPooling"/>
-## SpatialMaxPooling ##
-
-```lua
-module = nn.SpatialMaxPooling(kW, kH [, dW, dH])
-```
-
-Applies 2D max-pooling operation in `kWxkH` regions by step size
-`dWxdH` steps. The number of output features is equal to the number of
-input planes.
-
-<a name="nn.VolumetricMaxPooling"/>
-## VolumetricMaxPooling ##
-
-```lua
-module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH])
-```
-
-Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
-`dTxdWxdH` steps. The number of output features is equal to the number of
-input planes.
-
-<a name="nn.SpatialSubSampling"/>
-## SpatialSubSampling ##
-
-```lua
-module = nn.SpatialSubSampling(nInputPlane, kW, kH, [dW], [dH])
-```
-
-Applies a 2D sub-sampling over an input image composed of several input planes. The `input` tensor in
-`forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`). The number of output
-planes will be the same as `nInputPlane`.
-
-The parameters are the following:
-  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
-  * `kW`: The kernel width of the sub-sampling
-  * `kH`: The kernel height of the sub-sampling
-  * `dW`: The step of the sub-sampling in the width dimension. Default is `1`.
-  * `dH`: The step of the sub-sampling in the height dimension. Default is `1`.
-
-Note that depending of the size of your kernel, several (of the last)
-columns or rows of the input image might be lost. It is up to the user to
-add proper padding in images.
-
-If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
-will be `nInputPlane x oheight x owidth` where
-```lua
-owidth  = (width  - kW) / dW + 1
-oheight = (height - kH) / dH + 1 .
-```
-
-The parameters of the sub-sampling can be found in `self.weight` (Tensor of
-size `nInputPlane`) and `self.bias` (Tensor of size `nInputPlane`). The
-corresponding gradients can be found in `self.gradWeight` and
-`self.gradBias`.
-
-The output value of the layer can be precisely described as:
-```lua
-output[i][j][k] = bias[k]
-  + weight[k] sum_{s=1}^kW sum_{t=1}^kH input[dW*(i-1)+s)][dH*(j-1)+t][k]
-```
-
-<a name="nn.SpatialZeroPadding"/>
-## SpatialZeroPadding ##
-
-```lua
-module = nn.SpatialZeroPadding(padLeft, padRight, padTop, padBottom)
-```
-
-Each feature map of a given input is padded with specified number of
-zeros. If padding values are negative, then input is cropped.
-
-<a name="nn.SpatialSubtractiveNormalization"/>
-## SpatialSubtractiveNormalization ##
-
-```lua
-module = nn.SpatialSubtractiveNormalization(ninputplane, kernel)
-```
-
-Applies a spatial subtraction operation on a series of 2D inputs using
-`kernel` for computing the weighted average in a neighborhood. The
-neighborhood is defined for a local spatial region that is the size as
-kernel and across all features. For a an input image, since there is
-only one feature, the region is only spatial. For an RGB image, the
-weighted anerage is taken over RGB channels and a spatial region.
-
-If the `kernel` is 1D, then it will be used for constructing and seperable
-2D kernel. The operations will be much more efficient in this case.
-
-The kernel is generally chosen as a gaussian when it is believed that
-the correlation of two pixel locations decrease with increasing
-distance. On the feature dimension, a uniform average is used since
-the weighting across features is not known.
-
-For this example we use an external package
-[image](http://www.github.com/clementfarabet/lua---image/)
-
-```lua
-require 'image'
-require 'nn'
-lena = image.rgb2y(image.lena())
-ker = torch.ones(11)
-m=nn.SpatialSubtractiveNormalization(1,ker)
-processed = m:forward(lena)
-w1=image.display(lena)
-w2=image.display(processed)
-```
-![](image/lena.jpg)![](image/lenap.jpg)
+Note: The [LookupTable](#nn.LookupTable) is special in that while it does output a temporal Tensor of size `nOutputFrame x outputFrameSize`, 
+its input is a 1D Tensor of indices of size `nIndices`. Again, this is excluding the option first batch dimension.
 
 <a name="nn.TemporalConvolution"/>
 ## TemporalConvolution ##
@@ -465,3 +249,250 @@ Outputs something like:
 [torch.DoubleTensor of dimension 2x4x3]
 ```
 
+<a name="nn.SpatialModules"/>
+## Spatial Modules ##
+Excluding and optional batch dimension, spatial layers expect a 3D Tensor as input. The
+first dimension is the number of features (e.g. `frameSize`), the last two dimenstions
+are spatial (e.g. `height x width`). These are commonly used for processing images.
+
+<a name="nn.SpatialConvolution"/>
+### SpatialConvolution ###
+
+```lua
+module = nn.SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH])
+```
+
+Applies a 2D convolution over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`).
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `nOutputPlane`: The number of output planes the convolution layer will produce.
+  * `kW`: The kernel width of the convolution
+  * `kH`: The kernel height of the convolution
+  * `dW`: The step of the convolution in the width dimension. Default is `1`.
+  * `dH`: The step of the convolution in the height dimension. Default is `1`.
+
+Note that depending of the size of your kernel, several (of the last)
+columns or rows of the input image might be lost. It is up to the user to
+add proper padding in images.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
+will be `nOutputPlane x owidth x oheight` where
+```lua
+owidth  = (width  - kW) / dW + 1
+oheight = (height - kH) / dH + 1 .
+```
+
+The parameters of the convolution can be found in `self.weight` (Tensor of
+size `nOutputPlane x nInputPlane x kH x kW`) and `self.bias` (Tensor of
+size `nOutputPlane`). The corresponding gradients can be found in
+`self.gradWeight` and `self.gradBias`.
+
+The output value of the layer can be precisely described as:
+```lua
+output[i][j][k] = bias[k]
+  + sum_l sum_{s=1}^kW sum_{t=1}^kH weight[s][t][l][k]
+                                    * input[dW*(i-1)+s)][dH*(j-1)+t][l]
+```
+
+
+<a name="nn.SpatialConvolutionMap"/>
+### SpatialConvolutionMap ###
+
+```lua
+module = nn.SpatialConvolutionMap(connectionMatrix, kW, kH, [dW], [dH])
+```
+
+This class is a generalization of
+[nn.SpatialConvolution](#nn.SpatialConvolution). It uses a generic
+connection table between input and output features. The
+[nn.SpatialConvolution](#nn.SpatialConvolution) is equivalent to
+using a [full connection table](#nn.tables.full). One can specify
+different types of connection tables.
+
+<a name="nn.tables.full"/>
+#### Full Connection Table ####
+
+`table = nn.tables.full(nin,nout)`
+
+This is a precomputed table that specifies connections between every
+input and output node.
+
+<a name="nn.tables.onetoone"/>
+#### One to One Connection Table ####
+
+`table = nn.tables.oneToOne(n)`
+
+This is a precomputed table that specifies a single connection to each
+output node from corresponding input node.
+
+<a name="nn.tables.random"/>
+#### Random Connection Table ####
+
+`table = nn.tables.random(nin,nout, nto)`
+
+This table is randomly populated such that each output unit has
+`nto` incoming connections. The algorihtm tries to assign uniform
+number of outgoing connections to each input node if possible.
+
+<a name="nn.SpatialLPPooling"/>
+### SpatialLPPooling ###
+
+```lua
+module = nn.SpatialLPPooling(nInputPlane, pnorm, kW, kH, [dW], [dH])
+```
+
+Computes the `p` norm in a convolutional manner on a set of 2D input planes.
+
+<a name="nn.SpatialMaxPooling"/>
+### SpatialMaxPooling ###
+
+```lua
+module = nn.SpatialMaxPooling(kW, kH [, dW, dH])
+```
+
+Applies 2D max-pooling operation in `kWxkH` regions by step size
+`dWxdH` steps. The number of output features is equal to the number of
+input planes.
+
+<a name="nn.SpatialSubSampling"/>
+### SpatialSubSampling ###
+
+```lua
+module = nn.SpatialSubSampling(nInputPlane, kW, kH, [dW], [dH])
+```
+
+Applies a 2D sub-sampling over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`). The number of output
+planes will be the same as `nInputPlane`.
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `kW`: The kernel width of the sub-sampling
+  * `kH`: The kernel height of the sub-sampling
+  * `dW`: The step of the sub-sampling in the width dimension. Default is `1`.
+  * `dH`: The step of the sub-sampling in the height dimension. Default is `1`.
+
+Note that depending of the size of your kernel, several (of the last)
+columns or rows of the input image might be lost. It is up to the user to
+add proper padding in images.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
+will be `nInputPlane x oheight x owidth` where
+```lua
+owidth  = (width  - kW) / dW + 1
+oheight = (height - kH) / dH + 1 .
+```
+
+The parameters of the sub-sampling can be found in `self.weight` (Tensor of
+size `nInputPlane`) and `self.bias` (Tensor of size `nInputPlane`). The
+corresponding gradients can be found in `self.gradWeight` and
+`self.gradBias`.
+
+The output value of the layer can be precisely described as:
+```lua
+output[i][j][k] = bias[k]
+  + weight[k] sum_{s=1}^kW sum_{t=1}^kH input[dW*(i-1)+s)][dH*(j-1)+t][k]
+```
+
+<a name="nn.SpatialZeroPadding"/>
+### SpatialZeroPadding ###
+
+```lua
+module = nn.SpatialZeroPadding(padLeft, padRight, padTop, padBottom)
+```
+
+Each feature map of a given input is padded with specified number of
+zeros. If padding values are negative, then input is cropped.
+
+<a name="nn.SpatialSubtractiveNormalization"/>
+### SpatialSubtractiveNormalization ###
+
+```lua
+module = nn.SpatialSubtractiveNormalization(ninputplane, kernel)
+```
+
+Applies a spatial subtraction operation on a series of 2D inputs using
+`kernel` for computing the weighted average in a neighborhood. The
+neighborhood is defined for a local spatial region that is the size as
+kernel and across all features. For a an input image, since there is
+only one feature, the region is only spatial. For an RGB image, the
+weighted anerage is taken over RGB channels and a spatial region.
+
+If the `kernel` is 1D, then it will be used for constructing and seperable
+2D kernel. The operations will be much more efficient in this case.
+
+The kernel is generally chosen as a gaussian when it is believed that
+the correlation of two pixel locations decrease with increasing
+distance. On the feature dimension, a uniform average is used since
+the weighting across features is not known.
+
+For this example we use an external package
+[image](http://www.github.com/clementfarabet/lua---image/)
+
+```lua
+require 'image'
+require 'nn'
+lena = image.rgb2y(image.lena())
+ker = torch.ones(11)
+m=nn.SpatialSubtractiveNormalization(1,ker)
+processed = m:forward(lena)
+w1=image.display(lena)
+w2=image.display(processed)
+```
+![](image/lena.jpg)![](image/lenap.jpg)
+
+<a name="nn.VolumetricModules"/>
+## Volumetric Modules ##
+Excluding and optional batch dimension, volumetric layers expect a 4D Tensor as input. The
+first dimension is the number of features (e.g. `frameSize`), the second is sequential (e.g. `time`) and the 
+last two dimenstions are spatial (e.g. `height x width`). These are commonly used for processing videos (sequences of images).
+
+<a name="nn.VolumetricConvolution"/>
+### VolumetricConvolution ###
+
+```lua
+module = nn.VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH [, dT, dW, dH])
+```
+
+Applies a 3D convolution over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 4D tensor (`nInputPlane x time x height x width`).
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `nOutputPlane`: The number of output planes the convolution layer will produce.
+  * `kT`: The kernel size of the convolution in time
+  * `kW`: The kernel width of the convolution
+  * `kH`: The kernel height of the convolution
+  * `dT`: The step of the convolution in the time dimension. Default is `1`.
+  * `dW`: The step of the convolution in the width dimension. Default is `1`.
+  * `dH`: The step of the convolution in the height dimension. Default is `1`.
+
+Note that depending of the size of your kernel, several (of the last)
+columns or rows of the input image might be lost. It is up to the user to
+add proper padding in images.
+
+If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
+will be `nOutputPlane x otime x owidth x oheight` where
+```lua
+otime   = (time  - kT) / dT + 1
+owidth  = (width  - kW) / dW + 1
+oheight = (height - kH) / dH + 1 .
+```
+
+The parameters of the convolution can be found in `self.weight` (Tensor of
+size `nOutputPlane x nInputPlane x kT x kH x kW`) and `self.bias` (Tensor of
+size `nOutputPlane`). The corresponding gradients can be found in
+`self.gradWeight` and `self.gradBias`.
+
+<a name="nn.VolumetricMaxPooling"/>
+### VolumetricMaxPooling ###
+
+```lua
+module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH])
+```
+
+Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
+`dTxdWxdH` steps. The number of output features is equal to the number of
+input planes.
