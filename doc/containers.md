@@ -1,36 +1,11 @@
 <a name="nn.Containers"/>
 # Containers #
-
-<a name="nn.Concat"/>
-## Concat ##
-
-```lua
-module = nn.Concat(dim)
-```
-Concat concatenates the output of one layer of "parallel" modules along the
-provided dimension `dim`: they take the same inputs, and their output is
-concatenated.
-```lua
-mlp=nn.Concat(1);
-mlp:add(nn.Linear(5,3))
-mlp:add(nn.Linear(5,7))
-print(mlp:forward(torch.randn(5)))
-```
-which gives the output:
-```lua
- 0.7486
- 0.1349
- 0.7924
--0.0371
--0.4794
- 0.3044
--0.0835
--0.7928
- 0.7856
--0.1815
-[torch.Tensor of dimension 10]
-```
-
+Complex neural networks are easily built using container classes:
+ * [Sequential](#nn.Sequential) : plugs layers in a feed-forward fully connected manner ;
+ * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
+ * [Concat](#nn.Concat) : concatenates in one layer several modules ;
+ 
+See also the [Table Containers](#nn.TableContainers) for manipulating tables of [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
 <a name="nn.Sequential"/>
 ## Sequential ##
@@ -109,6 +84,37 @@ for i=1,10000 do     -- Train for a few iterations
  print(err)
 end
 ```
+
+<a name="nn.Concat"/>
+## Concat ##
+
+```lua
+module = nn.Concat(dim)
+```
+Concat concatenates the output of one layer of "parallel" modules along the
+provided dimension `dim`: they take the same inputs, and their output is
+concatenated.
+```lua
+mlp=nn.Concat(1);
+mlp:add(nn.Linear(5,3))
+mlp:add(nn.Linear(5,7))
+print(mlp:forward(torch.randn(5)))
+```
+which gives the output:
+```lua
+ 0.7486
+ 0.1349
+ 0.7924
+-0.0371
+-0.4794
+ 0.3044
+-0.0835
+-0.7928
+ 0.7856
+-0.1815
+[torch.Tensor of dimension 10]
+```
+
 <a name="nn.TableContainers"/>
 ## Table Containers ##
 While the above containers are used for manipulating input [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md), table containers are used for manipulating tables :
