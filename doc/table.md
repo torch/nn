@@ -1,7 +1,7 @@
 <a name="nn.TableLayers"/>
-# Layers for manipulating tables #
+# Layers Layers #
 
-This set of modules allows the manipulation of  Tables
+This set of modules allows the manipulation of Tables
 through the layers of a neural network.
 This allows one to build very rich architectures.
 
