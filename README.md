@@ -2,7 +2,7 @@
 <a name="nn.dok"/>
 # Neural Network Package #
 
-This package provides an easy way to build and train simple or complex neural networks:
+This package provides an easy and modular way to build and train simple or complex neural networks using [Torch](https://github.com/torch/torch7/blob/master/README.md):
  * Modules are the bricks used to build neural networks. Each are themselves neural networks, but can be combined with other networks using containers to create complex neural networks:
    * [Module](doc/module.md#nn.Module) : abstract class inherited by all modules;
    * [Containers](doc/containers.md#nn.Containers) : container classes like [Sequential](doc/containers.md#nn.Sequential), [Parallel](doc/containers.md#nn.Parallel) and [Concat](doc/containers.md#nn.Concat);
@@ -17,3 +17,4 @@ This package provides an easy way to build and train simple or complex neural ne
    * [Overview](doc/overview.md#nn.overview.dok) of the package essentials including modules, containers and training;
    * [Training](doc/training.md#nn.traningneuralnet.dok) : how to train a neural network using [StochasticGradient](doc/training.md#nn.StochasticGradient);
    * [Testing](doc/testing.md) : how to test your modules.
+   * [Experimental Modules](https://github.com/clementfarabet/lua---nnx/blob/master/README.md) : a package containing experimental modules and criteria.
