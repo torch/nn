@@ -4,41 +4,16 @@
 
 This package provides an easy way to build and train simple or complex
 neural networks. The documentation is divided into different sections:
- * [Module](doc/module.md#nn.Module) : an abstract class inherited by the following layers:
-   * [Module Containers](doc/containers.md#nn.Containers) : `Modules` that encapsulate other `Modules`;
-   * [Transfer functions](doc/transfer.md#nn.transfer.dok) : non-linear functions like Tanh and Sigmoid;
-   * [Simple layers](doc/simple.md#nn.simplelayers.dok) : parameterized layers like Linear and SparseLinear, or Tensor manipulations like Copy and Mean;
-   * [Table layers](doc/table.md#nn.TableLayers) : layers for manipulating tables;
-   * Convolution layers : temporal (1D), and spatial (2D) convolutions; 
- * [Criterion](doc/criterions.md#nn.Criterions) : given an input and a target, they compute a gradient according to a given loss function;
- * [Training](doc/training.md#nn.traningneuralnet.dok) a neural network;
- * [Detailed Overview](doc/overview.md#nn.overview.dok) of the package.
-
-## Overview ##
-Each module of a network is composed of [Modules](doc/module.md#nn.Modules) and there
-are several sub-classes of `Module` available: container classes like
-[Sequential](doc/containers.md#nn.Sequential), [Parallel](doc/containers.md#nn.Parallel) and
-[Concat](doc/containers.md#nn.Concat) , which can contain simple layers like
-[Linear](doc/simple.md#nn.Linear), [Mean](doc/simple.md#nn.Mean), [Max](doc/simple.md#nn.Max) and
-[Reshape](doc/simple.md#nn.Reshape), as well as [convolutional layers](doc/convolution.md), and [transfer
-functions](doc/transfer.md) like [Tanh](doc/transfer.md#nn.Tanh).
-
-Loss functions are implemented as sub-classes of
-[Criterion](doc/criterion.md#nn.Criterions). They are helpful to train neural network on
-classical tasks.  Common criterions are the Mean Squared Error
-criterion implemented in [MSECriterion](doc/criterion.md#nn.MSECriterion) and the
-cross-entropy criterion implemented in
-[ClassNLLCriterion](doc/criterion.md#nn.ClassNLLCriterion).
-
-Finally, the [StochasticGradient](doc/training.md#nn.StochasticGradient) class provides a
-high level way to train the neural network of choice, even though it is
-easy with a simple for loop to [train a neural network yourself](doc/training.md#nn.DoItYourself).
-
-## Testing ##
-For those who want to implement their own modules, we suggest using
-the `nn.Jacobian` class for testing the derivatives of their class,
-together with the [torch.Tester](https://github.com/torch/torch7/blob/master/doc/tester.md) class. The sources
-of `nn` package contains sufficiently many examples of such tests.
-
-
-
+ * Modules are the bricks used to build neural networks. Each are themselves neural networks, but can be combined with other networks using containers to create complex neural networks:
+   * [Module](doc/module.md#nn.Module) : abstract class inherited by all modules;
+   * [Containers](doc/containers.md#nn.Containers) : container classes like [Sequential](doc/containers.md#nn.Sequential), [Parallel](doc/containers.md#nn.Parallel) and [Concat](doc/containers.md#nn.Concat);
+   * [Transfer functions](doc/transfer.md#nn.transfer.dok) : non-linear functions like [Tanh](doc/transfer.md#nn.Tanh) and [Sigmoid](doc/transfer.md#nn.Sigmoid);
+   * [Simple layers](doc/simple.md#nn.simplelayers.dok) : like [Linear](doc/simple.md#nn.Linear), [Mean](doc/simple.md#nn.Mean), [Max](doc/simple.md#nn.Max) and [Reshape](doc/simple.md#nn.Reshape); and
+   * [Convolution layers](doc/convolution.md#nn.convlayers.dok) : [Temporal](doc/convolution.md#nn.TemporalModules),  [Spatial](doc/convolution.md#nn.SpatialModules) and [Volumetric](doc/convolution.md#nn.VolumetricModules) convolutions ; 
+ * [Criterions](doc/criterion.md#nn.Criterions) compute a gradient according to a given loss function given an input and a target. Common criterions are :
+   * [MSECriterion](doc/criterion.md#nn.MSECriterion) : the Mean Squared Error criterion used for regression; and 
+   * [ClassNLLCriterion](doc/criterion.md#nn.ClassNLLCriterion) : the Negative Log Likelihood (cross-entropy) criterion used for classification;
+ * Additional documentation :
+   * [Overview](doc/overview.md#nn.overview.dok) of the package essentials including modules, containers and training;
+   * [Training](doc/training.md#nn.traningneuralnet.dok) : how to a neural network using [StochasticGradient](doc/training.md#nn.StochasticGradient) or with with [your own loop](doc/training.md#nn.DoItYourself) ; and
+   * [Testing](doc/testing.md) : how to test your modules.
