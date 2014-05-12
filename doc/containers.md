@@ -119,7 +119,6 @@ which gives the output:
 ## Table Containers ##
 While the above containers are used for manipulating input [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md), table containers are used for manipulating tables :
  * [ConcatTable](table.md#nn.ConcatTable>)
- * [SequentialTable](table.md#nn.SequentialTable)
  * [ParallelTable](table.md#nn.ParallelTable)
 
 These, along with all other modules for manipulating tables can be found [here](doc/table.md).
