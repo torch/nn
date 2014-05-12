@@ -1,10 +1,3 @@
-<a name="nn.Modules"/>
-# Modules #
-
-Modules are bricks to build neural networks. A [Module](#nn.Module) is a neural network
-by itself, but it can be combined with other networks using [container classes](containers.md#nn.Containers) to create
-complex neural networks.
-
 <a name="nn.Module"/>
 ## Module ##
 
