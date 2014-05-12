@@ -1,7 +1,30 @@
 <a name="nn.overview.dok"/>
-# Detailed Overview #
+# Overview #
 
-__Module__
+Each module of a network is composed of [Modules](doc/module.md#nn.Modules) and there
+are several sub-classes of `Module` available: container classes like
+[Sequential](doc/containers.md#nn.Sequential), [Parallel](doc/containers.md#nn.Parallel) and
+[Concat](doc/containers.md#nn.Concat) , which can contain simple layers like
+[Linear](doc/simple.md#nn.Linear), [Mean](doc/simple.md#nn.Mean), [Max](doc/simple.md#nn.Max) and
+[Reshape](doc/simple.md#nn.Reshape), as well as [convolutional layers](doc/convolution.md), and [transfer
+functions](doc/transfer.md) like [Tanh](doc/transfer.md#nn.Tanh).
+
+Loss functions are implemented as sub-classes of
+[Criterion](doc/criterion.md#nn.Criterions). They are helpful to train neural network on
+classical tasks.  Common criterions are the Mean Squared Error
+criterion implemented in [MSECriterion](doc/criterion.md#nn.MSECriterion) and the
+cross-entropy criterion implemented in
+[ClassNLLCriterion](doc/criterion.md#nn.ClassNLLCriterion).
+
+Finally, the [StochasticGradient](doc/training.md#nn.StochasticGradient) class provides a
+high level way to train the neural network of choice, even though it is
+easy with a simple for loop to [train a neural network yourself](doc/training.md#nn.DoItYourself).
+
+## Detailed Overview ##
+This section provides a detailed overview of the neural network package. First the omnipresent [Module](#nn.overview.module) is examined, followed by some examples for [combining modules](#nn.overview.plugandplay) together. The last part explores facilities for [training a neural network](#nn.overview.training).
+
+<a name="nn.overview.module"/>
+### Module ###
 
 A neural network is called a [Module](module.md#nn.Module) (or simply
 _module_ in this documentation) in Torch. `Module` is an abstract
@@ -24,8 +47,8 @@ Some important remarks:
   * `gradInput` contains only valid values after a [backward(input, gradOutput)](module.md#nn.Module.backward).
   * [backward(input, gradOutput)](module.md#nn.Module.backward) uses certain computations obtained during [forward(input)](module.md#nn.Module.forward). You _must_ call `forward()` before calling a `backward()`, on the _same_ `input`, or your gradients are going to be incorrect!
 
-
-__Plug and play__
+<a name="nn.overview.plugandplay"/>
+### Plug and play ###
 
 Building a simple neural network can be achieved by constructing an available layer.
 A linear neural network (perceptron!) is built only in one line:
@@ -52,7 +75,8 @@ Of course, `Sequential` and `Concat` can contains other
 networks you ever dreamt of! See the [[#nn.Modules|complete list of
 available modules]].
 
-__Training a neural network__
+<a name="nn.overview.training"/>
+### Training a neural network ###
 
 Once you built your neural network, you have to choose a particular
 [Criterion](criterion.md#nn.Criterions) to train it. A criterion is a class which
@@ -90,7 +114,8 @@ are implemented.  [See an example](containers.md#nn.DoItStochasticGradient).
 to cut-and-paste it and create a variant to it adapted to your needs
 (if the constraints of `StochasticGradient` do not satisfy you).
 
-__Low Level Training Of a Neural Network__
+<a name="nn.overview.lowlevel"/>
+#### Low Level Training ####
 
 If you want to program the `StochasticGradient` by hand, you
 essentially need to control the use of forwards and backwards through
