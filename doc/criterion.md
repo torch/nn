@@ -107,6 +107,19 @@ function gradUpdate(mlp,x,y,learningRate)
 end
 ```
 
+<a name="nn.BCECriterion"/>
+## BCECriterion ##
+```lua
+criterion = nn.BCECriterion()
+```
+
+Creates a criterion that measures the Binary Cross Entropy between the target and the output:
+
+crossentropy(t,o) = -(t * log(o) + (1 - t) * log(1 - o))
+
+This is used for measuring the error of a reconstruction in for example an auto-encoder.
+
+
 <a name="nn.MarginCriterion"/>
 ## MarginCriterion ##
 

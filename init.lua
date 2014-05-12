@@ -99,6 +99,7 @@ include('MultiMarginCriterion.lua')
 include('MultiLabelMarginCriterion.lua')
 include('L1Cost.lua')
 include('WeightedMSECriterion.lua')
+include('BCECriterion.lua')
 
 include('StochasticGradient.lua')
 
