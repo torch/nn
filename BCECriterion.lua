@@ -11,7 +11,7 @@ function BCECriterion:updateOutput(input, target)
     
     self.output:add(torch.add(-input,1):log():cmul(torch.add(-target,1)))
 
-    if self.sizeAverage
+    if self.sizeAverage then
     	self.output:div(target:size(1))
     end
 
@@ -23,7 +23,7 @@ function BCECriterion:updateGradInput(input, target)
     self.gradInput = torch.cdiv(target,input)
     self.gradInput:add(-1,torch.cdiv(torch.add(-target,1),torch.add(-input,1)))
 
-    if self.sizeAverage
+    if self.sizeAverage then
     	self.gradInput:div(target:size(1))
     end
     

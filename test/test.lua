@@ -443,6 +443,13 @@ function nntest.WeightedMSECriterion()
    criterionJacobianTest(cri, input, target)
 end
 
+function nntest.BCECriterion()
+   local input = torch.rand(100)
+   local target = input:clone():add(torch.rand(100))
+   local cri = nn.BCECriterion()
+   criterionJacobianTest(cri, input, target)
+end
+
 function nntest.LogSigmoid()
    local ini = math.random(10,20)
    local inj = math.random(10,20)
