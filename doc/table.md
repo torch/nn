@@ -1,5 +1,5 @@
 <a name="nn.TableLayers"/>
-# Layers Layers #
+# Table Layers #
 
 This set of modules allows the manipulation of Tables
 through the layers of a neural network.
