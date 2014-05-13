@@ -89,6 +89,7 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
     {
       THTensor_(select)(outputSample, output, 0, i);
       THTensor_(select)(inputSample, input, 0, i);
+      long nOutputSampleFrame = nOutputFrame;
       
       /* bias first */
       for(k = 0; k < nOutputFrame; k++)
@@ -98,12 +99,12 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
       }
 
       /* ouch */
-      for(k = 0; nOutputFrame > 0; k++)
+      for(k = 0; nOutputSampleFrame > 0; k++)
       {
         long outputFrameStride = (kW-1)/dW+1;
         long inputFrameStride = outputFrameStride*dW;
         long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
-        nOutputFrame -= nFrame;
+        nOutputSampleFrame -= nFrame;
 
         THTensor_(setStorage2d)(inputWindow, inputSample->storage,
                                 inputSample->storageOffset+k*dW*inputSample->size[1],
@@ -198,14 +199,15 @@ static int nn_(TemporalConvolution_updateGradInput)(lua_State *L)
     {
       THTensor_(select)(gradOutputSample, gradOutput, 0, i);
       THTensor_(select)(gradInputSample, gradInput, 0, i);
+      int nOutputSampleFrame = nOutputFrame;
       
       /* ouch */
-      for(k = 0; nOutputFrame > 0; k++)
+      for(k = 0; nOutputSampleFrame > 0; k++)
       {
         long outputFrameStride = (kW-1)/dW+1;
         long inputFrameStride = outputFrameStride*dW;
         long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
-        nOutputFrame -= nFrame;
+        nOutputSampleFrame -= nFrame;
 
         THTensor_(setStorage2d)(gradOutputWindow, gradOutputSample->storage,
                                 gradOutputSample->storageOffset + k*gradOutputSample->size[1],
@@ -305,6 +307,7 @@ static int nn_(TemporalConvolution_accGradParameters)(lua_State *L)
     {
       THTensor_(select)(gradOutputSample, gradOutput, 0, i);
       THTensor_(select)(inputSample, input, 0, i);
+      int nOutputSampleFrame = nOutputFrame;
       
       /* bias first */
       for(k = 0; k < nOutputFrame; k++)
@@ -314,15 +317,15 @@ static int nn_(TemporalConvolution_accGradParameters)(lua_State *L)
       }
 
       /* ouch */
-      for(k = 0; nOutputFrame > 0; k++)
+      for(k = 0; nOutputSampleFrame > 0; k++)
       {
         long outputFrameStride = (kW-1)/dW+1;
         long inputFrameStride = outputFrameStride*dW;
         long nFrame = (nInputFrame-k*dW-kW)/inputFrameStride + 1;
-        nOutputFrame -= nFrame;
+        nOutputSampleFrame -= nFrame;
 
         THTensor_(setStorage2d)(inputWindow, inputSample->storage,
-                                input->storageOffset+k*dW*inputSample->size[1],
+                                inputSample->storageOffset+k*dW*inputSample->size[1],
                                 nFrame, inputFrameStride*inputSample->size[1],
                                 kW*inputSample->size[1], 1);
 
