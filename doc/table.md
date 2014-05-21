@@ -19,7 +19,7 @@ This allows one to build very rich architectures:
    * [CMulTable](#nn.CMulTable) : multiplication of input Tensors;
    * [CDivTable](#nn.CDivTable) : division of input Tensors;
  * Table of Criteria :
-   * [CriterionTable](#nn.CriterionTable) : wraps a Criterion module so that it can accept a Table of inputs.
+   * [CriterionTable](#nn.CriterionTable) : wraps a [Criterion](criterion.md#nn.Criterion) so that it can accept a Table of inputs.
 
 Table-based modules work by supporting forward and backward methods that can accept 
 tables as inputs. It turns out that the usual [Sequential](containers.md#nn.Sequential) module can do this, so all that is needed is other child modules that take advantage of such tables.
