@@ -231,3 +231,13 @@ gnuplot.grid(true)
 ```
 ![](image/tanh.png)
 
+<a name="nn.AddConstant"/>
+## AddConstant ##
+
+Adds a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `x + k`, where `k` is a scalar.
+
+<a name="nn.MullConstant"/>
+## MulConstant ##
+
+Multiplies input tensor by a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `k * x`, where `k` is a scalar.
+
