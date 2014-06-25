@@ -125,7 +125,7 @@ gnuplot.grid(true)
 Applies the `SoftPlus` function to an n-dimensioanl input Tensor.
 Can be used to constrain the output of a machine to always be positive.
 
-`SoftPlus` is defined as `f_i(x)` = `log(1 + exp(x_i)))`.
+`SoftPlus` is defined as `f_i(x)` = `1/beta * log(1 + exp(beta * x_i))`.
 
 ```lua
 ii=torch.randn(10)
