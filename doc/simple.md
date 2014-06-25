@@ -76,7 +76,7 @@ A sparse input vector may be created as so..
 
 The first column contains indices, the second column contains 
 values in a a vector where all other elements are zeros. The 
-indices should not exceed the stated dimesions of the input to the 
+indices should not exceed the stated dimensions of the input to the 
 layer (10000 in the example).
 
 <a name="nn.Abs"/>
