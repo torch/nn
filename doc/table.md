@@ -93,10 +93,14 @@ which gives the output:
 <a name="nn.SplitTable"/>
 ## SplitTable ##
 
-`module` = `SplitTable(dimension)`
+`module` = `SplitTable(dimension, nInputDims)`
 
 Creates a module that takes a [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor)
 as input and outputs several tables, splitting the Tensor along dimension `dimension`.
+
+The optional parameter `nInputDims` allows to specify the number of dimensions that
+this module will receive. This makes it possible to forward both minibatch and
+non-minibatch tensors through the same module.
 
 Example 1:
 ```lua
@@ -132,7 +136,7 @@ gives the output:
 Example 2:
 ```lua
 mlp=nn.SplitTable(1)
-pred=mlp:forward(torch.randn(10,3))
+pred=mlp:forward(torch.randn(4,3))
 for i,k in pairs(pred) do print(i,k); end
 ```
 gives the output:
@@ -160,6 +164,62 @@ gives the output:
  1.2309
  0.0983
 [torch.Tensor of dimension 3]
+```
+
+Example 3:
+```lua
+mlp=nn.SplitTable(1,2)
+pred=mlp:forward(torch.randn(2,4,3))
+for i,k in pairs(pred) do print(i,k); end
+pred=mlp:forward(torch.randn(4,3))
+for i,k in pairs(pred) do print(i,k); end
+```
+gives the output:
+```lua
+1
+-1.3533  0.7448 -0.8818
+-0.4521 -1.2463  0.0316
+[torch.DoubleTensor of dimension 2x3]
+
+2
+ 0.1130 -1.3904  1.4620
+ 0.6722  2.0910 -0.2466
+[torch.DoubleTensor of dimension 2x3]
+
+3
+ 0.4672 -1.2738  1.1559
+ 0.4664  0.0768  0.6243
+[torch.DoubleTensor of dimension 2x3]
+
+4
+ 0.4194  1.2991  0.2241
+ 2.9786 -0.6715  0.0393
+[torch.DoubleTensor of dimension 2x3]
+
+
+1
+-1.8932
+ 0.0516
+-0.6316
+[torch.DoubleTensor of dimension 3]
+
+2
+-0.3397
+-1.8881
+-0.0977
+[torch.DoubleTensor of dimension 3]
+
+3
+ 0.0135
+ 1.2089
+ 0.5785
+[torch.DoubleTensor of dimension 3]
+
+4
+-0.1758
+-0.0776
+-1.1013
+[torch.DoubleTensor of dimension 3]
 ```
 
 A more complicated example:
@@ -199,13 +259,17 @@ end
 <a name="nn.JoinTable"/>
 ## JoinTable ##
 
-`module` = `JoinTable(dimension)`
+`module` = `JoinTable(dimension, nInputDims)`
 
 Creates a module that takes a list of Tensors as input and outputs a 
 [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor)
 by joining them together along dimension `dimension`.
 
-Example:
+The optional parameter `nInputDims` allows to specify the number of dimensions that
+this module will receive. This makes it possible to forward both minibatch and
+non-minibatch tensors through the same module.
+
+Example 1:
 ```lua
 x=torch.randn(5,1)
 y=torch.randn(5,1)
@@ -227,12 +291,14 @@ gives the output:
  0.6580
  0.1784
 -1.7362
- 
+[torch.DoubleTensor of dimension 10x1]
+
  1.3965  0.1575
  0.5146  0.4491
 -1.5244  0.6580
 -0.9540  0.1784
  0.4256 -1.7362
+[torch.DoubleTensor of dimension 5x2]
 
  1.3965
  0.5146
@@ -242,6 +308,38 @@ gives the output:
 -1.2660
  1.0869
 [torch.Tensor of dimension 7x1]
+```
+
+Example 2:
+```lua
+module = nn.JoinTable(2,2)
+
+x=torch.randn(3,1)
+y=torch.randn(3,1)
+
+mx=torch.randn(2,3,1)
+my=torch.randn(2,3,1)
+
+print(module:forward{x,y})
+print(module:forward{mx,my})
+```
+gives the output:
+```lua
+ 0.4288  1.2002
+-1.4084 -0.7960
+-0.2091  0.1852
+[torch.DoubleTensor of dimension 3x2]
+
+(1,.,.) =
+  0.5561  0.1228
+ -0.6792  0.1153
+  0.0687  0.2955
+
+(2,.,.) =
+  2.5787  1.8185
+ -0.9860  0.6756
+  0.1989 -0.4327
+[torch.DoubleTensor of dimension 2x3x2]
 ```
 
 A more complicated example:

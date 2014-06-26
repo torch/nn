@@ -1830,6 +1830,43 @@ function nntest.MulConstant()
   mytester:assertlt(err, precision, 'bprop error ')
 end
 
+function nntest.JoinTable()
+   local tensor = torch.rand(3,4,5)
+   local input = {tensor, tensor}
+   local module
+   for d = 1,tensor:dim() do
+      module = nn.JoinTable(d)
+      mytester:asserteq(module:forward(input):size(d), tensor:size(d)*2, "dimension " .. d)
+   end
+
+   -- Minibatch
+   local tensor = torch.rand(3,4,5)
+   local input = {tensor, tensor}
+   local module
+   for d = 1,tensor:dim()-1 do
+      module = nn.JoinTable(d, 2)
+      mytester:asserteq(module:forward(input):size(d+1), tensor:size(d+1)*2, "dimension " .. d)
+   end
+end
+
+function nntest.SplitTable()
+   local input = torch.randn(3,4,5)
+   local module
+   for d = 1,input:dim() do
+      module = nn.SplitTable(d)
+      mytester:asserteq(#module:forward(input), input:size(d), "dimension " .. d)
+   end
+
+   -- Minibatch
+   local input = torch.randn(3,4,5)
+   local module
+   for d = 1,input:dim()-1 do
+      module = nn.SplitTable(d, 2)
+      mytester:asserteq(#module:forward(input), input:size(d+1), "dimension " .. d)
+   end
+end
+
+
 mytester:add(nntest)
 
 if not nn then
