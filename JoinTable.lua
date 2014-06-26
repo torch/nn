@@ -1,18 +1,11 @@
 local JoinTable, parent = torch.class('nn.JoinTable', 'nn.Module')
 
-function JoinTable:__init(dimension)
+function JoinTable:__init(dimension, nInputDims)
    parent.__init(self)
    self.size = torch.LongStorage()
    self.dimension = dimension
    self.gradInput = {}
-   self.nInputDims = nil
-end 
-
--- Sets the expected number of dimensions
--- in a non-minibatch input.
-function JoinTable:setNumInputDims(nInputDims)
    self.nInputDims = nInputDims
-   return self
 end
 
 function JoinTable:updateOutput(input) 
@@ -40,7 +33,6 @@ function JoinTable:updateOutput(input)
       offset = offset + currentOutput:size(dimension)
    end
    return self.output
-
 end
 
 function JoinTable:updateGradInput(input, gradOutput)

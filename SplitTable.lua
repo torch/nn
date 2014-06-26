@@ -1,17 +1,10 @@
 local SplitTable, parent = torch.class('nn.SplitTable', 'nn.Module')
 
-function SplitTable:__init(dimension)
+function SplitTable:__init(dimension, nInputDims)
    parent.__init(self)
    self.modules = {}
    self.dimension = dimension
-   self.nInputDims = nil
-end
-
--- Sets the expected number of dimensions
--- in a non-minibatch input.
-function SplitTable:setNumInputDims(nInputDims)
    self.nInputDims = nInputDims
-   return self
 end
 
 function SplitTable:updateOutput(input)

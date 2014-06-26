@@ -93,12 +93,12 @@ which gives the output:
 <a name="nn.SplitTable"/>
 ## SplitTable ##
 
-`module` = `SplitTable(dimension)`
+`module` = `SplitTable(dimension, nInputDims)`
 
 Creates a module that takes a [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor)
 as input and outputs several tables, splitting the Tensor along dimension `dimension`.
 
-The method `setNumInputDims` allows to specify the number of dimensions that
+The optional parameter `nInputDims` allows to specify the number of dimensions that
 this module will receive. This makes it possible to forward both minibatch and
 non-minibatch tensors through the same module.
 
@@ -168,8 +168,7 @@ gives the output:
 
 Example 3:
 ```lua
-mlp=nn.SplitTable(1)
-mlp:setNumInputDims(2)
+mlp=nn.SplitTable(1,2)
 pred=mlp:forward(torch.randn(2,4,3))
 for i,k in pairs(pred) do print(i,k); end
 pred=mlp:forward(torch.randn(4,3))
@@ -260,13 +259,13 @@ end
 <a name="nn.JoinTable"/>
 ## JoinTable ##
 
-`module` = `JoinTable(dimension)`
+`module` = `JoinTable(dimension, nInputDims)`
 
 Creates a module that takes a list of Tensors as input and outputs a 
 [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor)
 by joining them together along dimension `dimension`.
 
-The method `setNumInputDims` allows to specify the number of dimensions that
+The optional parameter `nInputDims` allows to specify the number of dimensions that
 this module will receive. This makes it possible to forward both minibatch and
 non-minibatch tensors through the same module.
 
@@ -313,8 +312,7 @@ gives the output:
 
 Example 2:
 ```lua
-module = nn.JoinTable(2)
-module:setNumInputDims(2)
+module = nn.JoinTable(2,2)
 
 x=torch.randn(3,1)
 y=torch.randn(3,1)

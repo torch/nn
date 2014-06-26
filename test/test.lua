@@ -1804,8 +1804,7 @@ function nntest.JoinTable()
    local input = {tensor, tensor}
    local module
    for d = 1,tensor:dim()-1 do
-      module = nn.JoinTable(d)
-      module:setNumInputDims(2)
+      module = nn.JoinTable(d, 2)
       mytester:asserteq(module:forward(input):size(d+1), tensor:size(d+1)*2, "dimension " .. d)
    end
 end
@@ -1822,8 +1821,7 @@ function nntest.SplitTable()
    local input = torch.randn(3,4,5)
    local module
    for d = 1,input:dim()-1 do
-      module = nn.SplitTable(d)
-      module:setNumInputDims(2)
+      module = nn.SplitTable(d, 2)
       mytester:asserteq(#module:forward(input), input:size(d+1), "dimension " .. d)
    end
 end
