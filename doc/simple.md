@@ -468,8 +468,77 @@ Example:
  12
  16
 [torch.Tensor of dimension 16]
+```
 
+<a name="nn.View"/>
+## Reshape ##
 
+`module` = `View(sizes)`
+
+This module creates a new view of the input tensor using the `sizes` passed to
+the constructor. The parameter `sizes` can either be a `LongStorage` or numbers.
+
+Example:
+```lua
+> x=torch.Tensor(4,4)
+> for i=1,4 do
+>  for j=1,4 do
+>   x[i][j]=(i-1)*4+j;
+>  end
+> end
+> print(x)
+
+x=torch.Tensor(4,4)
+for i=1,4 do
+ for j=1,4 do
+  x[i][j]=(i-1)*4+j;
+ end
+end
+print(x)
+
+  1   2   3   4
+  5   6   7   8
+  9  10  11  12
+ 13  14  15  16
+[torch.Tensor of dimension 4x4]
+
+> print(nn.View(2,8):forward(x))
+
+  1   2   3   4   5   6   7   8
+  9  10  11  12  13  14  15  16
+[torch.DoubleTensor of dimension 2x8]
+
+> print(nn.View(torch.LongStorage{8,2}):forward(x))
+
+  1   2
+  3   4
+  5   6
+  7   8
+  9  10
+ 11  12
+ 13  14
+ 15  16
+[torch.DoubleTensor of dimension 8x2]
+
+> print(nn.View(16):forward(x))
+
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+[torch.DoubleTensor of dimension 16]
 ```
 
 
