@@ -121,4 +121,4 @@ While the above containers are used for manipulating input [Tensors](https://git
  * [ConcatTable](table.md#nn.ConcatTable)
  * [ParallelTable](table.md#nn.ParallelTable)
 
-These, along with all other modules for manipulating tables can be found [here](doc/table.md).
+These, along with all other modules for manipulating tables can be found [here](table.md).
