@@ -9,6 +9,7 @@ function View:__init(...)
    assert(torch.typename(self.size)=="torch.LongStorage", "expecting a LongStorage")
    self.numElements = 1
    for i = 1,#self.size do
+      assert(self.size[i]>0, "Only positive sizes are allowed")
       self.numElements = self.numElements * self.size[i]
    end
 
