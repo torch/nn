@@ -1884,6 +1884,13 @@ function nntest.View()
    mytester:assertTableEq(module:forward(minibatch):nElement(),
       minibatch:nElement(),
       "Error in minibatch nElement")
+   local module = nn.View(-1):setNumInputDims(1)
+   mytester:assertTableEq(module:forward(minibatch):size(1),
+      minibatch:size(1),
+      "Error in minibatch dimension with size -1")
+   mytester:assertTableEq(module:forward(minibatch):nElement(),
+      minibatch:nElement(),
+      "Error in minibatch nElement with size -1")
 end
 
 -- Define a test for SpatialUpSamplingCuda

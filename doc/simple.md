@@ -478,7 +478,11 @@ Example:
 This module creates a new view of the input tensor using the `sizes` passed to
 the constructor. The parameter `sizes` can either be a `LongStorage` or numbers.
 
-Example:
+The method `setNumInputDims()` allows to specify the expected number of dimensions
+of the inputs of the modules. This makes it possible to use minibatch inputs when
+using a size -1 for one of the dimensions.
+
+Example 1:
 ```lua
 > x=torch.Tensor(4,4)
 > for i=1,4 do
@@ -487,14 +491,6 @@ Example:
 >  end
 > end
 > print(x)
-
-x=torch.Tensor(4,4)
-for i=1,4 do
- for j=1,4 do
-  x[i][j]=(i-1)*4+j;
- end
-end
-print(x)
 
   1   2   3   4
   5   6   7   8
@@ -541,6 +537,23 @@ print(x)
 [torch.DoubleTensor of dimension 16]
 ```
 
+Example 2:
+```lua
+> input = torch.Tensor(2,3)
+> minibatch = torch.Tensor(5,2,3)
+> m = nn.View(-1):setNumInputDims(2)
+> print(#m:forward(input))
+
+ 6
+[torch.LongStorage of size 2]
+
+> print(#m:forward(minibatch))
+
+ 5
+ 6
+[torch.LongStorage of size 2]
+
+```
 
 <a name="nn.Select"/>
 ## Select ##
