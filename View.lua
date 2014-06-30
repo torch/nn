@@ -9,21 +9,30 @@ function View:__init(...)
    assert(torch.typename(self.size)=="torch.LongStorage", "expecting a LongStorage")
    self.numElements = 1
    for i = 1,#self.size do
-      assert(self.size[i]>0, "Only positive sizes are allowed")
       self.numElements = self.numElements * self.size[i]
    end
 
    self.output = nil
    self.gradInput = nil
+   self.numInputDims = nil
 end
 
-local function isMinibatch(input, numElements)
-   return input:dim() > 1 and 
-          input:nElement()/input:size(1) == numElements
+function View:setNumInputDims(numInputDims)
+   self.numInputDims = numInputDims
+   return self
+end
+
+local function isMinibatch(input, numInputDims, numElements)
+   if numInputDims then
+      return input:dim() == numInputDims+1
+   else
+      return input:dim() > 1 and
+             input:nElement()/input:size(1) == numElements
+   end
 end
 
 function View:updateOutput(input)
-   if isMinibatch(input, self.numElements) then
+   if isMinibatch(input, self.numInputDims, self.numElements) then
       self.output = input:view(input:size(1), unpack(self.size:totable()))
    else
       self.output = input:view(self.size)
