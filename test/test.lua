@@ -239,7 +239,7 @@ end
 
 function nntest.Linear()
    local ini = math.random(5,7)
-   local inj_vals = {math.random(5,7), 1}  -- Also test the inj = 1 spetial case
+   local inj_vals = {math.random(5,7), 1}  -- Also test the inj = 1 spatial case
    local input = torch.Tensor(ini):zero()
 
    for ind, inj in pairs(inj_vals) do
