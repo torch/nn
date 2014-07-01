@@ -40,8 +40,14 @@ function Linear:updateOutput(input)
       local nunit = self.bias:size(1)
 
       self.output:resize(nframe, nunit)
-      self.output:zero():addr(1, input.new(nframe):fill(1), self.bias)
-      self.output:addmm(1, input, self.weight:t())
+      if nunit == 1 then
+         -- Special case to fix output size of 1 bug:
+         self.output:zero():add(self.bias[1])
+         self.output:select(2,1):addmv(1, input, self.weight:select(1,1))
+      else
+         self.output:zero():addr(1, input.new(nframe):fill(1), self.bias)
+         self.output:addmm(1, input, self.weight:t())
+      end
    else
       error('input must be vector or matrix')
    end
@@ -76,9 +82,15 @@ function Linear:accGradParameters(input, gradOutput, scale)
    elseif input:dim() == 2 then
       local nframe = input:size(1)
       local nunit = self.bias:size(1)
-
-      self.gradWeight:addmm(scale, gradOutput:t(), input)
-      self.gradBias:addmv(scale, gradOutput:t(), input.new(nframe):fill(1))
+      
+      if nunit == 1 then
+         -- Special case to fix output size of 1 bug:
+         self.gradWeight:select(1,1):addmv(scale, input:t(), gradOutput:select(2,1))
+         self.gradBias:addmv(scale, gradOutput:t(), input.new(nframe):fill(1))
+      else
+         self.gradWeight:addmm(scale, gradOutput:t(), input)
+         self.gradBias:addmv(scale, gradOutput:t(), input.new(nframe):fill(1))
+      end
    end
 
 end
