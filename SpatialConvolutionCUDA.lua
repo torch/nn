@@ -37,9 +37,10 @@ end
 
 function SpatialConvolutionCUDA:updateOutput(input)
    input.nn.SpatialConvolutionCUDA_updateOutput(self, input)
-   for i = 1,self.nOutputPlane do
-      self.output[i]:add(self.bias[i])
-   end
+   local biasrep = self.bias:new():resize(self.bias:size(1),1,1,1):expandAs(self.output)
+   self.biasrepc = self.biasrepc or biasrep.new()
+   self.biasrepc:resizeAs(self.output):copy(biasrep)
+   self.output:add(self.biasrepc)
    return self.output
 end
 
