@@ -55,9 +55,8 @@ function SpatialConvolutionCUDA:accGradParameters(input, gradOutput, scale)
    if self.partialSum > 0 then
       self.gradWeight:add(self.gradWeightPartial:sum(1):resizeAs(self.gradWeight))
    end
-   for i = 1,self.nOutputPlane do
-      self.gradBias:narrow(1,i,1):add(scale * gradOutput[i]:sum() )
-   end
+   local sums = gradOutput:new():resize(gradOutput:size(1), gradOutput:size(2)*gradOutput:size(3)*gradOutput:size(4)):sum(2)
+   self.gradBias:add(scale, sums)
 end
 
 -- this routine copies weight+bias from a regular SpatialConvolution module
