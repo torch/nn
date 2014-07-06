@@ -92,6 +92,18 @@ function Concat:updateParameters(learningRate)
    end
 end
 
+function Concat:training()
+   for i=1,#self.modules do
+      self.modules[i]:training()
+   end
+end
+
+function Concat:evaluate()
+   for i=1,#self.modules do
+      self.modules[i]:evaluate()
+   end
+end
+
 function Concat:share(mlp,...)
    for i=1,#self.modules do
       self.modules[i]:share(mlp.modules[i],...); 

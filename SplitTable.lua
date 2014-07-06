@@ -2,7 +2,6 @@ local SplitTable, parent = torch.class('nn.SplitTable', 'nn.Module')
 
 function SplitTable:__init(dimension)
    parent.__init(self)
-   self.modules = {} 
    self.dimension = dimension
 end
 

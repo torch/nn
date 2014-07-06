@@ -63,6 +63,18 @@ function ConcatTable:updateParameters(learningRate)
    end
 end
 
+function ConcatTable:training()
+   for i=1,#self.modules do
+      self.modules[i]:training()
+   end
+end
+
+function ConcatTable:evaluate()
+   for i=1,#self.modules do
+      self.modules[i]:evaluate()
+   end
+end
+
 function ConcatTable:share(mlp,...)
    for i=1,#self.modules do
       self.modules[i]:share(mlp.modules[i],...); 

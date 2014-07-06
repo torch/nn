@@ -61,6 +61,18 @@ function ParallelTable:updateParameters(learningRate)
    end
 end
 
+function ParallelTable:training()
+   for i=1,#self.modules do
+      self.modules[i]:training()
+   end
+end
+
+function ParallelTable:evaluate()
+   for i=1,#self.modules do
+      self.modules[i]:evaluate()
+   end
+end
+
 function ParallelTable:share(mlp,...)
    for i=1,#self.modules do
       self.modules[i]:share(mlp.modules[i],...); 
