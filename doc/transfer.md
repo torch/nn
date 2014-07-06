@@ -125,7 +125,7 @@ gnuplot.grid(true)
 Applies the `SoftPlus` function to an n-dimensioanl input Tensor.
 Can be used to constrain the output of a machine to always be positive.
 
-`SoftPlus` is defined as `f_i(x)` = `log(1 + exp(x_i)))`.
+`SoftPlus` is defined as `f_i(x)` = `1/beta * log(1 + exp(beta * x_i))`.
 
 ```lua
 ii=torch.randn(10)
@@ -230,4 +230,14 @@ gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
 ![](image/tanh.png)
+
+<a name="nn.AddConstant"/>
+## AddConstant ##
+
+Adds a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `x + k`, where `k` is a scalar.
+
+<a name="nn.MulConstant"/>
+## MulConstant ##
+
+Multiplies input tensor by a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `k * x`, where `k` is a scalar.
 

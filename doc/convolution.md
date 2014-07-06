@@ -396,6 +396,27 @@ output[i][j][k] = bias[k]
   + weight[k] sum_{s=1}^kW sum_{t=1}^kH input[dW*(i-1)+s)][dH*(j-1)+t][k]
 ```
 
+<a name="nn.SpatialUpSamplingNearest"/>
+### SpatialUpSamplingNearest ###
+
+```lua
+module = nn.SpatialUpSamplingNearest(scale)
+```
+
+Applies a 2D up-sampling over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 3D or 4D tensor (i.e. for 4D: `nBatchPlane x nInputPlane x height x width`). The number of output planes will be the same.  The v dimension is assumed to be the second last dimension (i.e. for 4D it will be the 3rd dim), and the u dimension is assumed to be the last dimension.
+
+The parameters are the following:
+  * `scale`: The upscale ratio.  Must be a positive integer
+
+The up-scaling method is simple nearest neighbor, ie: 
+
+```lua
+output(u,v) = input(floor((u-1)/scale)+1, floor((v-1)/scale)+1)
+```
+
+Where `u` and `v` are index from 1 (as per lua convention).  There are no learnable parameters.
+
 <a name="nn.SpatialZeroPadding"/>
 ### SpatialZeroPadding ###
 

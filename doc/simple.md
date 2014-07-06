@@ -76,7 +76,7 @@ A sparse input vector may be created as so..
 
 The first column contains indices, the second column contains 
 values in a a vector where all other elements are zeros. The 
-indices should not exceed the stated dimesions of the input to the 
+indices should not exceed the stated dimensions of the input to the 
 layer (10000 in the example).
 
 <a name="nn.Abs"/>
@@ -289,6 +289,59 @@ additionally learns a separate diagonal covariance matrix across the
 features of the input space for each center.
 
 
+<a name="nn.Identity"/>
+## Identity ##
+
+`module` = `Identity()`
+
+Creates a module that returns whatever is input to it as output. 
+This is useful when combined with the module 
+[ParallelTable](table.md#nn.ParallelTable)
+in case you do not wish to do anything to one of the input Tensors.
+Example:
+```lua
+mlp=nn.Identity()
+print(mlp:forward(torch.ones(5,2)))
+```
+gives the output: 
+```lua
+ 1  1
+ 1  1
+ 1  1
+ 1  1
+ 1  1
+[torch.Tensor of dimension 5x2]
+```
+
+Here is a more useful example, where one can implement a network which also computes a Criterion using this module:
+```lua 
+pred_mlp=nn.Sequential(); -- A network that makes predictions given x.
+pred_mlp:add(nn.Linear(5,4)) 
+pred_mlp:add(nn.Linear(4,3)) 
+
+xy_mlp=nn.ParallelTable();-- A network for predictions and for keeping the
+xy_mlp:add(pred_mlp)      -- true label for comparison with a criterion
+xy_mlp:add(nn.Identity()) -- by forwarding both x and y through the network.
+
+mlp=nn.Sequential();     -- The main network that takes both x and y.
+mlp:add(xy_mlp)		 -- It feeds x and y to parallel networks;
+cr=nn.MSECriterion();
+cr_wrap=nn.CriterionTable(cr)
+mlp:add(cr_wrap)         -- and then applies the criterion.
+
+for i=1,100 do 		 -- Do a few training iterations
+  x=torch.ones(5);          -- Make input features.
+  y=torch.Tensor(3); 
+  y:copy(x:narrow(1,1,3)) -- Make output label.
+  err=mlp:forward{x,y}    -- Forward both input and output.
+  print(err)		 -- Print error from criterion.
+
+  mlp:zeroGradParameters();  -- Do backprop... 
+  mlp:backward({x, y} );   
+  mlp:updateParameters(0.05); 
+end
+```
+
 <a name="nn.Copy"/>
 ## Copy ##
 
@@ -415,10 +468,92 @@ Example:
  12
  16
 [torch.Tensor of dimension 16]
-
-
 ```
 
+<a name="nn.View"/>
+## Reshape ##
+
+`module` = `View(sizes)`
+
+This module creates a new view of the input tensor using the `sizes` passed to
+the constructor. The parameter `sizes` can either be a `LongStorage` or numbers.
+
+The method `setNumInputDims()` allows to specify the expected number of dimensions
+of the inputs of the modules. This makes it possible to use minibatch inputs when
+using a size -1 for one of the dimensions.
+
+Example 1:
+```lua
+> x=torch.Tensor(4,4)
+> for i=1,4 do
+>  for j=1,4 do
+>   x[i][j]=(i-1)*4+j;
+>  end
+> end
+> print(x)
+
+  1   2   3   4
+  5   6   7   8
+  9  10  11  12
+ 13  14  15  16
+[torch.Tensor of dimension 4x4]
+
+> print(nn.View(2,8):forward(x))
+
+  1   2   3   4   5   6   7   8
+  9  10  11  12  13  14  15  16
+[torch.DoubleTensor of dimension 2x8]
+
+> print(nn.View(torch.LongStorage{8,2}):forward(x))
+
+  1   2
+  3   4
+  5   6
+  7   8
+  9  10
+ 11  12
+ 13  14
+ 15  16
+[torch.DoubleTensor of dimension 8x2]
+
+> print(nn.View(16):forward(x))
+
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+[torch.DoubleTensor of dimension 16]
+```
+
+Example 2:
+```lua
+> input = torch.Tensor(2,3)
+> minibatch = torch.Tensor(5,2,3)
+> m = nn.View(-1):setNumInputDims(2)
+> print(#m:forward(input))
+
+ 6
+[torch.LongStorage of size 2]
+
+> print(#m:forward(minibatch))
+
+ 5
+ 6
+[torch.LongStorage of size 2]
+
+```
 
 <a name="nn.Select"/>
 ## Select ##
