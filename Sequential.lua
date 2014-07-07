@@ -13,6 +13,15 @@ function Sequential:add(module)
    return self
 end
 
+function Sequential:push(module)
+   local modules = self.modules
+   self.modules = {}
+   self:add(module)
+   for i,module in ipairs(modules) do
+      self:add(module)
+   end
+end
+
 function Sequential:size()
    return #self.modules
 end
