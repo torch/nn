@@ -83,6 +83,18 @@ function Sequential:updateParameters(learningRate)
    end
 end
 
+function Sequential:training()
+   for i=1,#self.modules do
+      self.modules[i]:training()
+   end
+end
+
+function Sequential:evaluate()
+   for i=1,#self.modules do
+      self.modules[i]:evaluate()
+   end
+end
+
 function Sequential:share(mlp,...)
    for i=1,#self.modules do
       self.modules[i]:share(mlp.modules[i],...); 

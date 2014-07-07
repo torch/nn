@@ -81,6 +81,14 @@ function Module:updateParameters(learningRate)
    end
 end
 
+function Module:training()
+   self.train = true
+end
+
+function Module:evaluate()
+   self.train = false
+end
+
 function Module:share(mlp, ...)
    local arg = {...}
    for i,v in ipairs(arg) do
