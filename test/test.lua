@@ -1920,6 +1920,57 @@ function nntest.SpatialUpSamplingNearest()
   end
 end
 
+function nntest.ConcatTable()
+   -- Test tensor input
+   local input = torch.rand(10, 10, 10)
+   local m = nn.Sequential()
+   
+   local concat = nn.ConcatTable()
+   concat:add(nn.Identity())
+   
+   m:add(concat)  -- Output of concat is a table of length 1
+   m:add(nn.JoinTable(1))  -- jac needs a tensor tensor output
+
+   local err = jac.testJacobian(m, input)
+   mytester:assertlt(err, precision, ' error on state ')
+
+   local ferr, berr = jac.testIO(m, input)
+   mytester:asserteq(ferr, 0, torch.typename(m)..' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(m)..' - i/o backward err ')
+
+   -- Now test a table input
+   -- jac needs a tensor input, so we have to form a network that creates
+   -- a table internally:  Do this using a Reshape and a SplitTable
+   m = nn.Sequential()
+   m:add(nn.Reshape(1,10,10,10))
+   m:add(nn.SplitTable(1))  -- output of Split table is a table of length 1
+ 
+   concat = nn.ConcatTable()
+   concat:add(nn.JoinTable(1))
+ 
+   m:add(concat)
+   m:add(nn.JoinTable(1))
+
+   err = jac.testJacobian(m, input)
+   mytester:assertlt(err, precision, ' error on state ')
+
+   ferr, berr = jac.testIO(m, input)
+   mytester:asserteq(ferr, 0, torch.typename(m)..' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(m)..' - i/o backward err ')
+
+   -- As per Soumith's suggestion, make sure getParameters works:
+   m = nn.ConcatTable()
+   local l = nn.Linear(16,16)
+   m:add(l)
+   mparams = m:getParameters()
+   -- I don't know of a way to make sure that the storage is equal, however
+   -- the linear weight and bias will be randomly initialized, so just make
+   -- sure both parameter sets are equal
+   lparams = l:getParameters()
+   err = (mparams - lparams):abs():max()
+   mytester:assertlt(err, precision, ' getParameters error ')
+end
+
 mytester:add(nntest)
 
 if not nn then

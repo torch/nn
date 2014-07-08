@@ -30,9 +30,32 @@ function ConcatTable:updateGradInput(input, gradOutput)
    for i,module in ipairs(self.modules) do
       local currentGradInput = module:updateGradInput(input, gradOutput[i])
       if i == 1 then
-         self.gradInput:resizeAs(currentGradInput):copy(currentGradInput)
+         if type(input) == 'table' then
+            assert(type(currentGradInput) == 'table', 
+              'currentGradInput is not a table!')
+            assert(#input == #currentGradInput, 
+              'table size mismatch')
+            -- gradInput is also a table
+            self.gradInput = {}
+            for j = 1, #currentGradInput do
+               self.gradInput[j] = currentGradInput[j]:clone()
+            end
+         else
+            -- gradInput is a tensor
+            self.gradInput:resizeAs(currentGradInput):copy(currentGradInput)
+         end
       else
-         self.gradInput:add(currentGradInput)
+         if type(input) == 'table' then
+            assert(type(currentGradInput) == 'table', 
+               'currentGradInput is not a table!')
+            assert(#input == #currentGradInput, 
+               'table size mismatch')
+            for j = 1, #self.gradInput do
+               self.gradInput[j]:add(currentGradInput[j])
+            end
+         else
+            self.gradInput:add(currentGradInput)
+         end
       end
    end
    return self.gradInput
