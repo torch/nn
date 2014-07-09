@@ -85,16 +85,17 @@ layer (10000 in the example).
 
 `module` = `nn.Dropout(p)`
 
-During training, `Dropout` masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution.
+During training, `Dropout` masks parts of the `input` using binary samples from 
+a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution.
 Each `input` element has a probability of `p` of being dropped, i.e having its
 commensurate output element be zero. This has proven an effective technique for 
 regularization and preventing the co-adaptation of neurons 
 (see [Hinton et al. 2012](http://arxiv.org/abs/1207.0580)). 
 
-The call to [forward](module.md#output-forwardinput) samples 
+In this example, we demonstrate how the call to [forward](module.md#output-forwardinput) samples 
 different `outputs` given the same `input`:
 ```lua
-> module = nn.Dropout()
+module = nn.Dropout()
 
 > x=torch.Tensor{{1,2,3,4},{5,6,7,8}}
 
@@ -110,7 +111,7 @@ different `outputs` given the same `input`:
 
 ```
 
-Backward drop's out the gradients at the same location:
+[Backward](module.md#gradinput-backwardinput-gradoutput) drops out the gradients at the same location:
 ```lua
 > =module:forward(x)
  1  2  0  0
@@ -123,7 +124,7 @@ Backward drop's out the gradients at the same location:
 [torch.DoubleTensor of dimension 2x4]
 ```
 
-During evaluation, `Dropout` does nothing more than scales the input by `1-p` such that 
+During [evaluation](module.md#evaluate), `Dropout` does nothing more than scales the input by `1-p` such that 
 all elements of the input are considered.
 ```lua
 > module:evaluate()
@@ -134,7 +135,7 @@ all elements of the input are considered.
 [torch.DoubleTensor of dimension 2x4]
 ```
 
-We can return to training our model by first calling `Module:training()`:
+We can return to training our model by first calling [Module:training()](module.md#training):
 ```lua
 > module:training()
 
