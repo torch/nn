@@ -7,12 +7,12 @@ function ElementTable:__init(index)
 end
 
 function ElementTable:updateOutput(input)
-   self.output:set(input[self.index])
+   self.output = input[self.index]
    return self.output
 end
 
 function ElementTable:updateGradInput(input, gradOutput)
-   if #gradInput == 0 then
+   if #self.gradInput == 0 then
       local function zeroTableCopy(t1, t2)
          for k, v in pairs(t2) do
             if (torch.type(v) == "table") then
@@ -31,5 +31,4 @@ end
 
 function ElementTable:type(type)
    self.gradInput = {}
-   self.output = self.output:type(type)
 end
