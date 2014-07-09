@@ -1,9 +1,11 @@
 local Dropout, Parent = torch.class('nn.Dropout', 'nn.Module')
 
-function Dropout:__init(p)
+function Dropout:__init(p,v1)
    Parent.__init(self)
    self.p = p or 0.5
    self.train = true
+   -- version 2 scales output during training instead of evaluation
+   self.v2 = not v1
    if self.p >= 1 or self.p < 0 then
       error('<Dropout> illegal percentage, must be 0 <= p < 1')
    end
@@ -19,8 +21,11 @@ function Dropout:updateOutput(input)
       self.noise:resizeAs(input)
       self.fnoise:bernoulli(1-self.p)
       self.noise:copy(self.fnoise)
+      if self.v2 then
+         self.noise:div(1-self.p)
+      end
       self.output:cmul(self.noise)
-   else
+   elseif not self.v2 then
       self.output:mul(1-self.p)
    end
    return self.output

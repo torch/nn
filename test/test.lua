@@ -62,8 +62,16 @@ end
 
 function nntest.Dropout()
    local p = 0.2 --prob of droping out a neuron
-   local input = torch.Tensor(1000):fill(1)
+   local input = torch.Tensor(1000):fill((1-p))
    local module = nn.Dropout(p)
+   -- version 2
+   local output = module:forward(input)
+   mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
+   local gradInput = module:backward(input, input)
+   mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
+   -- version 1 (old nnx version)
+   local input = input:fill(1)
+   local module = nn.Dropout(p,true)
    local output = module:forward(input)
    mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
    local gradInput = module:backward(input, input)
