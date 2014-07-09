@@ -1879,6 +1879,49 @@ function nntest.SplitTable()
    end
 end
 
+function nntest.ElementTable()
+   local input = {
+      torch.rand(3,4,5), torch.rand(3,4,5), 
+      {torch.rand(3,4,5)}, 
+      {torch.rand(3,4,5), {torch.rand(3,4,5)}}
+   }
+   local gradOutputs = {
+      torch.rand(3,4,5), torch.rand(3,4,5), 
+      {torch.rand(3,4,5)}, 
+      {torch.rand(3,4,5), {torch.rand(3,4,5)}}
+   }
+   local zeros = {
+      torch.Tensor(3,4,5):zero(), torch.Tensor(3,4,5):zero(), 
+      {torch.Tensor(3,4,5):zero()}, 
+      {torch.Tensor(3,4,5):zero(), {torch.Tensor(3,4,5):zero()}}
+   }
+   local function equal(t1, t2, msg)
+      if (torch.type(t1) == "table") then
+         for k, v in pairs(t2) do
+            equal(t1[k], t2[k])
+         end
+      else
+         mytester:assertTensorEq(t1, t2, 0.00001, msg)
+      end
+   end
+   local nonIdx = {2,3,4,1}
+   local module
+   for idx = 1,#input do
+      module = nn.ElementTable(idx)
+      local output = module:forward(input)
+      equal(output, input[idx], "output dimension " .. idx)
+      local gradInput = module:backward(input, gradOutputs[idx])
+      equal(gradInput[idx], gradOutputs[idx], "gradInput[idx] dimension " .. idx)
+      equal(gradInput[nonIdx[idx]], zeros[nonIdx[idx]], "gradInput[nonIdx] dimension " .. idx)
+   end
+   module:float()
+   local idx = #input
+   local output = module:forward(input)
+   equal(output, input[idx], "type output")
+   local gradInput = module:backward(input, gradOutputs[idx])
+   equal(gradInput[idx], gradOutputs[idx], "gradInput[idx] dimension " .. idx)
+   equal(gradInput[nonIdx[idx]], zeros[nonIdx[idx]], "gradInput[nonIdx] dimension " .. idx)
+end
 
 function nntest.View()
    local input = torch.rand(10)
