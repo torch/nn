@@ -26,6 +26,7 @@ include('Mul.lua')
 include('MulConstant.lua')
 include('Add.lua')
 include('AddConstant.lua')
+include('Dropout.lua')
 
 include('CAddTable.lua')
 include('CDivTable.lua')
