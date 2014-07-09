@@ -231,6 +231,23 @@ gnuplot.grid(true)
 ```
 ![](image/tanh.png)
 
+<a name="nn.ReLU"/>
+## ReLU ##
+
+Applies the rectified linear unit (`ReLU`) function element-wise to the input Tensor,
+thus outputting a Tensor of the same dimension.
+
+```lua
+ii=torch.linspace(-3,3)
+m=nn.ReLU()
+oo=m:forward(ii)
+go=torch.ones(100)
+gi=m:backward(ii,go)
+gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
+gnuplot.grid(true)
+```
+![](image/relu.png)
+
 <a name="nn.AddConstant"/>
 ## AddConstant ##
 

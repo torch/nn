@@ -60,6 +60,36 @@ function nntest.CMul()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.Dropout()
+   local p = 0.2 --prob of droping out a neuron
+   local input = torch.Tensor(1000):fill((1-p))
+   local module = nn.Dropout(p)
+   -- version 2
+   local output = module:forward(input)
+   mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
+   local gradInput = module:backward(input, input)
+   mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
+   -- version 1 (old nnx version)
+   local input = input:fill(1)
+   local module = nn.Dropout(p,true)
+   local output = module:forward(input)
+   mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
+   local gradInput = module:backward(input, input)
+   mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
+end
+
+function nntest.ReLU()
+   local input = torch.randn(3,4)
+   local gradOutput = torch.randn(3,4)
+   local module = nn.ReLU()
+   local output = module:forward(input)
+   local output2 = input:clone():gt(input, 0):cmul(input)
+   mytester:assertTensorEq(output, output2, 0.000001, 'ReLU output')
+   local gradInput = module:backward(input, gradOutput)
+   local gradInput2 = input:clone():gt(input, 0):cmul(gradOutput)
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001, 'ReLU gradInput')
+end
+
 function nntest.Exp()
    local ini = math.random(10,20)
    local inj = math.random(10,20)

@@ -79,6 +79,89 @@ values in a a vector where all other elements are zeros. The
 indices should not exceed the stated dimensions of the input to the 
 layer (10000 in the example).
 
+
+<a name="nn.Dropout"/>
+## Dropout ##
+
+`module` = `nn.Dropout(p)`
+
+During training, `Dropout` masks parts of the `input` using binary samples from 
+a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution.
+Each `input` element has a probability of `p` of being dropped, i.e having its
+commensurate output element be zero. This has proven an effective technique for 
+regularization and preventing the co-adaptation of neurons 
+(see [Hinton et al. 2012](http://arxiv.org/abs/1207.0580)). 
+
+Furthermore, the ouputs are scaled by a factor of `1/(1-p)` during training. This allows the 
+`input` to be simply forwarded as-is during evaluation.
+
+In this example, we demonstrate how the call to [forward](module.md#output-forwardinput) samples 
+different `outputs` to dropout (the zeros) given the same `input`:
+```lua
+module = nn.Dropout()
+
+> x=torch.Tensor{{1,2,3,4},{5,6,7,8}}
+
+> =module:forward(x)
+  2   0   0   8
+ 10   0  14   0
+[torch.DoubleTensor of dimension 2x4]
+
+> =module:forward(x)
+  0   0   6   0
+ 10   0   0   0
+[torch.DoubleTensor of dimension 2x4]
+
+```
+
+[Backward](module.md#gradinput-backwardinput-gradoutput) drops out the gradients at the same location:
+```lua
+> =module:forward(x)
+  0   4   0   0
+ 10  12   0  16
+[torch.DoubleTensor of dimension 2x4]
+
+> =module:backward(x,x:clone():fill(1))
+ 0  2  0  0
+ 2  2  0  2
+[torch.DoubleTensor of dimension 2x4]
+
+```
+In both cases the `gradOutput` and `input` are scaled by `1/(1-p)`, which in this case is `2`.
+
+During [evaluation](module.md#evaluate), `Dropout` does nothing more than 
+forward the input such that all elements of the input are considered.
+```lua
+> module:evaluate()
+
+> module:forward(x)
+ 1  2  3  4
+ 5  6  7  8
+[torch.DoubleTensor of dimension 2x4]
+
+```
+
+We can return to training our model by first calling [Module:training()](module.md#training):
+```lua
+> module:training()
+
+> return module:forward(x)
+  2   4   6   0
+  0   0   0  16
+[torch.DoubleTensor of dimension 2x4]
+
+```
+
+When used, `Dropout` should normally be applied to the input of parameterized 
+[Modules](module.md#nn.Module) like [Linear](#nn.Linear) 
+or [SpatialConvolution](convolution.md#nn.SpatialConvolution).
+A `p` of `0.5` (the default) is usually okay for hidden layers.
+`Dropout` can sometimes be used successfully on the dataset inputs with a `p` around `0.2`.
+It sometimes works best following [Transfer](transfer.md) Modules 
+like [ReLU](transfer.md#nn.ReLU). All this depends a great deal on the dataset so its up 
+to the user to try different combinations.
+
+
 <a name="nn.Abs"/>
 ## Abs ##
 
