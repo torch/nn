@@ -79,6 +79,81 @@ values in a a vector where all other elements are zeros. The
 indices should not exceed the stated dimensions of the input to the 
 layer (10000 in the example).
 
+
+<a name="nn.Dropout"/>
+## Dropout ##
+
+`module` = `nn.Dropout(p)`
+
+During training, `Dropout` masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution.
+Each `input` element has a probability of `p` of being dropped, i.e having its
+commensurate output element be zero. This has proven an effective technique for 
+regularization and preventing the co-adaptation of neurons 
+(see [Hinton et al. 2012](http://arxiv.org/abs/1207.0580)). 
+
+The call to [forward](module.md#output-forwardinput) samples 
+different `outputs` given the same `input`:
+```lua
+> module = nn.Dropout()
+
+> x=torch.Tensor{{1,2,3,4},{5,6,7,8}}
+
+> =module:forward(x)
+ 0  2  0  4
+ 5  0  0  0
+[torch.DoubleTensor of dimension 2x4]
+
+> =module:forward(x)
+ 0  2  3  4
+ 5  6  7  8
+[torch.DoubleTensor of dimension 2x4]
+
+```
+
+Backward drop's out the gradients at the same location:
+```lua
+> =module:forward(x)
+ 1  2  0  0
+ 5  6  7  0
+[torch.DoubleTensor of dimension 2x4]
+
+> return module:backward(x,x:clone():fill(1))
+ 1  1  0  0
+ 1  1  1  0
+[torch.DoubleTensor of dimension 2x4]
+```
+
+During evaluation, `Dropout` does nothing more than scales the input by `1-p` such that 
+all elements of the input are considered.
+```lua
+> module:evaluate()
+
+> return module:forward(x)
+ 0.5000  1.0000  1.5000  2.0000
+ 2.5000  3.0000  3.5000  4.0000
+[torch.DoubleTensor of dimension 2x4]
+```
+
+We can return to training our model by first calling `Module:training()`:
+```lua
+> module:training()
+
+> module:forward(x)
+ 0  0  0  4
+ 5  6  0  0
+[torch.DoubleTensor of dimension 2x4]
+```
+
+When used, `Dropout` should normally be applied to the input of parameterized 
+[Modules](module.md#nn.Module) like [Linear](#nn.Linear) 
+or [SpatialConvolution](convolution.md#nn.SpatialConvolution).
+A `p` of `0.5` (the default) is usually okay for hidden layers.
+`Dropout` can sometimes be used successfully on the dataset inputs with a `p` around `0.2`.
+It sometimes works best following [Transfer](transfer.md) Modules 
+like [ReLU](transfer.md#nn.ReLU). All this depends a great deal on the dataset so its up 
+to the user to try different combinations.
+
+
 <a name="nn.Abs"/>
 ## Abs ##
 
