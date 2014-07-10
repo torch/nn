@@ -87,7 +87,7 @@ include('ParallelTable.lua')
 include('ConcatTable.lua')
 include('SplitTable.lua')
 include('JoinTable.lua')
-include('ElementTable.lua')
+include('SelectTable.lua')
 include('CriterionTable.lua')
 include('Identity.lua')
 

@@ -9,7 +9,7 @@ This allows one to build very rich architectures:
  * Table Conversion Modules convert between tables and Tensors:
    * [SplitTable](#nn.SplitTable) : splits a Tensor into a table of Tensors;
    * [JoinTable](#nn.JoinTable) : joins a table of Tensors into a Tensor;
-   * [ElementTable](#nn.ElementTable) : retrieve one element from a table;
+   * [SelectTable](#nn.SelectTable) : retrieve one element from a table;
  * Pair Modules compute a measure like distance or similarity from a pair (table) of input Tensors :
    * [PairwiseDistance](#nn.PairwiseDistance) : outputs the `p`-norm. distance between inputs;
    * [DotProduct](#nn.DotProduct) : outputs the dot product (similarity) between inputs;
@@ -376,10 +376,10 @@ for i=1,100 do             -- A few steps of training such a network..
 end
 ```
 
-<a name="nn.ElementTable"/>
-## ElementTable ##
+<a name="nn.SelectTable"/>
+## SelectTable ##
 
-`module` = `ElementTable(index)`
+`module` = `SelectTable(index)`
 
 Creates a module that takes a Table as input and outputs the element at index `index`. 
 This can be either a Table or a [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
@@ -391,18 +391,18 @@ Example 1:
 ```lua
 > input = {torch.randn(2,3), torch.randn(2,1)}
                                                                       [0.0002s]	
-> =nn.ElementTable(1):forward(input)
+> =nn.SelectTable(1):forward(input)
 -0.3060  0.1398  0.2707
  0.0576  1.5455  0.0610
 [torch.DoubleTensor of dimension 2x3]
 
                                                                       [0.0002s]	
-> =nn.ElementTable(2):forward(input)
+> =nn.SelectTable(2):forward(input)
  2.3080
 -0.2955
 [torch.DoubleTensor of dimension 2x1]
 
-> =unpack(nn.ElementTable(1):backward(input, torch.randn(2,3)))
+> =unpack(nn.SelectTable(1):backward(input, torch.randn(2,3)))
 -0.4891 -0.3495 -0.3182
 -2.0999  0.7381 -0.5312
 [torch.DoubleTensor of dimension 2x3]
@@ -417,7 +417,7 @@ Example 2:
 ```lua
 > input = {torch.randn(2,3), {torch.randn(2,1), {torch.randn(2,2)}}}
 
-> =nn.ElementTable(2):forward(input)
+> =nn.SelectTable(2):forward(input)
 {
   1 : DoubleTensor - size: 2x1
   2 : 
@@ -426,7 +426,7 @@ Example 2:
     }
 }
 
-> =unpack(nn.ElementTable(2):backward(input, {torch.randn(2,1), {torch.randn(2,2)}}))
+> =unpack(nn.SelectTable(2):backward(input, {torch.randn(2,1), {torch.randn(2,2)}}))
 0 0 0
 0 0 0
 [torch.DoubleTensor of dimension 2x3]
@@ -439,7 +439,7 @@ Example 2:
     }
 }
 
-> gradInput = nn.ElementTable(1):backward(input, torch.randn(2,3))
+> gradInput = nn.SelectTable(1):backward(input, torch.randn(2,3))
 
 > =gradInput
 {

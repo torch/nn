@@ -1899,7 +1899,7 @@ function nntest.SplitTable()
    end
 end
 
-function nntest.ElementTable()
+function nntest.SelectTable()
    local input = {
       torch.rand(3,4,5), torch.rand(3,4,5), 
       {torch.rand(3,4,5)}, 
@@ -1927,7 +1927,7 @@ function nntest.ElementTable()
    local nonIdx = {2,3,4,1}
    local module
    for idx = 1,#input do
-      module = nn.ElementTable(idx)
+      module = nn.SelectTable(idx)
       local output = module:forward(input)
       equal(output, input[idx], "output dimension " .. idx)
       local gradInput = module:backward(input, gradOutputs[idx])
