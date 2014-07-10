@@ -477,8 +477,9 @@ function nntest.WeightedMSECriterion()
 end
 
 function nntest.BCECriterion()
-   local input = torch.rand(100)
-   local target = input:clone():add(torch.rand(100))
+   local eps = 1e-2
+   local input = torch.rand(100)*(1-eps) + eps/2
+   local target = torch.rand(100)*(1-eps) + eps/2
    local cri = nn.BCECriterion()
    criterionJacobianTest1D(cri, input, target)
 end
