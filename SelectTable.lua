@@ -1,17 +1,17 @@
-local ElementTable, parent = torch.class('nn.ElementTable', 'nn.Module')
+local SelectTable, parent = torch.class('nn.SelectTable', 'nn.Module')
 
-function ElementTable:__init(index)
+function SelectTable:__init(index)
    parent.__init(self)
    self.index = index
    self.gradInput = {}
 end
 
-function ElementTable:updateOutput(input)
+function SelectTable:updateOutput(input)
    self.output = input[self.index]
    return self.output
 end
 
-function ElementTable:updateGradInput(input, gradOutput)
+function SelectTable:updateGradInput(input, gradOutput)
    if #self.gradInput == 0 then
       local function zeroTableCopy(t1, t2)
          for k, v in pairs(t2) do
@@ -29,6 +29,6 @@ function ElementTable:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
-function ElementTable:type(type)
+function SelectTable:type(type)
    self.gradInput = {}
 end
