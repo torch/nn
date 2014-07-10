@@ -274,3 +274,11 @@ Custom modules should not override this function. They should instead override [
 
 This function will go over all the weights and gradWeights and make them view into a single tensor (one for weights and one for gradWeights). Since the storage of every weight and gradWeight is changed, this function should be called only once on a given network.
 
+<a name="nn.Module.training"/>
+### training() ###
+This sets the mode of the Module (or sub-modules) to `train=true`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
+
+<a name="nn.Module.evaluate"/>
+### evaluate() ###
+This sets the mode of the Module (or sub-modules) to `train=false`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
+
