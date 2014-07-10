@@ -29,9 +29,16 @@ function LookupTable:__init(nIndex, ...)
    self.weight = torch.Tensor(self.size)
    self.gradWeight = torch.Tensor(self.size):zero()
    self.inputs = {}
+   
+   self.accUpdate = false
 
    self.nBackward = 0
    self:reset()
+end
+
+function LookupTable:accUpdateOnly()
+   self.accUpdate = true
+   self.gradWeight = nil
 end
 
 function LookupTable:reset(stdv)
@@ -73,8 +80,10 @@ function LookupTable:updateOutput(input)
 end
 
 function LookupTable:zeroGradParameters()
-   for k,_ in pairs(self.inputs) do
-      self.gradWeight:select(1, k):zero()
+   if not self.accUpdate then
+      for k,_ in pairs(self.inputs) do
+         self.gradWeight:select(1, k):zero()
+      end
    end
    self.inputs = {}
    self.nBackward = 0
@@ -124,6 +133,7 @@ function LookupTable:accUpdateGradParameters(input, gradOutput, lr)
 end
 
 function LookupTable:updateParameters(learningRate)
+   assert(not self.accUpdate, "use accUpdateGradParameters instead")
    for k,nBackward in pairs(self.inputs) do
       local kscale = self:scaleUpdateByKey(k)
       self.weight:select(1, k):add(-learningRate*kscale, self.gradWeight:select(1, k))
