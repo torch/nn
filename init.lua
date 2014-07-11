@@ -88,6 +88,7 @@ include('ConcatTable.lua')
 include('SplitTable.lua')
 include('JoinTable.lua')
 include('SelectTable.lua')
+include('MixtureTable.lua')
 include('CriterionTable.lua')
 include('Identity.lua')
 
