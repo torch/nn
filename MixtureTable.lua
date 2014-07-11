@@ -1,7 +1,8 @@
 local MixtureTable, parent = torch.class('nn.MixtureTable', 'nn.Module')
 
-function MixtureTable:__init()
+function MixtureTable:__init(dim)
    parent.__init(self)
+   self.dim = dim
    self._gaterView = torch.Tensor()
    self._expert = torch.Tensor()
    self._expertView = torch.Tensor()
@@ -15,24 +16,37 @@ end
 function MixtureTable:updateOutput(input) 
    local gaterInput, expertInputs = unpack(input)
    if gaterInput:dim() == 2 then
-      if gaterInput:size(2) ~= #expertInputs then
-         error"Should be one gater output per expert"
-      end
-      local expertInput = expertInputs[1]
-      if self.batchSize ~= expertInput:size(1) then
-         self.size:resize(expertInput:dim()+1):fill(1)
-         self.size[1] = expertInput:size(1)
-         self.size[2] = gaterInput:size(2)
-         self.output:resizeAs(expertInput)
-         self.batchSize = expertInput:size(1)
-         self.backwardSetup = false
-      end
-      self._gaterView:view(gaterInput, self.size:storage())
-      self.output:zero()
-      -- multiply accumulate gater outputs by their commensurate expert
-      for i,expertInput in ipairs(expertInputs) do
-         local gate = self._gaterView:select(2,i):expandAs(expertInput)
-         self.output:addcmul(expertInput, gate)
+      if self.dim then -- expertInputs is a Tensor :
+         if self.batchSize ~= expertInputs:size(1) then
+            self.size:set(expertInputs:size():clone())
+            self.size[self.dim] = 1
+            self.output:resizeAs(expertInputs:select(dim, 1))
+            self.batchSize = expertInputs:size(1)
+            self.backwardSetup = false
+         end
+         self._gaterView:view(gaterInput, self.size)
+         self._expert:cmul(self._gaterView:expandAs(expertInputs), expertInput)
+         self.output:sum(self.dim)
+      else             -- expertInputs is a Table :
+         if gaterInput:size(2) ~= #expertInputs then
+            error"Should be one gater output per expert"
+         end
+         local expertInput = expertInputs[1]
+         if self.batchSize ~= expertInput:size(1) then
+            self.size:resize(expertInput:dim()+1):fill(1)
+            self.size[1] = expertInput:size(1)
+            self.size[2] = gaterInput:size(2)
+            self.output:resizeAs(expertInput)
+            self.batchSize = expertInput:size(1)
+            self.backwardSetup = false
+         end
+         self._gaterView:view(gaterInput, self.size:storage())
+         self.output:zero()
+         -- multiply accumulate gater outputs by their commensurate expert
+         for i,expertInput in ipairs(expertInputs) do
+            local gate = self._gaterView:select(2,i):expandAs(expertInput)
+            self.output:addcmul(expertInput, gate)
+         end
       end
    else
       error"Only works with mini-batches"
