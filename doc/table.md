@@ -9,7 +9,8 @@ This allows one to build very rich architectures:
  * Table Conversion Modules convert between tables and Tensors:
    * [SplitTable](#nn.SplitTable) : splits a Tensor into a table of Tensors;
    * [JoinTable](#nn.JoinTable) : joins a table of Tensors into a Tensor;
-   * [SelectTable](#nn.SelectTable) : retrieve one element from a table;
+   * [SelectTable](#nn.SelectTable) : select one element from a table;
+   * [MixtureTable](#nn.MixtureTable) : mixture of experts using a gater;
  * Pair Modules compute a measure like distance or similarity from a pair (table) of input Tensors :
    * [PairwiseDistance](#nn.PairwiseDistance) : outputs the `p`-norm. distance between inputs;
    * [DotProduct](#nn.DotProduct) : outputs the dot product (similarity) between inputs;
@@ -375,6 +376,65 @@ for i=1,100 do             -- A few steps of training such a network..
  print(err)
 end
 ```
+
+<a name='nn.MixtureTable'/>
+## MixtureTable ##
+
+`module` = `MixtureTable([dim])`
+
+Creates a module that takes a Table `{gater, experts}` as input and outputs
+the mixture of `experts` (a Tensor or Table of Tensors) using a 
+`gater` Tensor. When `dim` is provided, it specifies the dimension of 
+the `experts` Tensor that will be interpolated (or mixed). Otherwise, 
+the `experts` are expected to be provided as a Table of Tensors. This 
+Module is currently only implemented for mini-batches. 
+
+Considering an `input = {G,E}` with a single example, then 
+the mixture of experts Tensor `E` with 
+gater Tensor `G` has the following form:
+```lua
+output = G[1]*E[1] + G[2]*E[2] + ... + G[n]*E[n]
+```
+where `dim = 1`, `n = E:size(dim) = G:size(dim)` and `G:dim() == 1`.
+Note that `E:dim() >= 2`, such that `output:dim() = E:dim() - 1`.
+
+Example 1:
+Using this Module, an arbitrary mixture of `n` 2-layer experts 
+by a 2-layer gater could be constructed as follows:
+```lua
+experts = nn.ConcatTable()
+for i=1,n do
+   local expert = nn.Sequential()
+   expert:add(nn.Linear(3,4))
+   expert:add(nn.Tanh())
+   expert:add(nn.Linear(4,5))
+   expert:add(nn.Tanh()) 
+   experts:add(expert)
+end
+
+gater = nn.Sequential()
+gater:add(nn.Linear(3,7))
+gater:add(nn.Tanh())
+gater:add(nn.Linear(7,n))
+gater:add(nn.SoftMax())
+
+trunk = nn.ConcatTable()
+trunk:add(gater)
+trunk:add(experts)
+
+moe = nn.Sequential()
+moe:add(trunk)
+moe:add(nn.MixtureTable())
+```
+Forwarding a batch of 2 examples gives us something like this:
+```lua
+> =moe:forward(torch.randn(2,3))
+-0.2152  0.3141  0.3280 -0.3772  0.2284
+ 0.2568  0.3511  0.0973 -0.0912 -0.0599
+[torch.DoubleTensor of dimension 2x5]
+```
+
+
 
 <a name="nn.SelectTable"/>
 ## SelectTable ##
