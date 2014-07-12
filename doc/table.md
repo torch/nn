@@ -434,6 +434,45 @@ Forwarding a batch of 2 examples gives us something like this:
 [torch.DoubleTensor of dimension 2x5]
 ```
 
+Example 2:
+In the following, the MixtureTable expects `experts` to be a Tensor of 
+`size = {1,4,2,5,n}`:
+```lua
+experts = nn.Concat(5)
+for i=1,n do
+   local expert = nn.Sequential()
+   expert:add(nn.Linear(3,4))
+   expert:add(nn.Tanh())
+   expert:add(nn.Linear(4,2*5))
+   expert:add(nn.Tanh()) 
+   expert:add(nn.Reshape(4,2,5,1))
+   experts:add(expert)
+end
+
+gater = nn.Sequential()
+gater:add(nn.Linear(3,7))
+gater:add(nn.Tanh())
+gater:add(nn.Linear(7,n))
+gater:add(nn.SoftMax())
+
+trunk = nn.ConcatTable()
+trunk:add(gater)
+trunk:add(experts)
+
+moe = nn.Sequential()
+moe:add(trunk)
+moe:add(nn.MixtureTable(5))
+```
+Forwarding a batch of 2 examples gives us something like this:
+```lua
+> =moe:forward(torch.randn(2,3)):size()
+ 2
+ 4
+ 2
+ 5
+[torch.LongStorage of size 4]
+
+```
 
 
 <a name="nn.SelectTable"/>

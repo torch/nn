@@ -25,7 +25,7 @@ function MixtureTable:updateOutput(input)
          if self.batchSize ~= expertInputs:size(1) then
             self.size:resize(expertInputs:dim()):fill(1)
             self.size[1] = gaterInput:size(1)
-            self.size[2] = gaterInput:size(2)
+            self.size[self.dim] = gaterInput:size(2)
             self.output:resizeAs(expertInputs:select(self.dim, 1))
             self.batchSize = expertInputs:size(1)
             self.backwardSetup = false
