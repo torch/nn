@@ -2033,6 +2033,19 @@ function nntest.MixtureTable()
    for i, expertGradInput in ipairs(gradInput[2]) do
       mytester:assertTensorEq(expertGradInput, expertGradInput2:select(1,i), 0.000001, "mixture5 expert "..i.." gradInput")
    end
+   -- test type-cast
+   module:float()
+   local input2 = {
+      input[1]:float(), 
+      {input[2][1]:float(), input[2][2]:float(), input[2][3]:float()}
+   }
+   local output = module:forward(input2)
+   mytester:assertTensorEq(output, output2:float(), 0.000001, "mixture5B output")
+   local gradInput = module:backward(input2, gradOutput:float())
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2:float(), 0.000001, "mixture5B gater gradInput")
+   for i, expertGradInput in ipairs(gradInput[2]) do
+      mytester:assertTensorEq(expertGradInput, expertGradInput2:select(1,i):float(), 0.000001, "mixture5B expert "..i.." gradInput")
+   end
    -- expertInput is a Tensor:
    local input = {input[1], expertInput}
    local module = nn.MixtureTable(1)
@@ -2041,6 +2054,14 @@ function nntest.MixtureTable()
    local gradInput = module:backward(input, gradOutput)
    mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture6 gater gradInput")
    mytester:assertTensorEq(gradInput[2], expertGradInput2, 0.000001, "mixture6 expert gradInput")
+   -- test type-cast:
+   module:float()
+   local input2 = {input[1]:float(), expertInput:float()}
+   local output = module:forward(input2)
+   mytester:assertTensorEq(output, output2:float(), 0.000001, "mixture6B output")
+   local gradInput = module:backward(input2, gradOutput:float())
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2:float(), 0.000001, "mixture6B gater gradInput")
+   mytester:assertTensorEq(gradInput[2], expertGradInput2:float(), 0.000001, "mixture6B expert gradInput")
 end
 
 function nntest.View()
