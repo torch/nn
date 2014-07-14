@@ -9,8 +9,8 @@ This allows one to build very rich architectures:
  * Table Conversion Modules convert between tables and Tensors:
    * [SplitTable](#nn.SplitTable) : splits a Tensor into a table of Tensors;
    * [JoinTable](#nn.JoinTable) : joins a table of Tensors into a Tensor;
+   * [MixtureTable](#nn.MixtureTable) : mixture of experts weighted by a gater;
    * [SelectTable](#nn.SelectTable) : select one element from a table;
-   * [MixtureTable](#nn.MixtureTable) : mixture of experts using a gater;
  * Pair Modules compute a measure like distance or similarity from a pair (table) of input Tensors :
    * [PairwiseDistance](#nn.PairwiseDistance) : outputs the `p`-norm. distance between inputs;
    * [DotProduct](#nn.DotProduct) : outputs the dot product (similarity) between inputs;
@@ -386,8 +386,9 @@ Creates a module that takes a Table `{gater, experts}` as input and outputs
 the mixture of `experts` (a Tensor or Table of Tensors) using a 
 `gater` Tensor. When `dim` is provided, it specifies the dimension of 
 the `experts` Tensor that will be interpolated (or mixed). Otherwise, 
-the `experts` are expected to be provided as a Table of Tensors. This 
-Module is currently only implemented for mini-batches. 
+the `experts` should take the form of a Table of Tensors. This 
+Module works for `experts` of dimension 1D or more, and for a
+1D or 2D `gater`, i.e. for single examples or mini-batches.
 
 Considering an `input = {G,E}` with a single example, then 
 the mixture of experts Tensor `E` with 
@@ -473,7 +474,6 @@ Forwarding a batch of 2 examples gives us something like this:
 [torch.LongStorage of size 4]
 
 ```
-
 
 <a name="nn.SelectTable"/>
 ## SelectTable ##
