@@ -471,6 +471,43 @@ Example 2:
 
 ```
 
+<a name="nn.FlattenTable"/>
+## FlattenTable ##
+
+`module` = `FlattenTable()`
+
+Creates a module that takes an arbitrarily deep table of Tensors (potentially nested) as input and outputs a table of tensors, where the output tensor in index `i` is the tensor with post-order DFS index `i` in the input table.
+
+This module is particularly useful in combination with nn.Identity() to create networks that can append to their input table.
+
+Example:
+```lua
+x={torch.rand(1), {torch.rand(2), {torch.rand(3)}}, torch.rand(4)}
+print(x)
+print(nn.FlattenTable():forward(x))
+```
+gives the output:
+```lua
+{
+  1 : DoubleTensor - size: 1
+  2 : 
+    {
+      1 : DoubleTensor - size: 2
+      2 : 
+        {
+          1 : DoubleTensor - size: 3
+        }
+    }
+  3 : DoubleTensor - size: 4
+}
+{
+  1 : DoubleTensor - size: 1
+  2 : DoubleTensor - size: 2
+  3 : DoubleTensor - size: 3
+  4 : DoubleTensor - size: 4
+}
+```
+
 <a name="nn.PairwiseDistance"/>
 ## PairwiseDistance ##
 
