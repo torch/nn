@@ -26,33 +26,60 @@ function ConcatTable:updateOutput(input)
    return self.output
 end
 
-function ConcatTable:updateGradInput(input, gradOutput)
-   for i,module in ipairs(self.modules) do
-      local currentGradInput = module:updateGradInput(input, gradOutput[i])
-      if i == 1 then
-         if type(input) == 'table' then
-            assert(type(currentGradInput) == 'table', 
-              'currentGradInput is not a table!')
-            assert(#input == #currentGradInput, 
-              'table size mismatch')
-            -- gradInput is also a table
-            self.gradInput = {}
-            for j = 1, #currentGradInput do
-               self.gradInput[j] = currentGradInput[j]:clone()
-            end
-         else
-            -- gradInput is a tensor
-            self.gradInput:resizeAs(currentGradInput):copy(currentGradInput)
-         end
+local function reTable(t1, t2, f)
+   for k, v in pairs(t2) do
+      if (torch.type(v) == "table") then
+         t1[k] = retable(t1[k] or {}, t2[k], f)
       else
-         if type(input) == 'table' then
-            assert(type(currentGradInput) == 'table', 
-               'currentGradInput is not a table!')
-            assert(#input == #currentGradInput, 
-               'table size mismatch')
-            for j = 1, #self.gradInput do
-               self.gradInput[j]:add(currentGradInput[j])
+         f(t1, k, v)
+      end
+   end
+   return t1
+end
+
+function ConcatTable:updateGradInput(input, gradOutput)
+   if self.table or torch.type(input) == 'table' then
+      for i,module in ipairs(self.modules) do
+         local currentGradInput = module:updateGradInput(input, gradOutput[i])
+         if torch.type(currentGradInput) ~= 'table' then
+            error"currentGradInput is not a table!"
+         end
+         if #input ~= #currentGradInput then
+            error("table size mismatch: "..#input.." ~= "..#currentGradInput)
+         end
+         if i == 1 then
+            if not self.table then
+               -- gradInput is also a table
+               self.gradInput = {}
+               local cloneFunc = function(t, k ,v)
+                  t[k] = v:clone()
+               end
+               reTable(self.gradInput, input, 
+                  function(t, k ,v)
+                     t[k] = v:clone()
+                  end
+               )
+               self.table = true
             end
+               self.reTable(self.gradInput, currentGradInput[j],
+                  function(t, k, v)
+                     t[k]:copy(v)
+                  end
+               )
+            else
+         else
+            self.reTable(self.gradInput, currentGradInput,
+               function(t, k, v)
+                  t[k]:add(v)
+               end
+            )
+         end
+      end
+   else
+      for i,module in ipairs(self.modules) do
+         local currentGradInput = module:updateGradInput(input, gradOutput[i])
+         if i == 1 then
+            self.gradInput:resizeAs(currentGradInput):copy(currentGradInput)
          else
             self.gradInput:add(currentGradInput)
          end
