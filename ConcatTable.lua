@@ -26,7 +26,7 @@ function ConcatTable:updateOutput(input)
    return self.output
 end
 
-local function reTable(t1, t2, f)
+local function retable(t1, t2, f)
    for k, v in pairs(t2) do
       if (torch.type(v) == "table") then
          t1[k] = retable(t1[k] or {}, t2[k], f)
@@ -54,21 +54,20 @@ function ConcatTable:updateGradInput(input, gradOutput)
                local cloneFunc = function(t, k ,v)
                   t[k] = v:clone()
                end
-               reTable(self.gradInput, input, 
+               retable(self.gradInput, input, 
                   function(t, k ,v)
                      t[k] = v:clone()
                   end
                )
                self.table = true
             end
-               self.reTable(self.gradInput, currentGradInput[j],
-                  function(t, k, v)
-                     t[k]:copy(v)
-                  end
-               )
-            else
+            retable(self.gradInput, currentGradInput,
+               function(t, k, v)
+                  t[k]:copy(v)
+               end
+            )
          else
-            self.reTable(self.gradInput, currentGradInput,
+            retable(self.gradInput, currentGradInput,
                function(t, k, v)
                   t[k]:add(v)
                end
@@ -151,6 +150,15 @@ function ConcatTable:parameters()
       end
    end
    return w,gw
+end
+
+function ConcatTable:type(type)
+   parent.type(self, type)
+   if torch.type(self.gradInput) == 'table' then
+      for i, gradInput in ipairs(self.gradInput) do
+         self.gradInput[i] = gradInput:type(type)
+      end
+   end
 end
 
 function ConcatTable:__tostring__()
