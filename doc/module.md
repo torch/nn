@@ -4,8 +4,8 @@
 `Module` is an abstract class which defines fundamental methods necessary
 for a training a neural network. Modules are [serializable](https://github.com/torch/torch7/blob/master/doc/serialization.md#serialization).
 
-Modules contain two states variables: [output](#nn.ModuleOutput) and
-[gradInput](#nn.ModuleGradInput).
+Modules contain two states variables: [output](#output) and
+[gradInput](#gradinput).
 
 <a name="nn.Module.forward"/>
 ### [output] forward(input) ###
@@ -16,7 +16,7 @@ module. In general `input` and `output` are
 like [table layers](table.md#nn.TableLayers) might expect something else. Please,
 refer to each module specification for further information.
 
-After a `forward()`, the [ouput](#nn.ModuleOutput) state variable should
+After a `forward()`, the [ouput](#output) state variable should
 have been updated to the new value.
 
 It is not advised to override this function. Instead, one should
@@ -57,14 +57,14 @@ functions.
 
 Computes the output using the current parameter set of the class and
 input. This function returns the result which is stored in the
-[output](#nn.Module.output) field.
+[output](#output) field.
 
 <a name="nn.Module.updateGradInput"/>
 ### updateGradInput(input, gradOutput) ###
 
 Computing the gradient of the module with respect to its own
 input. This is returned in `gradInput`. Also, the
-[gradInput](#nn.Module.gradInput) state variable is updated
+[gradInput](#gradinput) state variable is updated
 accordingly.
 
 <a name="nn.Module.accGradParameters"/>
@@ -273,4 +273,12 @@ wrt to the learnable parameters `flatGradParameters`.
 Custom modules should not override this function. They should instead override [parameters(...)](#nn.Module.parameters) which is, in turn, called by the present function.
 
 This function will go over all the weights and gradWeights and make them view into a single tensor (one for weights and one for gradWeights). Since the storage of every weight and gradWeight is changed, this function should be called only once on a given network.
+
+<a name="nn.Module.training"/>
+### training() ###
+This sets the mode of the Module (or sub-modules) to `train=true`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
+
+<a name="nn.Module.evaluate"/>
+### evaluate() ###
+This sets the mode of the Module (or sub-modules) to `train=false`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
 
