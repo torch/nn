@@ -38,7 +38,9 @@ local function retable(t1, t2, f)
 end
 
 function ConcatTable:updateGradInput(input, gradOutput)
-   if self.table or torch.type(input) == 'table' then
+   local isTable = torch.type(input) == 'table'
+   local wasTable = torch.type(self.gradInput) == 'table'
+   if isTable then
       for i,module in ipairs(self.modules) do
          local currentGradInput = module:updateGradInput(input, gradOutput[i])
          if torch.type(currentGradInput) ~= 'table' then
@@ -48,21 +50,10 @@ function ConcatTable:updateGradInput(input, gradOutput)
             error("table size mismatch: "..#input.." ~= "..#currentGradInput)
          end
          if i == 1 then
-            if not self.table then
-               -- gradInput is also a table
-               self.gradInput = {}
-               local cloneFunc = function(t, k ,v)
-                  t[k] = v:clone()
-               end
-               retable(self.gradInput, input, 
-                  function(t, k ,v)
-                     t[k] = v:clone()
-                  end
-               )
-               self.table = true
-            end
+            self.gradInput = wasTable and self.gradInput or {}
             retable(self.gradInput, currentGradInput,
                function(t, k, v)
+                  t[k] = t[k] or v:clone()
                   t[k]:resizeAs(v)
                   t[k]:copy(v)
                end
@@ -76,6 +67,7 @@ function ConcatTable:updateGradInput(input, gradOutput)
          end
       end
    else
+      self.gradInput = (not wasTable) and self.gradInput or input:clone()
       for i,module in ipairs(self.modules) do
          local currentGradInput = module:updateGradInput(input, gradOutput[i])
          if i == 1 then
