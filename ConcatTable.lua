@@ -63,6 +63,7 @@ function ConcatTable:updateGradInput(input, gradOutput)
             end
             retable(self.gradInput, currentGradInput,
                function(t, k, v)
+                  t[k]:resizeAs(v)
                   t[k]:copy(v)
                end
             )
