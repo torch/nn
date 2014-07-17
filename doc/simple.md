@@ -554,7 +554,7 @@ Example:
 ```
 
 <a name="nn.View"/>
-## Reshape ##
+## View ##
 
 `module` = `View(sizes)`
 

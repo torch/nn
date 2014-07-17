@@ -36,9 +36,10 @@ pred=mlp:forward{x,y,z}      -- This is equivalent to the line before
 ## ConcatTable ##
 
 ConcatTable is a container module that applies each member module to 
-the same input [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
+the same input [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor)
+or Table.
 
-Example:
+Example 1:
 ```lua
 mlp= nn.ConcatTable()
 mlp:add(nn.Linear(5,2))
@@ -61,6 +62,37 @@ which gives the output:
 [torch.Tensor of dimension 3] 
 ```
 
+Example 2:
+```lua
+mlp= nn.ConcatTable()
+mlp:add(nn.Identity())
+mlp:add(nn.Identity())
+
+pred=mlp:forward{torch.randn(2),{torch.randn(3)}};
+print(pred)
+```
+which gives the output (using [th](https://github.com/torch/trepl)):
+```lua
+{
+  1 : 
+    {
+      1 : DoubleTensor - size: 2
+      2 : 
+        {
+          1 : DoubleTensor - size: 3
+        }
+    }
+  2 : 
+    {
+      1 : DoubleTensor - size: 2
+      2 : 
+        {
+          1 : DoubleTensor - size: 3
+        }
+    }
+}
+
+```
 <a name="nn.ParallelTable"/>
 ## ParallelTable ##
 
