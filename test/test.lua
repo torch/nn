@@ -1,5 +1,9 @@
 require 'torch'
 
+-- you can easily test specific units like this: 
+-- luajit -lnn -e "nn.test{'LookupTable'}"
+-- luajit -lnn -e "nn.test{'LookupTable', 'Add'}"
+
 local mytester = torch.Tester()
 local jac
 local sjac
@@ -1832,6 +1836,13 @@ function nntest.LookupTable()
    local ferr,berr = jac.testIO(module,input,minval,maxval)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- accUpdate
+   module:accUpdateOnly()
+   mytester:assert(not module.gradWeight, 'gradWeight is nil')
+   module:float()
+   local output = module:forward(input)
+   module:backwardUpdate(input, output, 0.1)
 end
  
 function nntest.AddConstant()
