@@ -1956,6 +1956,137 @@ function nntest.SelectTable()
    equal(gradInput[nonIdx[idx]], zeros[nonIdx[idx]], "gradInput[nonIdx] dimension " .. idx)
 end
 
+function nntest.MixtureTable()
+   --[[ 2D ]]--
+   -- expertInput is a Table:
+   local expertInput = torch.randn(5,3,6)
+   local gradOutput = torch.randn(5,6)
+   local input = {
+      torch.rand(5,3), 
+      {expertInput:select(2,1), expertInput:select(2,2), expertInput:select(2,3)}
+   }
+   local module = nn.MixtureTable()
+   local output = module:forward(input)
+   local output2 = torch.cmul(input[1]:view(5,3,1):expand(5,3,6), expertInput):sum(2)
+   mytester:assertTensorEq(output, output2, 0.000001, "mixture output")
+   local gradInput = module:backward(input, gradOutput)
+   local gradOutput2 = torch.view(gradOutput, 5, 1, 6):expandAs(expertInput)
+   local gaterGradInput2 = torch.cmul(gradOutput2, expertInput):sum(3):select(3,1)
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture gater gradInput")
+   local expertGradInput2 = torch.cmul(input[1]:view(5,3,1):expand(5,3,6), gradOutput:view(5,1,6):expand(5,3,6))
+   for i, expertGradInput in ipairs(gradInput[2]) do
+      mytester:assertTensorEq(expertGradInput, expertGradInput2:select(2,i), 0.000001, "mixture expert "..i.." gradInput")
+   end
+   -- expertInput is a Tensor:
+   local input = {input[1], expertInput}
+   local module = nn.MixtureTable(2)
+   local output = module:forward(input)
+   mytester:assertTensorEq(output, output2, 0.000001, "mixture2 output")
+   local gradInput = module:backward(input, gradOutput)
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture2 gater gradInput")
+   mytester:assertTensorEq(gradInput[2], expertGradInput2, 0.000001, "mixture2 expert gradInput")
+   
+   --[[ 3D ]]--
+   local expertInput = torch.randn(5,6,3,2)
+   local gradOutput = torch.randn(5,6,2)
+   -- expertInput is a Table:
+   local input = {
+      torch.rand(5,3), 
+      {expertInput:select(3,1), expertInput:select(3,2), expertInput:select(3,3)}
+   }
+   local module = nn.MixtureTable()
+   local output = module:forward(input)
+   local output2 = torch.cmul(input[1]:view(5,1,3,1):expand(5,6,3,2), expertInput):sum(3)
+   mytester:assertTensorEq(output, output2, 0.000001, "mixture3 output")
+   local gradInput = module:backward(input, gradOutput)
+   local gradOutput2 = torch.view(gradOutput,5,6,1,2):expandAs(expertInput)
+   local gaterGradInput2 = torch.cmul(gradOutput2, expertInput):sum(4):select(4,1):sum(2):select(2,1)
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture3 gater gradInput")
+   local expertGradInput2 = torch.cmul(input[1]:view(5,1,3,1):expand(5,6,3,2), gradOutput2)
+   for i, expertGradInput in ipairs(gradInput[2]) do
+      mytester:assertTensorEq(expertGradInput, expertGradInput2:select(3,i), 0.000001, "mixture3 expert "..i.." gradInput")
+   end
+   -- expertInput is a Tensor
+   local input = {input[1], expertInput}
+   local module = nn.MixtureTable(3)
+   local output = module:forward(input)
+   mytester:assertTensorEq(output, output2, 0.000001, "mixture4 output")
+   local gradInput = module:backward(input, gradOutput)
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture4 gater gradInput")
+   mytester:assertTensorEq(gradInput[2], expertGradInput2, 0.000001, "mixture4 expert gradInput")
+   
+   --[[ 1D ]]--
+   -- expertInput is a Table:
+   local expertInput = torch.randn(3,6)
+   local gradOutput = torch.randn(6)
+   local input = {
+      torch.rand(3), 
+      {expertInput:select(1,1), expertInput:select(1,2), expertInput:select(1,3)}
+   }
+   local module = nn.MixtureTable()
+   local output = module:forward(input)
+   local output2 = torch.cmul(input[1]:view(3,1):expand(3,6), expertInput):sum(1)
+   mytester:assertTensorEq(output, output2, 0.000001, "mixture5 output")
+   local gradInput = module:backward(input, gradOutput)
+   local gradOutput2 = torch.view(gradOutput, 1, 6):expandAs(expertInput)
+   local gaterGradInput2 = torch.cmul(gradOutput2, expertInput):sum(2):select(2,1)
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture5 gater gradInput")
+   local expertGradInput2 = torch.cmul(input[1]:view(3,1):expand(3,6), gradOutput:view(1,6):expand(3,6))
+   for i, expertGradInput in ipairs(gradInput[2]) do
+      mytester:assertTensorEq(expertGradInput, expertGradInput2:select(1,i), 0.000001, "mixture5 expert "..i.." gradInput")
+   end
+   -- test type-cast
+   module:float()
+   local input2 = {
+      input[1]:float(), 
+      {input[2][1]:float(), input[2][2]:float(), input[2][3]:float()}
+   }
+   local output = module:forward(input2)
+   mytester:assertTensorEq(output, output2:float(), 0.000001, "mixture5B output")
+   local gradInput = module:backward(input2, gradOutput:float())
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2:float(), 0.000001, "mixture5B gater gradInput")
+   for i, expertGradInput in ipairs(gradInput[2]) do
+      mytester:assertTensorEq(expertGradInput, expertGradInput2:select(1,i):float(), 0.000001, "mixture5B expert "..i.." gradInput")
+   end
+   -- expertInput is a Tensor:
+   local input = {input[1], expertInput}
+   local module = nn.MixtureTable(1)
+   local output = module:forward(input)
+   mytester:assertTensorEq(output, output2, 0.000001, "mixture6 output")
+   local gradInput = module:backward(input, gradOutput)
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture6 gater gradInput")
+   mytester:assertTensorEq(gradInput[2], expertGradInput2, 0.000001, "mixture6 expert gradInput")
+   -- test type-cast:
+   module:float()
+   local input2 = {input[1]:float(), expertInput:float()}
+   local output = module:forward(input2)
+   mytester:assertTensorEq(output, output2:float(), 0.000001, "mixture6B output")
+   local gradInput = module:backward(input2, gradOutput:float())
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2:float(), 0.000001, "mixture6B gater gradInput")
+   mytester:assertTensorEq(gradInput[2], expertGradInput2:float(), 0.000001, "mixture6B expert gradInput")
+   
+   --[[ 2D gater, 1D expert]]--
+   -- expertInput is a Table:
+   local expertInput = torch.randn(5,3)
+   local gradOutput = torch.randn(5)
+   local input = {
+      torch.rand(5,3), 
+      {expertInput:select(2,1), expertInput:select(2,2), expertInput:select(2,3)}
+   }
+   local module = nn.MixtureTable()
+   local output = module:forward(input)
+   local output2 = torch.cmul(input[1], expertInput):sum(2)
+   mytester:assertTensorEq(output, output2, 0.000001, "mixture7 output")
+   local gradInput = module:backward(input, gradOutput)
+   local gradOutput2 = torch.view(gradOutput, 5, 1):expandAs(expertInput)
+   local gaterGradInput2 = torch.cmul(gradOutput2, expertInput)
+   mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture7 gater gradInput")
+   local expertGradInput2 = torch.cmul(input[1], gradOutput:view(5,1):expand(5,3))
+   for i, expertGradInput in ipairs(gradInput[2]) do
+      mytester:assertTensorEq(expertGradInput, expertGradInput2:select(2,i), 0.000001, "mixture7 expert "..i.." gradInput")
+   end
+end
+
 function nntest.View()
    local input = torch.rand(10)
    local template = torch.rand(5,2)
