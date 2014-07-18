@@ -6,11 +6,12 @@ This allows one to build very rich architectures:
  * Table Container Modules encapsulate sub-Modules:
    * [ConcatTable](#nn.ConcatTable) : applies each member module to the same input     [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor) and outputs a table;
    * [ParallelTable](#nn.ParallelTable) : applies the `ith` member module to the `ith` input and outputs a table;
- * Table Conversion Modules convert between tables and Tensors:
+ * Table Conversion Modules convert between tables and Tensors or tables:
    * [SplitTable](#nn.SplitTable) : splits a Tensor into a table of Tensors;
    * [JoinTable](#nn.JoinTable) : joins a table of Tensors into a Tensor;
    * [MixtureTable](#nn.MixtureTable) : mixture of experts weighted by a gater;
    * [SelectTable](#nn.SelectTable) : select one element from a table;
+   * [FlattenTable](#nn.FlattenTable) : flattens a nested table hierarchy;
  * Pair Modules compute a measure like distance or similarity from a pair (table) of input Tensors :
    * [PairwiseDistance](#nn.PairwiseDistance) : outputs the `p`-norm. distance between inputs;
    * [DotProduct](#nn.DotProduct) : outputs the dot product (similarity) between inputs;
