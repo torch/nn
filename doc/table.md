@@ -9,7 +9,8 @@ This allows one to build very rich architectures:
  * Table Conversion Modules convert between tables and Tensors:
    * [SplitTable](#nn.SplitTable) : splits a Tensor into a table of Tensors;
    * [JoinTable](#nn.JoinTable) : joins a table of Tensors into a Tensor;
-   * [SelectTable](#nn.SelectTable) : retrieve one element from a table;
+   * [MixtureTable](#nn.MixtureTable) : mixture of experts weighted by a gater;
+   * [SelectTable](#nn.SelectTable) : select one element from a table;
  * Pair Modules compute a measure like distance or similarity from a pair (table) of input Tensors :
    * [PairwiseDistance](#nn.PairwiseDistance) : outputs the `p`-norm. distance between inputs;
    * [DotProduct](#nn.DotProduct) : outputs the dot product (similarity) between inputs;
@@ -35,9 +36,10 @@ pred=mlp:forward{x,y,z}      -- This is equivalent to the line before
 ## ConcatTable ##
 
 ConcatTable is a container module that applies each member module to 
-the same input [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
+the same input [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor)
+or Table.
 
-Example:
+Example 1:
 ```lua
 mlp= nn.ConcatTable()
 mlp:add(nn.Linear(5,2))
@@ -60,6 +62,37 @@ which gives the output:
 [torch.Tensor of dimension 3] 
 ```
 
+Example 2:
+```lua
+mlp= nn.ConcatTable()
+mlp:add(nn.Identity())
+mlp:add(nn.Identity())
+
+pred=mlp:forward{torch.randn(2),{torch.randn(3)}};
+print(pred)
+```
+which gives the output (using [th](https://github.com/torch/trepl)):
+```lua
+{
+  1 : 
+    {
+      1 : DoubleTensor - size: 2
+      2 : 
+        {
+          1 : DoubleTensor - size: 3
+        }
+    }
+  2 : 
+    {
+      1 : DoubleTensor - size: 2
+      2 : 
+        {
+          1 : DoubleTensor - size: 3
+        }
+    }
+}
+
+```
 <a name="nn.ParallelTable"/>
 ## ParallelTable ##
 
@@ -374,6 +407,104 @@ for i=1,100 do             -- A few steps of training such a network..
 
  print(err)
 end
+```
+
+<a name='nn.MixtureTable'/>
+## MixtureTable ##
+
+`module` = `MixtureTable([dim])`
+
+Creates a module that takes a Table `{gater, experts}` as input and outputs
+the mixture of `experts` (a Tensor or Table of Tensors) using a 
+`gater` Tensor. When `dim` is provided, it specifies the dimension of 
+the `experts` Tensor that will be interpolated (or mixed). Otherwise, 
+the `experts` should take the form of a Table of Tensors. This 
+Module works for `experts` of dimension 1D or more, and for a
+1D or 2D `gater`, i.e. for single examples or mini-batches.
+
+Considering an `input = {G,E}` with a single example, then 
+the mixture of experts Tensor `E` with 
+gater Tensor `G` has the following form:
+```lua
+output = G[1]*E[1] + G[2]*E[2] + ... + G[n]*E[n]
+```
+where `dim = 1`, `n = E:size(dim) = G:size(dim)` and `G:dim() == 1`.
+Note that `E:dim() >= 2`, such that `output:dim() = E:dim() - 1`.
+
+Example 1:
+Using this Module, an arbitrary mixture of `n` 2-layer experts 
+by a 2-layer gater could be constructed as follows:
+```lua
+experts = nn.ConcatTable()
+for i=1,n do
+   local expert = nn.Sequential()
+   expert:add(nn.Linear(3,4))
+   expert:add(nn.Tanh())
+   expert:add(nn.Linear(4,5))
+   expert:add(nn.Tanh()) 
+   experts:add(expert)
+end
+
+gater = nn.Sequential()
+gater:add(nn.Linear(3,7))
+gater:add(nn.Tanh())
+gater:add(nn.Linear(7,n))
+gater:add(nn.SoftMax())
+
+trunk = nn.ConcatTable()
+trunk:add(gater)
+trunk:add(experts)
+
+moe = nn.Sequential()
+moe:add(trunk)
+moe:add(nn.MixtureTable())
+```
+Forwarding a batch of 2 examples gives us something like this:
+```lua
+> =moe:forward(torch.randn(2,3))
+-0.2152  0.3141  0.3280 -0.3772  0.2284
+ 0.2568  0.3511  0.0973 -0.0912 -0.0599
+[torch.DoubleTensor of dimension 2x5]
+```
+
+Example 2:
+In the following, the MixtureTable expects `experts` to be a Tensor of 
+`size = {1,4,2,5,n}`:
+```lua
+experts = nn.Concat(5)
+for i=1,n do
+   local expert = nn.Sequential()
+   expert:add(nn.Linear(3,4))
+   expert:add(nn.Tanh())
+   expert:add(nn.Linear(4,2*5))
+   expert:add(nn.Tanh()) 
+   expert:add(nn.Reshape(4,2,5,1))
+   experts:add(expert)
+end
+
+gater = nn.Sequential()
+gater:add(nn.Linear(3,7))
+gater:add(nn.Tanh())
+gater:add(nn.Linear(7,n))
+gater:add(nn.SoftMax())
+
+trunk = nn.ConcatTable()
+trunk:add(gater)
+trunk:add(experts)
+
+moe = nn.Sequential()
+moe:add(trunk)
+moe:add(nn.MixtureTable(5))
+```
+Forwarding a batch of 2 examples gives us something like this:
+```lua
+> =moe:forward(torch.randn(2,3)):size()
+ 2
+ 4
+ 2
+ 5
+[torch.LongStorage of size 4]
+
 ```
 
 <a name="nn.SelectTable"/>

@@ -1,6 +1,6 @@
-local SpatialConvolutionMM, parent = torch.class('nn.SpatialConvolutionMM', 'nn.Module')
+local SpatialConvolutionMM_BHWD, parent = torch.class('nn.SpatialConvolutionMM_BHWD', 'nn.Module')
 
-function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padding)
+function SpatialConvolutionMM_BHWD:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padding)
    parent.__init(self)
    
    dW = dW or 1
@@ -15,9 +15,9 @@ function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, 
    self.dH = dH
    self.padding = padding or 0
 
-   self.weight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
+   self.weight = torch.Tensor(nOutputPlane, kH*kW*nInputPlane)
    self.bias = torch.Tensor(nOutputPlane)
-   self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
+   self.gradWeight = torch.Tensor(nOutputPlane, kH*kW*nInputPlane)
    self.gradBias = torch.Tensor(nOutputPlane)
 
    self.finput = torch.Tensor()
@@ -26,7 +26,7 @@ function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, 
    self:reset()
 end
 
-function SpatialConvolutionMM:reset(stdv)
+function SpatialConvolutionMM_BHWD:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
    else
@@ -45,16 +45,16 @@ function SpatialConvolutionMM:reset(stdv)
    end
 end
 
-function SpatialConvolutionMM:updateOutput(input)
-   return input.nn.SpatialConvolutionMM_updateOutput(self, input)
+function SpatialConvolutionMM_BHWD:updateOutput(input)
+   return input.nn.SpatialConvolutionMM_BHWD_updateOutput(self, input)
 end
 
-function SpatialConvolutionMM:updateGradInput(input, gradOutput)
+function SpatialConvolutionMM_BHWD:updateGradInput(input, gradOutput)
    if self.gradInput then
-      return input.nn.SpatialConvolutionMM_updateGradInput(self, input, gradOutput)
+      return input.nn.SpatialConvolutionMM_BHWD_updateGradInput(self, input, gradOutput)
    end
 end
 
-function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
-   return input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
+function SpatialConvolutionMM_BHWD:accGradParameters(input, gradOutput, scale)
+   return input.nn.SpatialConvolutionMM_BHWD_accGradParameters(self, input, gradOutput, scale)
 end
