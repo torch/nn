@@ -59,6 +59,9 @@
 #include "generic/AbsCriterion.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/DistKLDivCriterion.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/SparseLinear.c"
 #include "THGenerateFloatTypes.h"
 
@@ -127,6 +130,7 @@ int luaopen_libnn(lua_State *L)
   nn_FloatLogSoftMax_init(L);
   nn_FloatMSECriterion_init(L);
   nn_FloatAbsCriterion_init(L);
+  nn_FloatDistKLDivCriterion_init(L);
   nn_FloatLogSigmoid_init(L);
   nn_FloatSigmoid_init(L);
   nn_FloatSoftMax_init(L);
@@ -163,6 +167,7 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleLogSoftMax_init(L);
   nn_DoubleMSECriterion_init(L);
   nn_DoubleAbsCriterion_init(L);
+  nn_DoubleDistKLDivCriterion_init(L);
   nn_DoubleLogSigmoid_init(L);
   nn_DoubleSigmoid_init(L);
   nn_DoubleSoftMax_init(L);

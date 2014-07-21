@@ -498,6 +498,15 @@ function nntest.BCECriterion()
    criterionJacobianTest1D(cri, input, target)
 end
 
+function nntest.DistKLDivCriterion()
+   local input = torch.rand(100)
+   local target = input:clone():add(torch.rand(100))
+   local cri = nn.DistKLDivCriterion(true)  -- sizeAverage = true
+   criterionJacobianTest1D(cri, input, target)
+   cri = nn.DistKLDivCriterion(false)  -- sizeAverage = false
+   criterionJacobianTest1D(cri, input, target)
+end
+
 function nntest.LogSigmoid()
    local ini = math.random(10,20)
    local inj = math.random(10,20)

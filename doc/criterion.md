@@ -107,6 +107,29 @@ function gradUpdate(mlp,x,y,learningRate)
 end
 ```
 
+<a name="nn.DistKLDivCriterion"/>
+## DistKLDivCriterion ##
+
+```lua
+criterion = DistKLDivCriterion()
+```
+
+Kullback–Leibler divergence criterion.  KL divergence is a useful distance 
+measure for continuous distributions and is often useful when performance
+direct regression over the space of (discretely sampled) continuous output 
+distributions.  As with ClassNLLCriterion, the `input` given through a 
+`forward()` is expected to contain _log-probabilities_, however unlike
+ClassNLLCriterion, `input` is not restricted to a 1D vector.
+
+This criterion expect a `target` tensor of the same size as the `input`
+tensor when calling [forward(input, target)](#nn.CriterionForward) and
+[backward(input, target)](#nn.CriterionBackward).
+
+The loss can be described as:
+```lua
+loss(x, target) = sum_{all i}(target_i * (log(target_i) - x_i))
+```
+
 <a name="nn.BCECriterion"/>
 ## BCECriterion ##
 ```lua
