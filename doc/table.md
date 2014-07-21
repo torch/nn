@@ -6,11 +6,12 @@ This allows one to build very rich architectures:
  * Table Container Modules encapsulate sub-Modules:
    * [ConcatTable](#nn.ConcatTable) : applies each member module to the same input     [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor) and outputs a table;
    * [ParallelTable](#nn.ParallelTable) : applies the `ith` member module to the `ith` input and outputs a table;
- * Table Conversion Modules convert between tables and Tensors:
+ * Table Conversion Modules convert between tables and Tensors or tables:
    * [SplitTable](#nn.SplitTable) : splits a Tensor into a table of Tensors;
    * [JoinTable](#nn.JoinTable) : joins a table of Tensors into a Tensor;
    * [MixtureTable](#nn.MixtureTable) : mixture of experts weighted by a gater;
    * [SelectTable](#nn.SelectTable) : select one element from a table;
+   * [FlattenTable](#nn.FlattenTable) : flattens a nested table hierarchy;
  * Pair Modules compute a measure like distance or similarity from a pair (table) of input Tensors :
    * [PairwiseDistance](#nn.PairwiseDistance) : outputs the `p`-norm. distance between inputs;
    * [DotProduct](#nn.DotProduct) : outputs the dot product (similarity) between inputs;
@@ -600,6 +601,43 @@ Example 2:
 0 0
 [torch.DoubleTensor of dimension 2x2]
 
+```
+
+<a name="nn.FlattenTable"/>
+## FlattenTable ##
+
+`module` = `FlattenTable()`
+
+Creates a module that takes an arbitrarily deep table of Tensors (potentially nested) as input and outputs a table of tensors, where the output tensor in index `i` is the tensor with post-order DFS index `i` in the input table.
+
+This module is particularly useful in combination with nn.Identity() to create networks that can append to their input table.
+
+Example:
+```lua
+x={torch.rand(1), {torch.rand(2), {torch.rand(3)}}, torch.rand(4)}
+print(x)
+print(nn.FlattenTable():forward(x))
+```
+gives the output:
+```lua
+{
+  1 : DoubleTensor - size: 1
+  2 : 
+    {
+      1 : DoubleTensor - size: 2
+      2 : 
+        {
+          1 : DoubleTensor - size: 3
+        }
+    }
+  3 : DoubleTensor - size: 4
+}
+{
+  1 : DoubleTensor - size: 1
+  2 : DoubleTensor - size: 2
+  3 : DoubleTensor - size: 3
+  4 : DoubleTensor - size: 4
+}
 ```
 
 <a name="nn.PairwiseDistance"/>
