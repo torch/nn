@@ -2260,6 +2260,30 @@ function nntest.FlattenTable()
    mytester:assertlt(err, precision, 'error on bprop ')
 end
 
+function nntest.L1Penalty()
+   local weight = 1
+   local sizeAverage = false
+   local m = nn.L1Penalty(weight, sizeAverage)
+
+   local input = torch.rand(2,10):add(-0.5)
+   input[1][1] = 0
+
+   local out = m:forward(input)
+   local grad = m:backward(input, torch.ones(input:size()))
+
+   local err = input:clone():abs():sum()*weight - m.loss
+   mytester:assertlt(math.abs(err), precision, 'error on fprop ')
+
+   local true_grad = (input:gt(0):typeAs(grad) +
+      input:lt(0):typeAs(grad):mul(-1)):mul(weight)
+   mytester:assertlt((true_grad - grad):abs():max(), precision,
+      'error on bprop ')
+
+   -- Note: We cannot use the Jacobian test for this Module since the backward
+   -- gradient cannot be estimated using finite differences (ie, the loss
+   -- during BPROP is not included in the FPROP output)
+end
+
 mytester:add(nntest)
 
 if not nn then

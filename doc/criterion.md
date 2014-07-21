@@ -449,3 +449,32 @@ for i=1,100 do
   end
 end
 ```
+
+<a name="nn.L1Penalty"/>
+## L1Penalty ##
+
+```lua
+penalty = L1Penalty(l1weight, sizeAverage)
+```
+
+L1Penalty is an inline module that in it's FPROP copies the input Tensor directly to the output, and computes an L1 loss of the latent state (input) and stores it in the module's `loss` field.  During BPROP: `gradInput = gradOutput + gradLoss`.
+
+This module can be used in autoencoder architectures to apply L1 losses to internal latent state without having to use Identity and parallel containers to carry the internal code to an output criterion.
+
+Example (sparse autoencoder, note: decoder should be normalized):
+
+```lua
+encoder = nn.Sequential() 
+encoder:add(nn.Linear(3, 128))
+encoder:add(nn.Threshold())
+decoder = nn.Linear(128,3)
+
+autoencoder = nn.Sequential()
+autoencoder:add(encoder)
+autoencoder:add(nn.L1Penalty(l1weight))
+autoencoder:add(decoder)
+
+criterion = nn.MSECriterion()  -- To measure reconstruction error
+-- ...
+```
+
