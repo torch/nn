@@ -113,11 +113,28 @@ function Module:clone(...)
    return clone
 end
 
+local function recursiveType(param, type_str)
+   if type(param) == 'table' then
+      for i = 1, #param do
+         param[i] = recursiveType(param[i], type_str)
+      end
+   else
+      if torch.typename(param) and 
+        torch.typename(param):find('torch%..+Tensor') then
+         param = param:type(type_str)
+      end
+   end
+   return param
+end
+
 function Module:type(type)
    -- find all tensors and convert them
    for key,param in pairs(self) do
-      if torch.typename(param) and torch.typename(param):find('torch%..+Tensor') then
-         self[key] = param:type(type)
+      -- Many modules (like CDivTable) have output or gradInput fields which
+      -- are table's of tensors.  To be general we need to recursively
+      -- cast fields that may be nested tables.
+      if key ~= 'modules' then
+        self[key] = recursiveType(self[key], type)
       end
    end
    -- find submodules in classic containers 'modules'
