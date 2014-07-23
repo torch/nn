@@ -1,5 +1,37 @@
 <a name="nn.simplelayers.dok"/>
 # Simple layers #
+Simple Modules are used for many reasons like adapting Tensor methods 
+and providing affine transformations :
+ * Parameterized Modules :
+   * [Linear](#nn.Linear) : a linear transformation ;
+   * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
+ * Modules that adapt basic Tensor methods :
+   * [Copy](#nn.Copy) :
+   * [Narrow](#nn.Narrow) :
+   * [Replicate](#nn.Replicate) :
+   * [Reshape](#nn.Reshape) :
+   * [View](#nn.View) :
+   * [Select](#nn.Select) :
+ * Modules that adapt mathematical Tensor methods :
+   * [Abs](#nn.Abs) :
+   * [Add](#nn.Add) :
+   * [Mul](#nn.Mul) :
+   * [CMul](#nn.CMul) :
+   * [CDiv](#nn.CDiv) :
+   * [Max](#nn.Max) :
+   * [Min](#nn.Min) :
+   * [Mean](#nn.Mean) :
+   * [Sum](#nn.Sum) :
+   * [Exp](#nn.Exp) :
+   * [Power](#nn.Power) :
+   * [Square](#nn.Square) :
+   * [Sqrt](#nn.Sqrt) :
+ * Miscellaneous Modules :
+   * [Identiy](#nn.Identity) :
+   * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
+   * [Euclidean](#nn.Euclidean) :
+   * [WeightedEuclidean](#nn.WeightedEuclidea) :
+   
 
 <a name="nn.Linear"/>
 ## Linear ##
