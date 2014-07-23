@@ -114,7 +114,7 @@ function Module:clone(...)
 end
 
 local function recursiveType(param, type_str)
-   if type(param) == 'table' then
+   if torch.type(param) == 'table' then
       for i = 1, #param do
          param[i] = recursiveType(param[i], type_str)
       end
