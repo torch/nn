@@ -300,7 +300,7 @@ i.e. the network successfully learns the input `x` has been scaled by
 pi.
 
 <a name='nn.CMul'/>
-## CMul ##)
+## CMul ##
 
 `module` = `CMul(inputDimension)`
 
