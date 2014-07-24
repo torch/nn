@@ -1,5 +1,37 @@
 <a name="nn.simplelayers.dok"/>
 # Simple layers #
+Simple Modules are used for various tasks like adapting Tensor methods 
+and providing affine transformations :
+ * Parameterized Modules :
+   * [Linear](#nn.Linear) : a linear transformation ;
+   * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
+   * [Add](#nn.Add) : adds a bias term to the incoming data ;
+   * [Mul](#nn.Mul) : multiply a single scalar factor to the incoming data ;
+   * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
+   * [CDiv](#nn.CDiv) : a component-wise division to the incoming data ;
+   * [Euclidean](#nn.Euclidean) : the euclidean distance of the input to `k` mean centers ;
+   * [WeightedEuclidean](#nn.WeightedEuclidean) : similar to [Euclidean](#nn.Euclidean), but additionally learns a diagonal covariance matrix ;
+ * Modules that adapt basic Tensor methods :
+   * [Copy](#nn.Copy) : a [copy](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#torch.Tensor.copy) of the input with [type](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-or-string-typetype) casting ;
+   * [Narrow](#nn.Narrow) : a [narrow](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-narrowdim-index-size) operation over a given dimension ;
+   * [Replicate](#nn.Replicate) : [repeats](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-repeattensorsizes) input `n` times along its first dimension ;
+   * [Reshape](#nn.Reshape) : a [reshape](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchreshaperes-x-m-n) of the inputs ;
+   * [View](#nn.View) : a [view](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#result-viewresult-tensor-sizes) of the inputs ;
+   * [Select](#nn.Select) : a [select](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-selectdim-index) over a given dimension ;
+ * Modules that adapt mathematical Tensor methods :
+   * [Max](#nn.Max) : a [max](https://github.com/nicholas-leonard/torch7/blob/doc/doc/maths.md#torchmaxresval-resind-x-dim) operation over a given dimension ;
+   * [Min](#nn.Min) : a [min](https://github.com/nicholas-leonard/torch7/blob/doc/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
+   * [Mean](#nn.Mean) : a [mean](https://github.com/nicholas-leonard/torch7/blob/doc/doc/maths.md#res-torchmeanres-x-dim) operation over a given dimension ;
+   * [Sum](#nn.Sum) : a [sum](https://github.com/nicholas-leonard/torch7/blob/doc/doc/maths.md#res-torchsumres-x) operation over a given dimension ;
+   * [Exp](#nn.Exp) : an element-wise [exp](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchexpres-x) operation ;
+   * [Abs](#nn.Abs) : an element-wise [abs](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchabsres-x) operation ;
+   * [Power](#nn.Power) : an element-wise [pow](https://github.com/nicholas-leonard/torch7/blob/doc/doc/maths.md#res-torchpowres-x) operation ;
+   * [Square](#nn.Square) : an element-wise square operation ;
+   * [Sqrt](#nn.Sqrt) : an element-wise [sqrt](https://github.com/nicholas-leonard/torch7/blob/doc/doc/maths.md#res-torchsqrtres-x) operation ;
+ * Miscellaneous Modules :
+   * [Identiy](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable));
+   * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
+   
 
 <a name="nn.Linear"/>
 ## Linear ##
@@ -181,8 +213,8 @@ gnuplot.grid(true)
 
 ![](image/abs.png)
 
+<a name='nn.Add'/>
 ## Add ##
-![](anchor:nn.Add)
 
 `module` = `Add(inputDimension,scalar)`
 
@@ -267,8 +299,8 @@ gives the output:
 i.e. the network successfully learns the input `x` has been scaled by
 pi.
 
+<a name='nn.CMul'/>
 ## CMul ##
-![](anchor:nn.CMul)
 
 `module` = `CMul(inputDimension)`
 
@@ -367,7 +399,7 @@ i.e. this layer has the weights `c_i`, `i` = `1`,..,`outputDimension`, where
 
 `module` = `WeightedEuclidean(inputDimension,outputDimension)`
 
-This module is similar to [Euclidian](#nn.Euclidian), but
+This module is similar to [Euclidean](#nn.Euclidean), but
 additionally learns a separate diagonal covariance matrix across the
 features of the input space for each center.
 
@@ -440,7 +472,7 @@ type from `inputType` to `outputType`.
 `module` = `Narrow(dimension, offset, length)`
 
 Narrow is application of
-[narrow](..:torch:tensor:#torch.Tensor.narrow) operation in a
+[narrow](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-narrowdim-index-size) operation in a
 module.
 
 <a name="nn.Replicate"/>
@@ -451,7 +483,7 @@ module.
 This class creates an output where the input is replicated
 `nFeature` times along its first dimension. There is no memory
 allocation or memory copy in this module. It sets the
-[stride](..:torch:tensor#torch.Tensor.stride) along the first
+[stride](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#number-stridedim) along the first
 dimension to zero.
 
 ```lua
