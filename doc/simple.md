@@ -213,8 +213,8 @@ gnuplot.grid(true)
 
 ![](image/abs.png)
 
+<a name='nn.Add'/>
 ## Add ##
-![](anchor:nn.Add)
 
 `module` = `Add(inputDimension,scalar)`
 
@@ -299,8 +299,8 @@ gives the output:
 i.e. the network successfully learns the input `x` has been scaled by
 pi.
 
-## CMul ##
-![](anchor:nn.CMul)
+<a name='nn.CMul'/>
+## CMul ##)
 
 `module` = `CMul(inputDimension)`
 
