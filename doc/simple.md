@@ -10,7 +10,7 @@ and providing affine transformations :
    * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
    * [CDiv](#nn.CDiv) : a component-wise division to the incoming data ;
    * [Euclidean](#nn.Euclidean) : the euclidean distance of the input to `k` mean centers ;
-   * [WeightedEuclidean](#nn.WeightedEuclidean) : similare to [Euclidian](#nn.Euclidian), but additionally learns a diagonal covariance matrix ;
+   * [WeightedEuclidean](#nn.WeightedEuclidean) : similar to [Euclidean](#nn.Euclidean), but additionally learns a diagonal covariance matrix ;
  * Modules that adapt basic Tensor methods :
    * [Copy](#nn.Copy) : a [copy](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#torch.Tensor.copy) of the input with [type](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-or-string-typetype) casting ;
    * [Narrow](#nn.Narrow) : a [narrow](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-narrowdim-index-size) operation over a given dimension ;
@@ -399,7 +399,7 @@ i.e. this layer has the weights `c_i`, `i` = `1`,..,`outputDimension`, where
 
 `module` = `WeightedEuclidean(inputDimension,outputDimension)`
 
-This module is similar to [Euclidian](#nn.Euclidian), but
+This module is similar to [Euclidean](#nn.Euclidean), but
 additionally learns a separate diagonal covariance matrix across the
 features of the input space for each center.
 
