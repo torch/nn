@@ -6,6 +6,10 @@ function Reshape:__init(...)
 
    self.size = torch.LongStorage()
    self.batchsize = torch.LongStorage()
+   if torch.type(arg[#arg]) == 'boolean' then
+      self.batchMode = arg[#arg]
+      table.remove(arg, #arg)
+   end
    local n = #arg
    if n == 1 and torch.typename(arg[1]) == 'torch.LongStorage' then
       self.size:resize(#arg[1]):copy(arg[1])
@@ -35,7 +39,10 @@ function Reshape:updateOutput(input)
       input = self._input
    end
    
-   if input:nElement() == self.nelement then
+   if (self.batchMode == false) or (
+         (self.batchMode == nil) and 
+         (input:nElement() == self.nelement and input:size(1) ~= 1)
+      ) then
       self.output:view(input, self.size)
    else
       self.batchsize[1] = input:size(1)
