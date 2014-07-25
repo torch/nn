@@ -2122,6 +2122,25 @@ function nntest.View()
       "Error in minibatch nElement with size -1")
 end
 
+function nntest.Reshape()
+   local input = torch.rand(10)
+   local template = torch.rand(5,2)
+   local target = template:size():totable()
+   local module = nn.Reshape(template:size())
+   mytester:assertTableEq(module:forward(input):size():totable(), target, "Error in forward (1)")
+   local module = nn.View(unpack(target))
+   mytester:assertTableEq(module:forward(input):size():totable(), target, "Error in forward (2)")
+
+   -- Minibatch
+   local minibatch = torch.rand(5,10)
+   mytester:assertTableEq(module:forward(minibatch):size(1),
+      minibatch:size(1),
+      "Error in minibatch dimension")
+   mytester:assertTableEq(module:forward(minibatch):nElement(),
+      minibatch:nElement(),
+      "Error in minibatch nElement")
+end
+
 -- Define a test for SpatialUpSamplingCuda
 function nntest.SpatialUpSamplingNearest()
   local scale = torch.random(2,4)
