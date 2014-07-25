@@ -15,28 +15,40 @@ function Reshape:__init(...)
          self.size[i] = arg[i]
       end
    end
-   self.nelement = 1
+
    self.batchsize:resize(#self.size+1)
    for i=1,#self.size do
-      self.nelement = self.nelement * self.size[i]
       self.batchsize[i+1] = self.size[i]
    end
+   
+   -- only used for non-contiguous input or gradOutput
+   self._input = torch.Tensor()
+   self._gradOutput = torch.Tensor()
 end
 
 function Reshape:updateOutput(input)
-   input = input:contiguous()
-   local nelement = input:nElement()
-   if nelement == self.nelement and input:size(1) ~= 1 then
-      self.output:set(input):resize(self.size)
+   if not input:isContiguous() then
+      self._input:resizeAs(input)
+      self._input:copy(input)
+      input = self._input
+   end
+   
+   if input:dim() == self.size:nElement() then
+      self.output:view(input, self.size)
    else
       self.batchsize[1] = input:size(1)
-      self.output:set(input):resize(self.batchsize)
+      self.output:view(input, self.batchsize)
    end
    return self.output
 end
 
 function Reshape:updateGradInput(input, gradOutput)
-   gradOutput = gradOutput:contiguous()
-   self.gradInput:set(gradOutput):resizeAs(input)
+   if not gradOutput:isContiguous() then
+      self._gradOutput:resizeAs(gradOutput)
+      self._gradOutput:copy(gradOutput)
+      gradOutput = self._gradOutput
+   end
+   
+   self.gradInput:viewAs(gradOutput, input)
    return self.gradInput
 end
