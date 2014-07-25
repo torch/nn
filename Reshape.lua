@@ -16,8 +16,10 @@ function Reshape:__init(...)
       end
    end
 
+   self.nelement = 1
    self.batchsize:resize(#self.size+1)
    for i=1,#self.size do
+      self.nelement = self.nelement * self.size[i]
       self.batchsize[i+1] = self.size[i]
    end
    
@@ -33,7 +35,7 @@ function Reshape:updateOutput(input)
       input = self._input
    end
    
-   if input:dim() == self.size:nElement() then
+   if input:nElement() == self.nelement then
       self.output:view(input, self.size)
    else
       self.batchsize[1] = input:size(1)
