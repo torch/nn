@@ -282,8 +282,8 @@ This sets the mode of the Module (or sub-modules) to `train=true`. This is usefu
 ### evaluate() ###
 This sets the mode of the Module (or sub-modules) to `train=false`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
 
-<a name="nn.Module.findModulesByTypename"/>
-### findModulesByTypename(typename) ###
+<a name="nn.Module.findModules"/>
+### findModules(typename) ###
 Find all instances of modules in the network of a certain `typename`.  It returns a flattened list of the matching nodes, as well as a flattened list of the container modules for each matching node.
 
 Modules that do not have a parent container (ie, a top level nn.Sequential for instance) will return their `self` as the container.
@@ -305,7 +305,7 @@ model:add(conv_bank2)
 input = {torch.rand(3,128,128), torch.rand(3,64,64)}
 model:forward(input)
 -- Print the size of the Threshold outputs
-conv_nodes = model:findModulesByTypename('nn.SpatialConvolution')
+conv_nodes = model:findModules('nn.SpatialConvolution')
 for i = 1, #conv_nodes do
   print(conv_nodes[i].output:size())
 end
@@ -314,7 +314,7 @@ end
 Another use might be to replace all nodes of a certain `typename` with another.  For instance, if we wanted to replace all `nn.Threshold` with `nn.Tanh` in the model above:
 
 ```lua
-threshold_nodes, container_nodes = model:findModulesByTypename('nn.Threshold')
+threshold_nodes, container_nodes = model:findModules('nn.Threshold')
 for i = 1, #threshold_nodes do
   -- Search the container for the current threshold node
   for j = 1, #(container_nodes[i].modules) do

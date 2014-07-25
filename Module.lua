@@ -246,7 +246,7 @@ function Module:__call__(input, gradOutput)
    end
 end
 
-function Module:findModulesByTypename(typename, container)
+function Module:findModules(typename, container)
   container = container or self
   local nodes = {}
   local containers = {}
@@ -261,7 +261,7 @@ function Module:findModulesByTypename(typename, container)
       for i = 1, #self.modules do
         local child = self.modules[i]
         local cur_nodes, cur_containers = 
-          child:findModulesByTypename(typename, self)
+          child:findModules(typename, self)
         assert(#cur_nodes == #cur_containers, 
           'Internal error: incorrect return length')  -- This shouldn't happen
         -- add the list items from our child to our list (ie return a 
