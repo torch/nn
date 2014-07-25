@@ -245,3 +245,34 @@ function Module:__call__(input, gradOutput)
       return self.output
    end
 end
+
+function Module:findModules(typename, container)
+  container = container or self
+  local nodes = {}
+  local containers = {}
+  local mod_type = torch.typename(self)
+  if mod_type == typename then
+    nodes[#nodes+1] = self
+    containers[#containers+1] = container
+  end
+  -- Recurse on nodes with 'modules'
+  if (self.modules ~= nil) then
+    if (torch.type(self.modules) == 'table') then
+      for i = 1, #self.modules do
+        local child = self.modules[i]
+        local cur_nodes, cur_containers = 
+          child:findModules(typename, self)
+        assert(#cur_nodes == #cur_containers, 
+          'Internal error: incorrect return length')  -- This shouldn't happen
+        -- add the list items from our child to our list (ie return a 
+        -- flattened table of the return nodes).
+        for j = 1, #cur_nodes do
+          nodes[#nodes+1] = cur_nodes[j]
+          containers[#containers+1] = cur_containers[j]
+        end
+      end
+    end
+  end
+  return nodes, containers
+end
+

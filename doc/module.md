@@ -282,3 +282,46 @@ This sets the mode of the Module (or sub-modules) to `train=true`. This is usefu
 ### evaluate() ###
 This sets the mode of the Module (or sub-modules) to `train=false`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
 
+<a name="nn.Module.findModules"/>
+### findModules(typename) ###
+Find all instances of modules in the network of a certain `typename`.  It returns a flattened list of the matching nodes, as well as a flattened list of the container modules for each matching node.
+
+Modules that do not have a parent container (ie, a top level nn.Sequential for instance) will return their `self` as the container.
+
+This function is very helpful for navigating complicated nested networks.  For example, a didactic example might be; if you wanted to print the output size of all `nn.SpatialConvolution` instances:
+
+```lua
+-- Construct a multi-resolution convolution network (with 2 resolutions):
+model = nn.ParallelTable()
+conv_bank1 = nn.Sequential()
+conv_bank1:add(nn.SpatialConvolution(3,16,5,5))
+conv_bank1:add(nn.Threshold())
+model:add(conv_bank1)
+conv_bank2 = nn.Sequential()
+conv_bank2:add(nn.SpatialConvolution(3,16,5,5))
+conv_bank2:add(nn.Threshold())
+model:add(conv_bank2)
+-- FPROP a multi-resolution sample
+input = {torch.rand(3,128,128), torch.rand(3,64,64)}
+model:forward(input)
+-- Print the size of the Threshold outputs
+conv_nodes = model:findModules('nn.SpatialConvolution')
+for i = 1, #conv_nodes do
+  print(conv_nodes[i].output:size())
+end
+```
+
+Another use might be to replace all nodes of a certain `typename` with another.  For instance, if we wanted to replace all `nn.Threshold` with `nn.Tanh` in the model above:
+
+```lua
+threshold_nodes, container_nodes = model:findModules('nn.Threshold')
+for i = 1, #threshold_nodes do
+  -- Search the container for the current threshold node
+  for j = 1, #(container_nodes[i].modules) do
+    if container_nodes[i].modules[j] == threshold_nodes[i] then
+      -- Replace with a new instance
+      container_nodes[i].modules[j] = nn.Tanh()
+    end
+  end
+end
+```
