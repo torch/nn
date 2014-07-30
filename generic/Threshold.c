@@ -24,10 +24,10 @@ static int nn_(Threshold_updateGradInput)(lua_State *L)
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
   THTensor_(resizeAs)(gradInput, input);
-  TH_TENSOR_APPLY3(real, gradInput, real, gradOutput, real, input,      \
-                   if ((*input_data) > threshold) *gradInput_data = 1;  \
-                   else *gradInput_data = 0;                            \
-                   *gradInput_data = (*gradOutput_data) * (*gradInput_data););
+  TH_TENSOR_APPLY3(real, gradInput, real, gradOutput, real, input,       \
+     if ((*input_data) > threshold) *gradInput_data = *gradOutput_data;  \
+     else *gradInput_data = 0;);                                         \
+  
   return 1;
 }
 
