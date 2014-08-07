@@ -1,4 +1,4 @@
-local Criterion = torch.class('nn.Criterion')
+local Criterion = torch.class('nn.Criterion', 'nn.Module')
 
 function Criterion:__init()
    self.gradInput = torch.Tensor()
