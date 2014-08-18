@@ -16,19 +16,12 @@ static int nn_(Tanh_updateOutput)(lua_State *L)
   }
   else
   {
-    real* output_data = THTensor_(data)(output);
-    real* input_data  = THTensor_(data)(input);
-    long k;
-
-#pragma omp parallel for private(k)
-    for (k = 0; k < input->size[0]; k++)
-    {
-      real* ptr_output = output_data + k*input->stride[0];
-      real* ptr_input  = input_data  + k*input->stride[0];
-      long i;
-      for (i = 0; i < input->stride[0]; i++)
-  ptr_output[i] = tanh(ptr_input[i]);
-    }
+    real* ptr_output = THTensor_(data)(output);
+    real* ptr_input  = THTensor_(data)(input);
+    long i;
+#pragma omp parallel for private(i)
+    for(i = 0; i < THTensor_(nElement)(input); i++)
+      ptr_output[i] = tanh(ptr_input[i]);
   }
   return 1;
 }
@@ -52,23 +45,16 @@ static int nn_(Tanh_updateGradInput)(lua_State *L)
   }
   else
   {
-    real* gradOutput_data = THTensor_(data)(gradOutput);
-    real* gradInput_data  = THTensor_(data)(gradInput);
-    real* output_data     = THTensor_(data)(output);
-    long k;
+    real* ptr_gradOutput = THTensor_(data)(gradOutput);
+    real* ptr_gradInput  = THTensor_(data)(gradInput);
+    real* ptr_output     = THTensor_(data)(output);
+    long i;
 
-#pragma omp parallel for private(k)
-    for (k = 0; k < output->size[0]; k++)
+#pragma omp parallel for private(i)
+    for(i = 0; i < THTensor_(nElement)(gradInput); i++)
     {
-      real* ptr_gradOutput = gradOutput_data + k*output->stride[0];
-      real* ptr_gradInput  = gradInput_data  + k*output->stride[0];
-      real* ptr_output     = output_data     + k*output->stride[0];
-      long i;
-      for (i = 0; i < output->stride[0]; i++)
-      {
-  real z = ptr_output[i];
-  ptr_gradInput[i] = ptr_gradOutput[i] * (1. - z*z);
-      }
+      real z = ptr_output[i];
+      ptr_gradInput[i] = ptr_gradOutput[i] * (1. - z*z);
     }
   }
   return 1;
