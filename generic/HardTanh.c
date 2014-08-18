@@ -21,29 +21,21 @@ static int nn_(HardTanh_updateOutput)(lua_State *L)
   }
   else
   {
-    real* output_data = THTensor_(data)(output);
-    real* input_data  = THTensor_(data)(input);
-    long k;
+    real* ptr_output = THTensor_(data)(output);
+    real* ptr_input  = THTensor_(data)(input);
+    long i;
 
-
-#pragma omp parallel for private(k)
-    for (k = 0; k < input->size[0]; k++)
+#pragma omp parallel for private(i)
+    for (i = 0; i < THTensor_(nElement)(input); i++)
     {
-      real* ptr_output = output_data + k*input->stride[0];
-      real* ptr_input  = input_data  + k*input->stride[0];
-      long i;
-      for (i = 0; i < input->stride[0]; i++)
-      {
-        if(ptr_input[i] < -1)
-          ptr_output[i] = -1;
-        else if (ptr_input[i] <= 1)
-          ptr_output[i] = ptr_input[i];
-        else
-          ptr_output[i] = 1;
-      }
+      if(ptr_input[i] < -1)
+	ptr_output[i] = -1;
+      else if (ptr_input[i] <= 1)
+	ptr_output[i] = ptr_input[i];
+      else
+	ptr_output[i] = 1;
     }
   }
-  
   return 1;
 }
 
@@ -68,25 +60,18 @@ static int nn_(HardTanh_updateGradInput)(lua_State *L)
   }
   else
   {
-    real* gradOutput_data = THTensor_(data)(gradOutput);
-    real* gradInput_data  = THTensor_(data)(gradInput);
-    real* input_data      = THTensor_(data)(input);
-    long k;
+    real* ptr_gradOutput = THTensor_(data)(gradOutput);
+    real* ptr_gradInput  = THTensor_(data)(gradInput);
+    real* ptr_input      = THTensor_(data)(input);
+    long i;
 
-#pragma omp parallel for private(k)
-    for (k = 0; k < input->size[0]; k++)
+#pragma omp parallel for private(i)
+    for (i = 0; i < THTensor_(nElement)(input); i++)
     {
-      real* ptr_gradOutput = gradOutput_data + k*input->stride[0];
-      real* ptr_gradInput  = gradInput_data  + k*input->stride[0];
-      real* ptr_input      = input_data      + k*input->stride[0];
-      long i;
-      for (i = 0; i < input->stride[0]; i++)
-      {
-        if(ptr_input[i] < -1 || ptr_input[i] > 1)
-          ptr_gradInput[i] = 0;
-        else
-          ptr_gradInput[i] = ptr_gradOutput[i];
-      }
+      if(ptr_input[i] < -1 || ptr_input[i] > 1)
+	ptr_gradInput[i] = 0;
+      else
+	ptr_gradInput[i] = ptr_gradOutput[i];
     }
   }
   return 1;
