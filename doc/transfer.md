@@ -37,7 +37,7 @@ Applies the hard shrinkage function element-wise to the input
 `HardShrinkage` operator is defined as:
 
   * `f(x) = x, if x > lambda`
-  * `f(x) = -x, if < -lambda`
+  * `f(x) = -x, if x < -lambda`
   * `f(x) = 0, otherwise`
 
 ```lua
@@ -62,7 +62,7 @@ Applies the hard shrinkage function element-wise to the input
 `HardShrinkage` operator is defined as:
 
   * `f(x) = x-lambda, if x > lambda`
-  * `f(x) = -x+lambda, if < -lambda`
+  * `f(x) = -x+lambda, if x < -lambda`
   * `f(x) = 0, otherwise`
 
 ```lua
