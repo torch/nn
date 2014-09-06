@@ -731,8 +731,8 @@ end
 Example:
 ```lua
 mlp=nn.DotProduct()
-x=torch.Tensor(1,2,3) 
-y=torch.Tensor(4,5,6)
+x=torch.Tensor({1,2,3}) 
+y=torch.Tensor({4,5,6})
 print(mlp:forward({x,y}))
 ```
 gives the output:
