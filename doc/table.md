@@ -649,8 +649,8 @@ Example:
 ```lua
 mlp_l1=nn.PairwiseDistance(1)
 mlp_l2=nn.PairwiseDistance(2)
-x=torch.Tensor(1,2,3) 
-y=torch.Tensor(4,5,6)
+x=torch.Tensor({1,2,3}) 
+y=torch.Tensor({4,5,6})
 print(mlp_l1:forward({x,y}))
 print(mlp_l2:forward({x,y}))
 ```
