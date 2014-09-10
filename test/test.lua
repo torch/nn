@@ -16,7 +16,7 @@ local nntest = {}
 local function equal(t1, t2, msg)
    if (torch.type(t1) == "table") then
       for k, v in pairs(t2) do
-         equal(t1[k], t2[k])
+         equal(t1[k], t2[k], msg)
       end
    else
       mytester:assertTensorEq(t1, t2, 0.00001, msg)
