@@ -2141,6 +2141,22 @@ function nntest.Reshape()
       "Error in minibatch nElement")
 end
 
+function nntest.BatchReshape()
+    function match(batchArgs, shapeX, shape) 
+        r = nn.BatchReshape(unpack(batchArgs))
+        x = torch.randn(unpack(shapeX))
+        y = r:forward(x)
+
+        mytester:assertTableEq(y:size():totable(), shape, "Error in forward")
+    end
+
+    match({1, 1,5,5}, {5, 5}, {1,5,5})
+    match({1, 1,5,5}, {5, 10}, {2,5,5})
+    match({1, 1,5,5}, {10, 10}, {4,5,5})
+
+    match({2, 1,5,5}, {10, 10}, {1,20,5})
+end
+
 -- Define a test for SpatialUpSamplingCuda
 function nntest.SpatialUpSamplingNearest()
   local scale = torch.random(2,4)
