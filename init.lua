@@ -10,6 +10,7 @@ include('Sequential.lua')
 
 include('Linear.lua')
 include('SparseLinear.lua')
+include('BatchReshape.lua')
 include('Reshape.lua')
 include('View.lua')
 include('Select.lua')

@@ -16,6 +16,7 @@ and providing affine transformations :
    * [Narrow](#nn.Narrow) : a [narrow](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-narrowdim-index-size) operation over a given dimension ;
    * [Replicate](#nn.Replicate) : [repeats](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-repeattensorsizes) input `n` times along its first dimension ;
    * [Reshape](#nn.Reshape) : a [reshape](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchreshaperes-x-m-n) of the inputs ;
+   * [BatchReshape](#nn.BatchReshape) : a reshape of the inputs, with one free dimension ;
    * [View](#nn.View) : a [view](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#result-viewresult-tensor-sizes) of the inputs ;
    * [Select](#nn.Select) : a [select](https://github.com/nicholas-leonard/torch7/blob/doc/doc/tensor.md#tensor-selectdim-index) over a given dimension ;
  * Modules that adapt mathematical Tensor methods :
@@ -593,6 +594,63 @@ Example:
  16
 [torch.Tensor of dimension 16]
 ```
+
+<a name="nn.BatchReshape"/>
+## Reshape ##
+
+`module` = `Reshape(index,  dimension1, dimension2, ... )`
+
+Reshapes an `nxpxqx..`  Tensor into a `dimension1xdimension2x...` Tensor,
+taking the elements column-wise. One dimension is "free", i.e. it will
+be adapted depending on the number of elements in the tensor.
+The first argument `index` sets the index of this dimension.
+
+Notice that the number of elements in the tensor should be a multiple of
+the number of elements dimension1 x dimension2 x ... 
+
+Example:
+```lua
+> x=torch.Tensor(4,4)
+> for i=1,4 do
+>  for j=1,4 do
+>   x[i][j]=(i-1)*4+j;
+>  end
+> end
+> print(x)
+
+  1   2   3   4
+  5   6   7   8
+  9  10  11  12
+ 13  14  15  16
+[torch.Tensor of dimension 4x4]
+
+> > print(nn.BatchReshape(1,2,2):forward(x))
+  1   2
+  3   4
+  5   6
+  7   8
+  9  10
+ 11  12
+ 13  14
+ 15  16
+[torch.DoubleTensor of dimension 8x2]
+
+                                                                      [0.0004s]
+> print(nn.BatchReshape(2,2,2):forward(x))
+  1   2   3   4   5   6   7   8
+  9  10  11  12  13  14  15  16
+[torch.DoubleTensor of dimension 2x8]
+```
+
+A typical example is to use it combined with convolutions, as for example:
+```
+model:add(nn.TemporalConvolution(size, outputFrameSize, kW, dW))
+model:add(nn.BatchReshape(1, nOutputFrame, outputFrameSize))
+model:add(nn.Linear(outputFrameSize, outputSize))
+model:add(nn.BatchReshape(1, 1, nOutputFrame, outputSize))
+```
+where the convolution outputs nOutputFrame frames per input sample, and we
+want a linear transformation of each frame before continuing the processing.
 
 <a name="nn.View"/>
 ## View ##
