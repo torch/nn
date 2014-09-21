@@ -11,6 +11,21 @@
 ------------------------------------------------------------------------
 local SpatialConcat, parent = torch.class('nn.SpatialConcat', 'nn.Concat')
 
+function SpatialConcat:spatialWindow(output, currentOutput, offset)
+   local outputWindow = output:narrow(self.dimension, offset, currentOutput:size(self.dimension))
+   for dim=1,self.size:size(1) do
+      local currentSize = currentOutput:size(dim)
+      if dim ~= self.dimension and self.size[dim] ~= currentSize then
+         -- 5x5 vs 3x3 -> start = [(5-3)/2] + 1 = 2 (1 pad each side)
+         -- 9x9 vs 5x5 -> start = [(9-5)/2] + 1 = 3 (2 pad each side)
+         -- 9x9 vs 4x4 -> start = [(9-4)/2] + 1 = 3.5 (2 pad, 3 pad)
+         local start = ((self.size[dim] - currentSize) / 2) + 1
+         outputWindow = outputWindow:narrow(dim, start, currentSize)
+      end
+   end
+   return outputWindow
+end
+
 function SpatialConcat:updateOutput(input)
    local outs = {}
    for i=1,#self.modules do
@@ -28,25 +43,51 @@ function SpatialConcat:updateOutput(input)
          end
       end
    end
-   self.output:resize(self.size)
+   self.output:resize(self.size):zero() --zero for padding
    
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = outs[i]
-      local outputWindow = self.output:narrow(self.dimension, offset, currentOutput:size(self.dimension))
-      for dim=1,self.size:size(1) do
-         local currentSize = currentOutput:size(dim)
-         if dim ~= self.dimension and self.size[dim] ~= currentSize then
-            -- 5x5 vs 3x3 -> start = [(5-3)/2] + 1 = 2 (1 pad each side)
-            -- 9x9 vs 5x5 -> start = [(9-5)/2] + 1 = 3 (2 pad each side)
-            -- 9x9 vs 4x4 -> start = [(9-4)/2] + 1 = 3.5 (2 pad, 3 pad)
-            local start = ((self.size[dim] - currentSize) / 2) + 1
-            outputWindow = outputWindow:narrow(dim, start, currentSize)
-         end
-      end
+      local outputWindow = self:spatialWindow(self.output, currentOutput, offset)
       outputWindow:copy(currentOutput)
       offset = offset + currentOutput:size(self.dimension)
    end
    return self.output
+end
+   
+function SpatialConcat:updateGradInput(input, gradOutput)
+   self.gradInput:resizeAs(input)
+
+   local offset = 1
+   for i,module in ipairs(self.modules) do
+      local gradOutputWindow = self:spatialWindow(gradOutput, module.output, offset)
+      local currentGradInput = module:updateGradInput(input, gradOutputWindow)
+      if i==1 then
+         self.gradInput:copy(currentGradInput)
+      else
+         self.gradInput:add(currentGradInput)
+      end
+      offset = offset + currentOutput:size(self.dimension)
+   end
+   return self.gradInput
+end
+
+function SpatialConcat:accGradParameters(input, gradOutput, scale)
+   scale = scale or 1
+   local offset = 1
+   for i,module in ipairs(self.modules) do
+      local gradOutputWindow = self:spatialWindow(gradOutput, module.output, offset)
+      local currentGradInput = module:accGradParameters(input, gradOutputWindow, scale)
+      offset = offset + currentOutput:size(self.dimension)
+   end
+end
+
+function SpatialConcat:accUpdateGradParameters(input, gradOutput, lr)
+   local offset = 1
+   for i,module in ipairs(self.modules) do
+      local gradOutputWindow = self:spatialWindow(gradOutput, module.output, offset)
+      local currentGradInput = module:accUpdateGradParameters(input, gradOutputWindow, lr)
+      offset = offset + currentOutput:size(self.dimension)
+   end
 end
 
