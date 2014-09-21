@@ -3,7 +3,8 @@
 Complex neural networks are easily built using container classes:
  * [Sequential](#nn.Sequential) : plugs layers in a feed-forward fully connected manner ;
  * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
- * [Concat](#nn.Concat) : concatenates in one layer several modules ;
+ * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
+ * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
  
 See also the [Table Containers](#nn.TableContainers) for manipulating tables of [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
@@ -146,6 +147,7 @@ mlp:add(nn.SpatialConvolutionMM(inputSize, outputSize, 4, 4))
 print(mlp:forward(input))
 ```
 which gives the output:
+```lua
 (1,.,.) = 
  -0.2874  0.6255  1.1122  0.4768  0.9863 -0.2201 -0.1516
   0.2779  0.9295  1.1944  0.4457  1.1470  0.9693  0.1654
@@ -201,10 +203,12 @@ which gives the output:
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
 [torch.DoubleTensor of dimension 6x7x7]
 ```
-Note how the last 2 filter maps have 1 column of zero-padding 
-on the left and 2 on the right. This is inevitable when the component
-module output tensors that aren't all odd or even. For consistent 
-mapping, all odd or all even outputs are therefore desired.
+Note how the last 2 of 6 filter maps have 1 column of zero-padding 
+on the left and top, as well as 2 on the right and bottom. 
+This is inevitable when the component
+module output tensors non-`dim` sizes aren't all odd or even. 
+Such that in order to keep the mappings aligned, one need 
+only ensure that these be all odd (or even).
 
 <a name="nn.TableContainers"/>
 ## Table Containers ##
