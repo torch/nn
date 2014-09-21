@@ -5,7 +5,7 @@
 -- of the Going deeper with convolutions paper :
 -- http://arxiv.org/pdf/1409.4842v1.pdf
 -- The normal Concat Module can't be used since the spatial dimensions
--- tensors to be concatenated may have different values. To deal with
+-- of tensors to be concatenated may have different values. To deal with
 -- this, we select the largest spatial dimensions and add zero-padding
 -- around the smaller dimensions.
 ------------------------------------------------------------------------
