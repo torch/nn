@@ -7,6 +7,7 @@ include('Module.lua')
 include('Concat.lua')
 include('Parallel.lua')
 include('Sequential.lua')
+include('DepthConcat.lua')
 
 include('Linear.lua')
 include('SparseLinear.lua')

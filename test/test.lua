@@ -1,8 +1,7 @@
-require 'torch'
 
 -- you can easily test specific units like this: 
--- luajit -lnn -e "nn.test{'LookupTable'}"
--- luajit -lnn -e "nn.test{'LookupTable', 'Add'}"
+-- th -lnn -e "nn.test{'LookupTable'}"
+-- th -lnn -e "nn.test{'LookupTable', 'Add'}"
 
 local mytester = torch.Tester()
 local jac
@@ -2310,6 +2309,36 @@ function nntest.L1Penalty()
    -- Note: We cannot use the Jacobian test for this Module since the backward
    -- gradient cannot be estimated using finite differences (ie, the loss
    -- during BPROP is not included in the FPROP output)
+end
+
+function nntest.DepthConcat()
+   local outputSize = torch.IntTensor{5,6,7,8}
+   local input = torch.randn(2,3,42,42)
+   local gradOutput = torch.randn(2, outputSize:sum(), 42, 42)
+   local concat = nn.DepthConcat(2)
+   concat:add(nn.SpatialConvolutionMM(3, outputSize[1], 1, 1, 1, 1)) --> 2, 5, 42, 42
+   concat:add(nn.SpatialConvolutionMM(3, outputSize[2], 3, 3, 1, 1)) --> 2, 6, 40, 40
+   concat:add(nn.SpatialConvolutionMM(3, outputSize[3], 4, 4, 1, 1)) --> 2, 7, 39, 39
+   concat:add(nn.SpatialConvolutionMM(3, outputSize[4], 5, 5, 1, 1)) --> 2, 8, 38, 38
+   concat:zeroGradParameters()
+   -- forward/backward
+   local outputConcat = concat:forward(input)
+   local gradInputConcat = concat:backward(input, gradOutput)
+   -- the spatial dims are the largest, the nFilters is the sum
+   local output = torch.Tensor(2, outputSize:sum(), 42, 42):zero() -- zero for padding
+   local narrows = { {{},{1,5},{},{}}, {{},{6,11},{2,41},{2,41}}, {{},{12,18},{2,40},{2,40}}, {{},{19,26},{3,40},{3,40}} }
+   local gradInput = input:clone():zero()
+   local gradWeights = {}
+   for i=1,4 do
+      local conv = concat:get(i)
+      local gradWeight = conv.gradWeight:clone()
+      conv:zeroGradParameters()
+      output[narrows[i]]:copy(conv:forward(input))
+      gradInput:add(conv:backward(input, gradOutput[narrows[i]]))
+      mytester:assertTensorEq(gradWeight, conv.gradWeight, 0.000001, "Error in SpatialConcat:accGradParameters for conv "..i)
+   end
+   mytester:assertTensorEq(output, outputConcat, 0.000001, "Error in SpatialConcat:updateOutput")
+   mytester:assertTensorEq(gradInput, gradInputConcat, 0.000001, "Error in SpatialConcat:updateGradInput")
 end
 
 mytester:add(nntest)
