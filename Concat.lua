@@ -31,7 +31,6 @@ function Concat:updateOutput(input)
    
    local offset = 1
    for i,module in ipairs(self.modules) do
-      --local currentOutput = module:updateOutput(input)
       local currentOutput = outs[i]
       self.output:narrow(self.dimension, offset, currentOutput:size(self.dimension)):copy(currentOutput)
       offset = offset + currentOutput:size(self.dimension)
