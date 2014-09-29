@@ -128,7 +128,6 @@ local function recursiveType(param, type_str)
 end
 
 function Module:type(type)
-   assert(type, 'Module: must provide a type to convert to')
    -- find all tensors and convert them
    for key,param in pairs(self) do
       -- Many modules (like CDivTable) have output or gradInput fields which
@@ -195,6 +194,7 @@ function Module:getParameters()
       
       local flatParameters = Tensor(nParameters):fill(1)
       local flatStorage = flatParameters:storage()
+--      print ('create flatPar' , flatParameters)
 
       for k = 1,#parameters do
          local storageOffset = storageInSet(storages, parameters[k]:storage())
@@ -204,8 +204,11 @@ function Module:getParameters()
                            parameters[k]:stride())
          parameters[k]:zero()
       end
+      --print ('flatVersion after zeroing', flatParameters)
 
+      local maskParameters=  flatParameters:float():clone()
       local cumSumOfHoles = flatParameters:float():cumsum(1)
+     --print ('cum sum of holes: ' , cumSumOfHoles)
       local nUsedParameters = nParameters - cumSumOfHoles[#cumSumOfHoles]
       local flatUsedParameters = Tensor(nUsedParameters)
       local flatUsedStorage = flatUsedParameters:storage()
@@ -222,19 +225,28 @@ function Module:getParameters()
          local k, v = unpack(storageAndOffset)
          flatParameters[{{v+1,v+k:size()}}]:copy(Tensor():set(k))
       end
+     -- print ('copy storages flatPar' , flatParameters)
+
       if cumSumOfHoles:sum() == 0 then
          flatUsedParameters:copy(flatParameters)
       else
-         for k = 1,flatUsedParameters:nElement() do
-            flatUsedParameters[k] = flatParameters[k+cumSumOfHoles[k]]
+         local counter = 0
+         for k = 1,flatParameters:nElement() do
+            if maskParameters[k] == 0 then
+               counter = counter + 1
+       --        print ('Copy to ' , counter ,  ' from ' , counter + cumSumOfHoles[k])
+               flatUsedParameters[counter] = flatParameters[counter+cumSumOfHoles[k]]
+            end
          end
+         assert (counter == nUsedParameters)
       end
+      --print ('used flatVersion', flatUsedParameters)
       return flatUsedParameters
    end
 
    -- flatten parameters and gradients
    local flatParameters = flatten(parameters)
-   local flatGradParameters = flatten(gradParameters)
+ --  local flatGradParameters = flatten(gradParameters)
 
    -- return new flat vector that contains all discrete parameters
    return flatParameters, flatGradParameters
