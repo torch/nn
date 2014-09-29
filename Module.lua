@@ -128,6 +128,7 @@ local function recursiveType(param, type_str)
 end
 
 function Module:type(type)
+   assert ( type, 'Module: must provide a type to convert to')
    -- find all tensors and convert them
    for key,param in pairs(self) do
       -- Many modules (like CDivTable) have output or gradInput fields which
