@@ -1776,38 +1776,6 @@ function nntest.Module_getParameters_8()
   
 end
 
-function nntest.Module_getParameters_9()
-   local function makeMLP(n, nrepeat)
-      local net = nn.Sequential()
-      local mod = nn.Linear(n, n)
-    
-      for i = 1, nrepeat do
-         net:add(nn.Linear(n,n))
-         net.modules[i].weight = mod.weight
-         net.modules[i].bias = mod.bias
-      end
-      _,_ = net:getParameters()
-      return net
-   end
-
-  local mlp1 = makeMLP(10, 3)
-  local mlp2 = makeMLP(10, 3)
-
-  local net = nn.Sequential():add(mlp1:get(1))
-                             :add(mlp2:get(2))
-                             
-  -- clone the second MLP to ensure that the weights before calling getParameters are preserved
-  mlp2 = mlp2:clone() 
-
-  local p, gp = net:getParameters()
-
-  mytester:asserteq((p[{ {1,100} }] - net.modules[1].weight):norm(), 0, 'error when using partial realloc')
-  mytester:asserteq((p[{ {111,210} }] - net.modules[2].weight):norm(), 0, 'error when using partial realloc')
-  -- check that the weights have the same values as before get Parameters was called
-  mytester:asserteq((net.modules[1].weight - mlp1.modules[1].weight):norm(), 0, ' error when using partial realloc')
-  mytester:asserteq((net.modules[2].weight - mlp2.modules[2].weight):norm(), 0, ' error when using partial realloc')
-  
-end
 function nntest.PairwiseDistance()
    -- Note: testJacobian doesn't support table inputs, and rather than re-write
    -- it so that it does, I'll just use a split table module on the input.
