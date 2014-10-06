@@ -824,8 +824,8 @@ end
 Example:
 ```lua
 mlp=nn.CosineDistance()
-x=torch.Tensor(1,2,3) 
-y=torch.Tensor(4,5,6)
+x=torch.Tensor({1,2,3}) 
+y=torch.Tensor({4,5,6})
 print(mlp:forward({x,y}))
 ```
 gives the output:
@@ -864,13 +864,13 @@ y=torch.rand(5)
 
 -- Grad update function..
 function gradUpdate(mlp, x, y, learningRate)
-local pred = mlp:forward(x)
-if pred[1]*y < 1 then
- gradCriterion=torch.Tensor(-y)
- mlp:zeroGradParameters()
- mlp:backward(x, gradCriterion)
- mlp:updateParameters(learningRate)
-end
+    local pred = mlp:forward(x)
+    if pred[1]*y < 1 then
+        gradCriterion=torch.Tensor({-y})
+        mlp:zeroGradParameters()
+        mlp:backward(x, gradCriterion)
+        mlp:updateParameters(learningRate)
+    end
 end
 
 -- push the pair x and y together, the distance should get larger..
