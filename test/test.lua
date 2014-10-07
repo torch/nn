@@ -481,6 +481,13 @@ function nntest.MSECriterion()
    criterionJacobianTest1D(cri, input, target)   
 end
 
+function nntest.MarginCriterion()
+   local input = torch.rand(100)
+   local target = input:clone():add(torch.rand(100))
+   local cri = nn.MarginCriterion()
+   criterionJacobianTest1D(cri, input, target)   
+end
+
 function nntest.WeightedMSECriterion()
    local input = torch.rand(100)
    local target = input:clone():add(torch.rand(100))
