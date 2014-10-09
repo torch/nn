@@ -72,16 +72,19 @@ criterion.sizeAverage = false
 ## ClassNLLCriterion ##
 
 ```lua
-criterion = ClassNLLCriterion()
+criterion = ClassNLLCriterion(weights)
 ```
 
 The negative log likelihood criterion. It is useful to train a classication
-problem with `n` classes. The `input` given through a `forward()` is
+problem with `n` classes. 
+If provided, the optional argument `weights` should be a 1D Tensor assigning weight to each of the classes. This is particularly useful when you have an unbalanced training set.
+
+The `input` given through a `forward()` is
 expected to contain _log-probabilities_ of each class: `input` has to be a
-1D tensor of size `n`. Obtaining log-probabilities in a neural network is
+1D tensor of size `n`. 
+Obtaining log-probabilities in a neural network is
 easily achieved by adding a [LogSoftMax](#nn.LogSoftMax) layer in the last
 layer of your neural network.
-
 This criterion expect a class index (1 to the number of class) as `target`
 when calling [forward(input, target)](#nn.CriterionForward) and
 [backward(input, target)](#nn.CriterionBackward).
@@ -90,7 +93,10 @@ The loss can be described as:
 ```lua
 loss(x, class) = forward(x, class) = -x[class]
 ```
-
+or in the case of the `weights` argument being specified:
+```lua
+loss(x, class) = forward(x, class) = -weights[class]*x[class]
+```
 The following is a code fragment showing how to make a gradient step 
 given an input `x`, a desired output `y` (an integer `1` to `n`, 
 in this case `n` = `2` classes), 
