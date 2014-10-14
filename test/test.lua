@@ -1307,12 +1307,12 @@ end
 
 function nntest.SpatialMaxPooling()
    local from = math.random(1,5)
-   local ki = math.random(1,5)
-   local kj = math.random(1,5)
+   local ki = math.random(1,4)
+   local kj = math.random(1,4)
    local si = math.random(1,3)
    local sj = math.random(1,3)
-   local outi = math.random(2,4)
-   local outj = math.random(2,4)
+   local outi = math.random(4,5)
+   local outj = math.random(4,5)
    local ini = (outi-1)*si+ki
    local inj = (outj-1)*sj+kj
 
