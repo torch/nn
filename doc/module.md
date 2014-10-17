@@ -44,12 +44,12 @@ output of the module).  This function simply performs this task using
 two function calls:
 
   - A function call to [updateGradInput(input, gradOutput)](#nn.Module.updateGradInput).
-  - A function call to [accGradParameters(input,gradOutput)](#nn.Module.accGradParameters).
+  - A function call to [accGradParameters(input,gradOutput,scale)](#nn.Module.accGradParameters).
 
 It is not advised to override this function call in custom classes. It
 is better to override
 [updateGradInput(input, gradOutput)](#nn.Module.updateGradInput) and
-[accGradParameters(input, gradOutput)](#nn.Module.accGradParameters)
+[accGradParameters(input, gradOutput,scale)](#nn.Module.accGradParameters)
 functions.
 
 <a name="nn.Module.updateOutput"/>
@@ -68,13 +68,15 @@ input. This is returned in `gradInput`. Also, the
 accordingly.
 
 <a name="nn.Module.accGradParameters"/>
-### accGradParameters(input, gradOutput) ###
+### accGradParameters(input, gradOutput, scale) ###
 
 Computing the gradient of the module with respect to its
 ownparameters. Many modules do not perform this step as they do not
 have any parameters. The state variable name for the parameters is
 module dependent. The module is expected to _accumulate_ the
 gradients with respect to the parameters in some variable.
+
+`scale` is a scale factor that is multiplied with the gradParameters before being accumulated.
 
 Zeroing this accumulation is achieved with
 [zeroGradParameters()](#nn.Module.zeroGradParameters) and updating
@@ -86,7 +88,7 @@ the parameters according to this accumulation is done with
 
 If the module has parameters, this will zero the accumulation of the
 gradients with respect to these parameters, accumulated through
-[accGradParameters(input, gradOutput)](#nn.Module.accGradParameters)
+[accGradParameters(input, gradOutput,scale)](#nn.Module.accGradParameters)
 calls. Otherwise, it does nothing.
 
 <a name="nn.Module.updateParameters"/>
