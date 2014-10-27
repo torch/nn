@@ -28,7 +28,7 @@ function Concat:updateOutput(input)
       end
    end
    self.output:resize(self.size)
-   
+
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = outs[i]
@@ -45,11 +45,13 @@ function Concat:updateGradInput(input, gradOutput)
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
       local currentGradInput = module:updateGradInput(input, gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)))
-        
-      if i==1 then
-         self.gradInput:copy(currentGradInput)
-      else
-         self.gradInput:add(currentGradInput)
+
+      if currentGradInput then -- if the module does not produce a gradInput (for example first layer), then ignore it and move on.
+         if i==1 then
+            self.gradInput:copy(currentGradInput)
+         else
+            self.gradInput:add(currentGradInput)
+         end
       end
       offset = offset + currentOutput:size(self.dimension)
    end
@@ -105,7 +107,7 @@ end
 
 function Concat:share(mlp,...)
    for i=1,#self.modules do
-      self.modules[i]:share(mlp.modules[i],...); 
+      self.modules[i]:share(mlp.modules[i],...);
    end
 end
 
