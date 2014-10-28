@@ -5,6 +5,9 @@
 #define torch_Tensor TH_CONCAT_STRING_3(torch.,Real,Tensor)
 #define nn_(NAME) TH_CONCAT_3(nn_, Real, NAME)
 
+#include "generic/Linear.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/Square.c"
 #include "THGenerateFloatTypes.h"
 
@@ -124,6 +127,7 @@ int luaopen_libnn(lua_State *L)
   lua_pushvalue(L, -1);
   lua_setfield(L, LUA_GLOBALSINDEX, "nn");
 
+  nn_FloatLinear_init(L);
   nn_FloatMin_init(L);
   nn_FloatMax_init(L);
   nn_FloatExp_init(L);
@@ -162,6 +166,7 @@ int luaopen_libnn(lua_State *L)
   nn_FloatL1Cost_init(L);
   nn_FloatSpatialUpSamplingNearest_init(L);
 
+  nn_DoubleLinear_init(L);
   nn_DoubleMin_init(L);
   nn_DoubleMax_init(L);
   nn_DoubleExp_init(L);
