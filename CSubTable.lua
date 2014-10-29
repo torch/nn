@@ -16,6 +16,6 @@ function CSubTable:updateGradInput(input, gradOutput)
    self.gradInput[1] = self.gradInput[1] or input[1].new()
    self.gradInput[2] = self.gradInput[2] or input[1].new()
    self.gradInput[1]:resizeAs(input[1]):copy(gradOutput)
-   self.gradInput[2]:resizeAs(input[1]):copy(gradOutput):mul(-1)
+   self.gradInput[2]:resizeAs(input[2]):copy(gradOutput):mul(-1)
    return self.gradInput
 end
