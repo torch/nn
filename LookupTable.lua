@@ -21,7 +21,7 @@ function LookupTable:__init(nIndex, ...)
 
    self.size[1] = nIndex
    
-   batchSize = torch.LongTensor(#self.size + 1)
+   local batchSize = torch.LongTensor(#self.size + 1)
    batchSize:narrow(1, 2,#self.size):copy(torch.LongTensor(self.size))
    batchSize[1] = 1
    self.batchSize = batchSize:storage()
