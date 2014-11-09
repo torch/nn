@@ -53,27 +53,26 @@ function LookupTable:reset(stdv)
 end
 
 function LookupTable:updateOutput(input)
+   input = input:long()
    if input:dim() == 1 then
       local nIndex = input:size(1)
       self.size[1] = nIndex
-      self.output:resize(self.size)
-      for i=1,nIndex do
-         self.output:select(1, i):copy(self.weight:select(1, input[i]))
-      end
+      self.output:index(self.weight, 1, input)
    elseif input:dim() == 2 then
       local nExample = input:size(1)
       local nIndex = input:size(2)
       self.batchSize[1] = nExample
       self.batchSize[2] = nIndex
-      self.output:resize(self.batchSize)
-      
-      for i=1,nExample do
-         local output = self.output:select(1, i)
-         local input = input:select(1, i)
-         for j=1,nIndex do
-            output:select(1, j):copy(self.weight:select(1, input[j]))
-         end
+      local indices
+      if input:isContiguous() then
+         indices = input:view(-1)
+      else
+         self._indices = self._indices or torch.LongTensor()
+         self._indices:resizeAs(input):copy(input)
+         indices = self._indices:view(-1)
       end
+      self.output:index(self.weight, 1, indices)
+      self.output = self.output:view(nExample, nIndex, self.size[2])
    end
 
    return self.output
