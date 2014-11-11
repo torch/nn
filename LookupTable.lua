@@ -53,7 +53,13 @@ function LookupTable:reset(stdv)
 end
 
 function LookupTable:updateOutput(input)
-   input = input:long()
+   -- make sure input is a contiguous torch.LongTensor
+   if (not input:isContiguous()) or torch.type(input) ~= 'torch.LongTensor' then
+      self._indices = self._indices or torch.LongTensor()
+      self._indices:resize(input:size()):copy(input)
+      input = self._indices
+   end
+   
    if input:dim() == 1 then
       local nIndex = input:size(1)
       self.size[1] = nIndex
@@ -63,15 +69,10 @@ function LookupTable:updateOutput(input)
       local nIndex = input:size(2)
       self.batchSize[1] = nExample
       self.batchSize[2] = nIndex
-      local indices
-      if input:isContiguous() then
-         indices = input:view(-1)
-      else
-         self._indices = self._indices or torch.LongTensor()
-         self._indices:resizeAs(input):copy(input)
-         indices = self._indices:view(-1)
-      end
-      self.output:index(self.weight, 1, indices)
+      
+      self._inputView = self._inputView or torch.LongTensor()
+      self._inputView:view(input, -1)
+      self.output:index(self.weight, 1, self._inputView)
       self.output = self.output:view(nExample, nIndex, self.size[2])
    end
 
@@ -114,7 +115,7 @@ end
 function LookupTable:accUpdateGradParameters(input, gradOutput, lr)
    if input:dim() == 1 then
       for i=1,input:size(1) do
-         local k = input[j]
+         local k = input[i]
          local kscale = self:scaleUpdateByKey(k)
          self.weight:select(1, input[i]):add(-lr*kscale, gradOutput:select(1, i))
       end
@@ -137,6 +138,12 @@ function LookupTable:updateParameters(learningRate)
       local kscale = self:scaleUpdateByKey(k)
       self.weight:select(1, k):add(-learningRate*kscale, self.gradWeight:select(1, k))
    end
+end
+
+function LookupTable:type(type)
+   self._indices = nil
+   self._inputView = nil
+   parent.type(self, type)
 end
 
 -- scale the update for each key
