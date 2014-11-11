@@ -1919,10 +1919,14 @@ function nntest.LookupTable()
    local totalIndex = math.random(6,9)
    local nIndex = math.random(3,5)
    local entry_size = math.random(2,5)
-   local input = torch.IntTensor(nIndex):zero()
+   local input = torch.randperm(totalIndex):narrow(1,1,nIndex):int()
    local module = nn.LookupTable(totalIndex, entry_size)
    local minval = 1
    local maxval = totalIndex
+   
+   local output = module:forward(input)
+   module:backwardUpdate(input, output, 0.1)
+   input:zero()
 
    -- 1D
    local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight, minval, maxval)
