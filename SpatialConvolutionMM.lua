@@ -45,16 +45,35 @@ function SpatialConvolutionMM:reset(stdv)
    end
 end
 
+local function makeContiguous(self, input, gradOutput)
+   if not input:isContiguous() then
+      self._input = self._input or input.new()
+      self._input:resizeAs(input):copy(input)
+      input = self._input
+   end
+   if gradOutput then
+      if not gradOutput:isContiguous() then
+	 self._gradOutput = self._gradOutput or gradOutput.new()
+	 self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
+	 gradOutput = self._gradOutput
+      end
+   end
+   return input, gradOutput
+end
+
 function SpatialConvolutionMM:updateOutput(input)
+   input = makeContiguous(self, input)
    return input.nn.SpatialConvolutionMM_updateOutput(self, input)
 end
 
 function SpatialConvolutionMM:updateGradInput(input, gradOutput)
    if self.gradInput then
+      input, gradOutput = makeContiguous(self, input, gradOutput)
       return input.nn.SpatialConvolutionMM_updateGradInput(self, input, gradOutput)
    end
 end
 
 function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
+   input, gradOutput = makeContiguous(self, input, gradOutput)
    return input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
 end
