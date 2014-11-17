@@ -36,7 +36,8 @@ static int nn_(Min_updateOutput)(lua_State *L)
                        *indices_data = theIndex+1;
                        *output_data = theMin;)
 
-  THTensor_(select)(output, NULL, dimension, 0);
+  if(output->nDimension > 1)
+    THTensor_(select)(output, NULL, dimension, 0);
 
   return 1;
 }
@@ -56,25 +57,32 @@ static int nn_(Min_updateGradInput)(lua_State *L)
   THTensor_(resizeAs)(gradInput, input);
   THTensor_(zero)(gradInput);
 
-  dim = THLongStorage_newWithSize(gradOutput->nDimension+1);
-  str = THLongStorage_newWithSize(gradOutput->nDimension+1);
-  for(i = 0, j =  0; j < gradOutput->nDimension+1; j++)
+  if(input->nDimension > 1)
   {
-    if(j == dimension)
+    dim = THLongStorage_newWithSize(gradOutput->nDimension+1);
+    str = THLongStorage_newWithSize(gradOutput->nDimension+1);
+    for(i = 0, j =  0; j < gradOutput->nDimension+1; j++)
     {
-      dim->data[j] = input->size[dimension];
-      str->data[j] = 0;
-      continue;
+      if(j == dimension)
+      {
+        dim->data[j] = input->size[dimension];
+        str->data[j] = 0;
+        continue;
+      }
+
+      dim->data[j] = gradOutput->size[i];
+      str->data[j] = gradOutput->stride[i];
+      i++;
     }
-
-    dim->data[j] = gradOutput->size[i];
-    str->data[j] = gradOutput->stride[i];
-    i++;
+    gradOutputPlusOneDim = THTensor_(newWithStorage)(gradOutput->storage, gradOutput->storageOffset, dim, str);
+    THLongStorage_free(dim);
+    THLongStorage_free(str);
   }
-
-  gradOutputPlusOneDim = THTensor_(newWithStorage)(gradOutput->storage, gradOutput->storageOffset, dim, str);
-  THLongStorage_free(dim);
-  THLongStorage_free(str);
+  else
+  {
+    THTensor_(retain)(gradOutput);
+    gradOutputPlusOneDim = gradOutput;
+  }
 
   TH_TENSOR_DIM_APPLY3(real, gradInput, real, gradOutputPlusOneDim, real, indices, dimension,
                        gradInput_data[ ((long)(*indices_data)-1)*gradInput_stride ] = *gradOutputPlusOneDim_data;)

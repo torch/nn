@@ -11,20 +11,28 @@ function Sum:updateOutput(input)
       self.output = input.new()
    end
    self.output:sum(input, self.dimension)
-   self.output = self.output:select(self.dimension, 1)
+   if self.output:nDimension() > 1 then
+      self.output = self.output:select(self.dimension, 1)
+   end
    return self.output
 end
 
 function Sum:updateGradInput(input, gradOutput)
    local size = gradOutput:size():totable()
    local stride = gradOutput:stride():totable()
-   table.insert(size, self.dimension, input:size(self.dimension))
-   table.insert(stride, self.dimension, 0)
+
+   if input:nDimension() > 1 then
+      table.insert(size, self.dimension, input:size(self.dimension))
+      table.insert(stride, self.dimension, 0)
+   else
+      size[1] = input:size(1)
+      stride[1] = 0
+   end
 
    self.gradInput:set(gradOutput:storage(),
                       1,
                       torch.LongStorage(size),
                       torch.LongStorage(stride))
-                      
+
    return self.gradInput
 end

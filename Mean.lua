@@ -8,15 +8,23 @@ end
 
 function Mean:updateOutput(input)
    self.output:mean(input, self.dimension)
-   self.output = self.output:select(self.dimension, 1)
+   if self.output:nDimension() > 1 then
+      self.output = self.output:select(self.dimension, 1)
+   end
    return self.output
 end
 
 function Mean:updateGradInput(input, gradOutput)
    local size = gradOutput:size():totable()
    local stride = gradOutput:stride():totable()
-   table.insert(size, self.dimension, input:size(self.dimension))
-   table.insert(stride, self.dimension, 0)
+
+   if input:nDimension() > 1 then
+      table.insert(size, self.dimension, input:size(self.dimension))
+      table.insert(stride, self.dimension, 0)
+   else
+      size[1] = input:size(1)
+      stride[1] = 0
+   end
 
    self.gradInput:resizeAs(gradOutput):copy(gradOutput)
    self.gradInput:mul(1/input:size(self.dimension))

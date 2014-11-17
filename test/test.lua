@@ -595,6 +595,15 @@ end
 -- end
 
 function nntest.Max()
+   -- 1D
+   local ini = math.random(3,7)
+   local input = torch.Tensor(ini):zero()
+   local module = nn.Max(1)
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   -- 3D
    local ini = math.random(3,5)
    local inj = math.random(3,5)
    local ink = math.random(3,5)
@@ -610,6 +619,15 @@ function nntest.Max()
 end
 
 function nntest.Min()
+   -- 1D
+   local ini = math.random(3,7)
+   local input = torch.Tensor(ini):zero()
+   local module = nn.Min(1)
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   -- 3D
    local ini = math.random(3,5)
    local inj = math.random(3,5)
    local ink = math.random(3,5)
@@ -625,6 +643,15 @@ function nntest.Min()
 end
 
 function nntest.Mean()
+   -- 1D
+   local ini = math.random(3,7)
+   local input = torch.Tensor(ini):zero()
+   local module = nn.Mean(1)
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   -- 3D
    local ini = math.random(3,5)
    local inj = math.random(3,5)
    local ink = math.random(3,5)
@@ -1423,6 +1450,15 @@ function nntest.SpatialLPPooling()
 end
 
 function nntest.Sum()
+   -- 1D
+   local ini = math.random(3,7)
+   local input = torch.Tensor(ini):zero()
+   local module = nn.Sum(1)
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   -- 3D
    local ini = math.random(3,5)
    local inj = math.random(3,5)
    local ink = math.random(3,5)
