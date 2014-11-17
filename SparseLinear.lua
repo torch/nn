@@ -9,6 +9,11 @@ function SparseLinear:__init(inputSize, outputSize)
    self.gradWeight = torch.Tensor(outputSize, inputSize)
    self.gradBias = torch.Tensor(outputSize)
    self.lastInput = torch.Tensor()
+
+   if torch.getnumthreads() > 1 and outputSize >= 128 then
+     self.shardBuffer = torch.Tensor(outputSize, torch.getnumthreads())
+   end
+
    -- state
    self.gradInput:resize(inputSize)
    self.output:resize(outputSize)
@@ -20,7 +25,7 @@ function SparseLinear:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
    else
-      stdv = 1./math.sqrt(self.weight:size(1))
+      stdv = 1./math.sqrt(self.weight:size(2))
    end
    if nn.oldSeed then
       for i=1,self.weight:size(1) do
@@ -45,17 +50,11 @@ end
 
 function SparseLinear:updateGradInput(input, gradOutput)
    if self.gradInput then
-      self.gradInput:resize(input:size())
-      self.gradInput:copy(input)
-      local numNonzero = self.gradInput:size(1)
-      for e=1,numNonzero do         
-         local g = 0
-         local i = self.gradInput[{e,1}]
-         for j=1,self.output:size(1) do
-            g = g + self.weight[{j,i}] * gradOutput[j]
-         end
-         self.gradInput[{e,2}] = g
-      end
+      input.nn.SparseLinear_updateGradInput(self, input, gradOutput)
       return self.gradInput
    end
+end
+
+function SparseLinear:updateParametersClearGrad(learningRate)
+  self.weight.nn.SparseLinear_updateParametersClearGrad(self, learningRate)
 end
