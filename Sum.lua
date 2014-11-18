@@ -16,15 +16,14 @@ function Sum:updateOutput(input)
 end
 
 function Sum:updateGradInput(input, gradOutput)
-   local size = gradOutput:size():totable()
-   local stride = gradOutput:stride():totable()
-   table.insert(size, self.dimension, input:size(self.dimension))
-   table.insert(stride, self.dimension, 0)
+    -- zero-strides dont work with MKL/BLAS, so
+    -- dont set self.gradInput to zero-stride tensor.
+    -- Instead, do a deepcopy
+    local size = input:size()
+    size[self.dimension] = 1
+    gradOutput = gradOutput:view(size)
+    self.gradInput:resizeAs(input)
+    self.gradInput:copy(gradOutput:expandAs(input))
 
-   self.gradInput:set(gradOutput:storage(),
-                      1,
-                      torch.LongStorage(size),
-                      torch.LongStorage(stride))
-                      
-   return self.gradInput
+    return self.gradInput
 end
