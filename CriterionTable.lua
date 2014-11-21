@@ -1,6 +1,7 @@
 local CriterionTable, parent = torch.class('nn.CriterionTable', 'nn.Module')
 
 function CriterionTable:__init(criterion)
+   parent.__init(self)
    self.criterion = criterion
    self.gradInput = {criterion.gradInput}
 end
