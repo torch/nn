@@ -28,7 +28,6 @@ function SplitTable:updateGradInput(input, gradOutput)
    local slices = input:size(dimension)
    self.gradInput:resizeAs(input)
 
-   local offset = 1
    for i=1,slices do 
       local currentGradInput = gradOutput[i];        
       self.gradInput:select(dimension,i):copy(currentGradInput)

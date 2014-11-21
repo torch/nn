@@ -1,4 +1,4 @@
-local SoftMin, parent = torch.class('nn.SoftMin', 'nn.Module')
+local SoftMin, _ = torch.class('nn.SoftMin', 'nn.Module')
 
 function SoftMin:updateOutput(input)
    self.mininput = self.mininput or input.new()

@@ -9,7 +9,7 @@
 -- this, we select the largest spatial dimensions and add zero-padding
 -- around the smaller dimensions.
 ------------------------------------------------------------------------
-local DepthConcat, parent = torch.class('nn.DepthConcat', 'nn.Concat')
+local DepthConcat, _ = torch.class('nn.DepthConcat', 'nn.Concat')
 
 function DepthConcat:windowNarrow(output, currentOutput, offset)
    local outputWindow = output:narrow(self.dimension, offset, currentOutput:size(self.dimension))
@@ -79,7 +79,7 @@ function DepthConcat:accGradParameters(input, gradOutput, scale)
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
       local gradOutputWindow = self:windowNarrow(gradOutput, currentOutput, offset)
-      local currentGradInput = module:accGradParameters(input, gradOutputWindow, scale)
+      module:accGradParameters(input, gradOutputWindow, scale)
       offset = offset + currentOutput:size(self.dimension)
    end
 end
@@ -89,7 +89,7 @@ function DepthConcat:accUpdateGradParameters(input, gradOutput, lr)
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
       local gradOutputWindow = self:windowNarrow(gradOutput, currentOutput, offset)
-      local currentGradInput = module:accUpdateGradParameters(input, gradOutputWindow, lr)
+      module:accUpdateGradParameters(input, gradOutputWindow, lr)
       offset = offset + currentOutput:size(self.dimension)
    end
 end

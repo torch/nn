@@ -52,7 +52,7 @@ function nn.Jacobian.backwardUpdate(module, input, param)
       end
       dout:zero()
       sdout[i] = 1
-      local din = module:updateGradInput(input, dout)
+      module:updateGradInput(input, dout)
       module:accUpdateGradParameters(input, dout, 1)
       jacobian:select(2,i):copy(param)
    end
@@ -242,7 +242,7 @@ function nn.Jacobian.testAllUpdate(module, input, weight, gradWeight)
    macshu2:updateGradInput(input, gradOutput)
    macshu1:accUpdateGradParameters(input, gradOutput, lr)
    macshu2:accUpdateGradParameters(input, gradOutput, lr)
-   local err = (weightc-maccgp[gradWeight]*(lr*2)-macshu1[weight]):norm()
+   err = (weightc-maccgp[gradWeight]*(lr*2)-macshu1[weight]):norm()
    err = err + (weightc-maccgp[gradWeight]*(lr*2)-macshu2[weight]):norm()
    errors["accUpdateGradParameters [shared]"] = err
 

@@ -63,9 +63,10 @@ function Concat:accGradParameters(input, gradOutput, scale)
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
-      local currentGradInput = module:accGradParameters(input,
-                                                        gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)),
-                                                        scale)
+      module:accGradParameters(
+          input,
+          gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)),
+          scale)
       offset = offset + currentOutput:size(self.dimension)
    end
 end
@@ -74,9 +75,10 @@ function Concat:accUpdateGradParameters(input, gradOutput, lr)
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
-      local currentGradInput = module:accUpdateGradParameters(input,
-                                                              gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)),
-                                                              lr)
+      module:accUpdateGradParameters(
+          input,
+          gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)),
+          lr)
       offset = offset + currentOutput:size(self.dimension)
    end
 end

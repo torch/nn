@@ -1,4 +1,4 @@
-local Identity, parent = torch.class('nn.Identity', 'nn.Module')
+local Identity, _ = torch.class('nn.Identity', 'nn.Module')
 
 function Identity:updateOutput(input)
    self.output = input
