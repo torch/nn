@@ -3,13 +3,20 @@ local ClassNLLCriterion, parent = torch.class('nn.ClassNLLCriterion', 'nn.Criter
 function ClassNLLCriterion:__init(weights)
    parent.__init(self)
    self.sizeAverage = true
+   self.outputTensor = torch.Tensor(1)
    if weights then
-       assert(weights:dim() == 1, "weights input should be 1-D Tensor")          
+       assert(weights:dim() == 1, "weights input should be 1-D Tensor")
        self.weights = weights
    end
 end
 
 function ClassNLLCriterion:updateOutput(input, target)
+   if input:type() == 'torch.CudaTensor' and not self.weights then
+       input.nn.ClassNLLCriterion_updateOutput(self, input, target)
+       self.output = self.outputTensor[1]
+       return self.output
+   end
+
    if input:dim() == 1 then
       self.output = -input[target]
       if self.weights then
@@ -37,6 +44,11 @@ end
 function ClassNLLCriterion:updateGradInput(input, target)
    self.gradInput:resizeAs(input)
    self.gradInput:zero()
+
+  if input:type() == 'torch.CudaTensor' and not self.weights then
+      input.nn.ClassNLLCriterion_updateGradInput(self, input, target)
+      return self.gradInput
+  end
 
   if input:dim() == 1 then
       self.gradInput[target] = -1
