@@ -75,13 +75,13 @@ function WeightedEuclidean:accGradParameters(input, gradOutput, scale)
          self.temp:copy(self.templates:select(2,o)):add(-1,input)
          self.temp:cmul(self.diagCov:select(2,o)):cmul(self.diagCov:select(2,o))
          self.temp:mul(gradOutput[o]/self.output[o])
-         self.gradTemplates:select(2,o):add(scale * self.temp)
+         self.gradTemplates:select(2,o):add(scale, self.temp)
 
          self.temp:copy(self.templates:select(2,o)):add(-1,input)
          self.temp:cmul(self.temp)
          self.temp:cmul(self.diagCov:select(2,o))
          self.temp:mul(gradOutput[o]/self.output[o])
-         self.gradDiagCov:select(2,o):add(scale * self.temp)
+         self.gradDiagCov:select(2,o):add(scale, self.temp)
       end
    end
 end
