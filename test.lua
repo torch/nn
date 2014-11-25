@@ -1349,7 +1349,6 @@ function nntest.SpatialSubSampling()
                          'error on bias [%s]', t))
    end
 
-   --verbose = true
    local batch = math.random(2,5)
    outi = math.random(4,8)
    outj = math.random(4,8)
@@ -1357,10 +1356,6 @@ function nntest.SpatialSubSampling()
    inj = (outj-1)*sj+kj
    module = nn.SpatialSubSampling(from, ki, kj, si, sj)
    input = torch.Tensor(batch,from,inj,ini):zero()
-
---    print(from, to, ki, kj, si, sj, batch, ini, inj)
---    print(module.weight:size())
---    print(module.gradWeight:size())
 
    local err = jac.testJacobian(module, input)
    mytester:assertlt(err, precision, 'batch error on state ')
@@ -1425,6 +1420,70 @@ function nntest.SpatialMaxPooling()
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
 
+end
+
+function nntest.SpatialAveragePooling()
+   local from = math.random(1,6)
+   local ki = math.random(1,5)
+   local kj = math.random(1,5)
+   local si = math.random(1,4)
+   local sj = math.random(1,4)
+   local outi = math.random(6,10)
+   local outj = math.random(6,10)
+   local ini = (outi-1)*si+ki
+   local inj = (outj-1)*sj+kj
+   local module = nn.SpatialAveragePooling(ki, kj, si, sj)
+   local input = torch.Tensor(from, inj, ini):zero()
+   
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+   local sap = nn.SpatialSubSampling(from, ki, kj, si, sj)
+   sap.weight:fill(1.0)
+   sap.bias:fill(0.0)
+   
+   local output = module:forward(input)
+   local gradInput = module:backward(input, output)
+   local output2 = sap:forward(input)
+   local gradInput2 = sap:updateGradInput(input, output)
+   
+   mytester:assertTensorEq(output, output2, 0.000001, torch.typename(module) .. ' forward err ')
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001, torch.typename(module) .. ' backward err ')
+
+   local batch = math.random(2,5)
+   outi = math.random(4,8)
+   outj = math.random(4,8)
+   ini = (outi-1)*si+ki
+   inj = (outj-1)*sj+kj
+   module = nn.SpatialAveragePooling(ki, kj, si, sj)
+   input = torch.Tensor(batch,from,inj,ini):zero()
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'batch error on state ')
+   
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+   
+   local sap = nn.SpatialSubSampling(from, ki, kj, si, sj)
+   sap.weight:fill(1.0)
+   sap.bias:fill(0.0)
+   
+   local output = module:forward(input)
+   local gradInput = module:backward(input, output)
+   local output2 = sap:forward(input)
+   local gradInput2 = sap:updateGradInput(input, output)
+   
+   mytester:assertTensorEq(output, output2, 0.000001, torch.typename(module) .. ' forward err (Batch) ')
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001, torch.typename(module) .. ' backward err (Batch) ')
 end
 
 function nntest.SpatialLPPooling()
