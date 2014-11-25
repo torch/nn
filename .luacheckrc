@@ -10,4 +10,4 @@ globals = {
 unused_args = false
 
 
-files['test/test.lua'].redefined = false
+files['test.lua'].redefined = false
