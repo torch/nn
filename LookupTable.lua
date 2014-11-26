@@ -117,6 +117,7 @@ function LookupTable:accUpdateGradParameters(input, gradOutput, lr)
       for i=1,input:size(1) do
          local k = input[i]
          local kscale = self:scaleUpdateByKey(k)
+         self.inputs[k] = (self.inputs[k] or 0) + 1
          self.weight:select(1, input[i]):add(-lr*kscale, gradOutput:select(1, i))
       end
    elseif input:dim() == 2 then 
@@ -126,6 +127,7 @@ function LookupTable:accUpdateGradParameters(input, gradOutput, lr)
          for j=1,input:size(1) do
             local k = input[j]
             local kscale = self:scaleUpdateByKey(k)
+            self.inputs[k] = (self.inputs[k] or 0) + 1
             self.weight:select(1, k):add(-lr*kscale, gradOutput:select(1, j))
          end
       end

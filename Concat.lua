@@ -142,7 +142,7 @@ function Concat:__tostring__()
    local ext = '  |    '
    local extlast = '       '
    local last = '   ... -> '
-   local str = 'nn.Concat'
+   local str = torch.type(self)
    str = str .. ' {' .. line .. tab .. 'input'
    for i=1,#self.modules do
       if i == self.modules then
