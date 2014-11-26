@@ -26,12 +26,19 @@ static int nn_(LogSoftMax_updateOutput)(lua_State *L)
   input = THTensor_(newContiguous)(input);
   THTensor_(resizeAs)(output, input);
 
-  input_data = THTensor_(data)(input);
-  output_data = THTensor_(data)(output);
+  real* input_data0 = THTensor_(data)(input);
+  real* output_data0 = THTensor_(data)(output);
+
+  accreal logsum;
+  real maxInput;
+#pragma omp parallel for private(t, d, maxInput, logsum, input_data, \
+                                 output_data)
   for(t = 0; t < nframe; t++)
   {
-    accreal logsum = 0;
-    real maxInput = -THInf;
+    logsum = 0;
+    maxInput = -THInf;
+    input_data = input_data0 + dim*t;
+    output_data = output_data0 + dim*t;
 
     for(d = 0; d < dim; d++)
       maxInput = THMax(maxInput, input_data[d]);
@@ -42,9 +49,6 @@ static int nn_(LogSoftMax_updateOutput)(lua_State *L)
 
     for(d = 0; d < dim; d++)
       output_data[d] = input_data[d] - logsum;
-
-    input_data += dim;
-    output_data += dim;
   }
 
   THTensor_(free)(input);
@@ -75,21 +79,24 @@ static int nn_(LogSoftMax_updateGradInput)(lua_State *L)
     THError("vector or matrix expected");
 
   THTensor_(resizeAs)(gradInput, output);
-  gradInput_data = THTensor_(data)(gradInput);
-  output_data = THTensor_(data)(output);
-  gradOutput_data = THTensor_(data)(gradOutput);
+  real* gradInput_data0 = THTensor_(data)(gradInput);
+  real* output_data0 = THTensor_(data)(output);
+  real* gradOutput_data0 = THTensor_(data)(gradOutput);
+  accreal sum;
+#pragma omp parallel for private(t, sum, d, gradInput_data, output_data, \
+                                 gradOutput_data)
   for(t = 0; t < nframe; t++)
   {
-    accreal sum = 0;
+    sum = 0;
+    gradInput_data = gradInput_data0 + dim*t;
+    output_data = output_data0 + dim*t;
+    gradOutput_data = gradOutput_data0 + dim*t;
+
     for(d = 0; d < dim; d++)
       sum += gradOutput_data[d];
 
     for(d = 0; d < dim; d++)
       gradInput_data[d] = gradOutput_data[d] - exp(output_data[d])*sum;
-
-    gradInput_data += dim;
-    output_data += dim;
-    gradOutput_data += dim;
   }
 
   return 1;
