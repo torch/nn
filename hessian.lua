@@ -330,7 +330,7 @@ function nn.hessian.enable()
          if storageAndOffset == nil then
              return nil
          end
-         local storage, offset = unpack(storageAndOffset)
+         local _, offset = unpack(storageAndOffset)
          return offset
       end
 

@@ -29,9 +29,7 @@ function nn.tables.random(nin, nout, nto)
    local tbl = torch.Tensor(nker, 2)
    local fi = torch.randperm(nin)
    local frcntr = 1
-   local tocntr = 1
    local nfi = math.floor(nin/nto) -- number of distinct nto chunks 
-   local rfi = math.fmod(nin,nto) -- number of remaining from maps
    local totbl = tbl:select(2,2)
    local frtbl = tbl:select(2,1)
    local fitbl = fi:narrow(1, 1, (nfi * nto)) -- part of fi that covers distinct chunks

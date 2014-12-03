@@ -39,10 +39,10 @@ local function checkMapping(output, input, input_map)
     end
     -- forward DFS order
     for i = 1, #input do
-      ok = checkMapping(output, input[i], input_map[i])
-      if not ok then
-        return false
-      end
+       local ok = checkMapping(output, input[i], input_map[i])
+       if not ok then
+          return false
+       end
     end
     return true
   else
@@ -77,7 +77,7 @@ function FlattenTable:updateOutput(input)
     self.input_map = flatten(self.output, input)
   end
   return self.output
-end 
+end
 
 function FlattenTable:updateGradInput(input, gradOutput)
   assert(type(input) == 'table', 'input must be a table')
@@ -90,7 +90,7 @@ function FlattenTable:updateGradInput(input, gradOutput)
   if not checkMapping(gradOutput, self.gradInput, self.input_map) then
     self.gradInput = inverseFlatten(gradOutput, self.input_map)
   end
-  
+
   return self.gradInput
 end
 

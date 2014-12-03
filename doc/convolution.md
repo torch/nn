@@ -12,6 +12,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
    * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
    * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
    * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
+   * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
    * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
    * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
    * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
@@ -353,6 +354,17 @@ module = nn.SpatialMaxPooling(kW, kH [, dW, dH])
 ```
 
 Applies 2D max-pooling operation in `kWxkH` regions by step size
+`dWxdH` steps. The number of output features is equal to the number of
+input planes.
+
+<a name="nn.SpatialAveragePooling"/>
+### SpatialAveragePooling ###
+
+```lua
+module = nn.SpatialAveragePooling(kW, kH [, dW, dH])
+```
+
+Applies 2D average-pooling operation in `kWxkH` regions by step size
 `dWxdH` steps. The number of output features is equal to the number of
 input planes.
 

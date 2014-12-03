@@ -1,6 +1,7 @@
 local Sequential, parent = torch.class('nn.Sequential', 'nn.Module')
 
 function Sequential:__init()
+   parent.__init(self)
    self.modules = {}
 end
 

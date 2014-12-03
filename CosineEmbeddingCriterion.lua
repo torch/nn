@@ -23,12 +23,6 @@ function CosineEmbeddingCriterion:updateOutput(input,y)
    return self.output
 end
 
-local function mathsign(t)
-   if t>0 then return 1; end
-   if t<0 then return -1; end
-   return 2*torch.random(2)-3;
-end
-
 function CosineEmbeddingCriterion:updateGradInput(input, y)
    local v1  = input[1]
    local v2  = input[2]

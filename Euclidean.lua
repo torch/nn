@@ -61,7 +61,7 @@ function Euclidean:accGradParameters(input, gradOutput, scale)
       if self.output[o] ~= 0 then
          self.temp:copy(self.weight:select(2,o)):add(-1,input)
          self.temp:mul(gradOutput[o]/self.output[o])
-         self.gradWeight:select(2,o):add(self.temp)
+         self.gradWeight:select(2,o):add(scale, self.temp)
       end
    end
 end

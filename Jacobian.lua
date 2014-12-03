@@ -52,7 +52,7 @@ function nn.Jacobian.backwardUpdate(module, input, param)
       end
       dout:zero()
       sdout[i] = 1
-      local din = module:updateGradInput(input, dout)
+      module:updateGradInput(input, dout)
       module:accUpdateGradParameters(input, dout, 1)
       jacobian:select(2,i):copy(param)
    end
@@ -170,17 +170,18 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
    local bo = module.gradInput:clone()
 
    -- write module
-   local f = torch.DiskFile('tmp.bin','w'):binary()
+   local filename = os.tmpname()
+   local f = torch.DiskFile(filename, 'w'):binary()
    f:writeObject(module)
    f:close()
    -- read module
-   local m = torch.DiskFile('tmp.bin'):binary():readObject()
+   local m = torch.DiskFile(filename):binary():readObject()
    m:forward(input)
    m:zeroGradParameters()
    m:updateGradInput(input,go)
    m:accGradParameters(input,go)
    -- cleanup
-   os.remove('tmp.bin')
+   os.remove(filename)
 
    local fo2 = m.output:clone()
    local bo2 = m.gradInput:clone()
@@ -241,7 +242,7 @@ function nn.Jacobian.testAllUpdate(module, input, weight, gradWeight)
    macshu2:updateGradInput(input, gradOutput)
    macshu1:accUpdateGradParameters(input, gradOutput, lr)
    macshu2:accUpdateGradParameters(input, gradOutput, lr)
-   local err = (weightc-maccgp[gradWeight]*(lr*2)-macshu1[weight]):norm()
+   err = (weightc-maccgp[gradWeight]*(lr*2)-macshu1[weight]):norm()
    err = err + (weightc-maccgp[gradWeight]*(lr*2)-macshu2[weight]):norm()
    errors["accUpdateGradParameters [shared]"] = err
 

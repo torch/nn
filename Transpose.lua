@@ -18,7 +18,6 @@ function Transpose:updateOutput(input)
 end
 
 function Transpose:updateGradInput(input, gradOutput)
-   local ndim = gradOutput:nDimension()
    for i = #self.permutations,1,-1 do
       local perm = self.permutations[i]
       gradOutput = gradOutput:transpose(perm[1],perm[2])
