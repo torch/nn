@@ -262,7 +262,7 @@ to produce the output _y_.
 <a name="nn.Mul"/>
 ## Mul ##
 
-`module` = `Mul(inputDimension)`
+`module` = `Mul()`
 
 Applies a _single_ scaling factor to the incoming data, i.e.
 _y= w x_, where _w_ is a scalar. 
@@ -271,7 +271,7 @@ Example:
 ```lua
 y=torch.Tensor(5);  
 mlp=nn.Sequential()
-mlp:add(nn.Mul(5))
+mlp:add(nn.Mul())
 
 function gradUpdate(mlp, x, y, criterion, learningRate) 
   local pred = mlp:forward(x)

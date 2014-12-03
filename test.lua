@@ -671,7 +671,7 @@ function nntest.Mul()
    local inj = math.random(3,5)
    local ink = math.random(3,5)
    local input = torch.Tensor(ini,inj,ink):zero()
-   local module = nn.Mul(ini*inj*ink)
+   local module = nn.Mul()
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
