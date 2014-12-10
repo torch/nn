@@ -76,6 +76,7 @@ function nntest.CMul()
    local input = torch.Tensor(ini,inj,ink):zero()
    local module = nn.CMul(ini*inj*ink)
 
+   -- 1D
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
 
@@ -90,6 +91,26 @@ function nntest.CMul()
                          'error on weight [%s]', t))
    end
 
+   -- 2D
+   local nframe = math.random(50,70)
+   local nframe = 5
+   local input = torch.Tensor(nframe, ini,inj,ink):zero()
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format('error on weight [%s]', t))
+   end
+
+
+   -- IO
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
