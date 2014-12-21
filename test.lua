@@ -1253,9 +1253,9 @@ function nntest.SpatialFullConvolutionCompare()
 end
 
 local function batchcompare(smod, sin, plist)
-   local bs = torch.LongStorage(sin:size():size()+1)
+   local bs = torch.LongStorage(sin:dim()+1)
    bs[1] = 1
-   for i=1,sin:size():size() do bs[i+1] = sin:size()[i] end
+   for i=1,sin:dim() do bs[i+1] = sin:size()[i] end
    local bin = torch.Tensor(bs):copy(sin)
    local bmod = smod:clone()
 
@@ -1778,6 +1778,26 @@ function nntest.VolumetricConvolution()
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+end
+
+function nntest.VolumetricConvolutionBatchCompare()
+   local from = math.random(2,3)
+   local to = math.random(2,3)
+   local kt = math.random(3,4)
+   local ki = math.random(3,4)
+   local kj = math.random(3,4)
+   local st = math.random(2,3)
+   local si = math.random(2,3)
+   local sj = math.random(2,3)
+   local outt = math.random(3,4)
+   local outi = math.random(3,4)
+   local outj = math.random(3,4)
+   local int = (outt-1)*st+kt
+   local ini = (outi-1)*si+ki
+   local inj = (outj-1)*sj+kj
+   local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj)
+   local input = torch.randn(from, int, inj, ini)
+   batchcompare(module,input, {'weight','bias','gradWeight','gradBias'})   
 end
 
 function nntest.VolumetricMaxPooling()
