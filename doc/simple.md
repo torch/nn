@@ -387,22 +387,30 @@ then an `nxq` matrix would be output.
 <a name="nn.Euclidean"/>
 ## Euclidean ##
 
-`module` = `Euclidean(inputDimension,outputDimension)`
+`module` = `Euclidean(inputSize,outputSize)`
 
-Outputs the Euclidean distance of the input to `outputDimension` centers,
-i.e. this layer has the weights `c_i`, `i` = `1`,..,`outputDimension`, where
-`c_i` are vectors of dimension `inputDimension`. Output dimension `j` is
-`|| c_j - x ||`, where `x` is the input.
+Outputs the Euclidean distance of the input to `outputSize` centers,
+i.e. this layer has the weights `w_j`,  for `j` = `1`,..,`outputSize`, where
+`w_j` are vectors of dimension `inputSize`. 
+
+The distance `y_j` between center `j` and input `x` is formulated as
+`y_j = || w_j - x ||`.
 
 <a name="nn.WeightedEuclidean"/>
 ## WeightedEuclidean ##
 
-`module` = `WeightedEuclidean(inputDimension,outputDimension)`
+`module` = `WeightedEuclidean(inputSize,outputSize)`
 
 This module is similar to [Euclidean](#nn.Euclidean), but
 additionally learns a separate diagonal covariance matrix across the
-features of the input space for each center.
+features of the input space _for each center_. 
 
+In other words, for each of the `outputSize` centers `w_j`, there is 
+a diagonal covariance matrices `c_j`, for `j` = `1`,..,`outputSize`, 
+where `c_j` are stored as vectors of size `inputSize`.
+
+The distance `y_j` between center `j` and input `x` is formulated as
+`y_j = || c_j * (w_j - x) ||`.
 
 <a name="nn.Identity"/>
 ## Identity ##
