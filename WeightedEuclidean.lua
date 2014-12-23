@@ -41,11 +41,11 @@ end
 
 function WeightedEuclidean:updateOutput(input)
    -- lazy-initialize 
-   self._temp = self._temp or torch.Tensor()
-   self._ones = self._ones or torch.Tensor{1}
-   self._diagCov = self._diagCov or torch.Tensor()
-   self._repeat = self._repeat or torch.Tensor()
-   self._sum = self._sum or torch.Tensor()
+   self._temp = self._temp or self.output.new()
+   self._ones = self._ones or self.output.new{1}
+   self._diagCov = self._diagCov or self.output.new()
+   self._repeat = self._repeat or self.output.new()
+   self._sum = self._sum or self.output.new()
    self._temp:resizeAs(input)
    if input:dim() == 1 then
       self.output:resize(self.templates:size(2))
@@ -81,7 +81,7 @@ function WeightedEuclidean:updateOutput(input)
 end
 
 function WeightedEuclidean:updateGradInput(input, gradOutput)
-   self._gradTemp = self._gradTemp or torch.Tensor()
+   self._gradTemp = self._gradTemp or self.output.new()
    self.gradInput:resizeAs(input):zero()
    self._temp:resizeAs(input)
    self._gradTemp:cdiv(gradOutput, self.output)
