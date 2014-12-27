@@ -55,7 +55,6 @@ static int nn_(VolumetricConvolution_updateOutput)(lua_State *L)
     THTensor *inb = THTensor_(new)();
     THTensor *outb = THTensor_(new)();
 
-#pragma omp parallel for private(j)
     for (j=0; j<nBatch; j++) { /* loop over batches */
       THTensor_(select)(inb,input,0,j);
       THTensor_(select)(outb,output,0,j);
@@ -113,7 +112,6 @@ static int nn_(VolumetricConvolution_updateGradInput)(lua_State *L)
     THTensor_(resize5d)(gradInput, input->size[0], input->size[1], input->size[2],
 			input->size[3], input->size[4]);
 
-#pragma omp parallel for private(j)
     for (j=0; j<nBatch; j++) { /* loop over batches */
       THTensor_(select)(ginpb,gradInput,0,j);
       THTensor_(select)(goutb,gradOutput,0,j);
@@ -172,7 +170,6 @@ static int nn_(VolumetricConvolution_accGradParameters)(lua_State *L)
     THTensor *goutb = THTensor_(new)();
     long j;
 
-#pragma omp parallel for private(j)
     for (j=0; j<nBatch; j++) { /* loop over batches */
       THTensor_(select)(inpb,input,0,j);
       THTensor_(select)(goutb,gradOutput,0,j);
