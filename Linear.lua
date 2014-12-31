@@ -42,7 +42,7 @@ function Linear:updateOutput(input)
       self.output:resize(nframe, nunit)
       if nunit == 1 then
          -- Special case to fix output size of 1 bug:
-         self.output:zero():add(self.bias[1])
+         self.output:copy(self.bias:view(1,nunit):expand(#self.output))
          self.output:select(2,1):addmv(1, input, self.weight:select(1,1))
       else
          self.output:zero():addr(1, input.new(nframe):fill(1), self.bias)
