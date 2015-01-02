@@ -20,7 +20,9 @@ function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT,
    self.bias = torch.Tensor(nOutputPlane)
    self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane, kT, kH, kW)
    self.gradBias = torch.Tensor(nOutputPlane)
-   
+   -- temporary buffers for unfolding (CUDA)
+   self.finput = torch.Tensor()
+   self.fgradInput = torch.Tensor()   
    self:reset()
 end
 
