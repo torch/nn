@@ -4,6 +4,7 @@ require('libnn')
 include('ErrorMessages.lua')
 include('Module.lua')
 
+include('Container.lua')
 include('Concat.lua')
 include('Parallel.lua')
 include('Sequential.lua')

@@ -477,7 +477,7 @@ function nntest.WeightedEuclidean()
    local inj = math.random(13,5)
    local input = torch.Tensor(ini):zero()
    local module = nn.WeightedEuclidean(ini,inj)
-   
+
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
 
