@@ -3,6 +3,7 @@ local Module = torch.class('nn.Module')
 function Module:__init()
    self.gradInput = torch.Tensor()
    self.output = torch.Tensor()
+   self._type = self.output:type()
 end
 
 function Module:parameters()
@@ -113,12 +114,33 @@ function Module:clone(...)
    return clone
 end
 
+function Module:_freeCaches()
+   -- nop. See invocation in Module:type()
+end
+
 function Module:type(type)
-   assert(type, 'Module: must provide a type to convert to')
+   if not type then
+      return self._type
+   end
+   -- Some modules keep around CudaTensors and other data that's
+   -- impossible to serialize as scratchpads. Invokes the module-
+   -- dependent logic to clear these caches.
+   self:_freeCaches()
+
    -- find all tensors and convert them
    for key,param in pairs(self) do
-      self[key] = nn.utils.recursiveType(param, type)
+      if self.gpu_assignments and key == 'modules' then
+	 local current_gpuid = cutorch.getDevice()
+         for i, module in ipairs(self.modules) do
+            cutorch.setDevice(self.gpu_assignments[i])
+            module:float():type(type)
+         end
+         cutorch.setDevice(current_gpuid)
+      else
+	 self[key] = nn.utils.recursiveType(param, type)
+      end
    end
+   self._type = type
    return self
 end
 
@@ -137,14 +159,30 @@ end
 function Module:reset()
 end
 
-function Module:getParameters()
-   -- get parameters
-   local parameters,gradParameters = self:parameters()
-
+-- This function is not easy to understand. It works as follows:
+--
+-- - gather all parameter tensors for this module (and children);
+--   count all parameter values (floats)
+-- - create one ginormous memory area (Storage object) with room for all
+--   parameters
+-- - remap each parameter tensor to point to an area within the ginormous
+--   Storage, and copy it there
+--
+-- It has the effect of making all parameters point to the same memory area,
+-- which is then returned.
+--
+-- The purpose is to allow operations over all parameters (such as momentum
+-- updates and serialization), but it assumes that all parameters are of
+-- the same type (and, in the case of CUDA, on the same device), which
+-- is not always true. Use for_each() to iterate over this module and
+-- children instead.
+--
+-- TODO: This logically belongs to torch.Tensor, not nn.
+function Module._gather(tensors)
    local function storageInSet(set, storage)
       local storageAndOffset = set[torch.pointer(storage)]
       if storageAndOffset == nil then
-          return nil
+         return nil
       end
       local _, offset = table.unpack(storageAndOffset)
       return offset
@@ -226,17 +264,71 @@ function Module:getParameters()
    collectgarbage()
 
    -- return new flat vector that contains all discrete parameters
-   return flatParameters, flatGradParameters
+   return flatten(tensors)
+end
+
+function Module:getParameters()
+   -- get parameters
+   local parameters,gradParameters = self:parameters()
+   return Module._gather(parameters), Module._gather(gradParameters)
+end
+
+-- Get the params of the module separated by device. Vanilla nn,
+-- without cunn, has all parameters in device 0.
+function Module:getParametersByDevice()
+    local p, gp = self:getParameters()
+    local tp = { }
+    local tgp = { }
+    tp[0] = p
+    tgp[0] = gp
+    return p, gp
 end
 
 function Module:__call__(input, gradOutput)
-   self:forward(input)
-   if gradOutput then
-      self:backward(input, gradOutput)
-      return self.output, self.gradInput
-   else
-      return self.output
-   end
+    self:forward(input)
+    if gradOutput then
+        self:backward(input, gradOutput)
+        return self.output, self.gradInput
+    else
+        return self.output
+    end
+end
+
+-- Run a callback (called with the module as an argument) in preorder over this
+-- module and its children. If flag_name is specified, we use it as an
+-- indicator to mark modules that have already been processed; if you call
+-- for_each again with the same flag_name, the processed modules (and all
+-- of their children) will be skipped.
+function Module:for_each(callback, flag_name)
+    if flag_name then
+        flag_name = '_for_each_' .. flag_name
+    end
+    self:_for_each(callback, flag_name)
+end
+
+function Module:_for_each(callback, flag_name)
+    if flag_name and self[flag_name] then
+        return
+    end
+    callback(self)
+    if flag_name then
+        self[flag_name] = true
+    end
+    if not self.modules then
+        return
+    end
+    if self.gpu_assignments then
+        local current_gpuid = cutorch.getDevice()
+        for i, module in ipairs(self.modules) do
+            cutorch.setDevice(self.gpu_assignments[i])
+            module:_for_each(callback, flag_name)
+        end
+        cutorch.setDevice(current_gpuid)
+    else
+        for _, module in ipairs(self.modules) do
+            module:_for_each(callback, flag_name)
+        end
+    end
 end
 
 function Module:findModules(typename, container)
