@@ -1,4 +1,4 @@
-local Parallel, parent = torch.class('nn.Parallel', 'nn.Module')
+local Parallel, parent = torch.class('nn.Parallel', 'nn.Container')
 
 function Parallel:__init(inputDimension,outputDimension)
    parent.__init(self)
@@ -6,15 +6,6 @@ function Parallel:__init(inputDimension,outputDimension)
    self.size = torch.LongStorage() 
    self.inputDimension = inputDimension
    self.outputDimension = outputDimension
-end
-
-function Parallel:add(module)
-   table.insert(self.modules, module)
-   return self
-end
-
-function Parallel:get(index)
-   return self.modules[index]
 end
 
 function Parallel:updateOutput(input)
@@ -99,36 +90,6 @@ function Parallel:accUpdateGradParameters(input, gradOutput, lr)
    end
 end
  
-function Parallel:zeroGradParameters()
-   for _,module in ipairs(self.modules) do
-      module:zeroGradParameters()
-   end
-end
-
-function Parallel:updateParameters(learningRate)
-   for _,module in ipairs(self.modules) do
-      module:updateParameters(learningRate)
-   end
-end
-
-function Parallel:training()
-   for i=1,#self.modules do
-      self.modules[i]:training()
-   end
-end
-
-function Parallel:evaluate()
-   for i=1,#self.modules do
-      self.modules[i]:evaluate()
-   end
-end
-
-function Parallel:share(mlp,...)
-   for i=1,#self.modules do
-      self.modules[i]:share(mlp.modules[i],...); 
-   end
-end
-
 function Parallel:parameters()
    local function tinsert(to, from)
       if type(from) == 'table' then
