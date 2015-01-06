@@ -2181,6 +2181,20 @@ function nntest.MulConstant()
   mytester:assertlt(err, precision, 'bprop error ')
 end
 
+function nntest.Copy()
+   local input = torch.randn(3,4):double()
+   local c = nn.Copy('torch.DoubleTensor', 'torch.FloatTensor')
+   local output = c:forward(input)
+   mytester:assert(torch.type(output) == 'torch.FloatTensor', 'copy forward type err')
+   mytester:assertTensorEq(output, input:float(), 0.000001, 'copy forward value err')
+   local gradInput = c:backward(input, output)
+   mytester:assert(torch.type(gradInput) == 'torch.DoubleTensor', 'copy backward type err')
+   mytester:assertTensorEq(gradInput, input, 0.000001, 'copy backward value err')
+   c.dontCast = true
+   c:double()
+   mytester:assert(torch.type(output) == 'torch.FloatTensor', 'copy forward type err')
+end
+
 function nntest.JoinTable()
    local tensor = torch.rand(3,4,5)
    local input = {tensor, tensor}
