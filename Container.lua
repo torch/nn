@@ -1,7 +1,6 @@
 -- This is code common to container modules, which are collections of
 -- smaller constituent modules like Parallel, Sequential, etc.
-local Container, parent =
-  torch.class('nn.Container', 'nn.Module')
+local Container, parent = torch.class('nn.Container', 'nn.Module')
 
 function Container:__init(...)
     parent.__init(self, ...)
