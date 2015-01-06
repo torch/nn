@@ -1,12 +1,33 @@
 <a name="nn.Containers"/>
 # Containers #
 Complex neural networks are easily built using container classes:
- * [Sequential](#nn.Sequential) : plugs layers in a feed-forward fully connected manner ;
- * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
- * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
- * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
+ * [Container](#nn.Container) : abstract class inherited by containers ;
+   * [Sequential](#nn.Sequential) : plugs layers in a feed-forward fully connected manner ;
+   * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
+   * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
+     * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
  
 See also the [Table Containers](#nn.TableContainers) for manipulating tables of [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
+
+<a name="nn.Container"/>
+## Container ##
+
+This is an abstract [Module](module.md#nn.Module) class which declares methods defined in all containers.
+It reimplements many of the Module methods such that calls are propagated to the 
+contained modules. For example, a call to [zeroGradParameters](module.md#nn.Module.zeroGradParameters)
+will be propagated to all contained modules.
+
+<a name="nn.Container.add"/>
+### add(module) ###
+Adds the given `module` to the container. The order is important
+
+<a name="nn.Container.get"/>
+### get(index) ###
+Returns the contained modules at index `index`.
+
+<a name="nn.Container.size"/>
+### size() ###
+Returns the number of contained modules.
 
 <a name="nn.Sequential"/>
 ## Sequential ##
