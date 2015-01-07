@@ -43,7 +43,11 @@ static int nn_(SparseLinear_updateOutput)(lua_State *L)
     THTensor_(zero)(buffer);
     #pragma omp parallel for private(i) schedule(static) num_threads(num_shards)
     for (i = 0; i < input->size[0]; i++) {
+#ifdef _OPENMP
       int shardId = omp_get_thread_num();
+#else
+      int shardId = 1;
+#endif
       long offset = (long)(THTensor_(get2d)(input, i, 0)) - 1;
 
       if (offset >= 0 && offset < inDim) {
