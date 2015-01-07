@@ -1,14 +1,16 @@
 local Copy, parent = torch.class('nn.Copy', 'nn.Module')
 
-function Copy:__init(intype, outtype)
+function Copy:__init(intype, outtype, forceCopy, dontCast)
    intype = intype or torch.Tensor.__typename
    outtype = outtype or torch.Tensor.__typename
+   
+   self.dontCast = dontCast
 
    parent.__init(self)
    self.gradInput = torch.getmetatable(intype).new()
    self.output = torch.getmetatable(outtype).new()
 
-   if intype == outtype then
+   if (not forceCopy) and intype == outtype then
 
       self.updateOutput = function(self, input)
                         self.output = input
@@ -30,4 +32,11 @@ end
 function Copy:updateGradInput(input, gradOutput)
    self.gradInput:resize(gradOutput:size()):copy(gradOutput)
    return self.gradInput
+end
+
+function Copy:type(type)
+   if type and self.dontCopy then
+      return self
+   end
+   return parent.type(self, type)
 end

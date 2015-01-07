@@ -468,11 +468,15 @@ end
 <a name="nn.Copy"/>
 ## Copy ##
 
-`module` = `Copy(inputType,outputType)`
+`module` = `Copy(inputType,outputType,[forceCopy,dontCast])`
 
 This layer copies the input to output with type casting from input
-type from `inputType` to `outputType`.
-
+type from `inputType` to `outputType`. Unless `forceCopy` is true, when
+the first two arguments are the same, the input isn't copied, only transfered
+as the output. The default `forceCopy` is false. 
+When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast
+the module's `output` and `gradInput` Tensors to the new type. The default 
+is false.
 
 <a name="nn.Narrow"/>
 ## Narrow ##
