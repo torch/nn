@@ -302,10 +302,12 @@ pi.
 <a name='nn.CMul'/>
 ## CMul ##
 
-`module` = `CMul(inputDimension)`
+`module` = `CMul(size)`
 
 Applies a component-wise multiplication to the incoming data, i.e.
-`y_i` = `w_i` =x_i=. 
+`y_i = w_i * x_i`. Argument `size` can be one or many numbers (sizes)
+or a `torch.LongStorage`. For example, `nn.CMul(3,4,5)` is equivalent to 
+`nn.CMul(torch.LongStorage{3,4,5})`.
 
 Example:
 ```lua
