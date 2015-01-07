@@ -38,14 +38,16 @@ function Linear:updateOutput(input)
    elseif input:dim() == 2 then
       local nframe = input:size(1)
       local nunit = self.bias:size(1)
-
       self.output:resize(nframe, nunit)
+      if not self.addBuffer or self.addBuffer:size(1) ~= nframe then
+         self.addBuffer = input.new(nframe):fill(1)
+      end
       if nunit == 1 then
          -- Special case to fix output size of 1 bug:
-         self.output:zero():add(self.bias[1])
+         self.output:copy(self.bias:view(1,nunit):expand(#self.output))
          self.output:select(2,1):addmv(1, input, self.weight:select(1,1))
       else
-         self.output:zero():addr(1, input.new(nframe):fill(1), self.bias)
+         self.output:zero():addr(1, self.addBuffer, self.bias)
          self.output:addmm(1, input, self.weight:t())
       end
    else
@@ -78,18 +80,18 @@ function Linear:accGradParameters(input, gradOutput, scale)
 
    if input:dim() == 1 then
       self.gradWeight:addr(scale, gradOutput, input)
-      self.gradBias:add(scale, gradOutput)      
+      self.gradBias:add(scale, gradOutput)
    elseif input:dim() == 2 then
       local nframe = input:size(1)
       local nunit = self.bias:size(1)
-      
+
       if nunit == 1 then
          -- Special case to fix output size of 1 bug:
          self.gradWeight:select(1,1):addmv(scale, input:t(), gradOutput:select(2,1))
-         self.gradBias:addmv(scale, gradOutput:t(), input.new(nframe):fill(1))
+         self.gradBias:addmv(scale, gradOutput:t(), self.addBuffer)
       else
          self.gradWeight:addmm(scale, gradOutput:t(), input)
-         self.gradBias:addmv(scale, gradOutput:t(), input.new(nframe):fill(1))
+         self.gradBias:addmv(scale, gradOutput:t(), self.addBuffer)
       end
    end
 

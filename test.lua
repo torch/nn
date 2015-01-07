@@ -76,6 +76,7 @@ function nntest.CMul()
    local input = torch.Tensor(ini,inj,ink):zero()
    local module = nn.CMul(ini*inj*ink)
 
+   -- 1D
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
 
@@ -90,6 +91,26 @@ function nntest.CMul()
                          'error on weight [%s]', t))
    end
 
+   -- 2D
+   local nframe = math.random(50,70)
+   local nframe = 5
+   local input = torch.Tensor(nframe, ini,inj,ink):zero()
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format('error on weight [%s]', t))
+   end
+
+
+   -- IO
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
@@ -469,6 +490,41 @@ function nntest.WeightedEuclidean()
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- test batch
+   local bs = math.random(3,5)
+   input:uniform(0,1)
+   local output = module:forward(input):clone()
+   module:zeroGradParameters()
+   local gradInput = module:backward(input, output):clone()
+   local params, gradParams = module:parameters()
+   for i=1,#params do
+      params[i] = params[i]:clone()
+   end
+   local input2 = input:view(1, -1):repeatTensor(bs, 1)
+   local output2 = module:forward(input2)
+   module:zeroGradParameters()
+   local gradInput2 = module:backward(input2, output2, 1/bs)
+   local params2, gradParams2 = module:parameters()
+   mytester:assertTensorEq(output2[bs-1], output, 0.000001, "error in batch updateOutput")
+   mytester:assertTensorEq(gradInput2[bs-1], gradInput, 0.000001, "error in batch updateGradInput")
+   mytester:assertTensorEq(gradParams[1], gradParams2[1], 0.000001, "error in batch accGradParameters (gradTemplates)")
+   mytester:assertTensorEq(gradParams[2], gradParams2[2], 0.000001, "error in batch accGradParameters (gradDiagCov)")
+   
+   input:zero()
+   module:zeroGradParameters()
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+   mytester:assertlt(err,precision, 'error on bias ')
+
+   local ferr,berr = jac.testIO(module,input2)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
 local function criterionJacobianTest1D(cri, input, target)
@@ -671,7 +727,7 @@ function nntest.Mul()
    local inj = math.random(3,5)
    local ink = math.random(3,5)
    local input = torch.Tensor(ini,inj,ink):zero()
-   local module = nn.Mul(ini*inj*ink)
+   local module = nn.Mul()
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
@@ -1242,9 +1298,9 @@ function nntest.SpatialFullConvolutionCompare()
 end
 
 local function batchcompare(smod, sin, plist)
-   local bs = torch.LongStorage(sin:size():size()+1)
+   local bs = torch.LongStorage(sin:dim()+1)
    bs[1] = 1
-   for i=1,sin:size():size() do bs[i+1] = sin:size()[i] end
+   for i=1,sin:dim() do bs[i+1] = sin:size()[i] end
    local bin = torch.Tensor(bs):copy(sin)
    local bmod = smod:clone()
 
@@ -1767,6 +1823,26 @@ function nntest.VolumetricConvolution()
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+end
+
+function nntest.VolumetricConvolutionBatchCompare()
+   local from = math.random(2,3)
+   local to = math.random(2,3)
+   local kt = math.random(3,4)
+   local ki = math.random(3,4)
+   local kj = math.random(3,4)
+   local st = math.random(2,3)
+   local si = math.random(2,3)
+   local sj = math.random(2,3)
+   local outt = math.random(3,4)
+   local outi = math.random(3,4)
+   local outj = math.random(3,4)
+   local int = (outt-1)*st+kt
+   local ini = (outi-1)*si+ki
+   local inj = (outj-1)*sj+kj
+   local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj)
+   local input = torch.randn(from, int, inj, ini)
+   batchcompare(module,input, {'weight','bias','gradWeight','gradBias'})   
 end
 
 function nntest.VolumetricMaxPooling()

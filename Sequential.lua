@@ -1,9 +1,4 @@
-local Sequential, parent = torch.class('nn.Sequential', 'nn.Module')
-
-function Sequential:__init()
-   parent.__init(self)
-   self.modules = {}
-end
+local Sequential, _ = torch.class('nn.Sequential', 'nn.Container')
 
 function Sequential:add(module)
    if #self.modules == 0 then
@@ -22,14 +17,6 @@ function Sequential:insert(module, index)
    table.insert(self.modules, index, module)
    self.output = self.modules[#self.modules].output
    self.gradInput = self.modules[1].gradInput
-end
-
-function Sequential:size()
-   return #self.modules
-end
-
-function Sequential:get(index)
-   return self.modules[index]
 end
 
 function Sequential:updateOutput(input)
@@ -82,63 +69,6 @@ function Sequential:accUpdateGradParameters(input, gradOutput, lr)
    currentModule:accUpdateGradParameters(input, currentGradOutput, lr)
 end
 
-function Sequential:zeroGradParameters()
-  for i=1,#self.modules do
-     self.modules[i]:zeroGradParameters()
-  end
-end
-
-function Sequential:updateParameters(learningRate)
-   for i=1,#self.modules do
-      self.modules[i]:updateParameters(learningRate)
-   end
-end
-
-function Sequential:training()
-   for i=1,#self.modules do
-      self.modules[i]:training()
-   end
-end
-
-function Sequential:evaluate()
-   for i=1,#self.modules do
-      self.modules[i]:evaluate()
-   end
-end
-
-function Sequential:share(mlp,...)
-   for i=1,#self.modules do
-      self.modules[i]:share(mlp.modules[i],...); 
-   end
-end
-
-function Sequential:reset(stdv)
-   for i=1,#self.modules do
-      self.modules[i]:reset(stdv)
-   end
-end
-
-function Sequential:parameters()
-   local function tinsert(to, from)
-      if type(from) == 'table' then
-         for i=1,#from do
-            tinsert(to,from[i])
-         end
-      else
-         table.insert(to,from)
-      end
-   end
-   local w = {}
-   local gw = {}
-   for i=1,#self.modules do
-      local mw,mgw = self.modules[i]:parameters()
-      if mw then
-         tinsert(w,mw)
-         tinsert(gw,mgw)
-      end
-   end
-   return w,gw
-end
 
 function Sequential:__tostring__()
    local tab = '  '
