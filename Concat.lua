@@ -1,7 +1,7 @@
 local Concat, parent = torch.class('nn.Concat', 'nn.Container')
 
 function Concat:__init(dimension)
-   parent.__init(self, dimension)
+   parent.__init(self)
    self.size = torch.LongStorage()
    self.dimension = dimension
 end

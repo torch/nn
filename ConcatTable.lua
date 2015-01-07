@@ -1,22 +1,9 @@
-local ConcatTable, parent = torch.class('nn.ConcatTable', 'nn.Module')
+local ConcatTable, parent = torch.class('nn.ConcatTable', 'nn.Container')
 
 function ConcatTable:__init()
    parent.__init(self)
    self.modules = {}
    self.output = {}
-end
-
-function ConcatTable:add(module)
-   table.insert(self.modules, module)
-   return self
-end
-
-function ConcatTable:get(index)
-   return self.modules[index]
-end
-
-function ConcatTable:size()
-   return #self.modules 
 end
 
 function ConcatTable:updateOutput(input)
@@ -99,52 +86,6 @@ function ConcatTable:zeroGradParameters()
    end
 end
 
-function ConcatTable:updateParameters(learningRate)
-   for _,module in ipairs(self.modules) do
-      module:updateParameters(learningRate)
-   end
-end
-
-function ConcatTable:training()
-   for i=1,#self.modules do
-      self.modules[i]:training()
-   end
-end
-
-function ConcatTable:evaluate()
-   for i=1,#self.modules do
-      self.modules[i]:evaluate()
-   end
-end
-
-function ConcatTable:share(mlp,...)
-   for i=1,#self.modules do
-      self.modules[i]:share(mlp.modules[i],...); 
-   end
-end
-
-function ConcatTable:parameters()
-   local function tinsert(to, from)
-      if type(from) == 'table' then
-         for i=1,#from do
-            tinsert(to,from[i])
-         end
-      else
-         table.insert(to,from)
-      end
-   end
-   local w = {}
-   local gw = {}
-   for i=1,#self.modules do
-      local mw,mgw = self.modules[i]:parameters()
-      if mw then
-         tinsert(w,mw)
-         tinsert(gw,mgw)
-      end
-   end
-   return w,gw
-end
-
 function ConcatTable:type(type)
    parent.type(self, type)
    if torch.type(self.gradInput) == 'table' then
@@ -161,7 +102,7 @@ function ConcatTable:__tostring__()
    local ext = '  |    '
    local extlast = '       '
    local last = '   ... -> '
-   local str = 'nn.ConcatTable'
+   local str = torch.type(self)
    str = str .. ' {' .. line .. tab .. 'input'
    for i=1,#self.modules do
       if i == self.modules then

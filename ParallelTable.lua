@@ -1,4 +1,4 @@
-local ParallelTable, parent = torch.class('nn.ParallelTable', 'nn.Module')
+local ParallelTable, parent = torch.class('nn.ParallelTable', 'nn.Container')
 
 function ParallelTable:__init()
    parent.__init(self)
@@ -7,26 +7,12 @@ function ParallelTable:__init()
    self.gradInput = {}
 end
 
-function ParallelTable:add(module)
-   table.insert(self.modules, module)
-   return self
-end
-
-function ParallelTable:get(index)
-   return self.modules[index]
-end
-
-function ParallelTable:size()
-   return #self.modules 
-end
-
 function ParallelTable:updateOutput(input)
    for i=1,#self.modules do
       self.output[i] = self.modules[i]:updateOutput(input[i])
    end
    return self.output
 end
-
 
 function ParallelTable:updateGradInput(input, gradOutput)
    for i,module in ipairs(self.modules) do
@@ -49,58 +35,6 @@ function ParallelTable:accUpdateGradParameters(input, gradOutput, lr)
    end
 end
 
-function ParallelTable:zeroGradParameters()
-   for _,module in ipairs(self.modules) do
-      module:zeroGradParameters()
-   end
-end
-
-function ParallelTable:updateParameters(learningRate)
-   for _,module in ipairs(self.modules) do
-      module:updateParameters(learningRate)
-   end
-end
-
-function ParallelTable:training()
-   for i=1,#self.modules do
-      self.modules[i]:training()
-   end
-end
-
-function ParallelTable:evaluate()
-   for i=1,#self.modules do
-      self.modules[i]:evaluate()
-   end
-end
-
-function ParallelTable:share(mlp,...)
-   for i=1,#self.modules do
-      self.modules[i]:share(mlp.modules[i],...); 
-   end
-end
-
-function ParallelTable:parameters()
-   local function tinsert(to, from)
-      if type(from) == 'table' then
-         for i=1,#from do
-            tinsert(to,from[i])
-         end
-      else
-         table.insert(to,from)
-      end
-   end
-   local w = {}
-   local gw = {}
-   for i=1,#self.modules do
-      local mw,mgw = self.modules[i]:parameters()
-      if mw then
-         tinsert(w,mw)
-         tinsert(gw,mgw)
-      end
-   end
-   return w,gw
-end
-
 function ParallelTable:__tostring__()
    local tab = '  '
    local line = '\n'
@@ -108,7 +42,7 @@ function ParallelTable:__tostring__()
    local ext = '  |    '
    local extlast = '       '
    local last = '   ... -> '
-   local str = 'nn.ParallelTable'
+   local str = torch.type(self)
    str = str .. ' {' .. line .. tab .. 'input'
    for i=1,#self.modules do
       if i == self.modules then
