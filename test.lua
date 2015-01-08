@@ -22,6 +22,22 @@ local function equal(t1, t2, msg)
 end
 
 
+--[[ Generate tests to exercise the tostring component of modules. ]]
+local tostringTestModules = {
+    nnLinear = nn.Linear(1, 2),
+    nnReshape = nn.Reshape(10),
+    nnSpatialZeroPadding = nn.SpatialZeroPadding(1, 1, 1, 1)}
+for test_name, component in pairs(tostringTestModules) do
+  nntest['tostring' .. test_name] =
+    function ()
+      mytester:assert(tostring(component):find(torch.type(component) .. '(',
+                                                 1, true),
+                      'nn components should have a descriptive tostring' ..
+                      ' beginning with the classname')
+    end
+end
+
+
 function nntest.Add()
    local inj_vals = {math.random(3,5), 1}  -- Also test the inj = 1 spatial case
    local ini = math.random(3,5)
