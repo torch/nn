@@ -99,3 +99,9 @@ end
 
 -- we do not need to accumulate parameters when sharing
 Linear.sharedAccUpdateGradParameters = Linear.accUpdateGradParameters
+
+
+function Linear:__tostring__()
+  return torch.type(self) ..
+      string.format('(%d -> %d)', self.weight:size(2), self.weight:size(1))
+end
