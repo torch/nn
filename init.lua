@@ -122,3 +122,5 @@ include('Jacobian.lua')
 include('SparseJacobian.lua')
 include('hessian.lua')
 include('test.lua')
+
+return nn
