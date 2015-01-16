@@ -1861,37 +1861,6 @@ function nntest.SpatialAveragePooling()
    mytester:assertTensorEq(gradInput, gradInput2, 0.000001, torch.typename(module) .. ' backward err (Batch) ')
 end
 
-function nntest.SpatialAdaptiveMaxPooling()
-   local from = math.random(1,5)
-   local ki = math.random(1,12)
-   local kj = math.random(1,12)
-   local ini = math.random(1,64)
-   local inj = math.random(1,64)
-
-   local module = nn.SpatialAdaptiveMaxPooling(ki,kj)
-   local input = torch.rand(from,ini,inj)
-
-   local err = jac.testJacobian(module, input)
-   mytester:assertlt(err, precision, 'error on state ')
-
-   local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
-
-   -- batch
-   local nbatch = math.random(2,5)
-   input = torch.rand(nbatch,from,ini,inj)
-   module = nn.SpatialAdaptiveMaxPooling(ki,kj)
-
-   local err = jac.testJacobian(module, input)
-   mytester:assertlt(err, precision, 'error on state (Batch) ')
-
-   local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
-
-end
-
 function nntest.SpatialLPPooling()
    local fanin = math.random(1,4)
    local osizex = math.random(1,4)
