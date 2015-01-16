@@ -64,53 +64,55 @@ function nn.Jacobian.backwardUpdate(module, input, param)
    return jacobian
 end
 
-function nn.Jacobian.forward(module, input, param)
+function nn.Jacobian.forward(module, input, param, perturbation)
    param = param or input
    -- perturbation amount
-   local small = 1e-6
+   perturbation = perturbation or 1e-6
    -- 1D view of input
    --local tst = param:storage()
    local sin = param.new(param):resize(param:nElement())--param.new(tst,1,tst:size())
    -- jacobian matrix to calculate
    local jacobian = torch.Tensor():resize(param:nElement(),module:forward(input):nElement())
-   
+
    local outa = torch.Tensor(jacobian:size(2))
    local outb = torch.Tensor(jacobian:size(2))
-   
-   for i=1,sin:nElement() do      
-      sin[i] = sin[i] - small
-      outa:copy(module:forward(input))
-      sin[i] = sin[i] + 2*small
-      outb:copy(module:forward(input))
-      sin[i] = sin[i] - small
 
-      outb:add(-1,outa):div(2*small)
+   for i=1,sin:nElement() do
+      local orig = sin[i]
+      sin[i] = orig - perturbation
+      outa:copy(module:forward(input))
+      sin[i] = orig + perturbation
+      outb:copy(module:forward(input))
+      sin[i] = orig
+
+      outb:add(-1,outa):div(2*perturbation)
       jacobian:select(1,i):copy(outb)
    end
 
    return jacobian
 end
 
-function nn.Jacobian.forwardUpdate(module, input, param)
+function nn.Jacobian.forwardUpdate(module, input, param, perturbation)
    -- perturbation amount
-   local small = 1e-6
+   perturbation = perturbation or 1e-6
    -- 1D view of input
    --local tst = param:storage()
    local sin =  param.new(param):resize(param:nElement())--param.new(tst,1,tst:size())
    -- jacobian matrix to calculate
    local jacobian = torch.Tensor():resize(param:nElement(),module:forward(input):nElement())
-   
+
    local outa = torch.Tensor(jacobian:size(2))
    local outb = torch.Tensor(jacobian:size(2))
-   
-   for i=1,sin:nElement() do      
-      sin[i] = sin[i] - small
-      outa:copy(module:forward(input))
-      sin[i] = sin[i] + 2*small
-      outb:copy(module:forward(input))
-      sin[i] = sin[i] - small
 
-      outb:add(-1,outa):div(2*small)
+   for i=1,sin:nElement() do
+      local orig = sin[i]
+      sin[i] = orig - perturbation
+      outa:copy(module:forward(input))
+      sin[i] = orig + perturbation
+      outb:copy(module:forward(input))
+      sin[i] = orig
+
+      outb:add(-1,outa):div(2*perturbation)
       jacobian:select(1,i):copy(outb)
       jacobian:select(1,i):mul(-1)
       jacobian:select(1,i):add(sin[i])
@@ -118,37 +120,37 @@ function nn.Jacobian.forwardUpdate(module, input, param)
    return jacobian
 end
 
-function nn.Jacobian.testJacobian (module, input, minval, maxval)
+function nn.Jacobian.testJacobian(module, input, minval, maxval, perturbation)
    minval = minval or -2
    maxval = maxval or 2
    local inrange = maxval - minval
    input:copy(torch.rand(input:nElement()):mul(inrange):add(minval))
-   local jac_fprop = nn.Jacobian.forward(module,input)
-   local jac_bprop = nn.Jacobian.backward(module,input)
+   local jac_fprop = nn.Jacobian.forward(module, input, input, perturbation)
+   local jac_bprop = nn.Jacobian.backward(module, input)
    local error = jac_fprop-jac_bprop
    return error:abs():max()
 end
 
-function nn.Jacobian.testJacobianParameters (module, input, param, dparam, minval, maxval)
+function nn.Jacobian.testJacobianParameters(module, input, param, dparam, minval, maxval, perturbation)
    minval = minval or -2
    maxval = maxval or 2
    local inrange = maxval - minval
    input:copy(torch.rand(input:nElement()):mul(inrange):add(minval))
    param:copy(torch.rand(param:nElement()):mul(inrange):add(minval))
    local jac_bprop = nn.Jacobian.backward(module, input, param, dparam)
-   local jac_fprop = nn.Jacobian.forward(module, input, param)
+   local jac_fprop = nn.Jacobian.forward(module, input, param, perturbation)
    local error = jac_fprop - jac_bprop
    return error:abs():max()
 end
 
-function nn.Jacobian.testJacobianUpdateParameters (module, input, param, minval, maxval)
+function nn.Jacobian.testJacobianUpdateParameters(module, input, param, minval, maxval, perturbation)
    minval = minval or -2
    maxval = maxval or 2
    local inrange = maxval - minval
    input:copy(torch.rand(input:nElement()):mul(inrange):add(minval))
    param:copy(torch.rand(param:nElement()):mul(inrange):add(minval))
    local params_bprop = nn.Jacobian.backwardUpdate(module, input, param)
-   local params_fprop = nn.Jacobian.forwardUpdate(module, input, param)
+   local params_fprop = nn.Jacobian.forwardUpdate(module, input, param, perturbation)
 
    local error = params_fprop - params_bprop
    return error:abs():max()

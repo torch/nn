@@ -262,7 +262,7 @@ to produce the output _y_.
 <a name="nn.Mul"/>
 ## Mul ##
 
-`module` = `Mul(inputDimension)`
+`module` = `Mul()`
 
 Applies a _single_ scaling factor to the incoming data, i.e.
 _y= w x_, where _w_ is a scalar. 
@@ -271,7 +271,7 @@ Example:
 ```lua
 y=torch.Tensor(5);  
 mlp=nn.Sequential()
-mlp:add(nn.Mul(5))
+mlp:add(nn.Mul())
 
 function gradUpdate(mlp, x, y, criterion, learningRate) 
   local pred = mlp:forward(x)
@@ -302,10 +302,12 @@ pi.
 <a name='nn.CMul'/>
 ## CMul ##
 
-`module` = `CMul(inputDimension)`
+`module` = `CMul(size)`
 
 Applies a component-wise multiplication to the incoming data, i.e.
-`y_i` = `w_i` =x_i=. 
+`y_i = w_i * x_i`. Argument `size` can be one or many numbers (sizes)
+or a `torch.LongStorage`. For example, `nn.CMul(3,4,5)` is equivalent to 
+`nn.CMul(torch.LongStorage{3,4,5})`.
 
 Example:
 ```lua
@@ -387,22 +389,30 @@ then an `nxq` matrix would be output.
 <a name="nn.Euclidean"/>
 ## Euclidean ##
 
-`module` = `Euclidean(inputDimension,outputDimension)`
+`module` = `Euclidean(inputSize,outputSize)`
 
-Outputs the Euclidean distance of the input to `outputDimension` centers,
-i.e. this layer has the weights `c_i`, `i` = `1`,..,`outputDimension`, where
-`c_i` are vectors of dimension `inputDimension`. Output dimension `j` is
-`|| c_j - x ||`, where `x` is the input.
+Outputs the Euclidean distance of the input to `outputSize` centers,
+i.e. this layer has the weights `w_j`,  for `j` = `1`,..,`outputSize`, where
+`w_j` are vectors of dimension `inputSize`. 
+
+The distance `y_j` between center `j` and input `x` is formulated as
+`y_j = || w_j - x ||`.
 
 <a name="nn.WeightedEuclidean"/>
 ## WeightedEuclidean ##
 
-`module` = `WeightedEuclidean(inputDimension,outputDimension)`
+`module` = `WeightedEuclidean(inputSize,outputSize)`
 
 This module is similar to [Euclidean](#nn.Euclidean), but
 additionally learns a separate diagonal covariance matrix across the
-features of the input space for each center.
+features of the input space _for each center_. 
 
+In other words, for each of the `outputSize` centers `w_j`, there is 
+a diagonal covariance matrices `c_j`, for `j` = `1`,..,`outputSize`, 
+where `c_j` are stored as vectors of size `inputSize`.
+
+The distance `y_j` between center `j` and input `x` is formulated as
+`y_j = || c_j * (w_j - x) ||`.
 
 <a name="nn.Identity"/>
 ## Identity ##
@@ -460,11 +470,15 @@ end
 <a name="nn.Copy"/>
 ## Copy ##
 
-`module` = `Copy(inputType,outputType)`
+`module` = `Copy(inputType,outputType,[forceCopy,dontCast])`
 
 This layer copies the input to output with type casting from input
-type from `inputType` to `outputType`.
-
+type from `inputType` to `outputType`. Unless `forceCopy` is true, when
+the first two arguments are the same, the input isn't copied, only transfered
+as the output. The default `forceCopy` is false. 
+When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast
+the module's `output` and `gradInput` Tensors to the new type. The default 
+is false.
 
 <a name="nn.Narrow"/>
 ## Narrow ##

@@ -61,3 +61,9 @@ function Reshape:updateGradInput(input, gradOutput)
    self.gradInput:viewAs(gradOutput, input)
    return self.gradInput
 end
+
+
+function Reshape:__tostring__()
+  return torch.type(self) .. '(' ..
+      table.concat(self.size:totable(), 'x') .. ')'
+end
