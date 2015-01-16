@@ -13,6 +13,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
    * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
    * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
    * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
+   * [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling) : a 2D max-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
    * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
    * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
    * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
@@ -367,6 +368,29 @@ module = nn.SpatialAveragePooling(kW, kH [, dW, dH])
 Applies 2D average-pooling operation in `kWxkH` regions by step size
 `dWxdH` steps. The number of output features is equal to the number of
 input planes.
+
+<a name="nn.SpatialAdaptiveMaxPooling"/>
+### SpatialAdaptiveMaxPooling ###
+
+```lua
+module = nn.SpatialAdaptiveMaxPooling(W, H)
+```
+
+Applies 2D max-pooling operation in an image such that the output is of
+size `WxH`, for any input size. The number of output features is equal
+to the number of input planes.
+
+For an output of dimensions `(owidth,oheight)`, the indexes of the pooling
+region `(j,i)` in the input image of dimensions `(iwidth,iheight)` are
+given by:
+
+```
+x_j_start = floor((j   /owidth)  * iwidth)
+x_j_end   = ceil(((j+1)/owidth)  * iwidth)
+
+y_i_start = floor((i   /oheight) * iheight)
+y_i_end   = ceil(((i+1)/oheight) * iheight)
+```
 
 <a name="nn.SpatialSubSampling"/>
 ### SpatialSubSampling ###
