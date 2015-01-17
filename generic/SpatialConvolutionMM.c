@@ -18,7 +18,7 @@ static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
 #pragma omp parallel for private(nip)
   for(nip = 0; nip < nInputPlane; nip++)
   {
-    int kw, kh, y, ix, iy;
+    int kw, kh, y, x, ix, iy;
     for(kh = 0; kh < kH; kh++)
     {
       for(kw = 0; kw < kW; kw++)
@@ -28,20 +28,35 @@ static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
         if (padding > 0) {
           int lpad,rpad;
           for(y = 0; y < outputHeight; y++) {
-            iy = y - padding + kh;
-            ix = 0 - padding + kw;
+            iy = y*dH - padding + kh;
             if (iy < 0 || iy >= inputHeight) {
             } else {
-              lpad = fmaxf(0,padding-kw);
-              rpad = fmaxf(0,padding-(kW-kw-1));
-              THVector_(add)(dst+iy*inputWidth+ix+lpad, src+y*outputWidth+lpad, 1, outputWidth - lpad - rpad); /* note: THVector_add could handle 1 value better */
+              if (dW==1){
+                 ix = 0 - padding + kw;
+                 lpad = fmaxf(0,padding-kw);
+                 rpad = fmaxf(0,padding-(kW-kw-1));
+                 THVector_(add)(dst+iy*inputWidth+ix+lpad, src+y*outputWidth+lpad, 1, outputWidth - lpad - rpad); /* note: THVector_add could handle 1 value better */
+              }
+              else{
+                for (x=0; x<outputWidth; x++){
+                   ix = x*dW - padding + kw;
+                   if (ix < 0 || ix >= inputWidth){
+                   }else
+                     THVector_(add)(dst+iy*inputWidth+ix, src+y*outputWidth+x, 1, 1);
+                }
+              }
             }
           }
         } else {
           for(y = 0; y < outputHeight; y++) {
-            iy = y + kh;
+            iy = y*dH + kh;
             ix = 0 + kw;
-            THVector_(add)(dst+iy*inputWidth+ix, src+y*outputWidth, 1, outputWidth); /* note: THVector_add could handle 1 value better */
+            if (dW == 1 )
+               THVector_(add)(dst+iy*inputWidth+ix, src+y*outputWidth, 1, outputWidth); /* note: THVector_add could handle 1 value better */
+            else{
+              for(x = 0; x < outputWidth; x++)
+                THVector_(add)(dst+iy*inputWidth+ix+x*dW, src+y*outputWidth+x, 1, 1);
+            }
           }
         }
       }
@@ -73,23 +88,39 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
     if (padding > 0) {
       int lpad,rpad;
       for(y = 0; y < outputHeight; y++) {
-        iy = y - padding + kh;
-        ix = 0 - padding + kw;
+        iy = y*dH - padding + kh;
         if (iy < 0 || iy >= inputHeight) {
           memset(dst+y*outputWidth, 0, sizeof(real)*outputWidth);
         } else {
-          lpad = fmaxf(0,padding-kw);
-          rpad = fmaxf(0,padding-(kW-kw-1));
-          if (lpad > 0) memset(dst+y*outputWidth, 0, sizeof(real)*lpad);
-          memcpy(dst+y*outputWidth+lpad, src+iy*inputWidth+ix+lpad, sizeof(real)*(outputWidth-rpad-lpad));
-          if (rpad > 0) memset(dst+y*outputWidth + outputWidth - rpad, 0, sizeof(real)*rpad);
+          if (dW==1){
+             ix = 0 - padding + kw;
+             lpad = fmaxf(0,padding-kw);
+             rpad = fmaxf(0,padding-(kW-kw-1));
+             if (lpad > 0) memset(dst+y*outputWidth, 0, sizeof(real)*lpad);
+             memcpy(dst+y*outputWidth+lpad, src+iy*inputWidth+ix+lpad, sizeof(real)*(outputWidth-rpad-lpad));
+             if (rpad > 0) memset(dst+y*outputWidth + outputWidth - rpad, 0, sizeof(real)*rpad);
+          }
+          else{
+            for (x=0; x<outputWidth; x++){
+               ix = x*dW - padding + kw;
+               if (ix < 0 || ix >= inputWidth)
+                 memset(dst+y*outputWidth+x, 0, sizeof(real)*1);
+               else
+                 memcpy(dst+y*outputWidth+x, src+iy*inputWidth+ix, sizeof(real)*(1));
+            }
+          }
         }
       }
     } else {
       for(y = 0; y < outputHeight; y++) {
-        iy = y + kh;
+        iy = y*dH + kh;
         ix = 0 + kw;
-        memcpy(dst+y*outputWidth, src+iy*inputWidth+ix, sizeof(real)*outputWidth);
+        if (dW == 1)
+           memcpy(dst+y*outputWidth, src+iy*inputWidth+ix, sizeof(real)*outputWidth);
+        else{
+          for (x=0; x<outputWidth; x++)
+             memcpy(dst+y*outputWidth+x, src+iy*inputWidth+ix+x*dW, sizeof(real)*(1));
+         }
       }
     }
   }
@@ -144,9 +175,6 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
 
   luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
 
-  // Temporary:
-  luaL_argcheck(L, dW == 1, 1, "dW must == 1");
-  luaL_argcheck(L, dH == 1, 1, "dH must == 1");
 
   if (input->nDimension == 4) {
     dimf++;
