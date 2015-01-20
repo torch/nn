@@ -76,6 +76,7 @@ include('SpatialMaxPooling.lua')
 include('SpatialMaxPoolingCUDA.lua')
 include('SpatialLPPooling.lua')
 include('SpatialAveragePooling.lua')
+include('SpatialAdaptiveMaxPooling.lua')
 include('TemporalConvolution.lua')
 include('TemporalSubSampling.lua')
 include('TemporalMaxPooling.lua')
@@ -122,3 +123,5 @@ include('Jacobian.lua')
 include('SparseJacobian.lua')
 include('hessian.lua')
 include('test.lua')
+
+return nn
