@@ -1104,8 +1104,8 @@ function nntest.SpatialConvolutionMM()
    local padding = math.random(0,2)
    local outi = math.random(5,9)
    local outj = math.random(5,9)
-   local ini = (outi-1)*si+ki-padding*2
-   local inj = (outj-1)*sj+kj-padding*2
+   local ini = (outi-1)*di+ki-padding*2
+   local inj = (outj-1)*dj+kj-padding*2
    local module = nn.SpatialConvolutionMM(from, to, ki, kj, di, dj, padding)
    local input = torch.Tensor(from, inj, ini):zero()
 
