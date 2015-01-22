@@ -11,22 +11,17 @@ function SpatialLPPooling:__init(nInputPlane, pnorm, kW, kH, dW, dH)
    self.dW = dW
    self.dH = dH
 
-   self.nInputPlane = nInputPlane
-
    if pnorm == 2 then
       self:add(nn.Square())
    else
       self:add(nn.Power(pnorm))
    end
-   self:add(nn.SpatialSubSampling(nInputPlane, kW, kH, dW, dH))
+   self:add(nn.SpatialAveragePooling(kW, kH, dW, dH))
    if pnorm == 2 then
       self:add(nn.Sqrt())
    else
       self:add(nn.Power(1/pnorm))
    end
-
-   self:get(2).bias:zero()
-   self:get(2).weight:fill(1)
 end
 
 -- the module is a Sequential: by default, it'll try to learn the parameters
