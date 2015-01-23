@@ -28,6 +28,7 @@ and providing affine transformations :
    * [Power](#nn.Power) : an element-wise [pow](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchpowres-x) operation ;
    * [Square](#nn.Square) : an element-wise square operation ;
    * [Sqrt](#nn.Sqrt) : an element-wise [sqrt](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchsqrtres-x) operation ;
+   * [MM](#nn.MM) : matrix-matrix multiplication (also supports batches of matrices) ;
  * Miscellaneous Modules :
    * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable));
    * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
@@ -831,3 +832,24 @@ gnuplot.grid(true)
 ```
 ![](image/power.png)
 
+<a name="nn.MM"/>
+## MM ##
+
+`module` = `nn.MM(transA, transB)`
+
+Performs multiplications on one or more pairs of matrices.
+If `transA` is set, the first matrix is transposed before multiplication.
+If `transB` is set, the second matrix is transposed before multiplication.
+By default, the matrices do not get transposed.
+
+The module also accepts 3D inputs which are interpreted as batches of matrices.
+When using batches, the first input matrix should be of size `b x m x n` and the
+second input matrix should be of size `b x n x p` (assuming `transA` and `transB`
+are not set).
+
+```lua
+m = nn.MM()
+A = torch.randn(b, m, n)
+B = torch.randn(b, n, p)
+C = m.forward({A, B})  -- C will be of size `b x m x n`
+```
