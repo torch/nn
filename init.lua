@@ -119,6 +119,8 @@ include('BCECriterion.lua')
 
 include('StochasticGradient.lua')
 
+include('MM.lua')
+
 include('Jacobian.lua')
 include('SparseJacobian.lua')
 include('hessian.lua')
