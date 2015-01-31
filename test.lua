@@ -2793,7 +2793,7 @@ end
 function nntest.L1Penalty()
    local weight = 1
    local sizeAverage = false
-   local m = nn.L1Penalty(weight, sizeAverage)
+   local m = nn.L1Penalty(weight, sizeAverage, false)
 
    local input = torch.rand(2,10):add(-0.5)
    input[1][1] = 0

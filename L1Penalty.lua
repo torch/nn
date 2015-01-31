@@ -8,9 +8,13 @@ function L1Penalty:__init(l1weight, sizeAverage, provideOutput)
     parent.__init(self)
     self.l1weight = l1weight 
     self.sizeAverage = sizeAverage or false  
-    self.provideOutput = provideOutput or true
+    if provideOutput == nil then
+       self.provideOutput = true
+    else
+       self.provideOutput = provideOutput
+    end
 end
-
+    
 function L1Penalty:updateOutput(input)
     local m = self.l1weight 
     if self.sizeAverage == true then 
