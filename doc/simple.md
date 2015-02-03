@@ -848,8 +848,8 @@ second input matrix should be of size `b x n x p` (assuming `transA` and `transB
 are not set).
 
 ```lua
-m = nn.MM()
+model = nn.MM()
 A = torch.randn(b, m, n)
 B = torch.randn(b, n, p)
-C = m.forward({A, B})  -- C will be of size `b x m x n`
+C = model.forward({A, B})  -- C will be of size `b x m x n`
 ```
