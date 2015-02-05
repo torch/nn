@@ -6,6 +6,7 @@ static int nn_(MultiMarginCriterion_updateOutput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);  
   int sizeAverage = luaT_getfieldcheckboolean(L, 1, "sizeAverage");
+  int p = luaT_getfieldchecknumber(L, 1, "p");
   real *input_data, *target_data;
   long nframe, dim;
   long t, d;
@@ -54,7 +55,7 @@ static int nn_(MultiMarginCriterion_updateOutput)(lua_State *L)
         continue;
     
       if(z > 0)
-        sum += z;
+        sum += (p==1) ? z : z*z;
     }
     input_data += dim;
   }
@@ -75,6 +76,7 @@ static int nn_(MultiMarginCriterion_updateGradInput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   int sizeAverage = luaT_getfieldcheckboolean(L, 1, "sizeAverage");
+  int p = luaT_getfieldchecknumber(L, 1, "p");
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
   real *input_data;
   real *gradInput_data;
@@ -127,8 +129,9 @@ static int nn_(MultiMarginCriterion_updateGradInput)(lua_State *L)
     
       if(z > 0)
       {
-        gradInput_target -= g;
-        gradInput_data[d] = g;
+        real h = (p == 1) ? g : 2*g*z;
+        gradInput_target -= h;
+        gradInput_data[d] = h;
       }
       else
         gradInput_data[d] = 0;

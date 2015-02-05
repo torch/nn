@@ -220,13 +220,13 @@ i.e. the mlp successfully separates the two data points such that they both have
 ## MultiMarginCriterion ##
 
 ```lua
-criterion = MultiMarginCriterion()
+criterion = MultiMarginCriterion(p)
 ```
 
 Creates a criterion that optimizes a multi-class classification hinge loss (margin-based loss) between input `x`  (a Tensor of dimension 1) and output `y` (which is a target class index, 1 <= y <= x:size(1)) :
 
 ```lua
-loss(x,y) = forward(x,y) = sum_i(max(0, 1 - (x[y] - x[i]))) / x:size(1)
+loss(x,y) = forward(x,y) = sum_i(max(0, 1 - (x[y] - x[i]))^p) / x:size(1)
 ```
 where i = 1 to x:size(1) and i ~= y
 
