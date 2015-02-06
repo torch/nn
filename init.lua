@@ -9,6 +9,7 @@ include('Concat.lua')
 include('Parallel.lua')
 include('Sequential.lua')
 include('DepthConcat.lua')
+include('Recurrent.lua')
 
 include('Linear.lua')
 include('SparseLinear.lua')
