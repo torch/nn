@@ -1,6 +1,6 @@
 local SpatialConvolution, parent = torch.class('nn.SpatialConvolution', 'nn.Module')
 
-function SpatialConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH)
+function SpatialConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padding)
    parent.__init(self)
 
    dW = dW or 1
@@ -10,12 +10,14 @@ function SpatialConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH)
    self.nOutputPlane = nOutputPlane
    self.kW = kW
    self.kH = kH
+
    self.dW = dW
    self.dH = dH
+   self.padding = padding or 0
 
-   self.weight = torch.Tensor(nOutputPlane, nInputPlane, kH, kW)
+   self.weight = torch.Tensor(nOutputPlane, nInputPlane * kH * kW)
    self.bias = torch.Tensor(nOutputPlane)
-   self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane, kH, kW)
+   self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane * kH * kW)
    self.gradBias = torch.Tensor(nOutputPlane)
    
    self:reset()
@@ -40,16 +42,50 @@ function SpatialConvolution:reset(stdv)
    end
 end
 
+local function backCompatibility(self)
+   self.finput = self.finput or self.weight.new()
+   self.fgradInput = self.fgradInput or self.weight.new()
+   self.padding = self.padding or 0
+   if self.weight:dim() == 4 then 
+      self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+   end
+   if self.gradWeight:dim() == 4 then 
+      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+   end
+end
+
+local function makeContiguous(self, input, gradOutput)
+   if not input:isContiguous() then
+      self._input = self._input or input.new()
+      self._input:resizeAs(input):copy(input)
+      input = self._input
+   end
+   if gradOutput then
+      if not gradOutput:isContiguous() then
+	 self._gradOutput = self._gradOutput or gradOutput.new()
+	 self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
+	 gradOutput = self._gradOutput
+      end
+   end
+   return input, gradOutput
+end
+
 function SpatialConvolution:updateOutput(input)
-   return input.nn.SpatialConvolution_updateOutput(self, input)
+   backCompatibility(self)
+   input = makeContiguous(self, input)
+   return input.nn.SpatialConvolutionMM_updateOutput(self, input)
 end
 
 function SpatialConvolution:updateGradInput(input, gradOutput)
    if self.gradInput then
-      return input.nn.SpatialConvolution_updateGradInput(self, input, gradOutput)
+      backCompatibility(self)
+      input, gradOutput = makeContiguous(self, input, gradOutput)
+      return input.nn.SpatialConvolutionMM_updateGradInput(self, input, gradOutput)
    end
 end
 
 function SpatialConvolution:accGradParameters(input, gradOutput, scale)
-   return input.nn.SpatialConvolution_accGradParameters(self, input, gradOutput, scale)
+   backCompatibility(self)
+   input, gradOutput = makeContiguous(self, input, gradOutput)
+   return input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
 end
