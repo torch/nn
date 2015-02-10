@@ -15,9 +15,9 @@ function SpatialConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, pa
    self.dH = dH
    self.padding = padding or 0
 
-   self.weight = torch.Tensor(nOutputPlane, nInputPlane * kH * kW)
+   self.weight = torch.Tensor(nOutputPlane, nInputPlane, kH, kW)
    self.bias = torch.Tensor(nOutputPlane)
-   self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane * kH * kW)
+   self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane, kH, kW)
    self.gradBias = torch.Tensor(nOutputPlane)
    
    self:reset()
@@ -46,11 +46,11 @@ local function backCompatibility(self)
    self.finput = self.finput or self.weight.new()
    self.fgradInput = self.fgradInput or self.weight.new()
    self.padding = self.padding or 0
-   if self.weight:dim() == 4 then 
-      self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+   if self.weight:dim() == 2 then 
+      self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
    end
-   if self.gradWeight:dim() == 4 then 
-      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+   if self.gradWeight:dim() == 2 then 
+      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
    end
 end
 
@@ -70,22 +70,42 @@ local function makeContiguous(self, input, gradOutput)
    return input, gradOutput
 end
 
+-- function to re-view the weight layout in a way that would make the MM ops happy
+local function viewWeight(self)
+   self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+   self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+end
+
+local function unviewWeight(self)
+   self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
+   self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
+end
+
 function SpatialConvolution:updateOutput(input)
    backCompatibility(self)
+   viewWeight(self)
    input = makeContiguous(self, input)
-   return input.nn.SpatialConvolutionMM_updateOutput(self, input)
+   local out = input.nn.SpatialConvolutionMM_updateOutput(self, input)
+   unviewWeight(self)
+   return out
 end
 
 function SpatialConvolution:updateGradInput(input, gradOutput)
    if self.gradInput then
       backCompatibility(self)
+      viewWeight(self)
       input, gradOutput = makeContiguous(self, input, gradOutput)
-      return input.nn.SpatialConvolutionMM_updateGradInput(self, input, gradOutput)
+      local out = input.nn.SpatialConvolutionMM_updateGradInput(self, input, gradOutput)
+      unviewWeight(self)
+      return out
    end
 end
 
 function SpatialConvolution:accGradParameters(input, gradOutput, scale)
    backCompatibility(self)
    input, gradOutput = makeContiguous(self, input, gradOutput)
-   return input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
+   viewWeight(self)
+   local out = input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
+   unviewWeight(self)
+   return out
 end
