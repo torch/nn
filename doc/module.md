@@ -327,3 +327,46 @@ for i = 1, #threshold_nodes do
   end
 end
 ```
+
+<a name="nn.Module.listModules"/>
+### listModules() ###
+
+List all Modules instances in a network. Returns a flattened list of modules, 
+including container modules (which will be listed first), self, and any other 
+component modules. 
+
+For example :
+```lua
+mlp = nn.Sequential()
+mlp:add(nn.Linear(10,20))
+mlp:add(nn.Tanh())
+mlp2 = nn.Parallel()
+mlp2:add(mlp)
+mlp2:add(nn.ReLU())
+for i,module in ipairs(mlp2:listModules()) do
+   print(module)
+end
+```
+
+Which will result in the following output :
+
+```lua
+nn.Parallel {
+  input
+    |`-> (1): nn.Sequential {
+    |      [input -> (1) -> (2) -> output]
+    |      (1): nn.Linear(10 -> 20)
+    |      (2): nn.Tanh
+    |    }
+    |`-> (2): nn.ReLU
+     ... -> output
+}
+nn.Sequential {
+  [input -> (1) -> (2) -> output]
+  (1): nn.Linear(10 -> 20)
+  (2): nn.Tanh
+}
+nn.Linear(10 -> 20)
+nn.Tanh
+nn.ReLU
+```
