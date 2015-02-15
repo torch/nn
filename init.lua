@@ -62,6 +62,7 @@ include('HardShrink.lua')
 include('SoftShrink.lua')
 include('Threshold.lua')
 include('ReLU.lua')
+include('PReLU.lua')
 
 include('LookupTable.lua')
 include('SpatialConvolution.lua')
