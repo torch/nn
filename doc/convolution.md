@@ -25,7 +25,7 @@ a kernel for computing the weighted average in a neighborhood ;
 
 <a name="nn.TemporalModules"/>
 ## Temporal Modules ##
-Excluding and optional first batch dimension, temporal layers expect a 2D Tensor as input. The
+Excluding an optional first batch dimension, temporal layers expect a 2D Tensor as input. The
 first dimension is the number of frames in the sequence (e.g. `nInputFrame`), the last dimenstion
 is the number of features per frame (e.g. `inputFrameSize`). The output will normally have the same number 
 of dimensions, although the size of each dimension may change. These are commonly used for processing acoustic signals or sequences of words, i.e. in Natural Language Processing. 
