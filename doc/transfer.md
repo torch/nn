@@ -248,6 +248,20 @@ gnuplot.grid(true)
 ```
 ![](image/relu.png)
 
+<a name="nn.ReLU"/>
+## PReLU ##
+
+Applies parametric ReLU, which parameter varies the slope of the negative part:
+
+```max(0,y_i) + a_i * min(0,y_i)```
+
+When called without a number on input as ```nn.PReLU()``` uses shared version, meaning
+has only one parameter. Otherwise if called ```nn.PReLU(nOutputPlane)``` has ```nOutputPlane```
+parameters, one for each input map. The output dimension is always equal to input dimension.
+Note that weight decay should not be used on it. For reference see http://arxiv.org/abs/1502.01852
+
+![](image/prelu.png)
+
 <a name="nn.AddConstant"/>
 ## AddConstant ##
 

@@ -262,6 +262,70 @@ function nntest.Threshold()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.PReLU()
+   local ini = math.random(3,5)
+   local input = torch.Tensor(ini):zero()
+
+   local module = nn.PReLU(ini)
+
+   -- 1D
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+			 'error on weight [%s]', t))
+   end
+
+   -- 2D
+   local nframe = math.random(1,7)
+   local input = torch.Tensor(nframe, ini):zero()
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+			 'error on weight [%s]', t))
+   end
+
+   -- 4D
+   local nframe = math.random(1,7)
+   local kW, kH = math.random(1,8), math.random(1,8)
+   local input = torch.Tensor(nframe, ini, kW, kH):zero()
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+			 'error on weight [%s]', t))
+   end
+
+   -- IO
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
 function nntest.HardShrink()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
