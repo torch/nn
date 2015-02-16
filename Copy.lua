@@ -3,7 +3,7 @@ local Copy, parent = torch.class('nn.Copy', 'nn.Module')
 function Copy:__init(intype, outtype, forceCopy, dontCast)
    intype = intype or torch.Tensor.__typename
    outtype = outtype or torch.Tensor.__typename
-   
+
    self.dontCast = dontCast
 
    parent.__init(self)
@@ -35,7 +35,7 @@ function Copy:updateGradInput(input, gradOutput)
 end
 
 function Copy:type(type)
-   if type and self.dontCopy then
+   if type and self.dontCast then
       return self
    end
    return parent.type(self, type)
