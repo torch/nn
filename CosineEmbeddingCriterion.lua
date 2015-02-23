@@ -32,16 +32,18 @@ function CosineEmbeddingCriterion:updateGradInput(input, y)
    gw2:resizeAs(v1)
 
    gw1:zero()
-   gw1:add(1/(self.w2*self.w3), v2)
-   gw1:add(-self.w1/(self.w22*self.w2*self.w3), v1)
-   
    gw2:zero()
-   gw2:add(1/(self.w2*self.w3), v1)
-   gw2:add(-self.w1/(self.w32*self.w2*self.w3), v2)
 
+   if self.output > 0 then
+      gw1:add(1/(self.w2*self.w3), v2)
+      gw1:add(-self.w1/(self.w22*self.w2*self.w3), v1)
+
+      gw2:add(1/(self.w2*self.w3), v1)
+      gw2:add(-self.w1/(self.w32*self.w2*self.w3), v2)
+   end
    if y == 1 then
-      gw1 = -gw1
-      gw2 = -gw2
+      gw1:mul(-1)
+      gw2:mul(-1)
    end
    self.gradInput = {gw1, gw2}
    return self.gradInput
