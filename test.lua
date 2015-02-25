@@ -3124,6 +3124,19 @@ function nntest.BatchMMTransposeBoth()
   end
 end
 
+function nntest.CosineEmbeddingCriterion()
+  local v1 = torch.Tensor{1, 0}
+  local v2 = torch.Tensor{0.5, math.sqrt(3)*0.5}
+
+  local crit = nn.CosineEmbeddingCriterion(0.6)
+  local output = crit:forward({v1, v2}, -1) -- must be called before backward
+  local grads = crit:backward({v1, v2}, -1)
+
+  local zero = torch.Tensor(2):zero()
+  equal(grads[1], zero, 'gradient should be zero')
+  equal(grads[2], zero, 'gradient should be zero')
+end
+
 mytester:add(nntest)
 
 if not nn then
