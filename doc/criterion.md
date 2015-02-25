@@ -283,10 +283,10 @@ or dissimilar, e.g. using the L1 pairwise distance,
 and is typically used for
 learning nonlinear embeddings or semi-supervised learning.
 
-<verbatim> 
+```
 loss(x,y) = forward(x,y) = x, if y=1
 = max(0,margin - x), if y=-1
-</verbatim>
+```
 
 The `margin` has a default value of 1, or can be set in the constructor:
 ```lua
@@ -366,10 +366,10 @@ This is used for measuring whether two inputs are similar
 or dissimilar, using the L1 distance, and is typically used for
 learning nonlinear embeddings or semi-supervised learning.
 
-<verbatim> 
+```
 loss(x,y) = forward(x,y) = ||x1-x2||_1, if y=1
 = max(0,margin - ||x1-x2||_1), if y=-1
-</verbatim>
+```
 
 The `margin` has a default value of 1, or can be set in the constructor:
 ```lua
@@ -393,10 +393,10 @@ learning nonlinear embeddings or semi-supervised learning.
 Forward and Backward have to be used alternately. If `margin` is missing, the default value is 0.
 
 The loss function is:
-<verbatim> 
+```
 loss(x,y) = forward(x,y) = 1-cos(x1, x2), if y=1
 = max(0,cos(x1, x2)-margin), if y=-1
-</verbatim>
+```
 
 <a name="nn.MarginRankingCriterion"/>
 ## MarginRankingCriterion ##
@@ -413,9 +413,9 @@ If `y` = `1` then it assumed the first input should be ranked higher (have a lar
 than the second input, and vice-versa for `y` = `-1`.
 
 The loss function is:
-<verbatim> 
+```
 loss(x,y) = forward(x,y) = max(0,-y*(x[1]-x[2])+margin)
-</verbatim>
+```
 
 Example:
 ```lua
