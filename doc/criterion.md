@@ -50,7 +50,7 @@ State variable which contains the result of the last [backward(input, target)](#
 ## AbsCriterion ##
 
 ```lua
-criterion = AbsCriterion()
+criterion = nn.AbsCriterion()
 ```
 
 Creates a criterion that
@@ -72,7 +72,7 @@ criterion.sizeAverage = false
 ## ClassNLLCriterion ##
 
 ```lua
-criterion = ClassNLLCriterion(weights)
+criterion = nn.ClassNLLCriterion(weights)
 ```
 
 The negative log likelihood criterion. It is useful to train a classication
@@ -117,7 +117,7 @@ end
 ## DistKLDivCriterion ##
 
 ```lua
-criterion = DistKLDivCriterion()
+criterion = nn.DistKLDivCriterion()
 ```
 
 Kullback–Leibler divergence criterion.  KL divergence is a useful distance 
@@ -153,7 +153,7 @@ This is used for measuring the error of a reconstruction in for example an auto-
 ## MarginCriterion ##
 
 ```lua
-criterion = MarginCriterion()
+criterion = nn.MarginCriterion()
 ```
 
 Creates a criterion that optimizes a two-class classification hinge loss (margin-based loss) between input `x`  (a Tensor of dimension 1) and output `y` (which is a scalar, either 1 or -1) :
@@ -165,7 +165,7 @@ loss(x,y) = forward(x,y) = max(0,m- y x).
 `m` is the margin, which is by default 1.
 
 ```lua
-criterion = MarginCriterion(marginValue)
+criterion = nn.MarginCriterion(marginValue)
 ```
 
 sets a different value of `m`.
@@ -220,7 +220,7 @@ i.e. the mlp successfully separates the two data points such that they both have
 ## MultiMarginCriterion ##
 
 ```lua
-criterion = MultiMarginCriterion(p)
+criterion = nn.MultiMarginCriterion(p)
 ```
 
 Creates a criterion that optimizes a multi-class classification hinge loss (margin-based loss) between input `x`  (a Tensor of dimension 1) and output `y` (which is a target class index, 1 <= y <= x:size(1)) :
@@ -234,7 +234,7 @@ where i = 1 to x:size(1) and i ~= y
 ## MSECriterion ##
 
 ```lua
-criterion = MSECriterion()
+criterion = nn.MSECriterion()
 ```
 
 Creates a criterion that measures the mean squared error between `n` elements in the input `x` 
@@ -258,7 +258,7 @@ criterion.sizeAverage = false
 ## MultiCriterion ##
 
 ```lua
-criterion = MultiCriterion()
+criterion = nn.MultiCriterion()
 ```
 
 This returns a Criterion which is a weighted sum of other Criterion. 
@@ -273,7 +273,7 @@ where `weight` is a scalar.
 ## HingeEmbeddingCriterion ##
 
 ```lua
-criterion = HingeEmbeddingCriterion()
+criterion = nn.HingeEmbeddingCriterion()
 ```
 
 Creates a criterion that measures the loss given  an input
@@ -290,7 +290,7 @@ loss(x,y) = forward(x,y) = x, if y=1
 
 The `margin` has a default value of 1, or can be set in the constructor:
 ```lua
-criterion = HingeEmbeddingCriterion(marginValue)
+criterion = nn.HingeEmbeddingCriterion(marginValue)
 ```
 
 Example use:
@@ -357,7 +357,7 @@ end
 ## L1HingeEmbeddingCriterion ##
 
 ```lua
-criterion = L1HingeEmbeddingCriterion(margin)
+criterion = nn.L1HingeEmbeddingCriterion(margin)
 ```
 
 Creates a criterion that measures the loss given  an input
@@ -373,7 +373,7 @@ loss(x,y) = forward(x,y) = ||x1-x2||_1, if y=1
 
 The `margin` has a default value of 1, or can be set in the constructor:
 ```lua
-criterion = L1HingeEmbeddingCriterion(marginValue)
+criterion = nn.L1HingeEmbeddingCriterion(marginValue)
 ```
 
 <a name="nn.CosineEmbeddingCriterion"/>
@@ -483,7 +483,7 @@ end
 ## L1Penalty ##
 
 ```lua
-penalty = L1Penalty(l1weight, sizeAverage)
+penalty = nn.L1Penalty(L1weight, sizeAverage)
 ```
 
 L1Penalty is an inline module that in it's FPROP copies the input Tensor directly to the output, and computes an L1 loss of the latent state (input) and stores it in the module's `loss` field.  During BPROP: `gradInput = gradOutput + gradLoss`.
