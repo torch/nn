@@ -297,7 +297,7 @@ or dissimilar, e.g. using the L1 pairwise distance,
 and is typically used for
 learning nonlinear embeddings or semi-supervised learning.
 
-```
+```lua
             ⎧ forward(x,y) = x,  if y=1
 loss(x,y) = ⎨
             ⎩ max(0,margin - x), if y=-1
@@ -382,7 +382,7 @@ This is used for measuring whether two inputs are similar
 or dissimilar, using the L1 distance, and is typically used for
 learning nonlinear embeddings or semi-supervised learning.
 
-```
+```lua
             ⎧ forward(x,y) = ||x1-x2||_1,  if y=1
 loss(x,y) = ⎨
             ⎩ max(0,margin - ||x1-x2||_1), if y=-1
