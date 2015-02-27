@@ -57,12 +57,15 @@ Creates a criterion that
 measures the mean absolute value between `n` elements in the input `x` 
 and output `y`:
 
-`loss(x,y)`  = `1/n \sum |x_i-y_i|`.
+```lua
+loss(x,y)  = 1/n \sum |x_i-y_i|
+```
 
 If `x` and `y` are `d`-dimensional Tensors with a total of `n` elements,
 the sum operation still operates over all the elements, and divides by `n`.
 
 The division by `n` can be avoided if one sets the internal variable `sizeAverage` to `false`:
+
 ```lua
 criterion = nn.AbsCriterion()
 criterion.sizeAverage = false
@@ -90,10 +93,12 @@ when calling [forward(input, target)](#nn.CriterionForward) and
 [backward(input, target)](#nn.CriterionBackward).
 
 The loss can be described as:
+
 ```lua
 loss(x, class) = forward(x, class) = -x[class]
 ```
 or in the case of the `weights` argument being specified:
+
 ```lua
 loss(x, class) = forward(x, class) = -weights[class]*x[class]
 ```
@@ -101,15 +106,16 @@ The following is a code fragment showing how to make a gradient step
 given an input `x`, a desired output `y` (an integer `1` to `n`, 
 in this case `n` = `2` classes), 
 a network `mlp` and a learning rate `learningRate`:
+
 ```lua
 function gradUpdate(mlp,x,y,learningRate)
-  local criterion = nn.ClassNLLCriterion()
-  pred = mlp:forward(x)
-  local err = criterion:forward(pred, y); 
-  mlp:zeroGradParameters();
-  local t = criterion:backward(pred, y);
-  mlp:backward(x, t);
-  mlp:updateParameters(learningRate);
+   local criterion = nn.ClassNLLCriterion()
+   pred = mlp:forward(x)
+   local err = criterion:forward(pred, y); 
+   mlp:zeroGradParameters();
+   local t = criterion:backward(pred, y);
+   mlp:backward(x, t);
+   mlp:updateParameters(learningRate);
 end
 ```
 
@@ -132,22 +138,25 @@ tensor when calling [forward(input, target)](#nn.CriterionForward) and
 [backward(input, target)](#nn.CriterionBackward).
 
 The loss can be described as:
+
 ```lua
 loss(x, target) = sum_{all i}(target_i * (log(target_i) - x_i))
 ```
 
 <a name="nn.BCECriterion"/>
-## BCECriterion ##
+## BCECriterion
+
 ```lua
 criterion = nn.BCECriterion()
 ```
 
 Creates a criterion that measures the Binary Cross Entropy between the target and the output:
 
-crossentropy(t,o) = -(t * log(o) + (1 - t) * log(1 - o))
+```lua
+loss(t,o) = -(t * log(o) + (1 - t) * log(1 - o))
+```
 
 This is used for measuring the error of a reconstruction in for example an auto-encoder.
-
 
 <a name="nn.MarginCriterion"/>
 ## MarginCriterion ##
@@ -170,18 +179,18 @@ criterion = nn.MarginCriterion(marginValue)
 
 sets a different value of `m`.
 
-
 Example:
+
 ```lua
 require "nn"
 
 function gradUpdate(mlp, x, y, criterion, learningRate)
-  local pred = mlp:forward(x)
-  local err = criterion:forward(pred, y)
-  local gradCriterion = criterion:backward(pred, y)
-  mlp:zeroGradParameters()
-  mlp:backward(x, gradCriterion)
-  mlp:updateParameters(learningRate)
+   local pred = mlp:forward(x)
+   local err = criterion:forward(pred, y)
+   local gradCriterion = criterion:backward(pred, y)
+   mlp:zeroGradParameters()
+   mlp:backward(x, gradCriterion)
+   mlp:updateParameters(learningRate)
 end
 
 mlp=nn.Sequential()
@@ -192,8 +201,8 @@ x2=torch.rand(5)
 criterion=nn.MarginCriterion(1)
 
 for i=1,1000 do
-    gradUpdate(mlp,x1,1,criterion,0.01)
-    gradUpdate(mlp,x2,-1,criterion,0.01)
+   gradUpdate(mlp,x1,1,criterion,0.01)
+   gradUpdate(mlp,x2,-1,criterion,0.01)
 end
 
 print(mlp:forward(x1))
@@ -202,7 +211,9 @@ print(mlp:forward(x2))
 print(criterion:forward(mlp:forward(x1),1))
 print(criterion:forward(mlp:forward(x2),-1))
 ```
+
 gives the output:
+
 ```lua
  1.0043
 [torch.Tensor of dimension 1]
@@ -249,6 +260,7 @@ the sum operation still operates over all the elements, and divides by `n`. The 
 have the same number of elements (but their sizes might be different...)
 
 The division by `n` can be avoided if one sets the internal variable `sizeAverage` to `false`:
+
 ```lua
 criterion = nn.MSECriterion()
 criterion.sizeAverage = false
@@ -264,7 +276,9 @@ criterion = nn.MultiCriterion()
 This returns a Criterion which is a weighted sum of other Criterion. 
 Criterions are added using the method:
 
-`criterion:add(singleCriterion, weight)`
+```lua
+criterion:add(singleCriterion, weight)
+```
 
 where `weight` is a scalar.
 
@@ -284,11 +298,13 @@ and is typically used for
 learning nonlinear embeddings or semi-supervised learning.
 
 ```
-loss(x,y) = forward(x,y) = x, if y=1
-= max(0,margin - x), if y=-1
+            ⎧ forward(x,y) = x,  if y=1
+loss(x,y) = ⎨
+            ⎩ max(0,margin - x), if y=-1
 ```
 
 The `margin` has a default value of 1, or can be set in the constructor:
+
 ```lua
 criterion = nn.HingeEmbeddingCriterion(marginValue)
 ```
@@ -367,11 +383,13 @@ or dissimilar, using the L1 distance, and is typically used for
 learning nonlinear embeddings or semi-supervised learning.
 
 ```
-loss(x,y) = forward(x,y) = ||x1-x2||_1, if y=1
-= max(0,margin - ||x1-x2||_1), if y=-1
+            ⎧ forward(x,y) = ||x1-x2||_1,  if y=1
+loss(x,y) = ⎨
+            ⎩ max(0,margin - ||x1-x2||_1), if y=-1
 ```
 
 The `margin` has a default value of 1, or can be set in the constructor:
+
 ```lua
 criterion = nn.L1HingeEmbeddingCriterion(marginValue)
 ```
@@ -393,9 +411,10 @@ learning nonlinear embeddings or semi-supervised learning.
 Forward and Backward have to be used alternately. If `margin` is missing, the default value is 0.
 
 The loss function is:
-```
-loss(x,y) = forward(x,y) = 1-cos(x1, x2), if y=1
-= max(0,cos(x1, x2)-margin), if y=-1
+```lua
+            ⎧ forward(x,y) = 1-cos(x1, x2), if y=1
+loss(x,y) = ⎨
+            ⎩ max(0,cos(x1, x2)-margin),    if y=-1
 ```
 
 <a name="nn.MarginRankingCriterion"/>
@@ -413,13 +432,14 @@ If `y` = `1` then it assumed the first input should be ranked higher (have a lar
 than the second input, and vice-versa for `y` = `-1`.
 
 The loss function is:
-```
+
+```lua
 loss(x,y) = forward(x,y) = max(0,-y*(x[1]-x[2])+margin)
 ```
 
 Example:
-```lua
 
+```lua
 p1_mlp= nn.Linear(5,2)
 p2_mlp= p1_mlp:clone('weight','bias')
 
@@ -445,37 +465,36 @@ x=torch.randn(5)
 y=torch.randn(5)
 z=torch.randn(5)
 
-
 -- Use a typical generic gradient update function
 function gradUpdate(mlp, x, y, criterion, learningRate)
- local pred = mlp:forward(x)
- local err = criterion:forward(pred, y)
- local gradCriterion = criterion:backward(pred, y)
- mlp:zeroGradParameters()
- mlp:backward(x, gradCriterion)
- mlp:updateParameters(learningRate)
+   local pred = mlp:forward(x)
+   local err = criterion:forward(pred, y)
+   local gradCriterion = criterion:backward(pred, y)
+   mlp:zeroGradParameters()
+   mlp:backward(x, gradCriterion)
+   mlp:updateParameters(learningRate)
 end
 
 for i=1,100 do
- gradUpdate(mlpa,{{x,y},{x,z}},1,crit,0.01)
- if true then 
+   gradUpdate(mlpa,{{x,y},{x,z}},1,crit,0.01)
+   if true then 
       o1=mlp1:forward{x,y}[1]; 
       o2=mlp2:forward{x,z}[1]; 
       o=crit:forward(mlpa:forward{{x,y},{x,z}},1)
       print(o1,o2,o)
-  end
+   end
 end
 
 print "--"
 
 for i=1,100 do
- gradUpdate(mlpa,{{x,y},{x,z}},-1,crit,0.01)
- if true then 
+   gradUpdate(mlpa,{{x,y},{x,z}},-1,crit,0.01)
+   if true then 
       o1=mlp1:forward{x,y}[1]; 
       o2=mlp2:forward{x,z}[1]; 
       o=crit:forward(mlpa:forward{{x,y},{x,z}},-1)
       print(o1,o2,o)
-  end
+   end
 end
 ```
 
