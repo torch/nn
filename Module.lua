@@ -93,6 +93,7 @@ function Module:share(mlp, ...)
    local arg = {...}
    for i,v in ipairs(arg) do
       if self[v] ~= nil then
+         assert(self[v]:isSameSizeAs(mlp[v]), 'Module: shared Tensor size does not match (' .. v .. ')')
          self[v]:set(mlp[v])
          self.accUpdateGradParameters = self.sharedAccUpdateGradParameters
          mlp.accUpdateGradParameters = mlp.sharedAccUpdateGradParameters
