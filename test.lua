@@ -2096,6 +2096,18 @@ function nntest.VolumetricMaxPooling()
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+
+   -- batch
+   local nbatch = math.random(2,3)
+   module = nn.VolumetricMaxPooling(kt, ki, kj, st, si, sj)
+   input = torch.Tensor(nbatch, from, int, inj, ini):zero()
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state (Batch) ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
 end
 
 function nntest.Module_getParameters_1()
