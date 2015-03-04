@@ -83,7 +83,7 @@ static int nn_(SpatialAveragePooling_updateOutput)(lua_State *L)
             ptr_input += inputWidth; /* next input line */
           }
           /* Update output */
-          *ptr_output++ += sum;
+          *ptr_output++ += sum/(kW*kH);
         }
       }
     }
@@ -163,7 +163,7 @@ static int nn_(SpatialAveragePooling_updateGradInput)(lua_State *L)
           for(ky = 0; ky < kH; ky++)
           {
             for(kx = 0; kx < kW; kx++)
-              ptr_gradInput[kx] += z;
+              ptr_gradInput[kx] += z/(kW*kH);
             ptr_gradInput += inputWidth;
           }
         }

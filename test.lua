@@ -1706,7 +1706,7 @@ function nntest.SpatialAveragePooling()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
    
    local sap = nn.SpatialSubSampling(from, ki, kj, si, sj)
-   sap.weight:fill(1.0)
+   sap.weight:fill(1.0/(ki*kj))
    sap.bias:fill(0.0)
    
    local output = module:forward(input)
@@ -1737,7 +1737,7 @@ function nntest.SpatialAveragePooling()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
    
    local sap = nn.SpatialSubSampling(from, ki, kj, si, sj)
-   sap.weight:fill(1.0)
+   sap.weight:fill(1.0/(ki*kj))
    sap.bias:fill(0.0)
    
    local output = module:forward(input)
