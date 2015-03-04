@@ -2334,7 +2334,7 @@ function nntest.PairwiseDistance()
       module:add(nn.PairwiseDistance(p))
 
       local err = jac.testJacobian(module,input)
-      mytester:assertlt(err,precision, ' error on state ')
+      mytester:assertlt(err, 1e-4, ' error on state ')
 
       local ferr,berr = jac.testIO(module,input)
       mytester:asserteq(ferr, 0, torch.typename(module)..' - i/o forward err ')
@@ -2356,7 +2356,7 @@ function nntest.PairwiseDistance()
       module:add(nn.PairwiseDistance(p))
 
       err = jac.testJacobian(module,input)
-      mytester:assertlt(err,precision, ' error on state ')
+      mytester:assertlt(err, 1e-4, ' error on state ')
 
       -- Also check that the forward prop result is correct.
       -- manually calculate each distance separately
