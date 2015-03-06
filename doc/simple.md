@@ -572,39 +572,39 @@ Example:
 
 > print(nn.Reshape(2,8):forward(x))
 
-  1   9   2  10   3  11   4  12
-  5  13   6  14   7  15   8  16
+  1   2   3   4   5   6   7   8
+  9  10  11  12  13  14  15  16
 [torch.Tensor of dimension 2x8]
 
 > print(nn.Reshape(8,2):forward(x))
 
-  1   3
-  5   7
-  9  11
- 13  15
-  2   4
-  6   8
- 10  12
- 14  16
+  1   2
+  3   4
+  5   6
+  7   8
+  9  10
+ 11  12
+ 13  14
+ 15  16
 [torch.Tensor of dimension 8x2]
 
 > print(nn.Reshape(16):forward(x))
 
   1
-  5
-  9
- 13
   2
-  6
- 10
- 14
   3
-  7
- 11
- 15
   4
+  5
+  6
+  7
   8
+  9
+ 10
+ 11
  12
+ 13
+ 14
+ 15
  16
 [torch.Tensor of dimension 16]
 ```
