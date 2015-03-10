@@ -22,18 +22,54 @@ function View:setNumInputDims(numInputDims)
    return self
 end
 
-local function isMinibatch(input, numInputDims, numElements)
-   if numInputDims then
-      return input:dim() == numInputDims+1
-   else
-      return input:dim() > 1 and
-             input:nElement()/input:size(1) == numElements
+local function batchsize(input, size, numInputDims, numElements)
+
+   -- handle special vector case
+   if size:size() == 1 and size[1] == -1 then
+      if numInputDims then
+         numElements = 1
+         local dim = input:nDimension()
+         for i=1,numInputDims do
+            numElements = numElements * input:size(dim-numElements+1)
+         end
+      else
+         numElements = input:nElement()
+      end
+      size = torch.LongStorage{numElements}
    end
+
+   -- find if number of elements is divisible with desired number
+   local ine = input:nElement()
+   local dim = 0
+   local bsz = 1
+   while ine > numElements do
+      dim = dim + 1
+      local dimsz = input:size(dim)
+      if ine % numElements == 0 then
+         dimsz = math.min(ine/numElements, dimsz)
+      end
+      ine = ine / dimsz
+      bsz = bsz * dimsz
+   end
+
+   if ine ~= numElements then
+      error(string.format(
+               'input view (%s) and desired view (%s) do not match',
+               table.concat(input:size():totable(), 'x'),
+               table.concat(size:totable(), 'x')))
+   end
+
+   if bsz == 1 and (not numInputDims or input:nDimension() <= numInputDims) then
+      return
+   end
+
+   return bsz
 end
 
 function View:updateOutput(input)
-   if isMinibatch(input, self.numInputDims, self.numElements) then
-      self.output = input:view(input:size(1), unpack(self.size:totable()))
+   local bsz = batchsize(input, self.size, self.numInputDims, self.numElements)
+   if bsz then
+      self.output = input:view(bsz, unpack(self.size:totable()))
    else
       self.output = input:view(self.size)
    end

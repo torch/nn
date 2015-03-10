@@ -2710,6 +2710,18 @@ function nntest.View()
    mytester:assertTableEq(module:forward(minibatch):nElement(),
       minibatch:nElement(),
       "Error in minibatch nElement with size -1")
+
+   -- Minibatch Generalization
+   local minibatch = torch.rand(5,2,6)
+   local module = nn.View(6)
+   mytester:assertTableEq(
+      module:forward(minibatch):size(1),
+      minibatch:size(1)*minibatch:size(2),
+      "Error in minibatch generalization dimension")
+   mytester:assertTableEq(
+      module:forward(minibatch):nElement(),
+      minibatch:nElement(),
+      "Error in minibatch generalization nElement")
 end
 
 function nntest.Reshape()
