@@ -5,8 +5,9 @@ Criterions are helpful to train a neural network. Given an input and a
 target, they compute a gradient according to a given loss
 function. [AbsCriterion](#nn.AbsCriterion) and
 [MSECriterion](#nn.MSECriterion) are perfect for regression problems, while
-[ClassNLLCriterion](#nn.ClassNLLCriterion) is the criterion of choice when
-dealing with classification.
+[ClassNLLCriterion](#nn.ClassNLLCriterion) or
+[CrossEntropyCriterion](#nn.CrossEntropyCriterion) are the criteria of
+choice when dealing with classification.
 
 Criterions are [serializable](https://github.com/torch/torch7/blob/master/doc/file.md#serialization-methods).
 
@@ -79,15 +80,17 @@ criterion = nn.ClassNLLCriterion(weights)
 ```
 
 The negative log likelihood criterion. It is useful to train a classication
-problem with `n` classes. 
-If provided, the optional argument `weights` should be a 1D Tensor assigning weight to each of the classes. This is particularly useful when you have an unbalanced training set.
+problem with `n` classes.  If provided, the optional argument `weights`
+should be a 1D Tensor assigning weight to each of the classes. This is
+particularly useful when you have an unbalanced training set.
 
-The `input` given through a `forward()` is
-expected to contain _log-probabilities_ of each class: `input` has to be a
-1D tensor of size `n`. 
-Obtaining log-probabilities in a neural network is
-easily achieved by adding a [LogSoftMax](#nn.LogSoftMax) layer in the last
-layer of your neural network.
+The `input` given through a `forward()` is expected to contain
+_log-probabilities_ of each class: `input` has to be a 1D tensor of size
+`n`.  Obtaining log-probabilities in a neural network is easily achieved by
+adding a [LogSoftMax](#nn.LogSoftMax) layer in the last layer of your
+neural network. You may use
+[CrossEntropyCriterion](#nn.CrossEntropyCriterion) instead, if you prefer
+not to add an extra layer to your network.
 This criterion expect a class index (1 to the number of class) as `target`
 when calling [forward(input, target)](#nn.CriterionForward) and
 [backward(input, target)](#nn.CriterionBackward).
@@ -117,6 +120,39 @@ function gradUpdate(mlp,x,y,learningRate)
    mlp:backward(x, t);
    mlp:updateParameters(learningRate);
 end
+```
+
+<a name="nn.CrossEntropyCriterion"/>
+## CrossEntropyCriterion ##
+
+```lua
+criterion = nn.CrossEntropyCriterion(weights)
+```
+
+This criterion combines [LogSoftMax](#nn.LogSoftMax) and
+[CrossEntropyCriterion](#nn.CrossEntropyCriterion) in one single class.
+
+It is useful to train a classication problem with `n` classes.  If
+provided, the optional argument `weights` should be a 1D Tensor assigning
+weight to each of the classes. This is particularly useful when you have an
+unbalanced training set.
+
+The `input` given through a `forward()` is expected to contain scores for
+each class: `input` has to be a 1D tensor of size `n`. This criterion
+expect a class index (1 to the number of class) as `target` when calling
+[forward(input, target)](#nn.CriterionForward) and
+[backward(input, target)](#nn.CriterionBackward).
+
+The loss can be described as:
+
+```lua
+loss(x, class) = forward(x, class) = -log( e^x[class] / (\sum_j e^x[j]) )
+                                   = -x[class] + log( \sum_j e^x[j] )
+```
+or in the case of the `weights` argument being specified:
+
+```lua
+loss(x, class) = forward(x, class) = weights[class]*( -x[class] + log( \sum_j e^x[j] ) )
 ```
 
 <a name="nn.DistKLDivCriterion"/>
