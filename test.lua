@@ -723,19 +723,21 @@ local function criterionJacobianTest1D(cri, input, target)
    local dfdx = cri:backward(input, target)
    -- for each input perturbation, do central difference
    local centraldiff_dfdx = torch.Tensor():resizeAs(dfdx)
-   for i=1,input:size(1) do
+   local input_s = input:storage()
+   local centraldiff_dfdx_s = centraldiff_dfdx:storage()
+   for i=1,input:nElement() do
       -- f(xi + h)
-      input[i] = input[i] + eps
+      input_s[i] = input_s[i] + eps
       local fx1 = cri:forward(input, target)
       -- f(xi - h)
-      input[i] = input[i] - 2*eps
+      input_s[i] = input_s[i] - 2*eps
       local fx2 = cri:forward(input, target)
       -- f'(xi) = (f(xi + h) - f(xi - h)) / 2h
       local cdfx = (fx1 - fx2) / (2*eps)
       -- store f' in appropriate place
-      centraldiff_dfdx[i] = cdfx
+      centraldiff_dfdx_s[i] = cdfx
       -- reset input[i]
-      input[i] = input[i] + eps
+      input_s[i] = input_s[i] + eps
    end
 
    -- compare centraldiff_dfdx with :backward()
@@ -801,6 +803,31 @@ function nntest.ClassNLLCriterion()
    local weights = torch.rand(numLabels)
    weights = weights / weights:sum()
    cri = nn.ClassNLLCriterion(weights)
+   criterionJacobianTest1D(cri, input, target)
+end
+
+function nntest.CrossEntropyCriterion()
+   -- stochastic
+   local numLabels = math.random(5, 10)
+   local input = torch.zeros(numLabels)
+   local target = torch.random(1, numLabels)
+
+   local cri = nn.CrossEntropyCriterion()
+   criterionJacobianTest1D(cri, input, target)
+
+   -- batch
+   local numLabels = math.random(5,10)
+   local bsz = math.random(3, 7)
+   local input = torch.zeros(bsz, numLabels)
+   local target = torch.Tensor(bsz):random(1, numLabels)
+
+   local cri = nn.CrossEntropyCriterion()
+   criterionJacobianTest1D(cri, input, target)
+
+   -- with weights
+   local weights = torch.rand(numLabels)
+   weights = weights / weights:sum()
+   cri = nn.CrossEntropyCriterion(weights)
    criterionJacobianTest1D(cri, input, target)
 end
 

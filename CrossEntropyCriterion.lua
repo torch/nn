@@ -2,8 +2,8 @@ local CrossEntropyCriterion, Criterion = torch.class('nn.CrossEntropyCriterion',
 
 function CrossEntropyCriterion:__init(weights)
    Criterion.__init(self)
-   self.nll = nn.ClassNLLCriterion(weights)
    self.lsm = nn.LogSoftMax()
+   self.nll = nn.ClassNLLCriterion(weights)
 end
 
 function CrossEntropyCriterion:updateOutput(input, target)
@@ -21,7 +21,7 @@ function CrossEntropyCriterion:updateGradInput(input, target)
    target = type(target) == 'number' and target or target:squeeze()
    self.nll:updateGradInput(self.lsm.output, target)
    self.lsm:updateGradInput(input, self.nll.gradInput)
-   self.gradInput:view(self.nll.gradInput, size)
+   self.gradInput:view(self.lsm.gradInput, size)
    return self.gradInput
 end
 
