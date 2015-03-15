@@ -104,8 +104,8 @@ This is equivalent to:
 weights=torch.reshape(mlp.weight,inp) -- weights applied to all
 bias= mlp.bias[1];
 for i=1,x:size(1) do -- for each sequence element
-  element= x[i]; -- features of ith sequence element
-  print(element:dot(weights) + bias)
+   element= x[i]; -- features of ith sequence element
+   print(element:dot(weights) + bias)
 end
 ```
 which gives:
@@ -261,7 +261,7 @@ are spatial (e.g. `height x width`). These are commonly used for processing imag
 ### SpatialConvolution ###
 
 ```lua
-module = nn.SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH])
+module = nn.SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padding])
 ```
 
 Applies a 2D convolution over an input image composed of several input planes. The `input` tensor in
@@ -274,6 +274,7 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
+  * `padding`: The additional zeros added per side to the input planes. Default is `0`, a good number is `(kernelSize-1)/2` for square kernels.
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
@@ -282,8 +283,8 @@ add proper padding in images.
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
 will be `nOutputPlane x owidth x oheight` where
 ```lua
-owidth  = (width  - kW) / dW + 1
-oheight = (height - kH) / dH + 1 .
+owidth  = floor((width  + 2*padding - kW) / dW + 1)
+oheight = floor((height + 2*padding - kH) / dH + 1)
 ```
 
 The parameters of the convolution can be found in `self.weight` (Tensor of
@@ -316,7 +317,9 @@ different types of connection tables.
 <a name="nn.tables.full"/>
 #### Full Connection Table ####
 
-`table = nn.tables.full(nin,nout)`
+```lua
+table = nn.tables.full(nin,nout)
+```
 
 This is a precomputed table that specifies connections between every
 input and output node.
@@ -324,7 +327,9 @@ input and output node.
 <a name="nn.tables.onetoone"/>
 #### One to One Connection Table ####
 
-`table = nn.tables.oneToOne(n)`
+```lua
+table = nn.tables.oneToOne(n)
+```
 
 This is a precomputed table that specifies a single connection to each
 output node from corresponding input node.
@@ -332,7 +337,9 @@ output node from corresponding input node.
 <a name="nn.tables.random"/>
 #### Random Connection Table ####
 
-`table = nn.tables.random(nin,nout, nto)`
+```lua
+table = nn.tables.random(nin,nout, nto)
+```
 
 This table is randomly populated such that each output unit has
 `nto` incoming connections. The algorihtm tries to assign uniform
@@ -384,7 +391,7 @@ For an output of dimensions `(owidth,oheight)`, the indexes of the pooling
 region `(j,i)` in the input image of dimensions `(iwidth,iheight)` are
 given by:
 
-```
+```lua
 x_j_start = floor((j   /owidth)  * iwidth)
 x_j_end   = ceil(((j+1)/owidth)  * iwidth)
 
@@ -416,6 +423,7 @@ add proper padding in images.
 
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
 will be `nInputPlane x oheight x owidth` where
+
 ```lua
 owidth  = (width  - kW) / dW + 1
 oheight = (height - kH) / dH + 1 .
@@ -533,7 +541,7 @@ add proper padding in images.
 If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
 will be `nOutputPlane x otime x owidth x oheight` where
 ```lua
-otime   = (time  - kT) / dT + 1
+otime   = (time  - kT)  / dT + 1
 owidth  = (width  - kW) / dW + 1
 oheight = (height - kH) / dH + 1 .
 ```
