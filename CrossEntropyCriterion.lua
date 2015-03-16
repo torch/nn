@@ -31,5 +31,3 @@ function CrossEntropyCriterion:type(name)
    self.nll:type(name)
    return self
 end
-
-return nn.CrossEntropyCriterion
