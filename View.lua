@@ -30,7 +30,7 @@ local function batchsize(input, size, numInputDims, numElements)
          numElements = 1
          local dim = input:nDimension()
          for i=1,numInputDims do
-            numElements = numElements * input:size(dim-numElements+1)
+            numElements = numElements * input:size(dim-i+1)
          end
       else
          numElements = input:nElement()
