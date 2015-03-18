@@ -3,8 +3,8 @@ local Replicate, parent = torch.class('nn.Replicate','nn.Module')
 function Replicate:__init(nf, dim)
    parent.__init(self)
    self.nfeatures = nf
-   assert(dim > 0, "Can only replicate across positive integer dimensions.")
    self.dim = dim or 1
+   assert(dim > 0, "Can only replicate across positive integer dimensions.")
 end
 
 function Replicate:updateOutput(input)
