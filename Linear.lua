@@ -82,7 +82,6 @@ function Linear:accGradParameters(input, gradOutput, scale)
       self.gradWeight:addr(scale, gradOutput, input)
       self.gradBias:add(scale, gradOutput)
    elseif input:dim() == 2 then
-      local nframe = input:size(1)
       local nunit = self.bias:size(1)
 
       if nunit == 1 then
