@@ -42,7 +42,8 @@ static int nn_(Sqrt_updateGradInput)(lua_State *L)
       !THTensor_(isContiguous)(gradInput))
   {
     TH_TENSOR_APPLY3(real, gradInput, real, gradOutput, real, output, \
-         *gradInput_data  = 0.5 * (*gradOutput_data / *output_data););
+                     *gradInput_data = ((*output_data == 0.0) ? 0.0 : \
+                                        (0.5 * (*gradOutput_data / *output_data))););
   }
   else
   {
@@ -52,7 +53,11 @@ static int nn_(Sqrt_updateGradInput)(lua_State *L)
     long i;
 #pragma omp parallel for private(i)
     for(i = 0; i < THTensor_(nElement)(output); i++)
-      gradInput_data[i] = 0.5 * (gradOutput_data[i] / output_data[i]);
+      if (output_data[i] == 0.0) {
+        gradInput_data[i] = 0.0;
+      } else {
+        gradInput_data[i] = 0.5 * (gradOutput_data[i] / output_data[i]);
+      }
   }
   return 1;
 }
