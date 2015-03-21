@@ -29,12 +29,11 @@ and providing affine transformations :
    * [Square](#nn.Square) : an element-wise square operation ;
    * [Sqrt](#nn.Sqrt) : an element-wise [sqrt](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchsqrtres-x) operation ;
    * [MM](#nn.MM) : matrix-matrix multiplication (also supports batches of matrices) ;
-* Normalization modules:
-   * [BatchNormalization](#nn.BatchNormalization) - mean/std normalization over the mini-batch inputs, with an optional affine transform that follows
  * Miscellaneous Modules :
+   * [BatchNormalization](#nn.BatchNormalization) - mean/std normalization over the mini-batch inputs (with an optional affine transform) ;
    * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable));
    * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
-
+   * [Padding](#nn.Padding) : adds padding to a dimension ;
 
 <a name="nn.Linear"/>
 ## Linear ##
@@ -884,12 +883,12 @@ C = model.forward({A, B})  -- C will be of size `b x m x n`
 giving N = 0 disables the learnable affine transform.
 eps is a small value added to the standard-deviation to avoid divide-by-zero. Defaults to 1e-5
 
-In training time, this layer keeps a running estimate of it's computed mean and std.
-The running sum is kept with a default momentup of 0.1 (unless over-ridden)
-In test time, this running mean/std is used to normalize.
+During training, this layer keeps a running estimate of its computed mean and std.
+The running sum is kept with a default momentum of 0.1 (unless over-ridden)
+During evaluation, this running mean/std is used for normalization.
 
 
-Implements Batch Normalization as described in the paper:
+Implements Batch Normalization as described in [the paper](http://arxiv.org/pdf/1502.03167v3.pdf):
    "Batch Normalization: Accelerating Deep Network Training
                          by Reducing Internal Covariate Shift"
                    by Sergey Ioffe, Christian Szegedy
@@ -901,7 +900,7 @@ The operation implemented is:
        standard-deviation(x) + eps
 ```
 where the mean and standard-deviation are calculated per-dimension over the mini-batches
-and where gamma and beta are learnable parameter vectors of size N (where N = input dimensionality).
+and where gamma and beta are learnable parameter vectors of size `N` (where `N` is the input size).
 The learning of gamma and beta is optional.
 
 The module only accepts 2D inputs.
@@ -916,4 +915,37 @@ C = model.forward(A)  -- C will be of size `b x m`
 model = nn.BatchNormalization(0)
 A = torch.randn(b, m)
 C = model.forward(A)  -- C will be of size `b x m`
+```
+
+<a name="nn.Padding"/>
+## Padding ##
+
+`module` = `nn.Padding(dim, pad [, nInputDim, value])`
+
+This module adds `pad` units of padding to dimension `dim` of the input. 
+If `pad` is negative, padding is added to the left, otherwise, it is added to 
+the right of the dimension. When `nInputDim` is provided, inputs larger than 
+that value will be considered batches where the actual `dim` to be padded will 
+be dimension `dim + 1`. When `value` is provide, the padding will be filled with 
+that `value`. The default `value` is zero.
+
+Example 1:
+```lua
+module = nn.Padding(1,2,1,-1) --pad right x2
+module:forward(torch.randn(3)) --non-batch input
+ 0.2008
+ 0.4848
+-1.0783
+-1.0000
+-1.0000
+[torch.DoubleTensor of dimension 5]
+```
+
+Example 2:
+```lua
+module = nn.Padding(1,-2,1,-1) --pad left x2
+module:forward(torch.randn(2,3)) --batch input
+-1.0000 -1.0000  1.0203  0.2704 -1.6164
+-1.0000 -1.0000 -0.2219 -0.6529 -1.9218
+[torch.DoubleTensor of dimension 2x5]
 ```
