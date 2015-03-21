@@ -2,7 +2,7 @@
 # Convolutional layers #
 
 A convolution is an integral that expresses the amount of overlap of one function `g` as it is shifted over another function `f`. It therefore "blends" one function with another. The neural network package supports convolution, pooling, subsampling and other relevant facilities. These are divided base on the dimensionality of the input and output [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor):
- * [Temporal Modules](#nn.TemporalModules) apply to sequences with a one-dimensional relationship 
+ * [Temporal Modules](#nn.TemporalModules) apply to sequences with a one-dimensional relationship
 (e.g. sequences of words, phonemes and letters. Strings of some kind).
    * [TemporalConvolution](#nn.TemporalConvolution) : a 1D convolution over an input sequence ;
    * [TemporalSubSampling](#nn.TemporalSubSampling) : a 1D sub-sampling over an input sequence ;
@@ -18,6 +18,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
    * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
    * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
    * [SpatialSubtractiveNormalization](#nn.SpatialSubtractiveNormalization) : a spatial subtraction operation on a series of 2D inputs using
+   * [SpatialBatchNormalization](#nn.SpatialBatchNormalization): mean/std normalization over the mini-batch inputs and pixels, with an optional affine transform that follows
 a kernel for computing the weighted average in a neighborhood ;
  * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
    * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
@@ -27,10 +28,10 @@ a kernel for computing the weighted average in a neighborhood ;
 ## Temporal Modules ##
 Excluding an optional first batch dimension, temporal layers expect a 2D Tensor as input. The
 first dimension is the number of frames in the sequence (e.g. `nInputFrame`), the last dimenstion
-is the number of features per frame (e.g. `inputFrameSize`). The output will normally have the same number 
-of dimensions, although the size of each dimension may change. These are commonly used for processing acoustic signals or sequences of words, i.e. in Natural Language Processing. 
+is the number of features per frame (e.g. `inputFrameSize`). The output will normally have the same number
+of dimensions, although the size of each dimension may change. These are commonly used for processing acoustic signals or sequences of words, i.e. in Natural Language Processing.
 
-Note: The [LookupTable](#nn.LookupTable) is special in that while it does output a temporal Tensor of size `nOutputFrame x outputFrameSize`, 
+Note: The [LookupTable](#nn.LookupTable) is special in that while it does output a temporal Tensor of size `nOutputFrame x outputFrameSize`,
 its input is a 1D Tensor of indices of size `nIndices`. Again, this is excluding the option first batch dimension.
 
 <a name="nn.TemporalConvolution"/>
@@ -77,7 +78,7 @@ output[t][i] = bias[i]
 Here is a simple example:
 
 ```lua
-inp=5;  -- dimensionality of one sequence element 
+inp=5;  -- dimensionality of one sequence element
 outp=1; -- number of derived features for one sequence element
 kw=1;   -- kernel only operates on one sequence element per step
 dw=1;   -- we step once and go on to the next sequence element
@@ -93,8 +94,8 @@ which gives:
 -0.9872
 -0.6808
 -0.9403
--0.9680 
--0.6901 
+-0.9680
+-0.6901
 -0.6387
 [torch.Tensor of dimension 7x1]
 ```
@@ -128,7 +129,7 @@ module = nn.TemporalMaxPooling(kW, [dW])
 
 Applies 1D max-pooling operation in `kW` regions by step size
 `dW` steps. Input sequence composed of `nInputFrame` frames. The `input` tensor in
-`forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) 
+`forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`)
 or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`).
 
 If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be
@@ -185,16 +186,16 @@ module = nn.LookupTable(nIndex, size1, [size2], [size3], ...)
 ```
 
 This layer is a particular case of a convolution, where the width of the convolution would be `1`.
-When calling `forward(input)`, it assumes `input` is a 1D or 2D tensor filled with indices. 
+When calling `forward(input)`, it assumes `input` is a 1D or 2D tensor filled with indices.
 If the input is a matrix, then each row is assumed to be an input sample of given batch. Indices start
 at `1` and can go up to `nIndex`. For each index, it outputs a corresponding `Tensor` of size
 specified by `sizes` (a `LongStorage`) or `size1 x size2 x...`.
 
-Given a 1D input, the output tensors are concatenated, 
+Given a 1D input, the output tensors are concatenated,
 generating a `n x size1 x size2 x ... x sizeN` tensor, where `n`
-is the size of a 1D `input` tensor. 
+is the size of a 1D `input` tensor.
 
-Again with a 1D input, when only `size1` is provided, the `forward(input)` is equivalent to 
+Again with a 1D input, when only `size1` is provided, the `forward(input)` is equivalent to
 performing the following matrix-matrix multiplication in an efficient manner:
 ```lua
 M P
@@ -205,7 +206,7 @@ where `M` is a 2D matrix `size1 x nIndex` containing the parameters of the looku
 1D example:
 ```lua
  -- a lookup table containing 10 tensors of size 3
- module = nn.LookupTable(10, 3) 
+ module = nn.LookupTable(10, 3)
 
  input = torch.Tensor{1,2,1,10}
  print(module:forward(input))
@@ -221,14 +222,14 @@ Outputs something like:
 ```
 Note that the first row vector is the same as the 3rd one!
 
-Given a 2D input tensor of size `m x n`, the output is a `m x n x size1 x size2 x ... x sizeN` 
-tensor, where `m` is the number of samples in 
+Given a 2D input tensor of size `m x n`, the output is a `m x n x size1 x size2 x ... x sizeN`
+tensor, where `m` is the number of samples in
 the batch and `n` is the number of indices per sample.
 
 2D example:
 ```lua
  -- a lookup table containing 10 tensors of size 3
- module = nn.LookupTable(10, 3) 
+ module = nn.LookupTable(10, 3)
 
  -- a batch of 2 samples of 4 indices each
  input = torch.Tensor({{1,2,4,5},{4,3,2,10}})
@@ -237,13 +238,13 @@ the batch and `n` is the number of indices per sample.
 
 Outputs something like:
 ```lua
-(1,.,.) = 
+(1,.,.) =
  -0.0570 -1.5354  1.8555
  -0.9067  1.3392  0.6275
   1.9662  0.4645 -0.8111
   0.1103  1.7811  1.5969
 
-(2,.,.) = 
+(2,.,.) =
   1.9662  0.4645 -0.8111
   0.0026 -1.4547 -0.5154
  -0.9067  1.3392  0.6275
@@ -453,7 +454,7 @@ Applies a 2D up-sampling over an input image composed of several input planes. T
 The parameters are the following:
   * `scale`: The upscale ratio.  Must be a positive integer
 
-The up-scaling method is simple nearest neighbor, ie: 
+The up-scaling method is simple nearest neighbor, ie:
 
 ```lua
 output(u,v) = input(floor((u-1)/scale)+1, floor((v-1)/scale)+1)
@@ -508,10 +509,53 @@ w2=image.display(processed)
 ```
 ![](image/lena.jpg)![](image/lenap.jpg)
 
+<a name="nn.SpatialBatchNormalization"/>
+## SpatialBatchNormalization ##
+
+`module` = `nn.SpatialBatchNormalization(N [,eps] [, momentum])`
+ where N = number of input feature maps
+giving N = 0 disables the learnable affine transform.
+eps is a small value added to the standard-deviation to avoid divide-by-zero. Defaults to 1e-5
+
+Implements Batch Normalization as described in the paper:
+   "Batch Normalization: Accelerating Deep Network Training
+                         by Reducing Internal Covariate Shift"
+                   by Sergey Ioffe, Christian Szegedy
+
+The operation implemented is:
+```
+   y =     ( x - mean(x) )
+        -------------------- * gamma + beta
+       standard-deviation(x)
+```
+where the mean and standard-deviation are calculated per feature-map over the mini-batches and pixels
+and where gamma and beta are learnable parameter vectors of size N (where N = number of feature maps).
+The learning of gamma and beta is optional.
+
+   In training time, this layer keeps a running estimate of it's computed mean and std.
+   The running sum is kept with a default momentup of 0.1 (unless over-ridden)
+   In test time, this running mean/std is used to normalize.
+
+
+
+The module only accepts 4D inputs.
+
+```lua
+-- with learnable parameters
+model = nn.SpatialBatchNormalization(m)
+A = torch.randn(b, m)
+B = model.forward(B)  -- C will be of size `b x m`
+
+-- without learnable parameters
+model = nn.SpatialBatchNormalization(0)
+A = torch.randn(b, m)
+B = model.forward(B)  -- C will be of size `b x m`
+```
+
 <a name="nn.VolumetricModules"/>
 ## Volumetric Modules ##
 Excluding and optional batch dimension, volumetric layers expect a 4D Tensor as input. The
-first dimension is the number of features (e.g. `frameSize`), the second is sequential (e.g. `time`) and the 
+first dimension is the number of features (e.g. `frameSize`), the second is sequential (e.g. `time`) and the
 last two dimenstions are spatial (e.g. `height x width`). These are commonly used for processing videos (sequences of images).
 
 <a name="nn.VolumetricConvolution"/>
