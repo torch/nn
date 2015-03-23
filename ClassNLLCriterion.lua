@@ -11,13 +11,13 @@ function ClassNLLCriterion:__init(weights)
 end
 
 function ClassNLLCriterion:updateOutput(input, target)
-   if input:type() == 'torch.CudaTensor' and not self.weights then
+   if input:type() == 'torch.CudaTensor' then
       if input:dim() == 1 then
          self._target = self._target or input.new(1)
          self._target[1] = target
-         input.nn.ClassNLLCriterion_updateOutput(self, input, self._target)
+         input.nn.ClassNLLCriterion_updateOutput(self, input, self._target, self.weights)
       else
-         input.nn.ClassNLLCriterion_updateOutput(self, input, target)
+         input.nn.ClassNLLCriterion_updateOutput(self, input, target, self.weights)
       end
       self.output = self.outputTensor[1]
       return self.output
@@ -51,13 +51,13 @@ function ClassNLLCriterion:updateGradInput(input, target)
    self.gradInput:resizeAs(input)
    self.gradInput:zero()
 
-  if input:type() == 'torch.CudaTensor' and not self.weights then
+  if input:type() == 'torch.CudaTensor' then
      if input:dim() == 1 then
         self._target = self._target or input.new(1)
         self._target[1] = target
-        input.nn.ClassNLLCriterion_updateGradInput(self, input, self._target)
+        input.nn.ClassNLLCriterion_updateGradInput(self, input, self._target, self.weights)
      else
-        input.nn.ClassNLLCriterion_updateGradInput(self, input, target)
+        input.nn.ClassNLLCriterion_updateGradInput(self, input, target, self.weights)
      end
      return self.gradInput
   end
