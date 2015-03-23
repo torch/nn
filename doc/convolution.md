@@ -544,12 +544,12 @@ The module only accepts 4D inputs.
 -- with learnable parameters
 model = nn.SpatialBatchNormalization(m)
 A = torch.randn(b, m)
-B = model.forward(B)  -- C will be of size `b x m`
+C = model.forward(A)  -- C will be of size `b x m`
 
 -- without learnable parameters
 model = nn.SpatialBatchNormalization(0)
 A = torch.randn(b, m)
-B = model.forward(B)  -- C will be of size `b x m`
+C = model.forward(A)  -- C will be of size `b x m`
 ```
 
 <a name="nn.VolumetricModules"/>
