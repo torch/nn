@@ -41,7 +41,7 @@ function Linear:updateOutput(input)
       local nframe = input:size(1)
       local nunit = self.bias:size(1)
       self.output:resize(nframe, nunit)
-      if not self.addBuffer or self.addBuffer:size(1) ~= nframe then
+      if not self.addBuffer or self.addBuffer:nElement() ~= nframe then
          self.addBuffer = input.new(nframe):fill(1)
       end
       if nunit == 1 then
