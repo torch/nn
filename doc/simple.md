@@ -609,6 +609,26 @@ Example:
  15
  16
 [torch.Tensor of dimension 16]
+
+> y = torch.Tensor(1, 4):fill(0)
+> print(y)
+
+ 0  0  0  0
+ [torch.DoubleTensor of dimension 1x4]
+
+> print(nn.Reshape(4):forward(y))
+
+ 0  0  0  0
+ [torch.DoubleTensor of dimension 1x4]
+
+> print(nn.Reshape(4, false):forward(y))
+
+ 0
+ 0
+ 0
+ 0
+ [torch.DoubleTensor of dimension 4]
+
 ```
 
 <a name="nn.View"/>
