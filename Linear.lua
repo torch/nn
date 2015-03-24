@@ -7,7 +7,7 @@ function Linear:__init(inputSize, outputSize)
    self.bias = torch.Tensor(outputSize)
    self.gradWeight = torch.Tensor(outputSize, inputSize)
    self.gradBias = torch.Tensor(outputSize)
-   
+
    self:reset()
 end
 
@@ -28,6 +28,8 @@ function Linear:reset(stdv)
       self.weight:uniform(-stdv, stdv)
       self.bias:uniform(-stdv, stdv)
    end
+
+   return self
 end
 
 function Linear:updateOutput(input)
