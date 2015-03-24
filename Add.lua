@@ -60,7 +60,7 @@ function Add:accGradParameters(input, gradOutput, scale)
          self.gradBias:add(scale, gradOutput)
       else
          local gradOutput = gradOutput:view(input:size(1), -1)
-         self.gradBias:addmv(scale, gradOutput:t(), self._ones)
+         self.gradBias:view(-1):addmv(scale, gradOutput:t(), self._ones)
       end
    end
 end
