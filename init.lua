@@ -19,6 +19,7 @@ include('Narrow.lua')
 include('Replicate.lua')
 include('Transpose.lua')
 include('BatchNormalization.lua')
+include('ZeroGrad.lua')
 
 include('Copy.lua')
 include('Min.lua')
