@@ -32,6 +32,7 @@ include('MulConstant.lua')
 include('Add.lua')
 include('AddConstant.lua')
 include('Dropout.lua')
+include('SpatialDropout.lua')
 
 include('CAddTable.lua')
 include('CDivTable.lua')
