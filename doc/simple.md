@@ -33,6 +33,7 @@ and providing affine transformations :
    * [BatchNormalization](#nn.BatchNormalization) - mean/std normalization over the mini-batch inputs (with an optional affine transform) ;
    * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable));
    * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
+   * [SpatialDropout](#nn.SpatialDropout) : Same as Dropout but for spatial inputs where adjacent pixels are strongly correlated ;
    * [Padding](#nn.Padding) : adds padding to a dimension ;
    * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity);
    
@@ -196,6 +197,16 @@ It sometimes works best following [Transfer](transfer.md) Modules
 like [ReLU](transfer.md#nn.ReLU). All this depends a great deal on the dataset so its up
 to the user to try different combinations.
 
+<a name="nn.SpatialDropout"/>
+## SpatialDropout ##
+
+`module` = `nn.SpatialDropout(p)`
+
+This version performs the same function as ```nn.Dropout```, however it assumes the 2 right-most dimensions of the input are spatial, performs one Bernoulli trial per output feature when training, and extends this dropout value across the entire feature map.
+
+As described in the paper "Efficient Object Localization Using Convolutional Networks" (http://arxiv.org/abs/1411.4280), if adjacent pixels within feature maps are strongly correlated (as is normally the case in early convolution layers) then iid dropout will not regularize the activations and will otherwise just result in an effective learning rate decrease.  In this case, ```nn.SpatialDropout``` will help promote independence between feature maps and should be used instead.
+
+```nn.SpatialDropout``` accepts 3D or 4D inputs.  If the input is 3D than a layout of (features x height x width) is assumed and for 4D (batch x features x height x width) is assumed.
 
 <a name="nn.Abs"/>
 ## Abs ##
