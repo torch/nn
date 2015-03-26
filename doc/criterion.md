@@ -1,15 +1,27 @@
 <a name="nn.Criterions"/>
 # Criterions #
 
-Criterions are helpful to train a neural network. Given an input and a
-target, they compute a gradient according to a given loss
-function. [AbsCriterion](#nn.AbsCriterion) and
-[MSECriterion](#nn.MSECriterion) are perfect for regression problems, while
-[ClassNLLCriterion](#nn.ClassNLLCriterion) or
-[CrossEntropyCriterion](#nn.CrossEntropyCriterion) are the criteria of
-choice when dealing with classification.
+[Criterions](#nn.Criterion) are helpful to train a neural network. Given an input and a
+target, they compute a gradient according to a given loss function.
 
-Criterions are [serializable](https://github.com/torch/torch7/blob/master/doc/file.md#serialization-methods).
+ * Classification criterions :
+  * [BCECriterion](#nn.BCECriterion) : binary cross-entropy (two-class version of [ClassNLLCriterion](#nn.ClassNLLCriterion));
+  * [ClassNLLCriterion](#nn.ClassNLLCriterion) : negative log-likelihood for [LogSoftMax](transfer.md#nn.LogSoftMax) (multi-class);
+  * [CrossEntropyCriterion](#nn.CrossEntropyCriterion) : combines [LogSoftMax](transfer.md#nn.LogSoftMax) and [ClassNLLCriterion](#nn.ClassNLLCriterion);
+  * [MarginCriterion](#nn.MarginCriterion) : two class margin-based loss;
+  * [MultiMarginCriterion](#nn.MultiMarginCriterion) : multi-class margin-based loss;
+  * [MultiLabelMarginCriterion](#nn.MultiLabelMarginCriterion) : multi-class multi-classification margin-based loss;
+ * Regression criterions :
+  * [AbsCriterion](#nn.AbsCriterion) : measures the mean absolute value of the element-wise difference between input;
+  * [MSECriterion](#nn.MSECriterion) : mean square error (a classic);
+  * [DistKLDivCriterion](#nn.DistKLDivCriterion) : Kullback–Leibler divergence (for fitting continuous probability distributions);
+ * Embedding criterions (measuring whether two inputs are similar or dissimilar):
+  * [HingeEmbeddingCriterion](#nn.HingeEmbeddingCriterion) : takes a distance as input ;
+  * [L1HingeEmbeddingCriterion](#nn.L1HingeEmbeddingCriterion) : L1 distance between two inputs;
+  * [CosineEmbeddingCriterion](#nn.CosineEmbeddingCriterion) : cosine distance between two inputs;
+ * Miscelaneus criterions :
+  * [MultiCriterion](#nn.MultiCriterion) : a weighted sum of other criterions;
+  * [MarginRankingCriterion](#nn.MarginRankingCriterion) : ranks two inputs;
 
 <a name="nn.Criterion"/>
 ## Criterion ##
@@ -55,8 +67,8 @@ criterion = nn.AbsCriterion()
 ```
 
 Creates a criterion that
-measures the mean absolute value between `n` elements in the input `x` 
-and output `y`:
+measures the mean absolute value of the element-wise difference between input `x` 
+and target `y`:
 
 ```lua
 loss(x,y)  = 1/n \sum |x_i-y_i|
@@ -130,7 +142,7 @@ criterion = nn.CrossEntropyCriterion(weights)
 ```
 
 This criterion combines [LogSoftMax](#nn.LogSoftMax) and
-[CrossEntropyCriterion](#nn.CrossEntropyCriterion) in one single class.
+[ClassNLLCriterion](#nn.ClassNLLCriterion) in one single class.
 
 It is useful to train a classication problem with `n` classes.  If
 provided, the optional argument `weights` should be a 1D Tensor assigning
@@ -162,12 +174,13 @@ loss(x, class) = forward(x, class) = weights[class]*( -x[class] + log( \sum_j e^
 criterion = nn.DistKLDivCriterion()
 ```
 
-Kullback–Leibler divergence criterion.  KL divergence is a useful distance 
-measure for continuous distributions and is often useful when performance
+The [Kullback–Leibler divergence](http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) criterion.  
+KL divergence is a useful distance 
+measure for continuous distributions and is often useful when performing
 direct regression over the space of (discretely sampled) continuous output 
 distributions.  As with ClassNLLCriterion, the `input` given through a 
 `forward()` is expected to contain _log-probabilities_, however unlike
-ClassNLLCriterion, `input` is not restricted to a 1D vector.
+ClassNLLCriterion, `input` is not restricted to a 1D or 2D vector (as the criterion is applied element-wise).
 
 This criterion expect a `target` tensor of the same size as the `input`
 tensor when calling [forward(input, target)](#nn.CriterionForward) and
@@ -275,7 +288,40 @@ Creates a criterion that optimizes a multi-class classification hinge loss (marg
 ```lua
 loss(x,y) = forward(x,y) = sum_i(max(0, 1 - (x[y] - x[i]))^p) / x:size(1)
 ```
-where i = 1 to x:size(1) and i ~= y
+where `i = 1` to `x:size(1)` and `i ~= y`.
+Note that this criterion also works with 2D inputs and 1D targets.
+
+This criterion is especially useful for classification when used in conjunction with a module ending in the following output layer:
+```lua
+mlp = nn.Sequential()
+mlp:add(nn.Euclidean(n,m)) -- outputs a vector of distances
+mlp:add(nn.MulConstant(-1)) -- distance to similarity 
+```
+
+<a name="nn.MultiLabelMarginCriterion"/>
+## MultiLabelMarginCriterion ##
+
+```lua
+criterion = nn.MultiLabelMarginCriterion()
+```
+
+Creates a criterion that optimizes a multi-class multi-classification hinge loss 
+(margin-based loss) between input `x`  (a 1D Tensor) and output `y` (which is a 1D Tensor of target class indices) :
+
+```lua
+loss(x,y) = forward(x,y) = sum_ij(max(0, 1 - (x[y[j]] - x[i]))) / x:size(1)
+```
+where `i = 1` to `x:size(1)`, `j = 1` to `y:size(1)`, `y[j] ~= 0`, and `i ~= y[j]` for all `i` and `j`.
+Note that this criterion also works with 2D inputs and targets.
+
+`y` and `x` must have the same size. The criterion only considers the first non zero `y[j]` targets. 
+This allows for different samples to have variable amounts of target classes:
+```lua
+criterion = nn.MultiLabelMarginCriterion()
+input = torch.randn(2,4)
+target = torch.Tensor{{1,3,0,0},{4,0,0,0}} -- zero-values are ignored
+criterion:forward(input, target)
+``` 
 
 <a name="nn.MSECriterion"/>
 ## MSECriterion ##
@@ -532,33 +578,5 @@ for i=1,100 do
       print(o1,o2,o)
    end
 end
-```
-
-<a name="nn.L1Penalty"/>
-## L1Penalty ##
-
-```lua
-penalty = nn.L1Penalty(L1weight, sizeAverage)
-```
-
-L1Penalty is an inline module that in it's FPROP copies the input Tensor directly to the output, and computes an L1 loss of the latent state (input) and stores it in the module's `loss` field.  During BPROP: `gradInput = gradOutput + gradLoss`.
-
-This module can be used in autoencoder architectures to apply L1 losses to internal latent state without having to use Identity and parallel containers to carry the internal code to an output criterion.
-
-Example (sparse autoencoder, note: decoder should be normalized):
-
-```lua
-encoder = nn.Sequential() 
-encoder:add(nn.Linear(3, 128))
-encoder:add(nn.Threshold())
-decoder = nn.Linear(128,3)
-
-autoencoder = nn.Sequential()
-autoencoder:add(encoder)
-autoencoder:add(nn.L1Penalty(l1weight))
-autoencoder:add(decoder)
-
-criterion = nn.MSECriterion()  -- To measure reconstruction error
--- ...
 ```
 
