@@ -77,3 +77,9 @@ function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
    input, gradOutput = makeContiguous(self, input, gradOutput)
    return input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
 end
+
+function SpatialConvolutionMM:type(type)
+   self.finput = torch.Tensor()
+   self.fgradInput = torch.Tensor()
+   return parent.type(self,type)
+end
