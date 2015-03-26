@@ -34,7 +34,8 @@ and providing affine transformations :
    * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable));
    * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
    * [Padding](#nn.Padding) : adds padding to a dimension ;
-
+   * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity);
+   
 <a name="nn.Linear"/>
 ## Linear ##
 
@@ -948,4 +949,33 @@ module:forward(torch.randn(2,3)) --batch input
 -1.0000 -1.0000  1.0203  0.2704 -1.6164
 -1.0000 -1.0000 -0.2219 -0.6529 -1.9218
 [torch.DoubleTensor of dimension 2x5]
+```
+
+<a name="nn.L1Penalty"/>
+## L1Penalty ##
+
+```lua
+penalty = nn.L1Penalty(L1weight, sizeAverage)
+```
+
+L1Penalty is an inline module that in its forward propagation copies the input Tensor directly to the output, and computes an L1 loss of the latent state (input) and stores it in the module's `loss` field.  
+During backward propagation: `gradInput = gradOutput + gradLoss`.
+
+This module can be used in autoencoder architectures to apply L1 losses to internal latent state without having to use Identity and parallel containers to carry the internal code to an output criterion.
+
+Example (sparse autoencoder, note: decoder should be normalized):
+
+```lua
+encoder = nn.Sequential() 
+encoder:add(nn.Linear(3, 128))
+encoder:add(nn.Threshold())
+decoder = nn.Linear(128,3)
+
+autoencoder = nn.Sequential()
+autoencoder:add(encoder)
+autoencoder:add(nn.L1Penalty(l1weight))
+autoencoder:add(decoder)
+
+criterion = nn.MSECriterion()  -- To measure reconstruction error
+-- ...
 ```
