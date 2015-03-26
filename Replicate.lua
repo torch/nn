@@ -22,8 +22,7 @@ end
 
 function Replicate:updateGradInput(input, gradOutput)
    self.gradInput:resizeAs(input):zero()
-   for k = 1,gradOutput:size(1) do
-      self.gradInput:add(gradOutput[k])
-   end
+   local gradInput = self.gradInput:view(1, unpack(input:size():totable()))
+   gradInput:sum(gradOutput, 1)
    return self.gradInput
 end
