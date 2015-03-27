@@ -3188,6 +3188,26 @@ function nntest.CosineEmbeddingCriterion()
   equal(grads[2], zero, 'gradient should be zero')
 end
 
+function nntest.Replicate()
+   local vector = torch.random(3)
+
+   local r1 = nn.Replicate(2, 1)
+   local r2 = nn.Replicate(2, 2)
+
+   local vOutput1 = r1:forward(vector):clone()
+   local vOutput2 = r2:forward(vector):clone()
+
+   local expected1 = torch.zeros(2, 3)
+   local expected2 = torch.zeros(3, 2)
+   expected1:select(1, 1):copy(vector)
+   expected1:select(1, 2):copy(vector)
+   expected2:select(2, 1):copy(vector)
+   expected2:select(2, 2):copy(vector)
+
+   mytester:assertTensorEq(vOutput1, expected1, 'Wrong tiling of data when replicating vector.')
+   mytester:assertTensorEq(vOutput2, expected2, 'Wrong tiling of data when replicating vector.')
+end
+
 mytester:add(nntest)
 
 if not nn then
