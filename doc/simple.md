@@ -1,6 +1,6 @@
 <a name="nn.simplelayers.dok"/>
 # Simple layers #
-Simple Modules are used for various tasks like adapting Tensor methods 
+Simple Modules are used for various tasks like adapting Tensor methods
 and providing affine transformations :
  * Parameterized Modules :
    * [Linear](#nn.Linear) : a linear transformation ;
@@ -32,7 +32,7 @@ and providing affine transformations :
  * Miscellaneous Modules :
    * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable));
    * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
-   
+
 
 <a name="nn.Linear"/>
 ## Linear ##
@@ -77,9 +77,9 @@ applying the linear transformation is performed with:
 
 Applies a linear transformation to the incoming sparse data, i.e.
 _y= Ax+b_. The `input` tensor given in `forward(input)` must
-be a sparse vector represented as 2D tensor of the form 
+be a sparse vector represented as 2D tensor of the form
 torch.Tensor(N, 2) where the pairs represent indices and values.
-The SparseLinear layer is useful when the number of input 
+The SparseLinear layer is useful when the number of input
 dimensions is very large and the input data is sparse.
 
 You can create a sparse linear layer in the following way:
@@ -87,9 +87,9 @@ You can create a sparse linear layer in the following way:
 ```lua
  module= nn.SparseLinear(10000,2)  -- 10000 inputs, 2 outputs
 ```
-The sparse linear module may be used as part of a larger network, 
-and apart from the form of the input, 
-[SparseLinear](#nn.SparseLinear) 
+The sparse linear module may be used as part of a larger network,
+and apart from the form of the input,
+[SparseLinear](#nn.SparseLinear)
 operates in exactly the same way as the [Linear](#nn.Linear) layer.
 
 A sparse input vector may be created as so..
@@ -107,9 +107,9 @@ A sparse input vector may be created as so..
 
 ```
 
-The first column contains indices, the second column contains 
-values in a a vector where all other elements are zeros. The 
-indices should not exceed the stated dimensions of the input to the 
+The first column contains indices, the second column contains
+values in a a vector where all other elements are zeros. The
+indices should not exceed the stated dimensions of the input to the
 layer (10000 in the example).
 
 
@@ -118,17 +118,17 @@ layer (10000 in the example).
 
 `module` = `nn.Dropout(p)`
 
-During training, `Dropout` masks parts of the `input` using binary samples from 
+During training, `Dropout` masks parts of the `input` using binary samples from
 a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution.
 Each `input` element has a probability of `p` of being dropped, i.e having its
-commensurate output element be zero. This has proven an effective technique for 
-regularization and preventing the co-adaptation of neurons 
-(see [Hinton et al. 2012](http://arxiv.org/abs/1207.0580)). 
+commensurate output element be zero. This has proven an effective technique for
+regularization and preventing the co-adaptation of neurons
+(see [Hinton et al. 2012](http://arxiv.org/abs/1207.0580)).
 
-Furthermore, the ouputs are scaled by a factor of `1/(1-p)` during training. This allows the 
+Furthermore, the ouputs are scaled by a factor of `1/(1-p)` during training. This allows the
 `input` to be simply forwarded as-is during evaluation.
 
-In this example, we demonstrate how the call to [forward](module.md#output-forwardinput) samples 
+In this example, we demonstrate how the call to [forward](module.md#output-forwardinput) samples
 different `outputs` to dropout (the zeros) given the same `input`:
 ```lua
 module = nn.Dropout()
@@ -162,7 +162,7 @@ module = nn.Dropout()
 ```
 In both cases the `gradOutput` and `input` are scaled by `1/(1-p)`, which in this case is `2`.
 
-During [evaluation](module.md#evaluate), `Dropout` does nothing more than 
+During [evaluation](module.md#evaluate), `Dropout` does nothing more than
 forward the input such that all elements of the input are considered.
 ```lua
 > module:evaluate()
@@ -185,13 +185,13 @@ We can return to training our model by first calling [Module:training()](module.
 
 ```
 
-When used, `Dropout` should normally be applied to the input of parameterized 
-[Modules](module.md#nn.Module) like [Linear](#nn.Linear) 
+When used, `Dropout` should normally be applied to the input of parameterized
+[Modules](module.md#nn.Module) like [Linear](#nn.Linear)
 or [SpatialConvolution](convolution.md#nn.SpatialConvolution).
 A `p` of `0.5` (the default) is usually okay for hidden layers.
 `Dropout` can sometimes be used successfully on the dataset inputs with a `p` around `0.2`.
-It sometimes works best following [Transfer](transfer.md) Modules 
-like [ReLU](transfer.md#nn.ReLU). All this depends a great deal on the dataset so its up 
+It sometimes works best following [Transfer](transfer.md) Modules
+like [ReLU](transfer.md#nn.ReLU). All this depends a great deal on the dataset so its up
 to the user to try different combinations.
 
 
@@ -221,15 +221,15 @@ gnuplot.grid(true)
 
 Applies a bias term to the incoming data, i.e.
 _y_i= x_i + b_i,  or if _scalar=true_ then uses a single bias term,
-_y_i= x_i + b. 
+_y_i= x_i + b.
 
 Example:
 ```lua
-y=torch.Tensor(5);  
+y=torch.Tensor(5);
 mlp=nn.Sequential()
 mlp:add(nn.Add(5))
 
-function gradUpdate(mlp, x, y, criterion, learningRate) 
+function gradUpdate(mlp, x, y, criterion, learningRate)
   local pred = mlp:forward(x)
   local err = criterion:forward(pred, y)
   local gradCriterion = criterion:backward(pred, y)
@@ -241,7 +241,7 @@ end
 
 for i=1,10000 do
  x=torch.rand(5)
- y:copy(x); 
+ y:copy(x);
  for i=1,5 do y[i]=y[i]+i; end
  err=gradUpdate(mlp,x,y,nn.MSECriterion(),0.01)
 end
@@ -256,7 +256,7 @@ gives the output:
  5.0000
 [torch.Tensor of dimension 5]
 ```
-i.e. the network successfully learns the input _x_ has been shifted 
+i.e. the network successfully learns the input _x_ has been shifted
 to produce the output _y_.
 
 
@@ -266,15 +266,15 @@ to produce the output _y_.
 `module` = `Mul()`
 
 Applies a _single_ scaling factor to the incoming data, i.e.
-_y= w x_, where _w_ is a scalar. 
+_y= w x_, where _w_ is a scalar.
 
 Example:
 ```lua
-y=torch.Tensor(5);  
+y=torch.Tensor(5);
 mlp=nn.Sequential()
 mlp:add(nn.Mul())
 
-function gradUpdate(mlp, x, y, criterion, learningRate) 
+function gradUpdate(mlp, x, y, criterion, learningRate)
   local pred = mlp:forward(x)
   local err = criterion:forward(pred,y)
   local gradCriterion = criterion:backward(pred,y);
@@ -307,7 +307,7 @@ pi.
 
 Applies a component-wise multiplication to the incoming data, i.e.
 `y_i = w_i * x_i`. Argument `size` can be one or many numbers (sizes)
-or a `torch.LongStorage`. For example, `nn.CMul(3,4,5)` is equivalent to 
+or a `torch.LongStorage`. For example, `nn.CMul(3,4,5)` is equivalent to
 `nn.CMul(torch.LongStorage{3,4,5})`.
 
 Example:
@@ -315,10 +315,10 @@ Example:
 mlp=nn.Sequential()
 mlp:add(nn.CMul(5))
 
-y=torch.Tensor(5); 
+y=torch.Tensor(5);
 sc=torch.Tensor(5); for i=1,5 do sc[i]=i; end -- scale input with this
 
-function gradUpdate(mlp,x,y,criterion,learningRate) 
+function gradUpdate(mlp,x,y,criterion,learningRate)
   local pred = mlp:forward(x)
   local err = criterion:forward(pred,y)
   local gradCriterion = criterion:backward(pred,y);
@@ -394,7 +394,7 @@ then an `nxq` matrix would be output.
 
 Outputs the Euclidean distance of the input to `outputSize` centers,
 i.e. this layer has the weights `w_j`,  for `j` = `1`,..,`outputSize`, where
-`w_j` are vectors of dimension `inputSize`. 
+`w_j` are vectors of dimension `inputSize`.
 
 The distance `y_j` between center `j` and input `x` is formulated as
 `y_j = || w_j - x ||`.
@@ -406,10 +406,10 @@ The distance `y_j` between center `j` and input `x` is formulated as
 
 This module is similar to [Euclidean](#nn.Euclidean), but
 additionally learns a separate diagonal covariance matrix across the
-features of the input space _for each center_. 
+features of the input space _for each center_.
 
-In other words, for each of the `outputSize` centers `w_j`, there is 
-a diagonal covariance matrices `c_j`, for `j` = `1`,..,`outputSize`, 
+In other words, for each of the `outputSize` centers `w_j`, there is
+a diagonal covariance matrices `c_j`, for `j` = `1`,..,`outputSize`,
 where `c_j` are stored as vectors of size `inputSize`.
 
 The distance `y_j` between center `j` and input `x` is formulated as
@@ -420,8 +420,8 @@ The distance `y_j` between center `j` and input `x` is formulated as
 
 `module` = `Identity()`
 
-Creates a module that returns whatever is input to it as output. 
-This is useful when combined with the module 
+Creates a module that returns whatever is input to it as output.
+This is useful when combined with the module
 [ParallelTable](table.md#nn.ParallelTable)
 in case you do not wish to do anything to one of the input Tensors.
 Example:
@@ -429,7 +429,7 @@ Example:
 mlp=nn.Identity()
 print(mlp:forward(torch.ones(5,2)))
 ```
-gives the output: 
+gives the output:
 ```lua
  1  1
  1  1
@@ -440,10 +440,10 @@ gives the output:
 ```
 
 Here is a more useful example, where one can implement a network which also computes a Criterion using this module:
-```lua 
+```lua
 pred_mlp=nn.Sequential(); -- A network that makes predictions given x.
-pred_mlp:add(nn.Linear(5,4)) 
-pred_mlp:add(nn.Linear(4,3)) 
+pred_mlp:add(nn.Linear(5,4))
+pred_mlp:add(nn.Linear(4,3))
 
 xy_mlp=nn.ParallelTable();-- A network for predictions and for keeping the
 xy_mlp:add(pred_mlp)      -- true label for comparison with a criterion
@@ -457,14 +457,14 @@ mlp:add(cr_wrap)         -- and then applies the criterion.
 
 for i=1,100 do 		 -- Do a few training iterations
   x=torch.ones(5);          -- Make input features.
-  y=torch.Tensor(3); 
+  y=torch.Tensor(3);
   y:copy(x:narrow(1,1,3)) -- Make output label.
   err=mlp:forward{x,y}    -- Forward both input and output.
   print(err)		 -- Print error from criterion.
 
-  mlp:zeroGradParameters();  -- Do backprop... 
-  mlp:backward({x, y} );   
-  mlp:updateParameters(0.05); 
+  mlp:zeroGradParameters();  -- Do backprop...
+  mlp:backward({x, y} );
+  mlp:updateParameters(0.05);
 end
 ```
 
@@ -476,9 +476,9 @@ end
 This layer copies the input to output with type casting from input
 type from `inputType` to `outputType`. Unless `forceCopy` is true, when
 the first two arguments are the same, the input isn't copied, only transfered
-as the output. The default `forceCopy` is false. 
+as the output. The default `forceCopy` is false.
 When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast
-the module's `output` and `gradInput` Tensors to the new type. The default 
+the module's `output` and `gradInput` Tensors to the new type. The default
 is false.
 
 <a name="nn.Narrow"/>
@@ -493,10 +493,10 @@ module.
 <a name="nn.Replicate"/>
 ## Replicate ##
 
-`module` = `Replicate(nFeature)`
+`module` = `Replicate(nFeature, dim)`
 
 This class creates an output where the input is replicated
-`nFeature` times along its first dimension. There is no memory
+`nFeature` times along dimension `dim` (default 1). There is no memory
 allocation or memory copy in this module. It sets the
 [stride](https://github.com/torch/torch7/blob/master/doc/tensor.md#torch.Tensor.stride) along the first
 dimension to zero.
@@ -543,16 +543,16 @@ torch> =o
 `module` = `Reshape(dimension1, dimension2, ... [, batchMode])`
 
 Reshapes an `nxpxqx..`  Tensor into a `dimension1xdimension2x...` Tensor,
-taking the elements column-wise. 
+taking the elements column-wise.
 
-The optional last argument `batchMode`, 
-when `true` forces the first dimension of the input to be considered 
-the batch dimension, and thus keep its size fixed. This is necessary when 
-dealing with batch sizes of one. When `false`, it forces the 
-entire input (including the first dimension) to be reshaped to the 
-input size. Default `batchMode=nil`, which means that the module 
-considers inputs with more elements than the produce of provided sizes, 
-i.e. `dimension1xdimension2x...`, to be batches. 
+The optional last argument `batchMode`,
+when `true` forces the first dimension of the input to be considered
+the batch dimension, and thus keep its size fixed. This is necessary when
+dealing with batch sizes of one. When `false`, it forces the
+entire input (including the first dimension) to be reshaped to the
+input size. Default `batchMode=nil`, which means that the module
+considers inputs with more elements than the produce of provided sizes,
+i.e. `dimension1xdimension2x...`, to be batches.
 
 Example:
 ```lua
@@ -731,17 +731,17 @@ gives the output:
 ```
 
 This can be used in conjunction with [Concat](containers.md#nn.Concat)
-to emulate the behavior 
-of [Parallel](containers.md#nn.Parallel), or to select various parts of an input Tensor to 
+to emulate the behavior
+of [Parallel](containers.md#nn.Parallel), or to select various parts of an input Tensor to
 perform operations on. Here is a fairly complicated example:
 ```lua
 
 mlp=nn.Sequential();
-c=nn.Concat(2) 
+c=nn.Concat(2)
 for i=1,10 do
  local t=nn.Sequential()
  t:add(nn.Select(1,i))
- t:add(nn.Linear(3,2)) 
+ t:add(nn.Linear(3,2))
  t:add(nn.Reshape(2,1))
  c:add(t)
 end
@@ -759,7 +759,7 @@ for i=1,10000 do     -- Train for a few iterations
  err=criterion:forward(pred,y)
  gradCriterion = criterion:backward(pred,y);
  mlp:zeroGradParameters();
- mlp:backward(x, gradCriterion); 
+ mlp:backward(x, gradCriterion);
  mlp:updateParameters(0.01);
  print(err)
 end
