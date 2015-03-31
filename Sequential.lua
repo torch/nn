@@ -21,8 +21,10 @@ end
 
 function Sequential:updateOutput(input)
    local currentOutput = input
-   for i=1,#self.modules do 
-      currentOutput = self.modules[i]:updateOutput(currentOutput)
+   for i=1,#self.modules do
+      assert(pcall(function()
+         currentOutput = self.modules[i]:updateOutput(currentOutput)
+      end), 'Troubles with module ' .. i)
    end 
    self.output = currentOutput
    return currentOutput
@@ -33,7 +35,9 @@ function Sequential:updateGradInput(input, gradOutput)
    local currentModule = self.modules[#self.modules]
    for i=#self.modules-1,1,-1 do
       local previousModule = self.modules[i]
-      currentGradOutput = currentModule:updateGradInput(previousModule.output, currentGradOutput)
+      assert(pcall(function()
+         currentGradOutput = currentModule:updateGradInput(previousModule.output, currentGradOutput)
+      end), 'Troubles with module ' .. i+1)
       currentModule = previousModule
    end
    currentGradOutput = currentModule:updateGradInput(input, currentGradOutput)
