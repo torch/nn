@@ -36,8 +36,16 @@ end
 
 function Replicate:updateGradInput(input, gradOutput)
    self.gradInput:resizeAs(input):zero()
-   for k = 1,gradOutput:size(self.dim) do
-      self.gradInput:add(gradOutput:select(self.dim, k))
+   local sz = torch.LongStorage(input:dim()+1)
+   sz[self.dim] = 1
+   for i = 1,input:dim() do
+      local offset = 0
+      if i >= self.dim then
+         offset = 1
+      end
+      sz[i+offset] = input:size(i)
    end
+   local gradInput = self.gradInput:view(sz)
+   gradInput:sum(gradOutput, self.dim)
    return self.gradInput
 end

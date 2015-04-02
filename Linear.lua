@@ -7,7 +7,7 @@ function Linear:__init(inputSize, outputSize)
    self.bias = torch.Tensor(outputSize)
    self.gradWeight = torch.Tensor(outputSize, inputSize)
    self.gradBias = torch.Tensor(outputSize)
-   
+
    self:reset()
 end
 
@@ -28,6 +28,8 @@ function Linear:reset(stdv)
       self.weight:uniform(-stdv, stdv)
       self.bias:uniform(-stdv, stdv)
    end
+
+   return self
 end
 
 function Linear:updateOutput(input)
@@ -39,7 +41,7 @@ function Linear:updateOutput(input)
       local nframe = input:size(1)
       local nunit = self.bias:size(1)
       self.output:resize(nframe, nunit)
-      if not self.addBuffer or self.addBuffer:size(1) ~= nframe then
+      if not self.addBuffer or self.addBuffer:nElement() ~= nframe then
          self.addBuffer = input.new(nframe):fill(1)
       end
       if nunit == 1 then
@@ -82,7 +84,6 @@ function Linear:accGradParameters(input, gradOutput, scale)
       self.gradWeight:addr(scale, gradOutput, input)
       self.gradBias:add(scale, gradOutput)
    elseif input:dim() == 2 then
-      local nframe = input:size(1)
       local nunit = self.bias:size(1)
 
       if nunit == 1 then

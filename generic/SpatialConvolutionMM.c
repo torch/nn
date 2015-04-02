@@ -313,7 +313,6 @@ static void nn_(SpatialConvolutionMM_accGradParameters_frame)(THTensor *gradOutp
                                                               real scale)
 {
   long i;
-  THTensor *gradOutputPlane = THTensor_(new)();
   THTensor *gradOutput2d = THTensor_(newWithStorage2d)(gradOutput->storage, gradOutput->storageOffset,
                                                        gradOutput->size[0], -1,
                                                        gradOutput->size[1]*gradOutput->size[2], -1);
@@ -332,7 +331,6 @@ static void nn_(SpatialConvolutionMM_accGradParameters_frame)(THTensor *gradOutp
     (gradBias->storage->data + gradBias->storageOffset)[i] += scale*sum;
   }
 
-  THTensor_(free)(gradOutputPlane);
   THTensor_(free)(gradOutput2d);
 }
 

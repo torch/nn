@@ -241,7 +241,9 @@ function Module:getParameters()
 
    -- flatten parameters and gradients
    local flatParameters = flatten(parameters)
+   collectgarbage()
    local flatGradParameters = flatten(gradParameters)
+   collectgarbage()
 
    -- return new flat vector that contains all discrete parameters
    return flatParameters, flatGradParameters

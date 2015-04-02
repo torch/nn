@@ -150,6 +150,8 @@ Note that this function if called on a [Container](containers.md#nn.Containers)
 module will share the same parameters for all the contained modules as
 well.
 
+**NOTE: If you ever type-cast your network to another precision, i.e. net:cuda() for example, the sharing gets untied, and you have to reshare your modules again.**
+
 Example:
 ```lua
 
@@ -172,7 +174,6 @@ print(mlp2:get(1).bias[1])
 
 ```
 
-
 <a name="nn.Module.clone"/>
 ### clone(mlp,...) ###
 
@@ -184,6 +185,8 @@ If arguments are provided to the `clone(...)` function it also calls
 [share(...)](#nn.Module.share) with those arguments on the cloned
 module after creating it, hence making a deep copy of this module with
 some shared parameters.
+
+**NOTE: If you ever type-cast your network to another precision, i.e. net:cuda() for example, the sharing gets untied, and you have to reshare your modules again.**
 
 Example:
 ```lua

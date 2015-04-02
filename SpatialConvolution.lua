@@ -49,7 +49,7 @@ local function backCompatibility(self)
    if self.weight:dim() == 2 then 
       self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
    end
-   if self.gradWeight:dim() == 2 then 
+   if self.gradWeight and self.gradWeight:dim() == 2 then 
       self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
    end
 end
@@ -73,12 +73,12 @@ end
 -- function to re-view the weight layout in a way that would make the MM ops happy
 local function viewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
-   self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+   self.gradWeight = self.gradWeight and self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
 end
 
 local function unviewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
-   self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
+   self.gradWeight = self.gradWeight and self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
 end
 
 function SpatialConvolution:updateOutput(input)

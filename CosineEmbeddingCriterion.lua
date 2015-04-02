@@ -2,7 +2,7 @@ local CosineEmbeddingCriterion, parent = torch.class('nn.CosineEmbeddingCriterio
 
 function CosineEmbeddingCriterion:__init(margin)
    parent.__init(self)
-   margin=margin or 0
+   margin = margin or 0
    self.margin = margin 
    self.gradInput = {torch.Tensor(), torch.Tensor()}
 end 
@@ -15,7 +15,7 @@ function CosineEmbeddingCriterion:updateOutput(input,y)
    self.w32 = input2:dot(input2)
    self.w3 = math.sqrt(self.w32)
    self.output = self.w1/self.w2/self.w3
-   if y==-1 then
+   if y == -1 then
       self.output = math.max(0, self.output - self.margin);
    else
       self.output = 1 - self.output
