@@ -4,7 +4,7 @@ function Replicate:__init(nf, dim)
    parent.__init(self)
    self.nfeatures = nf
    self.dim = dim or 1
-   assert(dim > 0, "Can only replicate across positive integer dimensions.")
+   assert(self.dim > 0, "Can only replicate across positive integer dimensions.")
 end
 
 function Replicate:updateOutput(input)
