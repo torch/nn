@@ -38,5 +38,6 @@ end
 
 function SelectTable:type(type)
    self.gradInput = {}
+   self.output = {}
    return parent.type(self, type)
 end

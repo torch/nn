@@ -58,3 +58,8 @@ function JoinTable:updateGradInput(input, gradOutput)
    end
    return self.gradInput
 end
+
+function JoinTable:type(type)
+   self.gradInput = {}
+   return parent.type(self, type)
+end
