@@ -1806,10 +1806,10 @@ end
 
 function nntest.SpatialAdaptiveMaxPooling()
    local from = math.random(1,5)
-   local ki = math.random(1,12)
-   local kj = math.random(1,12)
-   local ini = math.random(1,64)
-   local inj = math.random(1,64)
+   local ki = math.random(1,5)
+   local kj = math.random(1,5)
+   local ini = math.random(1,16)
+   local inj = math.random(1,16)
 
    local module = nn.SpatialAdaptiveMaxPooling(ki,kj)
    local input = torch.rand(from,ini,inj)
@@ -1822,7 +1822,7 @@ function nntest.SpatialAdaptiveMaxPooling()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 
    -- batch
-   local nbatch = math.random(2,5)
+   local nbatch = math.random(1,3)
    input = torch.rand(nbatch,from,ini,inj)
    module = nn.SpatialAdaptiveMaxPooling(ki,kj)
 
