@@ -1310,6 +1310,189 @@ function nntest.SpatialConvolutionMM()
    mytester:asserteq(0, (gradInput-gradInputc):abs():max(), torch.typename(module) .. ' - contiguous err ')
 end
 
+local function constructComplexConvolution(from, to, ki, kj, outi, outj, w, b) 
+   -- Since we have a working convolution, we can actually use it to simulate  
+   -- a complex convolution by breaking up the complex convolution operator: 
+   -- x = (a1+ib1), (a2+ib2), ..., (an+ibn)  <-- Input 
+   -- y = (c1+id1), (c2+id2), ..., (cm+idm)  <-- Weight matrix 
+   -- conv(x,y) = conv(a,c) - conv(b,d) + i * (conv(b,c) + conv(a,d)) 
+   --           = c1 - c2 + i * (c3, c4)    
+   local cconv = nn.Sequential() 
+   local cdim = 5 
+ 
+   local convs = {}  -- For calculating grad weights need to save conv handle 
+ 
+   -- c1 = conv(a,c) 
+   local c1 = nn.Sequential() 
+   c1:add(nn.Select(cdim,1))  -- real_input 
+   local conv = nn.SpatialConvolutionMM(from, to, ki, kj) 
+   conv.weight:copy(w[{{},{},{},{},1}])  -- real_weight 
+   conv.bias:copy(b[{{},1}])  -- real_bias 
+   c1:add(conv) 
+   convs[1] = conv 
+   -- c2 = conv(b,d) 
+   local c2 = nn.Sequential() 
+   c2:add(nn.Select(cdim,2))  -- imag_input 
+   conv = nn.SpatialConvolutionMM(from, to, ki, kj) 
+   conv.weight:copy(w[{{},{},{},{},2}])  -- imag_weight 
+   conv.bias:fill(0)  -- (zero_bias) 
+   c2:add(conv) 
+   c2:add(nn.MulConstant(-1)) 
+   convs[2] = conv 
+   -- c3 = conv(b,c) 
+   local c3 = nn.Sequential() 
+   c3:add(nn.Select(cdim,2))  -- imag_input 
+   conv = nn.SpatialConvolutionMM(from, to, ki, kj) 
+   conv.weight:copy(w[{{},{},{},{},1}])  -- real_weight 
+   conv.bias:copy(b[{{},2}])  -- imag_bias 
+   c3:add(conv) 
+   convs[3] = conv 
+   -- c4 = conv(a,d) 
+   local c4 = nn.Sequential() 
+   c4:add(nn.Select(cdim,1))  -- real_input 
+   conv = nn.SpatialConvolutionMM(from, to, ki, kj) 
+   conv.weight:copy(w[{{},{},{},{},2}])  -- imag_weight 
+   conv.bias:fill(0)  -- (zero_bias) 
+   c4:add(conv) 
+   convs[4] = conv 
+ 
+   local real_branch = nn.Sequential() 
+   local par = nn.ConcatTable() 
+   par:add(c1) 
+   par:add(c2) 
+   real_branch:add(par) 
+   real_branch:add(nn.CAddTable()) 
+   real_branch:add(nn.Reshape(to, outj, outi, 1)) 
+ 
+   local imag_branch = nn.Sequential() 
+   par = nn.ConcatTable() 
+   par:add(c3) 
+   par:add(c4) 
+   imag_branch:add(par) 
+   imag_branch:add(nn.CAddTable()) 
+   imag_branch:add(nn.Reshape(to, outj, outi, 1)) 
+    
+   par = nn.ConcatTable() 
+   par:add(real_branch) 
+   par:add(imag_branch) 
+   cconv:add(par) 
+   cconv:add(nn.JoinTable(cdim))   
+ 
+   local grad_func = function(convs) 
+     -- Accumulate the gradient from the real convolutions 
+     local real_gradWeight = convs[1].gradWeight:clone() 
+     real_gradWeight:add(convs[3].gradWeight):resize(from,to,kj,ki,1) 
+     local real_gradBias = convs[1].gradBias:clone():resize(to,1) 
+     -- Accumulate the imag gradients 
+     local imag_gradWeight = convs[2].gradWeight:clone() 
+     imag_gradWeight:add(convs[4].gradWeight):resize(from,to,kj,ki,1) 
+     local imag_gradBias = convs[3].gradBias:clone():resize(to,1) 
+     -- Concat them 
+     local gradWeight = torch.cat(real_gradWeight, imag_gradWeight, 5) 
+     local gradBias = torch.cat(real_gradBias, imag_gradBias, 2) 
+     return gradWeight, gradBias 
+   end 
+ 
+   return cconv, convs, grad_func 
+end
+
+function nntest.SpatialConvolutionComplexMM()
+   -- We have a ground truth CPU based convolution with standard modules
+   -- using the function above, so compare our results against that
+   local bsz = 1
+   local from = 1
+   local to = 1
+   local ki = 2
+   local kj = 2
+   local ini = 4
+   local inj = 4
+   local outi = 3
+   local outj = 3
+   local si = 1
+   local sj = 1
+
+   local zin = torch.rand(bsz, from, inj, ini, 2)
+   local filt = torch.rand(to, from, kj, ki, 2)
+   local bias = torch.rand(to, 2)
+
+   local conv = constructComplexConvolution(from,to,ki,kj,outi,outj,filt, bias)
+   local out_gt = conv:forward(z)
+   local precision = 1e-5
+
+   local module = nn.SpatialConvolutionComplexMM(from,to,ki,kj,si,sj)
+   module.weight:copy(filt)
+   module.bias:copy(bias)
+   local out = module:forward(zin)
+
+   mytester:assertlt((out_gt - out):abs():max(), precision,
+      'complex convolution is incorrect')
+
+   -- Jacobian test non-batch input
+   zin = torch.zeros(from, inj, jni, 2)
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+
+   local err = jac.testJacobianParameters(module, input, module.weight, 
+      module.gradWeight)
+   mytester:assertlt(err , precision, 'error on weight ')
+
+   local err = jac.testJacobianParameters(module, input, module.bias, 
+      module.gradBias)
+   mytester:assertlt(err , precision, 'error on bias ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err , precision, 'error on weight [direct update] ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+   mytester:assertlt(err , precision, 'error on bias [direct update] ')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on weight [%s]', t))
+   end
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on bias [%s]', t))
+   end
+
+   -- Jacobian test batch input
+   zin = torch.zeros(bsz, from, inj, jni, 2)
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'batch error on state ')
+
+   local err = jac.testJacobianParameters(module, input, module.weight, 
+      module.gradWeight)
+   mytester:assertlt(err , precision, 'batch error on weight ')
+
+   local err = jac.testJacobianParameters(module, input, module.bias, 
+      module.gradBias)
+   mytester:assertlt(err , precision, 'batch error on bias ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   mytester:assertlt(err , precision, 'batch error on weight [direct update] ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+   mytester:assertlt(err , precision, 'batch error on bias [direct update] ')
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+                         'error on weight [%s]', t))
+   end
+
+   for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+      mytester:assertlt(err, precision, string.format(
+                         'batch error on bias [%s]', t))
+   end
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+end
+
+
 function nntest.SpatialConvolutionMap()
    local from = math.random(1,5)
    local fanin = math.random(1, from)
