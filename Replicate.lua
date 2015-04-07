@@ -8,6 +8,7 @@ function Replicate:__init(nf, dim)
 end
 
 function Replicate:updateOutput(input)
+   self.dim = self.dim or 1 --backwards compatible
    assert(
       self.dim <= input:dim()+1,
       "Not enough input dimensions to replicate along dimension " ..
