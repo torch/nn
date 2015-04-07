@@ -82,7 +82,7 @@ gnuplot.grid(true)
 
 Applies the `Softmax` function to an n-dimensional input Tensor,
 rescaling them so that the elements of the n-dimensional output Tensor
-lie in the range (0,1) and sum to 1. 
+lie in the range (0,1) and sum to 1.
 
 `Softmax` is defined as `f_i(x)` = `exp(x_i-shift) / sum_j exp(x_j-shift)`,
 where `shift` = `max_i x_i`.
@@ -104,7 +104,7 @@ Note that this module doesn't work directly with [ClassNLLCriterion](criterion.m
 
 Applies the `Softmin` function to an n-dimensional input Tensor,
 rescaling them so that the elements of the n-dimensional output Tensor
-lie in the range (0,1) and sum to 1. 
+lie in the range (0,1) and sum to 1.
 
 `Softmin` is defined as `f_i(x)` = `exp(-x_i-shift) / sum_j exp(-x_j-shift)`,
 where `shift` = `max_i x_i`.
@@ -237,6 +237,11 @@ gnuplot.grid(true)
 Applies the rectified linear unit (`ReLU`) function element-wise to the input Tensor,
 thus outputting a Tensor of the same dimension.
 
+Can optionally do it's operation in-place without using extra state memory:
+```lua
+m=nn.ReLU(true) -- true = in-place, false = keeping separate state.
+```
+
 ```lua
 ii=torch.linspace(-3,3)
 m=nn.ReLU()
@@ -248,7 +253,7 @@ gnuplot.grid(true)
 ```
 ![](image/relu.png)
 
-<a name="nn.ReLU"/>
+<a name="nn.PReLU"/>
 ## PReLU ##
 
 Applies parametric ReLU, which parameter varies the slope of the negative part:
@@ -271,4 +276,3 @@ Adds a (non-learnable) scalar constant.  This module is sometimes useful for deb
 ## MulConstant ##
 
 Multiplies input tensor by a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `k * x`, where `k` is a scalar.
-
