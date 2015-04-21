@@ -21,9 +21,9 @@ end
 
 function Sequential:updateOutput(input)
    local currentOutput = input
-   for i=1,#self.modules do 
+   for i=1,#self.modules do
       currentOutput = self.modules[i]:updateOutput(currentOutput)
-   end 
+   end
    self.output = currentOutput
    return currentOutput
 end
@@ -52,8 +52,23 @@ function Sequential:accGradParameters(input, gradOutput, scale)
       currentGradOutput = currentModule.gradInput
       currentModule = previousModule
    end
-   
+
    currentModule:accGradParameters(input, currentGradOutput, scale)
+end
+
+function Sequential:backward(input, gradOutput, scale)
+   scale = scale or 1
+   local currentGradOutput = gradOutput
+   local currentModule = self.modules[#self.modules]
+   for i=#self.modules-1,1,-1 do
+      local previousModule = self.modules[i]
+      currentGradOutput = currentModule:backward(previousModule.output, currentGradOutput, scale)
+      currentModule.gradInput = currentGradOutput
+      currentModule = previousModule
+   end
+   currentGradOutput = currentModule:backward(input, currentGradOutput, scale)
+   self.gradInput = currentGradOutput
+   return currentGradOutput
 end
 
 function Sequential:accUpdateGradParameters(input, gradOutput, lr)
@@ -65,7 +80,7 @@ function Sequential:accUpdateGradParameters(input, gradOutput, lr)
       currentGradOutput = currentModule.gradInput
       currentModule = previousModule
    end
-   
+
    currentModule:accUpdateGradParameters(input, currentGradOutput, lr)
 end
 

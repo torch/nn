@@ -61,6 +61,25 @@ function Concat:accGradParameters(input, gradOutput, scale)
    end
 end
 
+function Concat:backward(input, gradOutput, scale)
+   self.gradInput:resizeAs(input)
+   scale = scale or 1
+   local offset = 1
+   for i,module in ipairs(self.modules) do
+      local currentOutput = module.output
+      local currentGradInput = module:backward(input, gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)), scale)
+      if currentGradInput then -- if the module does not produce a gradInput (for example first layer), then ignore it and move on.
+         if i==1 then
+            self.gradInput:copy(currentGradInput)
+         else
+            self.gradInput:add(currentGradInput)
+         end
+      end
+      offset = offset + currentOutput:size(self.dimension)
+   end
+   return self.gradInput
+end
+
 function Concat:accUpdateGradParameters(input, gradOutput, lr)
    local offset = 1
    for i,module in ipairs(self.modules) do

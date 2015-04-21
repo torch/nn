@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 --[[ DepthConcat ]]--
 -- Concatenates the output of Convolutions along the depth dimension
--- (nOutputFrame). This is used to implement the DepthConcat layer 
+-- (nOutputFrame). This is used to implement the DepthConcat layer
 -- of the Going deeper with convolutions paper :
 -- http://arxiv.org/pdf/1409.4842v1.pdf
 -- The normal Concat Module can't be used since the spatial dimensions
@@ -44,7 +44,7 @@ function DepthConcat:updateOutput(input)
       end
    end
    self.output:resize(self.size):zero() --zero for padding
-   
+
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = outs[i]
@@ -54,7 +54,7 @@ function DepthConcat:updateOutput(input)
    end
    return self.output
 end
-   
+
 function DepthConcat:updateGradInput(input, gradOutput)
    self.gradInput:resizeAs(input)
 
@@ -84,6 +84,25 @@ function DepthConcat:accGradParameters(input, gradOutput, scale)
    end
 end
 
+function DepthConcat:backward(input, gradOutput, scale)
+   self.gradInput:resizeAs(input)
+
+   scale = scale or 1
+   local offset = 1
+   for i,module in ipairs(self.modules) do
+      local currentOutput = module.output
+      local gradOutputWindow = self:windowNarrow(gradOutput, currentOutput, offset)
+      local currentGradInput = module:backward(input, gradOutputWindow)
+      if i==1 then
+         self.gradInput:copy(currentGradInput)
+      else
+         self.gradInput:add(currentGradInput)
+      end
+      offset = offset + currentOutput:size(self.dimension)
+   end
+   return self.gradInput
+end
+
 function DepthConcat:accUpdateGradParameters(input, gradOutput, lr)
    local offset = 1
    for i,module in ipairs(self.modules) do
@@ -93,4 +112,3 @@ function DepthConcat:accUpdateGradParameters(input, gradOutput, lr)
       offset = offset + currentOutput:size(self.dimension)
    end
 end
-
