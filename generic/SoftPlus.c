@@ -5,27 +5,34 @@
 static int nn_(SoftPlus_updateOutput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
   real beta = luaT_getfieldchecknumber(L, 1, "beta");
   real threshold = luaT_getfieldchecknumber(L, 1, "threshold");
+  int inPlace = luaT_getfieldcheckboolean(L, 1, "inplace");
+  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
-  THTensor_(resizeAs)(output, input);
-
-  /* f(x) = 1/beta * log(1 + exp(beta * x)) */
-
-  TH_TENSOR_APPLY2(real, output, real, input,               \
-    *output_data = (*input_data * beta) > threshold ? *input_data : THLog1p(exp(*input_data * beta)) / beta;)
-    
-    return 1;
+  if (inPlace) {
+    TH_TENSOR_APPLY(real, input,                                        \
+                    if (*input_data * beta <= threshold) {              \
+                      *input_data = THLog1p(exp(*input_data * beta)) / beta; \
+                    })
+      THTensor_(set)(output, input);
+  } else {
+    THTensor_(resizeAs)(output, input);
+    /* f(x) = 1/beta * log(1 + exp(beta * x)) */
+    TH_TENSOR_APPLY2(real, output, real, input,                         \
+                     *output_data = (*input_data * beta) > threshold ? *input_data : THLog1p(exp(*input_data * beta)) / beta;);
+  }
+  return 1;
 }
 
 static int nn_(SoftPlus_updateGradInput)(lua_State *L)
 {
   THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
-  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
   real beta = luaT_getfieldchecknumber(L, 1, "beta");
   real threshold = luaT_getfieldchecknumber(L, 1, "threshold");
+  int inPlace = luaT_getfieldcheckboolean(L, 1, "inplace");
+  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
   /* d/dx[log(1+exp(k*x))/k] = exp(kx) / (exp(kx) + 1)
      SINCE
@@ -33,11 +40,20 @@ static int nn_(SoftPlus_updateGradInput)(lua_State *L)
      THEREFORE:
      d/dx(f(x)) = (exp(k*y) - 1) / exp(k*y) */
 
-  THTensor_(resizeAs)(gradInput, output);
-  TH_TENSOR_APPLY3(real, gradInput, real, gradOutput, real, output,    \
-                   real z = exp(*output_data * beta);                  \
-                   *gradInput_data = (*output_data * beta) > threshold ? *gradOutput_data : *gradOutput_data * (z - 1.)/z;)
-    return 1;
+  if (inPlace) {
+    TH_TENSOR_APPLY2(real, gradOutput, real, output,                    \
+                     real z = exp(*output_data * beta);                 \
+                     if (*output_data * beta <= threshold) {            \
+                       *gradOutput_data = *gradOutput_data * (z - 1.) / z; \
+                     })
+      THTensor_(set)(gradInput, gradOutput);
+  } else {
+    THTensor_(resizeAs)(gradInput, output);
+    TH_TENSOR_APPLY3(real, gradInput, real, gradOutput, real, output,   \
+                     real z = exp(*output_data * beta);                 \
+                     *gradInput_data = (*output_data * beta) > threshold ? *gradOutput_data : *gradOutput_data * (z - 1.)/z;);
+  }
+  return 1;
 }
 
 static const struct luaL_Reg nn_(SoftPlus__) [] = {
