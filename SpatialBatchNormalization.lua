@@ -39,6 +39,8 @@ function BN:__init(nFeature, eps, momentum)
    self.train = true
    self.momentum = momentum or 0.1
 
+   self.running_mean = torch.Tensor()
+   self.running_std = torch.Tensor()
    if nFeature > 0 then self.affine = true end
    if self.affine then
       self.weight = torch.Tensor(nFeature)
@@ -73,7 +75,7 @@ function BN:updateOutput(input)
    self.output:resizeAs(input)
    self.gradInput:resizeAs(input)
    if self.train == false then
-      assert(self.running_mean,
+      assert(self.running_mean:nDimension() ~= 0,
              'Module never run on training data. First run on some training data before evaluating.')
       self.output:copy(input)
       self.buffer:repeatTensor(self.running_mean:view(1, nFeature, 1, 1), nBatch, 1, iH, iW)
@@ -81,9 +83,12 @@ function BN:updateOutput(input)
       self.buffer:repeatTensor(self.running_std:view(1, nFeature, 1, 1), nBatch, 1, iH, iW)
       self.output:cmul(self.buffer)
    else -- training mode
-      self.running_mean = self.running_mean or input.new(nFeature):zero()
-      self.running_std  = self.running_std  or input.new(nFeature):zero()
-
+      if self.running_mean:nDimension() == 0 then
+         self.running_mean:resize(nFeature):zero()
+      end
+      if self.running_std:nDimension() == 0 then
+         self.running_std:resize(nFeature):zero()
+      end
       -- calculate mean over mini-batch, over feature-maps
       local in_folded = input:view(nBatch, nFeature, iH * iW)
       self.buffer:mean(in_folded, 1)

@@ -37,6 +37,8 @@ function BN:__init(nOutput, eps, momentum)
    self.eps = eps or 1e-5
    self.train = true
    self.momentum = momentum or 0.1
+   self.running_mean = torch.Tensor()
+   self.running_std = torch.Tensor()
 
    if nOutput > 0 then self.affine = true end
    if self.affine then
@@ -69,7 +71,7 @@ function BN:updateOutput(input)
    self.output:resizeAs(input)
    self.gradInput:resizeAs(input)
    if self.train == false then
-      assert(self.running_mean,
+      assert(self.running_mean:nDimension() ~= 0,
              'Module never run on training data. First run on some training data before evaluating.')
       self.output:copy(input)
       self.buffer:repeatTensor(self.running_mean, nBatch, 1)
@@ -77,9 +79,12 @@ function BN:updateOutput(input)
       self.buffer:repeatTensor(self.running_std, nBatch, 1)
       self.output:cmul(self.buffer)
    else -- training mode
-      self.running_mean = self.running_mean or input.new(input:size(2)):zero()
-      self.running_std  = self.running_std  or input.new(input:size(2)):zero()
-
+      if self.running_mean:nDimension() == 0 then
+         self.running_mean:resize(input:size(2)):zero()
+      end
+      if self.running_std:nDimension() == 0 then
+         self.running_std:resize(input:size(2)):zero()
+      end
       -- calculate mean over mini-batch
       self.buffer:mean(input, 1)                        -- E(x) = expectation of x.
       self.running_mean:mul(1 - self.momentum):add(self.momentum, self.buffer) -- add to running mean
