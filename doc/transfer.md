@@ -272,7 +272,19 @@ Note that weight decay should not be used on it. For reference see http://arxiv.
 
 Adds a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `x + k`, where `k` is a scalar.
 
+Can optionally do it's operation in-place without using extra state memory:
+```lua
+m=nn.AddConstant(k,true) -- true = in-place, false = keeping separate state.
+```
+In-place mode restores the original input value after the backward pass, allowing it's use after other in-place modules, like [MulConstant](#nn.MulConstant).
+
 <a name="nn.MulConstant"/>
 ## MulConstant ##
 
 Multiplies input tensor by a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `k * x`, where `k` is a scalar.
+
+Can optionally do it's operation in-place without using extra state memory:
+```lua
+m=nn.MulConstant(k,true) -- true = in-place, false = keeping separate state.
+```
+In-place mode restores the original input value after the backward pass, allowing it's use after other in-place modules, like [AddConstant](#nn.AddConstant).
