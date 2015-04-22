@@ -2872,6 +2872,17 @@ function nntest.View()
       minibatch:size(1),
       "Error in minibatch dimension with size -1")
 
+   -- another setNumInputDims case
+   local minibatch = torch.rand(2,5,4,10)
+   local module = nn.View(4,-1):setNumInputDims(2)
+   local out = module:forward(minibatch)
+   mytester:assertTableEq(out:size(1), minibatch:size(1)*minibatch:size(2),
+                          "Error in minibatch dimension with size -1")
+   mytester:assertTableEq(out:size(2), minibatch:size(3),
+                          "Error in minibatch dimension with size -1")
+   mytester:assertTableEq(out:size(3), minibatch:size(4),
+                          "Error in minibatch dimension with size -1")
+
    -- Minibatch Generalization
    local minibatch = torch.rand(5,2,6)
    local module = nn.View(6)
