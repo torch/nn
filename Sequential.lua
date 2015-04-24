@@ -1,5 +1,9 @@
 local Sequential, _ = torch.class('nn.Sequential', 'nn.Container')
 
+function Sequential:__len()
+   return #self.modules
+end
+
 function Sequential:add(module)
    if #self.modules == 0 then
       self.gradInput = module.gradInput
