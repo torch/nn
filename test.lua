@@ -794,6 +794,23 @@ function nntest.MultiMarginCriterion()
    criterionJacobianTest1D(cri, input, target)
 end
 
+function nntest.MarginRankingCriterion()
+   local input = {torch.rand(1), torch.rand(1)}
+   local mrc = nn.MarginRankingCriterion()
+   local output = mrc:forward(input, 1)
+   local gradInput = mrc:backward(input, 1)
+   -- cast to float
+   local input2 = {input[1]:float(), input[2]:float()}
+   local mrc2 = mrc:clone():float()
+   local output2 = mrc2:forward(input2, 1)
+   local gradInput2 = mrc2:backward(input2, 1)
+   mytester:assert(math.abs(output2 - output) < 0.00001, "MRC:type() forward error")
+   mytester:assertTensorEq(gradInput[1]:float(), gradInput2[1], 0.00001, "MRC:type() backward error 1")
+   mytester:assert(torch.type(gradInput2[1]) == 'torch.FloatTensor', "MRC:type() error 1")
+   mytester:assertTensorEq(gradInput[2]:float(), gradInput2[2], 0.00001, "MRC:type() backward error 2")
+   mytester:assert(torch.type(gradInput2[2]) == 'torch.FloatTensor', "MRC:type() error 2")
+end
+
 function nntest.WeightedMSECriterion()
    local input = torch.rand(10)
    local target = input:clone():add(torch.rand(10))
