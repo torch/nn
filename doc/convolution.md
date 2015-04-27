@@ -282,7 +282,7 @@ columns or rows of the input image might be lost. It is up to the user to
 add proper padding in images.
 
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
-will be `nOutputPlane x owidth x oheight` where
+will be `nOutputPlane x oheight x owidth` where
 ```lua
 owidth  = floor((width  + 2*padding - kW) / dW + 1)
 oheight = floor((height + 2*padding - kH) / dH + 1)
