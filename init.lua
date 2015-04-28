@@ -121,6 +121,7 @@ include('L1Penalty.lua')
 include('WeightedMSECriterion.lua')
 include('BCECriterion.lua')
 include('CrossEntropyCriterion.lua')
+include('ParallelCriterion.lua')
 
 include('StochasticGradient.lua')
 
