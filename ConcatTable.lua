@@ -86,15 +86,6 @@ function ConcatTable:zeroGradParameters()
    end
 end
 
-function ConcatTable:type(type)
-   parent.type(self, type)
-   if torch.type(self.gradInput) == 'table' then
-      for i, gradInput in ipairs(self.gradInput) do
-         self.gradInput[i] = gradInput:type(type)
-      end
-   end
-end
-
 function ConcatTable:__tostring__()
    local tab = '  '
    local line = '\n'

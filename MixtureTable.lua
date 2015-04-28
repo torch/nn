@@ -146,22 +146,3 @@ function MixtureTable:updateGradInput(input, gradOutput)
 
    return self.gradInput
 end
-
-function MixtureTable:type(type)
-   self.output = self.output:type(type)
-   self.gradInput[1] = self.gradInput[1]:type(type)
-   self._gaterView = self._gaterView:type(type)
-   self._expert = self._expert:type(type)
-   self._expertView = self._expertView:type(type)
-   self._sum = self._sum:type(type)
-   self._gradInput = self._gradInput:type(type)
-   self._expert2 = self._expert2:type(type)
-   self._expertView2 = self._expertView2:type(type)
-   if torch.type(self.gradInput[2]) == 'table' then
-      for i,expertGradInput in ipairs(self.gradInput[2]) do
-         self.gradInput[2][i] = expertGradInput:type(type)
-      end
-   else
-      self.gradInput[2] = self._gradInput
-   end
-end

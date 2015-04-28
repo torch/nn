@@ -90,11 +90,3 @@ function SpatialSubtractiveNormalization:updateGradInput(input, gradOutput)
    -- done
    return self.gradInput
 end
-
-function SpatialSubtractiveNormalization:type(type)
-   parent.type(self,type)
-   self.meanestimator:type(type)
-   self.divider:type(type)
-   self.subtractor:type(type)
-   return self
-end

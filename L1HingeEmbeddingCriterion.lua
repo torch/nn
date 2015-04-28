@@ -39,9 +39,3 @@ function L1HingeEmbeddingCriterion:updateGradInput(input, y)
   self.gradInput[2]:zero():add(-1, self.gradInput[1])
   return self.gradInput
 end
-
-function L1HingeEmbeddingCriterion:type(type)
-   self.gradInput[1] = self.gradInput[1]:type(type)
-   self.gradInput[2] = self.gradInput[2]:type(type)
-   return parent.type(self, type)
-end
