@@ -113,18 +113,23 @@ function Module:clone(...)
    return clone
 end
 
-local function recursiveType(param, type_str)
+local function recursiveType(param, type_str, device)
    if torch.type(param) == 'table' then
       for i = 1, #param do
-         param[i] = recursiveType(param[i], type_str)
+         param[i] = recursiveType(param[i], type_str, device)
       end
    elseif torch.isTensor(param) then
-       param = param:type(type_str)
+      if device then
+         assert(type_str == 'torch.CudaTensor')
+         param = param:cudaOn(device)
+      else
+         param = param:type(type_str)
+      end
    end
    return param
 end
 
-function Module:type(type)
+function Module:_type(type, device)
    assert(type, 'Module: must provide a type to convert to')
    -- find all tensors and convert them
    for key,param in pairs(self) do
@@ -132,16 +137,20 @@ function Module:type(type)
       -- are table's of tensors.  To be general we need to recursively
       -- cast fields that may be nested tables.
       if key ~= 'modules' then
-        self[key] = recursiveType(self[key], type)
+        self[key] = recursiveType(self[key], type, device)
       end
    end
    -- find submodules in classic containers 'modules'
    if self.modules then
       for _,module in ipairs(self.modules) do
-         module:type(type)
+         module:_type(type, device)
       end
    end
    return self
+end
+
+function Module:type(type)
+  return self:_type(type)
 end
 
 function Module:float()
@@ -154,6 +163,10 @@ end
 
 function Module:cuda()
    return self:type('torch.CudaTensor')
+end
+
+function Module:cudaOn(device)
+   return self:_type('torch.CudaTensor', device)
 end
 
 function Module:reset()
