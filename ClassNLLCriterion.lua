@@ -10,6 +10,16 @@ function ClassNLLCriterion:__init(weights)
    end
 end
 
+
+function ClassNLLCriterion:__len()
+   if (self.weights) then
+      return #self.weights
+   else
+      return 0
+   end
+end
+
+
 function ClassNLLCriterion:updateOutput(input, target)
    if input:type() == 'torch.CudaTensor' and not self.weights then
       if input:dim() == 1 then
