@@ -3494,6 +3494,14 @@ function nntest.Padding()
    mytester:assertTensorEq(gradInput, input, 0.00001, "Padding backward error")
 end
 
+function initSeed(seed)
+   seed = seed or os.time()
+   -- ensure that you can reproduce a failing test
+   print('seed: ', seed)
+   math.randomseed(seed)
+   torch.manualSeed(seed)
+end
+
 mytester:add(nntest)
 
 if not nn then
@@ -3504,9 +3512,9 @@ if not nn then
 else
    jac = nn.Jacobian
    sjac = nn.SparseJacobian
-   function nn.test(tests)
+   function nn.test(tests, seed)
       -- randomize stuff
-      math.randomseed(os.time())
+      initSeed(seed)
       mytester:run(tests)
       return mytester
    end
