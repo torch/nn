@@ -128,7 +128,7 @@ int luaopen_libnn(lua_State *L)
 {
   lua_newtable(L);
   lua_pushvalue(L, -1);
-  lua_setfield(L, LUA_GLOBALSINDEX, "nn");
+  lua_setglobal(L, "nn");
 
   nn_FloatMin_init(L);
   nn_FloatMax_init(L);
