@@ -113,13 +113,3 @@ function SpatialDivisiveNormalization:updateGradInput(input, gradOutput)
    -- done
    return self.gradInput
 end
-
-function SpatialDivisiveNormalization:type(type)
-   parent.type(self,type)
-   self.meanestimator:type(type)
-   self.stdestimator:type(type)
-   self.divider:type(type)
-   self.normalizer:type(type)
-   self.thresholder:type(type)
-   return self
-end
