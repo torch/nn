@@ -46,6 +46,7 @@ include('WeightedEuclidean.lua')
 include('PairwiseDistance.lua')
 include('CosineDistance.lua')
 include('DotProduct.lua')
+include('L2Normalize.lua')
 
 include('Exp.lua')
 include('Log.lua')
