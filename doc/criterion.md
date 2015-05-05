@@ -20,9 +20,9 @@ target, they compute a gradient according to a given loss function.
   * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
   * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
  * Miscelaneus criterions:
-  * [`MultiCriterion`](#nn.MultiCriterion): a weighted sum of other criterions;
+  * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
+  * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
   * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
-
 
 <a name="nn.Criterion"/>
 ## Criterion ##
@@ -344,10 +344,50 @@ This returns a Criterion which is a weighted sum of other Criterion.
 Criterions are added using the method:
 
 ```lua
-criterion:add(singleCriterion, weight)
+criterion:add(singleCriterion [, weight])
 ```
 
-where `weight` is a scalar.
+where `weight` is a scalar (default 1). Each criterion is applied to the same `input` and `target`.
+
+Example :
+
+```lua
+input = torch.rand(2,10)
+target = torch.IntTensor{1,8}
+nll = nn.ClassNLLCriterion()
+nll2 = nn.CrossEntropyCriterion()
+mc = nn.MultiCriterion():add(nll, 0.5):add(nll2)
+output = mc:forward(input, target)
+```
+
+<a name="nn.ParallelCriterion"/>
+## ParallelCriterion ##
+
+```lua
+criterion = nn.ParallelCriterion([repeatTarget])
+```
+
+This returns a Criterion which is a weighted sum of other Criterion. 
+Criterions are added using the method:
+
+```lua
+criterion:add(singleCriterion [, weight])
+```
+
+where `weight` is a scalar (default 1). The criterion expects an `input` and `target` table. 
+Each criterion is applied to the commensurate `input` and `target` element in the tables.
+However, if `repeatTarget=true`, the `target` is repeatedly presented to each criterion (with a different `input`).
+
+Example :
+
+```lua
+input = {torch.rand(2,10), torch.randn(2,10)}
+target = {torch.IntTensor{1,8}, torch.randn(2,10)}
+nll = nn.ClassNLLCriterion()
+mse = nn.MSECriterion()
+pc = nn.ParallelCriterion():add(nll, 0.5):add(mse)
+output = pc:forward(input, target)
+```
 
 
 <a name="nn.HingeEmbeddingCriterion"/>
