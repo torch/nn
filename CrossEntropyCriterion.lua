@@ -25,11 +25,4 @@ function CrossEntropyCriterion:updateGradInput(input, target)
    return self.gradInput
 end
 
-function CrossEntropyCriterion:type(name)
-   Criterion.type(self, name)
-   self.lsm:type(name)
-   self.nll:type(name)
-   return self
-end
-
 return nn.CrossEntropyCriterion
