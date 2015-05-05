@@ -21,7 +21,7 @@ function L2Normalize:updateGradInput(input, gradOutput)
    assert(gradOutput:dim() == 2, 'only mini-batch supported')
    local n = input:size(1) -- batch size
    local d = input:size(2) -- dimensionality of vectors
-   
+
    local sums = torch.sum(torch.cmul(input,input), 2):view(-1)
    local divterms = torch.pow(sums,3/2)
    -- compute diagonal term
@@ -34,7 +34,7 @@ function L2Normalize:updateGradInput(input, gradOutput)
    -- compute the local gradient of the L2 transformation
    local dsum = torch.cdiv(diag + cross, divterms:view(n,1,1):expand(n,d,d))
    -- chain the gradient
-   self.gradInput = torch.bmm(dsum, gradOutput:view(n,d,1))
+   self.gradInput = torch.bmm(dsum, gradOutput:view(n,d,1)):squeeze()
    return self.gradInput
 end
 
