@@ -117,18 +117,7 @@ function Module:type(type)
    assert(type, 'Module: must provide a type to convert to')
    -- find all tensors and convert them
    for key,param in pairs(self) do
-      -- Many modules (like CDivTable) have output or gradInput fields which
-      -- are table's of tensors.  To be general we need to recursively
-      -- cast fields that may be nested tables.
-      if key ~= 'modules' then
-        self[key] = nn._utils.recursiveType(param, type)
-      end
-   end
-   -- find submodules in classic containers 'modules'
-   if self.modules then
-      for _,module in ipairs(self.modules) do
-         module:type(type)
-      end
+      self[key] = nn.utils.recursiveType(param, type)
    end
    return self
 end
