@@ -6,6 +6,8 @@ function PReLU:__init(nOutputPlane)
    self.nOutputPlane = nOutputPlane or 0
    self.weight = torch.Tensor(nOutputPlane or 1):fill(0.25)
    self.gradWeight = torch.Tensor(nOutputPlane or 1)
+   self.gradWeightBuf = torch.Tensor()
+   self.gradWeightBuf2 = torch.Tensor()
 end
 
 function PReLU:updateOutput(input)
