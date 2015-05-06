@@ -33,8 +33,7 @@ function L2Normalize:updateGradInput(input, gradOutput)
    local b2 = input:view(n,1,d)
    self.diag:add(-torch.bmm(b1,b2))
    -- compute the local gradient of the L2 transformation
-   self.buffer:pow(3)
-   self.diag:cdiv(self.buffer:view(n,1,1):expand(n,d,d))
+   self.diag:cdiv(torch.pow(self.buffer,3):view(n,1,1):expand(n,d,d))
    -- chain the gradient
    self.gradInput:resize(n,d,1):bmm(self.diag, gradOutput:view(n,d,1)):resize(n,d)
    return self.gradInput
