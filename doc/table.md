@@ -610,7 +610,7 @@ Example 1:
 -0.2955
 [torch.DoubleTensor of dimension 2x1]
 
-> =unpack(nn.SelectTable(1):backward(input, torch.randn(2, 3)))
+> =table.unpack(nn.SelectTable(1):backward(input, torch.randn(2, 3)))
 -0.4891 -0.3495 -0.3182
 -2.0999  0.7381 -0.5312
 [torch.DoubleTensor of dimension 2x3]
@@ -634,7 +634,7 @@ Example 2:
     }
 }
 
-> =unpack(nn.SelectTable(2):backward(input, {torch.randn(2, 1), {torch.randn(2, 2)}}))
+> =table.unpack(nn.SelectTable(2):backward(input, {torch.randn(2, 1), {torch.randn(2, 2)}}))
 0 0 0
 0 0 0
 [torch.DoubleTensor of dimension 2x3]

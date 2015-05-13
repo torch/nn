@@ -18,7 +18,7 @@ end
 
 function MM:updateOutput(input)
   assert(#input == 2, 'input must be a pair of minibatch matrices')
-  local a, b = unpack(input)
+  local a, b = table.unpack(input)
   assert(a:nDimension() == 2 or a:nDimension() == 3, 'input tensors must be 2D or 3D')
 
   if a:nDimension() == 2 then
@@ -47,7 +47,7 @@ end
 
 function MM:updateGradInput(input, gradOutput)
   assert(#input == 2, 'input must be a pair of tensors')
-  local a, b = unpack(input)
+  local a, b = table.unpack(input)
   self.gradInput[1]:resizeAs(a)
   self.gradInput[2]:resizeAs(b)
 

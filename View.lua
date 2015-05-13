@@ -74,7 +74,7 @@ end
 function View:updateOutput(input)
    local bsz = batchsize(input, self.size, self.numInputDims, self.numElements)
    if bsz then
-      self.output = input:view(bsz, unpack(self.size:totable()))
+      self.output = input:view(bsz, table.unpack(self.size:totable()))
    else
       self.output = input:view(self.size)
    end

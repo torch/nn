@@ -2923,7 +2923,7 @@ function nntest.View()
    local target = template:size():totable()
    local module = nn.View(template:size())
    mytester:assertTableEq(module:forward(input):size():totable(), target, "Error in forward (1)")
-   local module = nn.View(unpack(target))
+   local module = nn.View(table.unpack(target))
    mytester:assertTableEq(module:forward(input):size():totable(), target, "Error in forward (2)")
 
    -- Minibatch
@@ -2979,7 +2979,7 @@ function nntest.Reshape()
    local target = template:size():totable()
    local module = nn.Reshape(template:size())
    mytester:assertTableEq(module:forward(input):size():totable(), target, "Error in forward (1)")
-   local module = nn.View(unpack(target))
+   local module = nn.View(table.unpack(target))
    mytester:assertTableEq(module:forward(input):size():totable(), target, "Error in forward (2)")
 
    -- Minibatch
@@ -3005,7 +3005,7 @@ function nntest.SpatialUpSamplingNearest()
     end
 
     -- Check that the gradient is correct by using finite elements
-    local input = torch.Tensor(unpack(shape)):zero()
+    local input = torch.Tensor(table.unpack(shape)):zero()
 
     local err = jac.testJacobian(m, input)
     mytester:assertlt(err, precision, ' error on state ')
@@ -3250,7 +3250,7 @@ function nntest.MM()
   local gradOutput = torch.randn(M, P)
   local gradInput = mm:backward({A, B}, gradOutput)
   mytester:assert(#gradInput == 2, 'gradInput must be table of size 2')
-  local gradA, gradB = unpack(gradInput)
+  local gradA, gradB = table.unpack(gradInput)
   mytester:assertTableEq(gradA:size():totable(), A:size():totable(),
                          'Gradient for input A has wrong size')
   mytester:assertTableEq(gradB:size():totable(), B:size():totable(),
@@ -3281,7 +3281,7 @@ function nntest.BatchMMNoTranspose()
     local gradOutput = torch.randn(bSize, M, P)
     local gradInput = mm:backward({A, B}, gradOutput)
     mytester:assert(#gradInput == 2, 'gradInput must be table of size 2')
-    local gradA, gradB = unpack(gradInput)
+    local gradA, gradB = table.unpack(gradInput)
     mytester:assertTableEq(gradA:size():totable(), A:size():totable(),
                            'Gradient for input A has wrong size')
     mytester:assertTableEq(gradB:size():totable(), B:size():totable(),
@@ -3315,7 +3315,7 @@ function nntest.BatchMMTransposeA()
     local gradOutput = torch.randn(bSize, M, P)
     local gradInput = mm:backward({A, B}, gradOutput)
     mytester:assert(#gradInput == 2, 'gradInput must be table of size 2')
-    local gradA, gradB = unpack(gradInput)
+    local gradA, gradB = table.unpack(gradInput)
     mytester:assertTableEq(gradA:size():totable(), A:size():totable(),
                            'Gradient for input A has wrong size')
     mytester:assertTableEq(gradB:size():totable(), B:size():totable(),
@@ -3349,7 +3349,7 @@ function nntest.BatchMMTransposeB()
     local gradOutput = torch.randn(bSize, M, P)
     local gradInput = mm:backward({A, B}, gradOutput)
     mytester:assert(#gradInput == 2, 'gradInput must be table of size 2')
-    local gradA, gradB = unpack(gradInput)
+    local gradA, gradB = table.unpack(gradInput)
     mytester:assertTableEq(gradA:size():totable(), A:size():totable(),
                            'Gradient for input A has wrong size')
     mytester:assertTableEq(gradB:size():totable(), B:size():totable(),
@@ -3383,7 +3383,7 @@ function nntest.BatchMMTransposeBoth()
     local gradOutput = torch.randn(bSize, M, P)
     local gradInput = mm:backward({A, B}, gradOutput)
     mytester:assert(#gradInput == 2, 'gradInput must be table of size 2')
-    local gradA, gradB = unpack(gradInput)
+    local gradA, gradB = table.unpack(gradInput)
     mytester:assertTableEq(gradA:size():totable(), A:size():totable(),
                            'Gradient for input A has wrong size')
     mytester:assertTableEq(gradB:size():totable(), B:size():totable(),
