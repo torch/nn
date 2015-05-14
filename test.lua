@@ -1153,7 +1153,7 @@ function nntest.SpatialSubtractiveNormalization_2dkernel()
    local nbfeatures = math.random(3,5)
    local kernel = torch.Tensor(kersize,kersize):fill(1)
    local module = nn.SpatialSubtractiveNormalization(nbfeatures,kernel)
-   local input = torch.rand(nbfeatures,inputSize,inputSize)
+   local input = torch.rand(nbfeatures,inputSize,inputSize/2)
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
@@ -1161,6 +1161,30 @@ function nntest.SpatialSubtractiveNormalization_2dkernel()
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+    -- test batch mode
+   local output = module:forward(input):clone()
+   local gradOutput = output:clone():uniform(0,1)
+   local gradInput = module:backward(input, gradOutput):clone()
+   local batchSize = 4
+   local input2 = torch.rand(batchSize,nbfeatures,inputSize,inputSize/2)
+   input2[2]:copy(input)
+   
+   local output2 = module:forward(input2)
+   local gradOutput2 = output2:clone():uniform(0,1)
+   gradOutput2[2]:copy(gradOutput)
+   local gradInput2 = module:backward(input2, gradOutput2)
+   
+   mytester:assertTensorEq(output2[2], output, 0.000001, "SpatialSubstractiveNormalization 2d forward batch err")
+   mytester:assertTensorEq(gradOutput2[2], gradOutput, 0.000001, "SpatialSubstractiveNormalization 2d backward batch err")
+   
+   local err = jac.testJacobian(module,input2)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input2)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
 end
 
 function nntest.SpatialSubtractiveNormalization_1dkernel()
@@ -1169,12 +1193,35 @@ function nntest.SpatialSubtractiveNormalization_1dkernel()
    local nbfeatures = math.random(3,5)
    local kernel = torch.Tensor(kersize):fill(1)
    local module = nn.SpatialSubtractiveNormalization(nbfeatures,kernel)
-   local input = torch.rand(nbfeatures,inputSize,inputSize)
+   local input = torch.rand(nbfeatures,inputSize,inputSize/2)
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+    -- test batch mode
+   local output = module:forward(input):clone()
+   local gradOutput = output:clone():uniform(0,1)
+   local gradInput = module:backward(input, gradOutput):clone()
+   local batchSize = 4
+   local input2 = torch.rand(batchSize,nbfeatures,inputSize,inputSize/2)
+   input2[2]:copy(input)
+   
+   local output2 = module:forward(input2)
+   local gradOutput2 = output2:clone():uniform(0,1)
+   gradOutput2[2]:copy(gradOutput)
+   local gradInput2 = module:backward(input2, gradOutput2)
+   
+   mytester:assertTensorEq(output2[2], output, 0.000001, "SpatialSubstractiveNormalization 1d forward batch err")
+   mytester:assertTensorEq(gradOutput2[2], gradOutput, 0.000001, "SpatialSubstractiveNormalization 1d backward batch err")
+   
+   local err = jac.testJacobian(module,input2)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input2)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
@@ -1185,12 +1232,35 @@ function nntest.SpatialDivisiveNormalization_2dkernel()
    local nbfeatures = math.random(3,5)
    local kernel = torch.Tensor(kersize,kersize):fill(1)
    local module = nn.SpatialDivisiveNormalization(nbfeatures,kernel)
-   local input = torch.rand(nbfeatures,inputSize,inputSize)
+   local input = torch.rand(nbfeatures,inputSize,inputSize/2)
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- test batch mode
+   local output = module:forward(input):clone()
+   local gradOutput = output:clone():uniform(0,1)
+   local gradInput = module:backward(input, gradOutput):clone()
+   local batchSize = 4
+   local input2 = torch.rand(batchSize,nbfeatures,inputSize,inputSize/2)
+   input2[2]:copy(input)
+   
+   local output2 = module:forward(input2)
+   local gradOutput2 = output2:clone():uniform(0,1)
+   gradOutput2[2]:copy(gradOutput)
+   local gradInput2 = module:backward(input2, gradOutput2)
+   
+   mytester:assertTensorEq(output2[2], output, 0.000001, "SpatialDivisiveNormalization 2d forward batch err")
+   mytester:assertTensorEq(gradOutput2[2], gradOutput, 0.000001, "SpatialDivisiveNormalization 2d backward batch err")
+   
+   local err = jac.testJacobian(module,input2)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input2)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
@@ -1201,12 +1271,77 @@ function nntest.SpatialDivisiveNormalization_1dkernel()
    local nbfeatures = math.random(3,5)
    local kernel = torch.Tensor(kersize):fill(1)
    local module = nn.SpatialDivisiveNormalization(nbfeatures,kernel)
-   local input = torch.rand(nbfeatures,inputSize,inputSize)
+   local input = torch.rand(nbfeatures,inputSize,inputSize/2)
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+    -- test batch mode
+   local output = module:forward(input):clone()
+   local gradOutput = output:clone():uniform(0,1)
+   local gradInput = module:backward(input, gradOutput):clone()
+   local batchSize = 4
+   local input2 = torch.rand(batchSize,nbfeatures,inputSize,inputSize/2)
+   input2[2]:copy(input)
+   
+   local output2 = module:forward(input2)
+   local gradOutput2 = output2:clone():uniform(0,1)
+   gradOutput2[2]:copy(gradOutput)
+   local gradInput2 = module:backward(input2, gradOutput2)
+   
+   mytester:assertTensorEq(output2[2], output, 0.000001, "SpatialDivisiveNormalization 1d forward batch err")
+   mytester:assertTensorEq(gradOutput2[2], gradOutput, 0.000001, "SpatialDivisiveNormalization 1d backward batch err")
+   
+   local err = jac.testJacobian(module,input2)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input2)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
+function nntest.SpatialContrastiveNormalization()
+   local inputSize = math.random(6,9)
+   local kersize = 3
+   local nbfeatures = math.random(3,5)
+   local kernel = torch.Tensor(kersize,kersize):fill(1)
+   local module = nn.SpatialContrastiveNormalization(nbfeatures,kernel)
+   local input = torch.rand(nbfeatures,inputSize,inputSize/2)
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- test batch mode and type
+   local output = module:forward(input):clone()
+   local gradOutput = output:clone():uniform(0,1)
+   local gradInput = module:backward(input, gradOutput):clone()
+   local batchSize = 4
+   local input2 = torch.rand(batchSize,nbfeatures,inputSize,inputSize/2):float()
+   input2[2]:copy(input)
+   
+   module:float() -- type-cast
+   local output2 = module:forward(input2)
+   local gradOutput2 = output2:clone():uniform(0,1)
+   gradOutput2[2]:copy(gradOutput)
+   local gradInput2 = module:backward(input2, gradOutput2)
+   
+   mytester:assertTensorEq(output2[2], output:float(), 0.000001, "SpatialContrastiveNormalization 2d forward batch err")
+   mytester:assertTensorEq(gradOutput2[2], gradOutput:float(), 0.000001, "SpatialContrastiveNormalization 2d backward batch err")
+   
+   module:double()
+   input2 = input2:double()
+   local err = jac.testJacobian(module,input2)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input2)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end

@@ -34,7 +34,7 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
       self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane), self.kernel:size(1), 1))
       self.meanestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, 1, self.kernel:size(1)))
    end
-   self.meanestimator:add(nn.Replicate(self.nInputPlane))
+   self.meanestimator:add(nn.Replicate(self.nInputPlane,1,3))
 
    -- create convolutional std estimator
    self.stdestimator = nn.Sequential()
@@ -46,7 +46,7 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
       self.stdestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane), self.kernel:size(1), 1))
       self.stdestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, 1, self.kernel:size(1)))
    end
-   self.stdestimator:add(nn.Replicate(self.nInputPlane))
+   self.stdestimator:add(nn.Replicate(self.nInputPlane,1,3))
    self.stdestimator:add(nn.Sqrt())
 
    -- set kernel and bias
@@ -82,15 +82,28 @@ function SpatialDivisiveNormalization:__init(nInputPlane, kernel, threshold, thr
 end
 
 function SpatialDivisiveNormalization:updateOutput(input)
+   
+   self.localstds = self.stdestimator:updateOutput(input)
+
    -- compute side coefficients
-   if (input:size(3) ~= self.coef:size(3)) or (input:size(2) ~= self.coef:size(2)) then
-      local ones = input.new():resizeAs(input):fill(1)
-      self.coef = self.meanestimator:updateOutput(ones)
-      self.coef = self.coef:clone()
+   local dim = input:dim()
+   if self.localstds:dim() ~= self.coef:dim() or (input:size(dim) ~= self.coef:size(dim)) or (input:size(dim-1) ~= self.coef:size(dim-1)) then
+      self.ones = self.ones or input.new()
+      if dim == 4 then
+         -- batch mode
+         self.ones:resizeAs(input[1]):fill(1)
+         local coef = self.meanestimator:updateOutput(self.ones)
+         self._coef = self._coef or input.new()
+         self._coef:resizeAs(coef):copy(coef) -- make contiguous for view
+         self.coef = self._coef:view(1,table.unpack(self._coef:size():totable())):expandAs(self.localstds)
+      else
+         self.ones:resizeAs(input):fill(1)
+         self.coef = self.meanestimator:updateOutput(self.ones)
+      end
+      
    end
 
    -- normalize std dev
-   self.localstds = self.stdestimator:updateOutput(input)
    self.adjustedstds = self.divider:updateOutput{self.localstds, self.coef}
    self.thresholdedstds = self.thresholder:updateOutput(self.adjustedstds)
    self.output = self.normalizer:updateOutput{input, self.thresholdedstds}
