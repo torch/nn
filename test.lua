@@ -3428,6 +3428,25 @@ function nntest.Replicate()
 
    mytester:assertTensorEq(vOutput1, expected1, precision, 'Wrong tiling of data when replicating vector.')
    mytester:assertTensorEq(vOutput2, expected2, precision, 'Wrong tiling of data when replicating vector.')
+   
+   -- batch mode
+   local vector = torch.rand(4,3)
+   
+   local r1 = nn.Replicate(2, 1, 1)
+   local r2 = nn.Replicate(2, 2, 1)
+
+   local vOutput1 = r1:forward(vector):clone()
+   local vOutput2 = r2:forward(vector):clone()
+
+   local expected1 = torch.zeros(4, 2, 3)
+   local expected2 = torch.zeros(4, 3, 2)
+   expected1:select(2, 1):copy(vector)
+   expected1:select(2, 2):copy(vector)
+   expected2:select(3, 1):copy(vector)
+   expected2:select(3, 2):copy(vector)
+
+   mytester:assertTensorEq(vOutput1, expected1, precision, 'Wrong tiling of data when replicating batch vector.')
+   mytester:assertTensorEq(vOutput2, expected2, precision, 'Wrong tiling of data when replicating batch vector.')
 end
 
 function nntest.BatchNormalization()
