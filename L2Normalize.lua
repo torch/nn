@@ -2,10 +2,12 @@
 --[[ 
    This layer expects an [n x d] Tensor and normalizes each
    row to have unit L2 norm.
+   - eps is a smoothing parameter that prevents division by zero
 ]]--
 local L2Normalize, parent = torch.class('nn.L2Normalize', 'nn.Module')
-function L2Normalize:__init()
+function L2Normalize:__init(eps)
    parent.__init(self)
+   self.eps = eps or 1e-10
 end
 function L2Normalize:updateOutput(input)
    assert(input:dim() == 2, 'only mini-batch supported (2D tensor), got '
@@ -13,7 +15,7 @@ function L2Normalize:updateOutput(input)
    self.output:resizeAs(input)
    self.buffer = self.buffer or input.new()
    self.normSquared = self.normSquared or input.new()
-   self.normSquared:sum(self.buffer:cmul(input, input), 2)
+   self.normSquared:sum(self.buffer:cmul(input, input), 2):add(self.eps)
    self.buffer:sqrt(self.normSquared)
    self.output:copy(input):cdiv(self.buffer:expandAs(input))
    return self.output
