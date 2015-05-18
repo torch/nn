@@ -3708,29 +3708,6 @@ function nntest.Padding()
    mytester:assertTensorEq(gradInput, input, 0.00001, "Padding backward error")
 end
 
-function nntest.L2Normalize()
-   local ini = math.random(6,8)
-   local inj = math.random(3,5)
-   local input = torch.randn(ini, inj)
-
-   local module = nn.L2Normalize()
-
-   -- test correctness of output
-   local output = module:forward(input)
-   local norms = torch.norm(output, 2, 2)
-   local desired_norms = torch.ones(ini)
-   mytester:assertTensorEq(norms, desired_norms, 0.000001, 'L2Normalize forward err')
-
-   -- test the Jacobian
-   local err = jac.testJacobian(module,input)
-   mytester:assertlt(err, precision, 'error on state ')
-
-   -- test IO correctness
-   local ferr, berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
-end
-
 mytester:add(nntest)
 
 if not nn then
