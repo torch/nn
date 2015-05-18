@@ -13,3 +13,5 @@ function nn.utils.recursiveType(param, type_str)
    end
    return param
 end
+
+table.unpack = table.unpack or unpack

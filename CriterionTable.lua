@@ -7,11 +7,11 @@ function CriterionTable:__init(criterion)
 end
 
 function CriterionTable:updateOutput(input) 
-   self.output = self.criterion:updateOutput(unpack(input))
+   self.output = self.criterion:updateOutput(table.unpack(input))
    return self.output
 end
     
 function CriterionTable:updateGradInput(input, gradOutput)
-  self.criterion:updateGradInput(unpack(input))
+  self.criterion:updateGradInput(table.unpack(input))
   return self.gradInput
 end 

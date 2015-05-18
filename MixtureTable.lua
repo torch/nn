@@ -18,7 +18,7 @@ function MixtureTable:__init(dim)
 end
 
 function MixtureTable:updateOutput(input) 
-   local gaterInput, expertInputs = unpack(input)
+   local gaterInput, expertInputs = table.unpack(input)
    
    self.dimG = 2
    local batchSize = gaterInput:size(1)
@@ -79,8 +79,8 @@ function MixtureTable:updateOutput(input)
 end
 
 function MixtureTable:updateGradInput(input, gradOutput)
-   local gaterInput, expertInputs = unpack(input)
-   local gaterGradInput, expertGradInputs = unpack(self.gradInput)
+   local gaterInput, expertInputs = table.unpack(input)
+   local gaterGradInput, expertGradInputs = table.unpack(self.gradInput)
       
    if self.table then
       if not self.backwardSetup then

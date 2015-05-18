@@ -35,7 +35,7 @@ function SpatialSubtractiveNormalization:__init(nInputPlane, kernel)
       self.meanestimator:add(nn.SpatialConvolutionMap(nn.tables.oneToOne(self.nInputPlane), self.kernel:size(1), 1))
       self.meanestimator:add(nn.SpatialConvolution(self.nInputPlane, 1, 1, self.kernel:size(1)))
    end
-   self.meanestimator:add(nn.Replicate(self.nInputPlane))
+   self.meanestimator:add(nn.Replicate(self.nInputPlane,1,3))
 
    -- set kernel and bias
    if kdim == 2 then
@@ -60,12 +60,27 @@ function SpatialSubtractiveNormalization:__init(nInputPlane, kernel)
    self.coef = torch.Tensor(1,1,1)
 end
 
-function SpatialSubtractiveNormalization:updateOutput(input)
+function SpatialSubtractiveNormalization:updateOutput(input)   
    -- compute side coefficients
-   if (input:size(3) ~= self.coef:size(3)) or (input:size(2) ~= self.coef:size(2)) then
-      local ones = input.new():resizeAs(input):fill(1)
-      self.coef = self.meanestimator:updateOutput(ones)
-      self.coef = self.coef:clone()
+   local dim = input:dim()
+   if input:dim()+1 ~= self.coef:dim() or (input:size(dim) ~= self.coef:size(dim)) or (input:size(dim-1) ~= self.coef:size(dim-1)) then
+      self.ones = self.ones or input.new()
+      self._coef = self._coef or self.coef.new()
+      if dim == 4 then
+         -- batch mode
+         self.ones:resizeAs(input[1]):fill(1)
+         local coef = self.meanestimator:updateOutput(self.ones)
+         self._coef:resizeAs(coef):copy(coef) -- make contiguous for view
+         local size = coef:size():totable()
+         table.insert(size,1,input:size(1))
+         self.coef = self._coef:view(1,table.unpack(self._coef:size():totable())):expand(table.unpack(size))
+      else
+         self.ones:resizeAs(input):fill(1)
+         local coef = self.meanestimator:updateOutput(self.ones)
+         self._coef:resizeAs(coef):copy(coef) -- copy meanestimator.output as it will be used below
+         self.coef = self._coef
+      end
+      
    end
 
    -- compute mean
@@ -84,6 +99,7 @@ function SpatialSubtractiveNormalization:updateGradInput(input, gradOutput)
    -- backprop through all modules
    local gradsub = self.subtractor:updateGradInput({input, self.adjustedsums}, gradOutput)
    local graddiv = self.divider:updateGradInput({self.localsums, self.coef}, gradsub[2])
+   local size = self.meanestimator:updateGradInput(input, graddiv[1]):size()
    self.gradInput:add(self.meanestimator:updateGradInput(input, graddiv[1]))
    self.gradInput:add(gradsub[1])
 
