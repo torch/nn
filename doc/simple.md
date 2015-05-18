@@ -511,10 +511,14 @@ Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/do
 ## Replicate ##
 
 ```lua
-module = nn.Replicate(nFeature, dim)
+module = nn.Replicate(nFeature [, dim, ndim])
 ```
 
-This class creates an output where the input is replicated `nFeature` times along dimension `dim` (default 1). There is no memory allocation or memory copy in this module. It sets the [stride](https://github.com/torch/torch7/blob/master/doc/tensor.md#torch.Tensor.stride) along the `dim`th dimension to zero.
+This class creates an output where the input is replicated `nFeature` times along dimension `dim` (default 1). 
+There is no memory allocation or memory copy in this module. 
+It sets the [stride](https://github.com/torch/torch7/blob/master/doc/tensor.md#torch.Tensor.stride) along the `dim`th dimension to zero.
+When provided, `ndim` should specify the number of non-batch dimensions.
+This allows the module to replicate the same non-batch dimension `dim` for both batch and non-batch `inputs`.
 
 ```lua
 > x = torch.linspace(1, 5, 5)
