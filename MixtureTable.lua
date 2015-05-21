@@ -3,22 +3,20 @@ local MixtureTable, parent = torch.class('nn.MixtureTable', 'nn.Module')
 function MixtureTable:__init(dim)
    parent.__init(self)
    self.dim = dim
-   self._gaterView = torch.Tensor()
-   self._expert = torch.Tensor()
-   self._expertView = torch.Tensor()
-   self._sum = torch.Tensor()
    self.size = torch.LongStorage()
    self.batchSize = 0
-   self.gradInput = {torch.Tensor(), {}}
-   self._gradInput = torch.Tensor()
    self.size2 = torch.LongStorage()
-   self._expertView2 = torch.Tensor()
-   self._expert2 = torch.Tensor()
    self.backwardSetup = false
+   self.gradInput = {}
 end
 
 function MixtureTable:updateOutput(input) 
    local gaterInput, expertInputs = table.unpack(input)
+   
+   -- buffers 
+   self._gaterView = self.gaterView or input[1].new()
+   self._expert = self._expert or input[1].new()
+   self._expertView = self._expertView or input[1].new()
    
    self.dimG = 2
    local batchSize = gaterInput:size(1)
@@ -43,9 +41,6 @@ function MixtureTable:updateOutput(input)
          end
          self.size[self.dim] = gaterInput:size(self.dimG)
          self.output:resizeAs(expertInput)
-         if torch.type(self.gradInput[2]) ~= 'table' then
-            self.gradInput[2] = {}
-         end
          self.backwardSetup = false
          self.batchSize = batchSize
       end
@@ -80,7 +75,14 @@ end
 
 function MixtureTable:updateGradInput(input, gradOutput)
    local gaterInput, expertInputs = table.unpack(input)
+   nn.utils.recursiveResizeAs(self.gradInput, input)
    local gaterGradInput, expertGradInputs = table.unpack(self.gradInput)
+   
+   -- buffers
+   self._sum = self._sum or input[1].new()
+   self._gradInput = self._gradInput or {input[1].new(), {}}
+   self._expertView2 = self._expertView2 or input[1].new()
+   self._expert2 = self._expert2 or input[1].new()
       
    if self.table then
       if not self.backwardSetup then
@@ -145,4 +147,15 @@ function MixtureTable:updateGradInput(input, gradOutput)
    end
 
    return self.gradInput
+end
+
+function MixtureTable:type(type)
+   self._gaterView = nil
+   self._expert = nil
+   self._expertView = nil
+   self._sum = nil
+   self._gradInput = nil
+   self._expert2 = nil
+   self._expertView2 = nil
+   return parent.type(self, type)
 end
