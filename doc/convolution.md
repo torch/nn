@@ -604,4 +604,4 @@ module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH])
 
 Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
 `dTxdWxdH` steps. The number of output features is equal to the number of
-input planes.
+input planes / dT.
