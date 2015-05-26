@@ -1,6 +1,5 @@
 language: c
 compiler:
-  - gcc
   - clang
 cache: apt
 before_script: 

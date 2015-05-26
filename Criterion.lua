@@ -29,11 +29,10 @@ function Criterion:clone()
 end
 
 function Criterion:type(type)
+   assert(type, 'Criterion: must provide a type to convert to')
    -- find all tensors and convert them
    for key,param in pairs(self) do
-      if torch.typename(param) and torch.typename(param):find('torch%..+Tensor') then
-         self[key] = param:type(type)
-      end
+      self[key] = nn.utils.recursiveType(param, type)
    end
    return self
 end

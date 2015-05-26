@@ -34,9 +34,3 @@ function SpatialContrastiveNormalization:updateGradInput(input, gradOutput)
    self.gradInput = self.normalizer:backward(input, gradOutput)
    return self.gradInput
 end
-
-function SpatialContrastiveNormalization:type(type)
-   parent.type(self,type)
-   self.normalizer:type(type)
-   return self
-end

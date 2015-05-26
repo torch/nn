@@ -30,3 +30,10 @@ function MultiCriterion:updateGradInput(input, target)
    end
    return self.gradInput
 end
+
+function MultiCriterion:type(type)
+   for i,criterion in ipairs(self.criterions) do
+      criterion:type(type)
+   end
+   return parent.type(self, type)
+end

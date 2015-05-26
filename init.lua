@@ -1,6 +1,8 @@
 require('torch')
 require('libnn')
 
+include('utils.lua')
+
 include('ErrorMessages.lua')
 include('Module.lua')
 
@@ -119,6 +121,7 @@ include('L1Penalty.lua')
 include('WeightedMSECriterion.lua')
 include('BCECriterion.lua')
 include('CrossEntropyCriterion.lua')
+include('ParallelCriterion.lua')
 
 include('StochasticGradient.lua')
 

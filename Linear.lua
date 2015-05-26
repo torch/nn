@@ -49,8 +49,8 @@ function Linear:updateOutput(input)
          self.output:copy(self.bias:view(1,nunit):expand(#self.output))
          self.output:select(2,1):addmv(1, input, self.weight:select(1,1))
       else
-         self.output:zero():addr(1, self.addBuffer, self.bias)
-         self.output:addmm(1, input, self.weight:t())
+         self.output:addmm(0, self.output, 1, input, self.weight:t())
+         self.output:addr(1, self.addBuffer, self.bias)
       end
    else
       error('input must be vector or matrix')

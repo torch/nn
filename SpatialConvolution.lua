@@ -19,7 +19,7 @@ function SpatialConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, pa
    self.bias = torch.Tensor(nOutputPlane)
    self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane, kH, kW)
    self.gradBias = torch.Tensor(nOutputPlane)
-   
+
    self:reset()
 end
 
@@ -35,7 +35,7 @@ function SpatialConvolution:reset(stdv)
       end)
       self.bias:apply(function()
          return torch.uniform(-stdv, stdv)
-      end) 
+      end)
    else
       self.weight:uniform(-stdv, stdv)
       self.bias:uniform(-stdv, stdv)
@@ -46,10 +46,10 @@ local function backCompatibility(self)
    self.finput = self.finput or self.weight.new()
    self.fgradInput = self.fgradInput or self.weight.new()
    self.padding = self.padding or 0
-   if self.weight:dim() == 2 then 
+   if self.weight:dim() == 2 then
       self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
    end
-   if self.gradWeight and self.gradWeight:dim() == 2 then 
+   if self.gradWeight and self.gradWeight:dim() == 2 then
       self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
    end
 end
@@ -73,12 +73,16 @@ end
 -- function to re-view the weight layout in a way that would make the MM ops happy
 local function viewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
-   self.gradWeight = self.gradWeight and self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+   if self.gradWeight and self.gradWeight:dim() > 0 then 
+      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
+   end
 end
 
 local function unviewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
-   self.gradWeight = self.gradWeight and self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
+   if self.gradWeight and self.gradWeight:dim() > 0 then 
+      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
+   end
 end
 
 function SpatialConvolution:updateOutput(input)
@@ -108,6 +112,12 @@ function SpatialConvolution:accGradParameters(input, gradOutput, scale)
    local out = input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
    unviewWeight(self)
    return out
+end
+
+function SpatialConvolution:type(type)
+   self.finput = torch.Tensor()
+   self.fgradInput = torch.Tensor()
+   return parent.type(self,type)
 end
 
 function SpatialConvolution:__tostring__()

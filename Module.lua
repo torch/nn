@@ -113,33 +113,11 @@ function Module:clone(...)
    return clone
 end
 
-local function recursiveType(param, type_str)
-   if torch.type(param) == 'table' then
-      for i = 1, #param do
-         param[i] = recursiveType(param[i], type_str)
-      end
-   elseif torch.isTensor(param) then
-       param = param:type(type_str)
-   end
-   return param
-end
-
 function Module:type(type)
    assert(type, 'Module: must provide a type to convert to')
    -- find all tensors and convert them
    for key,param in pairs(self) do
-      -- Many modules (like CDivTable) have output or gradInput fields which
-      -- are table's of tensors.  To be general we need to recursively
-      -- cast fields that may be nested tables.
-      if key ~= 'modules' then
-        self[key] = recursiveType(self[key], type)
-      end
-   end
-   -- find submodules in classic containers 'modules'
-   if self.modules then
-      for _,module in ipairs(self.modules) do
-         module:type(type)
-      end
+      self[key] = nn.utils.recursiveType(param, type)
    end
    return self
 end
@@ -168,7 +146,7 @@ function Module:getParameters()
       if storageAndOffset == nil then
           return nil
       end
-      local _, offset = unpack(storageAndOffset)
+      local _, offset = table.unpack(storageAndOffset)
       return offset
    end
 
@@ -222,7 +200,7 @@ function Module:getParameters()
       end
 
       for _, storageAndOffset in pairs(storages) do
-         local k, v = unpack(storageAndOffset)
+         local k, v = table.unpack(storageAndOffset)
          flatParameters[{{v+1,v+k:size()}}]:copy(Tensor():set(k))
       end
 
