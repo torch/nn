@@ -41,3 +41,7 @@ end
 function SpatialDropout:setp(p)
    self.p = p
 end
+
+function SpatialDropout:__tostring__()
+  return string.format('%s(%f)', torch.type(self), self.p)
+end
