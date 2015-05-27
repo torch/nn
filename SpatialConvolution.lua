@@ -119,3 +119,15 @@ function SpatialConvolution:type(type)
    self.fgradInput = torch.Tensor()
    return parent.type(self,type)
 end
+
+function SpatialConvolution:__tostring__()
+   local s = string.format('%s(in: %d, out: %d, kW: %d, kH: %d', torch.type(self),
+         self.nInputPlane, self.nOutputPlane, self.kW, self.kH)
+   if self.dW ~= 1 or self.dH ~= 1 then
+      s = s .. string.format(', dW: %d, dH: %d', self.dW, self.dH)
+   end
+   if self.padding ~= 0 then
+      s = s .. ', padding: ' .. self.padding
+   end
+   return s .. ')'
+end
