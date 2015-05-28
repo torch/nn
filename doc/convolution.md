@@ -23,6 +23,7 @@ a kernel for computing the weighted average in a neighborhood ;
  * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
    * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
    * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
+   * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
 
 <a name="nn.TemporalModules"/>
 ## Temporal Modules ##
@@ -603,5 +604,16 @@ module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH])
 ```
 
 Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
+`dTxdWxdH` steps. The number of output features is equal to the number of
+input planes / dT.
+
+<a name="nn.VolumetricAveragePooling"/>
+### VolumetricAveragePooling ###
+
+```lua
+module = nn.VolumetricAveragePooling(kT, kW, kH [, dT, dW, dH])
+```
+
+Applies 3D average-pooling operation in `kTxkWxkH` regions by step size
 `dTxdWxdH` steps. The number of output features is equal to the number of
 input planes / dT.
