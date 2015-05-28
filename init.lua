@@ -92,6 +92,7 @@ include('SpatialBatchNormalization.lua')
 
 include('VolumetricConvolution.lua')
 include('VolumetricMaxPooling.lua')
+include('VolumetricAveragePooling.lua')
 
 include('ParallelTable.lua')
 include('ConcatTable.lua')

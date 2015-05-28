@@ -37,6 +37,7 @@ for test_name, component in pairs(tostringTestModules) do
     end
 end
 
+
 function nntest.Add()
    local inj_vals = {math.random(3,5), 1}  -- Also test the inj = 1 spatial case
    local ini = math.random(3,5)
@@ -308,7 +309,7 @@ function nntest.PReLU()
 
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
-			 'error on weight [%s]', t))
+          'error on weight [%s]', t))
    end
 
    -- 2D
@@ -326,7 +327,7 @@ function nntest.PReLU()
 
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
-			 'error on weight [%s]', t))
+          'error on weight [%s]', t))
    end
 
    -- 4D
@@ -345,7 +346,7 @@ function nntest.PReLU()
 
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
-			 'error on weight [%s]', t))
+          'error on weight [%s]', t))
    end
 
    -- IO
@@ -437,6 +438,13 @@ function nntest.Sqrt()
    local out = module:forward(in1)
    local err = out:dist(in1:sqrt())
    mytester:assertlt(err, 1e-15, torch.typename(module) .. ' - forward err ')
+
+   -- Test zero inputs; we will avoid a div-by-zero by setting to zero
+   local zin = torch.DoubleTensor(5, 7):zero()
+   module:forward(zin)
+   local zgradout = torch.rand(5, 7)
+   local zgradin = module:backward(zin, zgradout)
+   mytester:assertTensorEq(zgradin, torch.DoubleTensor(5, 7):zero(), 0.000001, "error in sqrt backward singularity")
 
    local ini = math.random(3,5)
    local inj = math.random(3,5)
@@ -2363,6 +2371,43 @@ function nntest.VolumetricConvolutionBatchCompare()
    local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj)
    local input = torch.randn(from, int, inj, ini)
    batchcompare(module,input, {'weight','bias','gradWeight','gradBias'})
+end
+
+function nntest.VolumetricAveragePooling()
+   local from = math.random(2,3)
+   local kt = math.random(3,4)
+   local ki = math.random(3,4)
+   local kj = math.random(3,4)
+   local st = math.random(2,3)
+   local si = math.random(2,3)
+   local sj = math.random(2,3)
+   local outt = math.random(3,4)
+   local outi = math.random(3,4)
+   local outj = math.random(3,4)
+   local int = (outt-1)*st+kt
+   local ini = (outi-1)*si+ki
+   local inj = (outj-1)*sj+kj
+   local module = nn.VolumetricAveragePooling(kt, ki, kj, st, si, sj)
+   local input = torch.Tensor(from, int, inj, ini):zero()
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+
+      -- batch
+   local nbatch = math.random(2,3)
+   module = nn.VolumetricAveragePooling(kt, ki, kj, st, si, sj)
+   input = torch.Tensor(nbatch, from, int, inj, ini):zero()
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state (Batch) ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
 end
 
 function nntest.VolumetricMaxPooling()
