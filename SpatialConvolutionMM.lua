@@ -85,13 +85,15 @@ function SpatialConvolutionMM:type(type)
 end
 
 function SpatialConvolutionMM:__tostring__()
-   local s = string.format('%s(in: %d, out: %d, kW: %d, kH: %d', torch.type(self),
+   local s = string.format('%s(%d -> %d, %dx%d', torch.type(self),
          self.nInputPlane, self.nOutputPlane, self.kW, self.kH)
    if self.dW ~= 1 or self.dH ~= 1 then
-      s = s .. string.format(', dW: %d, dH: %d', self.dW, self.dH)
+     s = s .. string.format(', %d,%d', self.dW, self.dH)
    end
-   if self.padding ~= 0 then
-      s = s .. ', padding: ' .. self.padding
+   if self.padding and self.padding ~= 0 then
+     s = s .. ', ' .. self.padding .. ',' .. self.padding
+   elseif self.pad_w or self.pad_h then
+     s = s .. ', ' .. self.pad_w .. ',' .. self.pad_h
    end
    return s .. ')'
 end
