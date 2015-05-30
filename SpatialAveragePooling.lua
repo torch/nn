@@ -30,3 +30,8 @@ function SpatialAveragePooling:updateGradInput(input, gradOutput)
       return self.gradInput
    end
 end
+
+function SpatialAveragePooling:__tostring__()
+   return string.format('%s(%d,%d,%d,%d)', torch.type(self),
+         self.kW, self.kH, self.dW, self.dH)
+end

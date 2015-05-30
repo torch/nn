@@ -34,6 +34,6 @@ function SpatialMaxPooling:empty()
 end
 
 function SpatialMaxPooling:__tostring__()
-   return string.format('%s(kW: %d, kH: %d, dW: %d, dH: %d)', torch.type(self),
+   return string.format('%s(%d,%d,%d,%d)', torch.type(self),
          self.kW, self.kH, self.dW, self.dH)
 end
