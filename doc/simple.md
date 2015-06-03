@@ -909,10 +909,11 @@ C = model.forward({A, B})  -- C will be of size `b x m x n`
 ## BatchNormalization ##
 
 ```lua
-module = nn.BatchNormalization(N [, eps] [, momentum])
+module = nn.BatchNormalization(N [, eps] [, momentum] [,affine])
 ```
-where `N` is the dimensionality of input, giving `N = 0` disables the learnable affine transform.
+where `N` is the dimensionality of input
 `eps` is a small value added to the standard-deviation to avoid divide-by-zero. Defaults to `1e-5`.
+`affine` is a boolean. When set to false, the learnable affine transform is disabled. Defaults to true
 
 During training, this layer keeps a running estimate of its computed mean and std.
 The running sum is kept with a default momentum of 0.1 (unless over-ridden)
@@ -939,7 +940,7 @@ A = torch.randn(b, m)
 C = model.forward(A)  -- C will be of size `b x m`
 
 -- without learnable parameters
-model = nn.BatchNormalization(0)
+model = nn.BatchNormalization(m, nil, nil, false)
 A = torch.randn(b, m)
 C = model.forward(A)  -- C will be of size `b x m`
 ```

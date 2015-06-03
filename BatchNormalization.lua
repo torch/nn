@@ -29,18 +29,24 @@
 ]]--
 local BN,parent = torch.class('nn.BatchNormalization', 'nn.Module')
 
-function BN:__init(nOutput, eps, momentum)
+function BN:__init(nOutput, eps, momentum, affine)
    parent.__init(self)
    assert(nOutput and type(nOutput) == 'number',
-          'Missing argument #1: dimensionality of input. ' ..
-          'Give 0 for no affine transform')
+          'Missing argument #1: dimensionality of input. ')
+   assert(nOutput ~= 0, 'To set affine=false call BatchNormalization'
+     .. '(nOutput,  eps, momentum, false) ')
+   if affine ~= nil then
+      assert(type(affine) == 'boolean', 'affine has to be true/false')
+      self.affine = affine
+   else
+      self.affine = true
+   end
    self.eps = eps or 1e-5
    self.train = true
    self.momentum = momentum or 0.1
-   self.running_mean = torch.Tensor()
-   self.running_std = torch.Tensor()
+   self.running_mean = torch.zeros(nOutput)
+   self.running_std = torch.ones(nOutput)
 
-   if nOutput > 0 then self.affine = true end
    if self.affine then
       self.weight = torch.Tensor(nOutput)
       self.bias = torch.Tensor(nOutput)
@@ -71,20 +77,12 @@ function BN:updateOutput(input)
    self.output:resizeAs(input)
    self.gradInput:resizeAs(input)
    if self.train == false then
-      assert(self.running_mean:nDimension() ~= 0,
-             'Module never run on training data. First run on some training data before evaluating.')
       self.output:copy(input)
       self.buffer:repeatTensor(self.running_mean, nBatch, 1)
       self.output:add(-1, self.buffer)
       self.buffer:repeatTensor(self.running_std, nBatch, 1)
       self.output:cmul(self.buffer)
    else -- training mode
-      if self.running_mean:nDimension() == 0 then
-         self.running_mean:resize(input:size(2)):zero()
-      end
-      if self.running_std:nDimension() == 0 then
-         self.running_std:resize(input:size(2)):zero()
-      end
       -- calculate mean over mini-batch
       self.buffer:mean(input, 1)                        -- E(x) = expectation of x.
       self.running_mean:mul(1 - self.momentum):add(self.momentum, self.buffer) -- add to running mean

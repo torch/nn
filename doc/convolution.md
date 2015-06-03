@@ -513,10 +513,10 @@ w2=image.display(processed)
 <a name="nn.SpatialBatchNormalization"/>
 ## SpatialBatchNormalization ##
 
-`module` = `nn.SpatialBatchNormalization(N [,eps] [, momentum])`
+`module` = `nn.SpatialBatchNormalization(N [,eps] [, momentum] [,affine])`
  where N = number of input feature maps
-giving N = 0 disables the learnable affine transform.
 eps is a small value added to the standard-deviation to avoid divide-by-zero. Defaults to 1e-5
+`affine` is a boolean. When set to false, the learnable affine transform is disabled.  Defaults to true
 
 Implements Batch Normalization as described in the paper:
    "Batch Normalization: Accelerating Deep Network Training
@@ -548,7 +548,7 @@ A = torch.randn(b, m, h, w)
 C = model.forward(A)  -- C will be of size `b x m x h x w`
 
 -- without learnable parameters
-model = nn.SpatialBatchNormalization(0)
+model = nn.SpatialBatchNormalization(m, nil, nil, false)
 A = torch.randn(b, m, h, w)
 C = model.forward(A)  -- C will be of size `b x m x h x w`
 ```

@@ -438,6 +438,13 @@ function nntest.Sqrt()
    local err = out:dist(in1:sqrt())
    mytester:assertlt(err, 1e-15, torch.typename(module) .. ' - forward err ')
 
+   -- Test zero inputs; we will avoid a div-by-zero by setting to zero
+   local zin = torch.DoubleTensor(5, 7):zero()
+   module:forward(zin)
+   local zgradout = torch.rand(5, 7)
+   local zgradin = module:backward(zin, zgradout)
+   mytester:assertTensorEq(zgradin, torch.DoubleTensor(5, 7):zero(), 0.000001, "error in sqrt backward singularity")
+
    local ini = math.random(3,5)
    local inj = math.random(3,5)
    local ink = math.random(3,5)
@@ -3662,7 +3669,7 @@ function nntest.BatchNormalization()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 
    -- batch norm without affine transform
-   module = nn.BatchNormalization(0)
+   module = nn.BatchNormalization(indim, 1e-5, 0.1, false)
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
@@ -3716,7 +3723,7 @@ function nntest.SpatialBatchNormalization()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 
    -- batch norm without affine transform
-   module = nn.SpatialBatchNormalization(0)
+   module = nn.SpatialBatchNormalization(indim, 1e-5, 0.1, false)
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
