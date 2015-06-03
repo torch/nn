@@ -315,6 +315,53 @@ gives the output:
 [torch.DoubleTensor of dimension 3]
 ```
 
+The module also supports indexing from the end using negative dimensions. This allows to use this module when the number of dimensions of the input is unknown.
+
+### Example
+
+```lua
+m = nn.SplitTable(-2)
+out = m:forward(torch.randn(3, 2))
+for i, k in ipairs(out) do print(i, k) end
+out = m:forward(torch.randn(1, 3, 2))
+for i, k in ipairs(out) do print(i, k) end
+```
+
+gives the output:
+
+```
+1
+ 0.1420
+-0.5698
+[torch.DoubleTensor of size 2]
+
+2
+ 0.1663
+ 0.1197
+[torch.DoubleTensor of size 2]
+
+3
+ 0.4198
+-1.1394
+[torch.DoubleTensor of size 2]
+
+
+1
+-2.4941
+-1.4541
+[torch.DoubleTensor of size 1x2]
+
+2
+ 0.4594
+ 1.1946
+[torch.DoubleTensor of size 1x2]
+
+3
+-2.3322
+-0.7383
+[torch.DoubleTensor of size 1x2]
+```
+
 ### A more complicated example
 
 ```lua
