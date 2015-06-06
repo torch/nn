@@ -2,6 +2,10 @@
 #define TH_GENERIC_FILE "generic/SparseLinear.c"
 #else
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 static int nn_(checkInput)(THTensor* t) {
   return t->nDimension == 2 && t->size[1] == 2;
 }
