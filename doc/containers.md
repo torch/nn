@@ -51,7 +51,27 @@ which gives the output:
 [torch.Tensor of dimension 1]
 ```
 
-<a name="nn.Sequential.insert"/>
+<a name="nn.Sequential.remove"/>
+### remove([index]) ###
+
+Remove the module at the given `index`. If `index` is not specified, remove the last layer.
+
+```lua
+model = nn.Sequential()
+model:add(nn.Linear(10, 20))
+model:add(nn.Linear(20, 20))
+model:add(nn.Linear(20, 30))
+model:remove(2)
+> model
+nn.Sequential {
+  [input -> (1) -> (2) -> output]
+  (1): nn.Linear(10 -> 20)
+  (2): nn.Linear(20 -> 30)
+}
+```
+
+
+<a name="nn.Sequential.remove"/>
 ### insert(module, [index]) ###
 
 Inserts the given `module` at the given `index`. If `index` is not specified, the incremented length of the sequence is used and so this is equivalent to use `add(module)`.
@@ -69,6 +89,8 @@ nn.Sequential {
   (3): nn.Linear(20 -> 30)
 }
 ```
+
+
 
 <a name="nn.Parallel"/>
 ## Parallel ##
