@@ -24,6 +24,10 @@ function View:__init(...)
    self.output = nil
    self.gradInput = nil
    self.numInputDims = nil
+   
+   -- only used for non-contiguous input or gradOutput
+   self._input = torch.Tensor()
+   self._gradOutput = torch.Tensor()
 end
 
 function View:setNumInputDims(numInputDims)
@@ -72,6 +76,12 @@ local function batchsize(input, size, numInputDims, numElements)
 end
 
 function View:updateOutput(input)
+   if not input:isContiguous() then
+      self._input = self._input or input.new()
+      self._input:resizeAs(input)
+      self._input:copy(input)
+      input = self._input
+   end
    local bsz = batchsize(input, self.size, self.numInputDims, self.numElements)
    if bsz then
       self.output = input:view(bsz, table.unpack(self.size:totable()))
@@ -82,6 +92,12 @@ function View:updateOutput(input)
 end
 
 function View:updateGradInput(input, gradOutput)
+   if not gradOutput:isContiguous() then
+      self._gradOutput = self._gradOutput or gradOutput.new()
+      self._gradOutput:resizeAs(gradOutput)
+      self._gradOutput:copy(gradOutput)
+      gradOutput = self._gradOutput
+   end
    self.gradInput = gradOutput:view(input:size())
    return self.gradInput
 end
