@@ -71,7 +71,7 @@ nn.Sequential {
 ```
 
 
-<a name="nn.Sequential.remove"/>
+<a name="nn.Sequential.insert"/>
 ### insert(module, [index]) ###
 
 Inserts the given `module` at the given `index`. If `index` is not specified, the incremented length of the sequence is used and so this is equivalent to use `add(module)`.
