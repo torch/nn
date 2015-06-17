@@ -1446,12 +1446,13 @@ function nntest.SpatialConvolutionMM()
    local kj = math.random(1,5)
    local di =  math.random(1,4)
    local dj =  math.random(1,4)
-   local padding = math.random(0,2)
+   local padW = math.random(0,2)
+   local padH = math.random(0,2)
    local outi = math.random(5,9)
    local outj = math.random(5,9)
-   local ini = (outi-1)*di+ki-padding*2
-   local inj = (outj-1)*dj+kj-padding*2
-   local module = nn.SpatialConvolutionMM(from, to, ki, kj, di, dj, padding)
+   local ini = (outi-1)*di+ki-padW*2
+   local inj = (outj-1)*dj+kj-padH*2
+   local module = nn.SpatialConvolutionMM(from, to, ki, kj, di, dj, padW, padH)
    local input = torch.Tensor(from, inj, ini):zero()
 
    -- stochastic
@@ -1486,7 +1487,7 @@ function nntest.SpatialConvolutionMM()
    --verbose = true
    local batch = math.random(2,5)
 
-   module = nn.SpatialConvolutionMM(from, to, ki, kj, di, dj, padding)
+   module = nn.SpatialConvolutionMM(from, to, ki, kj, di, dj, padW, padH)
    input = torch.Tensor(batch,from,inj,ini):zero()
 
    local err = jac.testJacobian(module, input)
