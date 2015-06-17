@@ -9,7 +9,7 @@ The Y and X dimensions are assumed to be the last 2 tensor dimensions.  For
 instance, if the tensor is 4D, then dim 3 is the y dimension and dim 4 is the x.
 
 owidth  = width*scale_factor
-oheight  = height*scale_factor 
+oheight  = height*scale_factor
 --]]
 
 function SpatialUpSamplingNearest:__init(scale)
@@ -42,7 +42,7 @@ function SpatialUpSamplingNearest:updateOutput(input)
    self.outputSize[xdim] = self.outputSize[xdim] * self.scale_factor
    -- Resize the output if needed
    if input:dim() == 3 then
-     self.output:resize(self.outputSize[1], self.outputSize[2], 
+     self.output:resize(self.outputSize[1], self.outputSize[2],
        self.outputSize[3])
    else
      self.output:resize(self.outputSize)

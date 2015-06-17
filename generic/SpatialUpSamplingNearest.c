@@ -59,7 +59,7 @@ static int nn_(SpatialUpSamplingNearest_updateOutput)(lua_State *L)
             idst += i3*os[3];
             isrc += iin[3]*is[3];
           }
-        
+
           pout[idst] = pin[isrc];
         }
       }
@@ -140,7 +140,7 @@ static int nn_(SpatialUpSamplingNearest_updateGradInput)(lua_State *L)
       }
     }
   }
-  return 1; 
+  return 1;
 }
 
 static const struct luaL_Reg nn_(SpatialUpSamplingNearest__) [] = {
