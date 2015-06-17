@@ -36,12 +36,14 @@ function Container:training()
     for i=1,#self.modules do
         self.modules[i]:training()
     end
+    parent.training(self)
 end
 
 function Container:evaluate()
     for i=1,#self.modules do
         self.modules[i]:evaluate()
     end
+    parent.evaluate(self)
 end
 
 function Container:share(mlp, ...)
