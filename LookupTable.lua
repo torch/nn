@@ -1,6 +1,6 @@
 local LookupTable, parent = torch.class('nn.LookupTable', 'nn.Module')
 
-LookupTable.__version = 3
+LookupTable.__version = 4
 
 function LookupTable:__init(nIndex, nOutput)
    parent.__init(self)
@@ -33,9 +33,11 @@ end
 function LookupTable:makeInputContiguous(input)
    -- make sure input is a contiguous torch.LongTensor
    if (not input:isContiguous()) or torch.type(input) ~= torch.type(self._input) then
+      self.copiedInput = true
       self._input:resize(input:size()):copy(input)
       return self._input
    end
+   self.copiedInput = false
    return input
 end
 
@@ -53,8 +55,7 @@ function LookupTable:updateOutput(input)
 end
 
 function LookupTable:accGradParameters(input, gradOutput, scale)
-   input = self:makeInputContiguous(input)
-   self.gradWeight.nn.LookupTable_accGradParameters(self, input, gradOutput, scale)
+   self.gradWeight.nn.LookupTable_accGradParameters(self, self.copiedInput and self._input or input, gradOutput, scale)
 end
 
 function LookupTable:type(type)
