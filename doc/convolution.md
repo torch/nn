@@ -263,7 +263,7 @@ are spatial (e.g. `height x width`). These are commonly used for processing imag
 ### SpatialConvolution ###
 
 ```lua
-module = nn.SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padding])
+module = nn.SpatialConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH])
 ```
 
 Applies a 2D convolution over an input image composed of several input planes. The `input` tensor in
@@ -276,7 +276,8 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padding`: The additional zeros added per side to the input planes. Default is `0`, a good number is `(kernelSize-1)/2` for square kernels.
+  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
+  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
@@ -285,8 +286,8 @@ add proper padding in images.
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
 will be `nOutputPlane x oheight x owidth` where
 ```lua
-owidth  = floor((width  + 2*padding - kW) / dW + 1)
-oheight = floor((height + 2*padding - kH) / dH + 1)
+owidth  = floor((width  + 2*padW - kW) / dW + 1)
+oheight = floor((height + 2*padH - kH) / dH + 1)
 ```
 
 The parameters of the convolution can be found in `self.weight` (Tensor of

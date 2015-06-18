@@ -6,7 +6,7 @@
 static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
                                int kW, int kH,
                                int dW, int dH,
-                               int padding,
+                               int padW, int padH,
                                int nInputPlane,
                                int inputWidth, int inputHeight,
                                int outputWidth, int outputHeight)
@@ -25,21 +25,21 @@ static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
       {
         real *src = finput_data + nip*(kH*kW*outputHeight*outputWidth) + kh*(kW*outputHeight*outputWidth) + kw*(outputHeight*outputWidth);
         real *dst = input_data + nip*(inputHeight*inputWidth);
-        if (padding > 0) {
+        if (padW > 0 || padH > 0) {
           int lpad,rpad;
           for(y = 0; y < outputHeight; y++) {
-            iy = y*dH - padding + kh;
+            iy = y*dH - padH + kh;
             if (iy < 0 || iy >= inputHeight) {
             } else {
               if (dW==1){
-                 ix = 0 - padding + kw;
-                 lpad = fmaxf(0,padding-kw);
-                 rpad = fmaxf(0,padding-(kW-kw-1));
+                 ix = 0 - padW + kw;
+                 lpad = fmaxf(0,padW-kw);
+                 rpad = fmaxf(0,padW-(kW-kw-1));
                  THVector_(add)(dst+iy*inputWidth+ix+lpad, src+y*outputWidth+lpad, 1, outputWidth - lpad - rpad); /* note: THVector_add could handle 1 value better */
               }
               else{
                 for (x=0; x<outputWidth; x++){
-                   ix = x*dW - padding + kw;
+                   ix = x*dW - padW + kw;
                    if (ix < 0 || ix >= inputWidth){
                    }else
                      THVector_(add)(dst+iy*inputWidth+ix, src+y*outputWidth+x, 1, 1);
@@ -67,7 +67,7 @@ static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
 static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
                                int kW, int kH,
                                int dW, int dH,
-                               int padding,
+                               int padW, int padH,
                                int nInputPlane,
                                int inputWidth, int inputHeight,
                                int outputWidth, int outputHeight)
@@ -85,17 +85,17 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
     int x,y,ix,iy;
     real *dst = finput_data + nip*(kH*kW*outputHeight*outputWidth) + kh*(kW*outputHeight*outputWidth) + kw*(outputHeight*outputWidth);
     real *src = input_data + nip*(inputHeight*inputWidth);
-    if (padding > 0) {
+    if (padW > 0 || padH > 0) {
       int lpad,rpad;
       for(y = 0; y < outputHeight; y++) {
-        iy = y*dH - padding + kh;
+        iy = y*dH - padH + kh;
         if (iy < 0 || iy >= inputHeight) {
           memset(dst+y*outputWidth, 0, sizeof(real)*outputWidth);
         } else {
           if (dW==1){
-             ix = 0 - padding + kw;
-             lpad = fmaxf(0,padding-kw);
-             rpad = fmaxf(0,padding-(kW-kw-1));
+             ix = 0 - padW + kw;
+             lpad = fmaxf(0,padW-kw);
+             rpad = fmaxf(0,padW-(kW-kw-1));
              if (outputWidth-rpad-lpad <= 0) {
                 memset(dst+y*outputWidth, 0, sizeof(real)*outputWidth);
              } else {
@@ -106,7 +106,7 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
           }
           else{
             for (x=0; x<outputWidth; x++){
-               ix = x*dW - padding + kw;
+               ix = x*dW - padW + kw;
                if (ix < 0 || ix >= inputWidth)
                  memset(dst+y*outputWidth+x, 0, sizeof(real)*1);
                else
@@ -131,14 +131,14 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
 }
 
 static void nn_(SpatialConvolutionMM_updateOutput_frame)(THTensor *input, THTensor *output, THTensor *weight, THTensor *bias, THTensor *finput,
-                                                         int kW, int kH, int dW, int dH, int padding,
+                                                         int kW, int kH, int dW, int dH, int padW, int padH,
                                                          long nInputPlane, long inputWidth, long inputHeight,
                                                          long nOutputPlane, long outputWidth, long outputHeight)
 {
   long i;
   THTensor *output2d;
 
-  nn_(unfolded_copy)(finput, input, kW, kH, dW, dH, padding, nInputPlane, inputWidth, inputHeight, outputWidth, outputHeight);
+  nn_(unfolded_copy)(finput, input, kW, kH, dW, dH, padW, padH, nInputPlane, inputWidth, inputHeight, outputWidth, outputHeight);
 
   output2d = THTensor_(newWithStorage2d)(output->storage, output->storageOffset,
                                          nOutputPlane, -1,
@@ -159,7 +159,8 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
   int kH = luaT_getfieldcheckint(L, 1, "kH");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
-  int padding = luaT_getfieldcheckint(L, 1, "padding");
+  int padW = luaT_getfieldcheckint(L, 1, "padW");
+  int padH = luaT_getfieldcheckint(L, 1, "padH");
 
   THTensor *finput = luaT_getfieldcheckudata(L, 1, "finput", torch_Tensor);
   THTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
@@ -190,8 +191,8 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
   inputWidth   = input->size[dimw];
   inputHeight  = input->size[dimh];
   nOutputPlane = weight->size[0];
-  outputWidth  = (inputWidth + 2*padding - kW) / dW + 1;
-  outputHeight = (inputHeight + 2*padding - kH) / dH + 1;
+  outputWidth  = (inputWidth + 2*padW - kW) / dW + 1;
+  outputHeight = (inputHeight + 2*padH - kH) / dH + 1;
 
   if(input->nDimension == 3)
   {
@@ -199,7 +200,7 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
     THTensor_(resize3d)(output, nOutputPlane, outputHeight, outputWidth);
 
     nn_(SpatialConvolutionMM_updateOutput_frame)(input, output, weight, bias, finput,
-                                                 kW, kH, dW, dH, padding,
+                                                 kW, kH, dW, dH, padW, padH,
                                                  nInputPlane, inputWidth, inputHeight,
                                                  nOutputPlane, outputWidth, outputHeight);
   }
@@ -219,7 +220,7 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
       THTensor *finput_t = THTensor_(newSelect)(finput, 0, t);
 
       nn_(SpatialConvolutionMM_updateOutput_frame)(input_t, output_t, weight, bias, finput_t,
-                                                   kW, kH, dW, dH, padding,
+                                                   kW, kH, dW, dH, padW, padH,
                                                    nInputPlane, inputWidth, inputHeight,
                                                    nOutputPlane, outputWidth, outputHeight);
 
@@ -234,7 +235,7 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
 
 
 static void nn_(SpatialConvolutionMM_updateGradInput_frame)(THTensor *gradInput, THTensor *gradOutput, THTensor *weight, THTensor *fgradInput,
-                                                            int kW, int kH, int dW, int dH, int padding)
+                                                            int kW, int kH, int dW, int dH, int padW, int padH)
 {
   THTensor *gradOutput2d = THTensor_(newWithStorage2d)(gradOutput->storage, gradOutput->storageOffset,
                                                        gradOutput->size[0], -1,
@@ -244,7 +245,7 @@ static void nn_(SpatialConvolutionMM_updateGradInput_frame)(THTensor *gradInput,
 
   THTensor_(zero)(gradInput);
 
-  nn_(unfolded_acc)(fgradInput, gradInput, kW, kH, dW, dH, padding, gradInput->size[0], gradInput->size[2], gradInput->size[1], gradOutput->size[2], gradOutput->size[1]);
+  nn_(unfolded_acc)(fgradInput, gradInput, kW, kH, dW, dH, padW, padH, gradInput->size[0], gradInput->size[2], gradInput->size[1], gradOutput->size[2], gradOutput->size[1]);
 }
 
 static int nn_(SpatialConvolutionMM_updateGradInput)(lua_State *L)
@@ -255,7 +256,8 @@ static int nn_(SpatialConvolutionMM_updateGradInput)(lua_State *L)
   int kH = luaT_getfieldcheckint(L, 1, "kH");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
-  int padding = luaT_getfieldcheckint(L, 1, "padding");
+  int padW = luaT_getfieldcheckint(L, 1, "padW");
+  int padH = luaT_getfieldcheckint(L, 1, "padH");
   int nOutputPlane = luaT_getfieldcheckint(L, 1, "nOutputPlane");
 
   THTensor *finput = luaT_getfieldcheckudata(L, 1, "finput", torch_Tensor);
@@ -271,7 +273,7 @@ static int nn_(SpatialConvolutionMM_updateGradInput)(lua_State *L)
 
   if(input->nDimension == 3)
   {
-    nn_(SpatialConvolutionMM_updateGradInput_frame)(gradInput, gradOutput, weight, fgradInput, kW, kH, dW, dH, padding);
+    nn_(SpatialConvolutionMM_updateGradInput_frame)(gradInput, gradOutput, weight, fgradInput, kW, kH, dW, dH, padW, padH);
   }
   else
   {
@@ -285,7 +287,7 @@ static int nn_(SpatialConvolutionMM_updateGradInput)(lua_State *L)
       THTensor *gradOutput_t = THTensor_(newSelect)(gradOutput, 0, t);
       THTensor *fgradInput_t = THTensor_(newSelect)(fgradInput, 0, t);
 
-      nn_(SpatialConvolutionMM_updateGradInput_frame)(gradInput_t, gradOutput_t, weight, fgradInput_t, kW, kH, dW, dH, padding);
+      nn_(SpatialConvolutionMM_updateGradInput_frame)(gradInput_t, gradOutput_t, weight, fgradInput_t, kW, kH, dW, dH, padW, padH);
 
       THTensor_(free)(gradInput_t);
       THTensor_(free)(gradOutput_t);

@@ -1,6 +1,6 @@
 local SpatialConvolutionMM, parent = torch.class('nn.SpatialConvolutionMM', 'nn.Module')
 
-function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padding)
+function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH)
    parent.__init(self)
    
    dW = dW or 1
@@ -13,7 +13,8 @@ function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, 
 
    self.dW = dW
    self.dH = dH
-   self.padding = padding or 0
+   self.padW = padW or 0
+   self.padH = padH or self.padW
 
    self.weight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
    self.bias = torch.Tensor(nOutputPlane)
@@ -62,6 +63,12 @@ local function makeContiguous(self, input, gradOutput)
 end
 
 function SpatialConvolutionMM:updateOutput(input)
+   -- backward compatibility
+   if self.padding then
+      self.padW = self.padding
+      self.padH = self.padding
+      self.padding = nil
+   end
    input = makeContiguous(self, input)
    return input.nn.SpatialConvolutionMM_updateOutput(self, input)
 end
@@ -92,8 +99,8 @@ function SpatialConvolutionMM:__tostring__()
    end
    if self.padding and self.padding ~= 0 then
      s = s .. ', ' .. self.padding .. ',' .. self.padding
-   elseif self.pad_w or self.pad_h then
-     s = s .. ', ' .. self.pad_w .. ',' .. self.pad_h
+   elseif (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
+     s = s .. ', ' .. self.padW .. ',' .. self.padW
    end
    return s .. ')'
 end
