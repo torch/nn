@@ -277,7 +277,7 @@ The parameters are the following:
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
   * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `padH`: The additional zeros added per height to the input planes. Default is `padW`, a good number is `(kH-1)/2`.
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
