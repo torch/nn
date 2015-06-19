@@ -1520,7 +1520,7 @@ function nntest.SpatialConvolutionMM()
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
 
    -- non-contiguous
-   local input = torch.randn(batch,from,inj,ini):transpose(3,4) -- non-contiguous
+   local input = torch.randn(batch,from,ini,inj):transpose(3,4) -- non-contiguous
    local inputc = input:contiguous() -- contiguous
    local output = module:forward(input)
    local outputc = module:forward(inputc)
