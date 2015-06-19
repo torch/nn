@@ -137,7 +137,7 @@ function SpatialConvolution:__tostring__()
    if self.padding and self.padding ~= 0 then
      s = s .. ', ' .. self.padding .. ',' .. self.padding
    elseif (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
-     s = s .. ', ' .. self.padW .. ',' .. self.padW
+     s = s .. ', ' .. self.padW .. ',' .. self.padH
    end
    return s .. ')'
 end
