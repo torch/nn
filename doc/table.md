@@ -895,9 +895,9 @@ end
 <a name="nn.CosineDistance"/>
 ## CosineDistance ##
 
-`module` = `CosineDistance()` creates a module that takes a `table` of two vectors as input and outputs the cosine distance between them.
+`module` = `CosineDistance()` creates a module that takes a `table` of two vectors (or matrices if in batch mode) as input and outputs the cosine distance between them.
 
-Example:
+Examples:
 ```lua
 mlp = nn.CosineDistance()
 x = torch.Tensor({1, 2, 3})
@@ -908,6 +908,19 @@ gives the output:
 ```lua
  0.9746
 [torch.Tensor of dimension 1]
+```
+`CosineDistance` also accepts batches:
+```lua
+mlp = nn.CosineDistance()
+x = torch.Tensor({{1,2,3},{1,2,-3}})
+y = torch.Tensor({{4,5,6},{-4,5,6}})
+print(mlp:forward({x,y}))
+```
+gives the output:
+```lua
+ 0.9746
+-0.3655
+[torch.DoubleTensor of size 2]
 ```
 
 A more complicated example:
