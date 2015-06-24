@@ -116,10 +116,11 @@ end
 function Module:type(type, tensorCache)
    assert(type, 'Module: must provide a type to convert to')
 
+   tensorCache = tensorCache or {}
+
    -- find all tensors and convert them
    for key,param in pairs(self) do
-      self[key] = nn.utils.recursiveType(param, type)
-
+      self[key] = nn.utils.recursiveType(param, type, tensorCache)
    end
 
    return self
@@ -279,6 +280,19 @@ function Module:__call__(input, gradOutput)
    else
       return self.output
    end
+end
+
+-- Run a callback (called with the module as an argument) in preorder over this
+-- module and its children.
+--
+function Module:apply(callback)
+    callback(self)
+
+    if self.modules then
+        for _, module in ipairs(self.modules) do
+            module:apply(callback)
+        end
+    end
 end
 
 function Module:findModules(typename, container)

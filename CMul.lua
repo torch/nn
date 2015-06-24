@@ -114,7 +114,7 @@ function CMul:accGradParameters(input, gradOutput, scale)
    end
 end
 
-function CMul:type(type)
+function CMul:type(type, tensorCache)
    if type then
       self._input = nil
       self._output = nil
@@ -124,5 +124,5 @@ function CMul:type(type)
       self._repeat = nil
       self._sum = nil
    end
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
 end
