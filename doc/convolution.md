@@ -361,12 +361,23 @@ Computes the `p` norm in a convolutional manner on a set of 2D input planes.
 ### SpatialMaxPooling ###
 
 ```lua
-module = nn.SpatialMaxPooling(kW, kH [, dW, dH])
+module = nn.SpatialMaxPooling(kW, kH [, dW, dH, padW, padH])
 ```
 
 Applies 2D max-pooling operation in `kWxkH` regions by step size
 `dWxdH` steps. The number of output features is equal to the number of
 input planes.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output
+image size will be `nOutputPlane x oheight x owidth` where
+
+```lua
+owidth  = op((width  + 2*padW - kW) / dW + 1)
+oheight = op((height + 2*padH - kH) / dH + 1)
+```
+
+`op` is a rounding operator. By default, it is `floor`. It can be changed
+by calling `:ceil()` or `:floor()` methods.
 
 <a name="nn.SpatialAveragePooling"/>
 ### SpatialAveragePooling ###
