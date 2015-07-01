@@ -92,6 +92,110 @@ function nn.Jacobian.forward(module, input, param, perturbation)
    return jacobian
 end
 
+function nn.Jacobian.backwardDiagHessian(module, input, diagHessianParamName)
+   -- Compute the second derivatives (diagonal Hessian elements)
+   -- by backpropagation (using the code from hessian.lua).
+   --
+   -- This function computes the diagonal Hessian elements of the following function:
+   --
+   -- F(x_1, x_2, ..., x_n) = y_1^2/2 + y_2^2/2 + ... + y_m^2/2,
+   --
+   -- where
+   -- x_1, ..., x_n are the input values and parameters of the given module,
+   -- y_1, ..., y_m are the output values of the given module.
+   --
+   -- All x_i and y_i values are scalars here. In other words,
+   -- x_1, ..., x_n denote the scalar elements of the module input tensor,
+   --             the scalar elements of module.weight,
+   --             and the scalar elements of module.bias;
+   -- y_1, ..., y_m are the scalar elements of the module output tensor.
+   --
+   -- The diagonal Hessian elements of F are computed with respect to
+   -- the module input values and parameters (x_1, .., x_n).
+   --
+   -- The function F is chosen for its convenient properties:
+   --
+   -- dF / dy_i = y_i,
+   -- d^2F / dy_i^2 = 1.
+   --
+   -- In other words, the diagonal Hessian elements of F with respect
+   -- to the module OUTPUT values (y_1, ... y_m) are equal to 1.
+   --
+   -- Because of that, computing the diagonal Hessian elements of F
+   -- with respect to the module INPUT values and PARAMETERS (x_1, ..., x_n)
+   -- can be done by calling updateDiagHessianInput() and accDiagHessianParameters()
+   -- using a tensor of ones as diagHessianOutput.
+
+   module:forward(input)
+   local diagHessianOutput = module.output.new():resizeAs(module.output):fill(1)
+
+   module.diagHessianWeight:zero()
+   module.diagHessianBias:zero()
+   module:updateDiagHessianInput(input, diagHessianOutput)
+   module:accDiagHessianParameters(input, diagHessianOutput)
+
+   return module[diagHessianParamName]
+end
+
+function nn.Jacobian.linearModuleDiagHessian(module, input, gradParamName)
+   -- Compute the second derivatives (diagonal Hessian elements)
+   -- from the first derivatives for the given module
+   -- (without using the code from hessian.lua).
+   --
+   -- The given module is assumed to be linear with respect to its inputs and weights
+   -- (like nn.Linear, nn.SpatialConvolution, etc.)
+   --
+   -- This function computes the diagonal Hessian elements of the following function:
+   --
+   -- F(x_1, x_2, ..., x_n) = y_1^2/2 + y_2^2/2 + ... + y_m^2/2.
+   --
+   -- (See the the comment for nn.Jacobian.backwardDiagHessian() for explanation.)
+   --
+   -- The first derivatives of F with respect to
+   -- the module inputs and parameters (x_1, ..., x_n) are:
+   --
+   -- dF / dx_i = \sum_k (dF / dy_k) (dy_k / dx_i).
+   --
+   -- The second derivatives are:
+   --
+   -- d^2F / dx_i = \sum_k [(d^2F / dy_k^2) (dy_k / dx_i)^2 + (dF / dy_k) (d^2y_k / dx_i^2)].
+   --
+   -- The second derivatives of F with respect to the module outputs (y_1, ..., y_m)
+   -- are equal to 1, so:
+   --
+   -- d^2F / dx_i = \sum_k [(dy_k / dx_i)^2 + (dF / dy_k) (d^2y_k / dx_i^2)].
+   --
+   -- Assuming the linearity of module outputs (y_1, ..., y_m)
+   -- with respect to module inputs and parameters (x_1, ..., x_n),
+   -- we have (d^2y_k / dx_i^2) = 0,
+   -- and the expression finally becomes:
+   --
+   -- d^2F / dx_i = \sum_k (dy_k / dx_i)^2.
+   --
+   -- The first derivatives (dy_k / dx_i) are computed by normal backpropagation,
+   -- using updateGradInput() and accGradParameters().
+
+   local gradParam = module[gradParamName]
+
+   local diagHessian = gradParam.new():resize(gradParam:nElement()):zero()
+
+   module:forward(input)
+   local gradOutput = module.output.new():resizeAs(module.output)
+   local gradOutput1D = gradOutput:view(gradOutput:nElement())
+
+   for i=1,gradOutput:nElement() do
+      gradOutput1D:zero()
+      gradOutput1D[i] = 1
+      module.gradWeight:zero()
+      module.gradBias:zero()
+      module:updateGradInput(input, gradOutput)
+      module:accGradParameters(input, gradOutput)
+      diagHessian:addcmul(gradParam, gradParam)
+   end
+
+   return diagHessian
+end
+
 function nn.Jacobian.forwardUpdate(module, input, param, perturbation)
    -- perturbation amount
    perturbation = perturbation or 1e-6
@@ -154,6 +258,33 @@ function nn.Jacobian.testJacobianUpdateParameters(module, input, param, minval, 
 
    local error = params_fprop - params_bprop
    return error:abs():max()
+end
+
+function nn.Jacobian.testDiagHessian(module, input, gradParamName, diagHessianParamName, minval, maxval)
+   -- Compute the diagonal Hessian elements for the same function in two different ways,
+   -- then compare the results and return the difference.
+
+   minval = minval or -2
+   maxval = maxval or 2
+   local inrange = maxval - minval
+   input:copy(torch.rand(input:nElement()):mul(inrange):add(minval))
+   module:initDiagHessianParameters()
+   local h_bprop = nn.Jacobian.backwardDiagHessian(module, input, diagHessianParamName)
+   local h_linearmodule = nn.Jacobian.linearModuleDiagHessian(module, input, gradParamName)
+   local error = h_bprop - h_linearmodule
+   return error:abs():max()
+end
+
+function nn.Jacobian.testDiagHessianInput(module, input, minval, maxval)
+   return nn.Jacobian.testDiagHessian(module, input, 'gradInput', 'diagHessianInput', minval, maxval)
+end
+
+function nn.Jacobian.testDiagHessianWeight(module, input, minval, maxval)
+   return nn.Jacobian.testDiagHessian(module, input, 'gradWeight', 'diagHessianWeight', minval, maxval)
+end
+
+function nn.Jacobian.testDiagHessianBias(module, input, minval, maxval)
+   return nn.Jacobian.testDiagHessian(module, input, 'gradBias', 'diagHessianBias', minval, maxval)
 end
 
 function nn.Jacobian.testIO(module,input, minval, maxval)

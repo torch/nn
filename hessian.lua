@@ -31,6 +31,9 @@ function nn.hessian.enable()
          module[gwname] = hwval
          module[hwname] = gwval
       end
+      local oldOutput = module.output
+      module.output = module.output.new():resizeAs(oldOutput)
+      module.forward(module, module.inputSq)
       module.accGradParameters(module, module.inputSq, diagHessianOutput, 1)
       -- put back gradients
       for i=1,#gw do
@@ -41,6 +44,7 @@ function nn.hessian.enable()
          module[gwname] = hwval
          module[hwname] = gwval
       end
+      module.output = oldOutput
    end
    nn.hessian.accDiagHessianParameters = accDiagHessianParameters
 
@@ -210,7 +214,7 @@ function nn.hessian.enable()
    end
 
    function nn.SpatialConvolution.initDiagHessianParameters(self)
-      initDiagHessianParameters(self,{'gradWeight'},{'diagHessianWeight'})
+      initDiagHessianParameters(self,{'gradWeight','gradBias'},{'diagHessianWeight','diagHessianBias'})
    end
 
    ----------------------------------------------------------------------
@@ -222,7 +226,7 @@ function nn.hessian.enable()
    end
 
    function nn.SpatialFullConvolution.accDiagHessianParameters(self, input, diagHessianOutput)
-      accDiagHessianParameters(self,input, diagHessianOutput, {'gradWeight'}, {'diagHessianWeight'})
+      accDiagHessianParameters(self,input, diagHessianOutput, {'gradWeight','gradBias'}, {'diagHessianWeight','diagHessianBias'})
    end
 
    function nn.SpatialFullConvolution.initDiagHessianParameters(self)
@@ -324,70 +328,15 @@ function nn.hessian.enable()
    function nn.Module.getParameters(self)
       -- get parameters
       local parameters,gradParameters,hessianParameters = self:parameters()
-
-      local function storageInSet(set, storage)
-         local storageAndOffset = set[torch.pointer(storage)]
-         if storageAndOffset == nil then
-             return nil
-         end
-         local _, offset = table.unpack(storageAndOffset)
-         return offset
-      end
-
-      -- this function flattens arbitrary lists of parameters,
-      -- even complex shared ones
-      local function flatten(parameters)
-         local storages = {}
-         local nParameters = 0
-         for k = 1,#parameters do
-            local storage = parameters[k]:storage()
-            if not storageInSet(storages, storage) then
-               storages[torch.pointer(storage)] = {storage, nParameters}
-               nParameters = nParameters + storage:size()
-            end
-         end
-         
-         local flatParameters = torch.Tensor(nParameters):fill(1)
-         local flatStorage = flatParameters:storage()
-
-         for k = 1,#parameters do
-            local storageOffset = storageInSet(storages, parameters[k]:storage())
-            parameters[k]:set(flatStorage,
-                              storageOffset + parameters[k]:storageOffset(),
-                              parameters[k]:size(),
-                              parameters[k]:stride())
-            parameters[k]:zero()
-         end
-
-         local cumSumOfHoles = flatParameters:cumsum(1)
-         local nUsedParameters = nParameters - cumSumOfHoles[#cumSumOfHoles]
-         local flatUsedParameters = torch.Tensor(nUsedParameters)
-         local flatUsedStorage = flatUsedParameters:storage()
-
-         for k = 1,#parameters do
-            local offset = cumSumOfHoles[parameters[k]:storageOffset()]
-            parameters[k]:set(flatUsedStorage,
-                              parameters[k]:storageOffset() - offset,
-                              parameters[k]:size(),
-                              parameters[k]:stride())
-         end
-
-         for _, storageAndOffset in pairs(storages) do
-            local k, v = table.unpack(storageAndOffset)
-            flatParameters[{{v+1,v+k:size()}}]:copy(torch.Tensor():set(k))
-         end
-         for k = 1,flatUsedParameters:nElement() do
-            flatUsedParameters[k] = flatParameters[k+cumSumOfHoles[k] ]
-         end
-         return flatUsedParameters
-      end
-
       -- flatten parameters and gradients
-      local flatParameters = flatten(parameters)
-      local flatGradParameters = flatten(gradParameters)
+      local flatParameters = nn.Module.flatten(parameters)
+      collectgarbage()
+      local flatGradParameters = nn.Module.flatten(gradParameters)
+      collectgarbage()
       local flatHessianParameters
       if hessianParameters and hessianParameters[1] then
-         flatHessianParameters = flatten(hessianParameters)
+         flatHessianParameters = nn.Module.flatten(hessianParameters)
+         collectgarbage()
       end
 
       -- return new flat vector that contains all discrete parameters

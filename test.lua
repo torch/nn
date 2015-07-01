@@ -2,6 +2,8 @@
 -- th -lnn -e "nn.test{'LookupTable'}"
 -- th -lnn -e "nn.test{'LookupTable', 'Add'}"
 
+nn.hessian.enable()
+
 local mytester = torch.Tester()
 local jac
 local sjac
@@ -484,6 +486,15 @@ function nntest.Linear()
      local err = jac.testJacobianUpdateParameters(module, input, module.bias)
      mytester:assertlt(err,precision, 'error on bias [direct update] ')
 
+     local err = jac.testDiagHessianInput(module, input)
+     mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+     local err = jac.testDiagHessianWeight(module, input)
+     mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+     local err = jac.testDiagHessianBias(module, input)
+     mytester:assertlt(err , precision, 'error on diagHessianBias')
+
      for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
         mytester:assertlt(err, precision, string.format(
                            'error on weight [%s]', t))
@@ -512,6 +523,15 @@ function nntest.Linear()
 
      local err = jac.testJacobianUpdateParameters(module, input, module.bias)
      mytester:assertlt(err,precision, 'error on bias [direct update] ')
+
+     local err = jac.testDiagHessianInput(module, input)
+     mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+     local err = jac.testDiagHessianWeight(module, input)
+     mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+     local err = jac.testDiagHessianBias(module, input)
+     mytester:assertlt(err , precision, 'error on diag HessianBias')
 
      for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
         mytester:assertlt(err, precision, string.format(
@@ -1384,6 +1404,15 @@ function nntest.SpatialConvolution()
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'error on bias [direct update] ')
 
+   local err = jac.testDiagHessianInput(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+   local err = jac.testDiagHessianWeight(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+   local err = jac.testDiagHessianBias(module, input)
+   mytester:assertlt(err , precision, 'error on diag HessianBias')
+
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
                          'error on weight [%s]', t))
@@ -1423,6 +1452,15 @@ function nntest.SpatialConvolution()
 
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'batch error on bias [direct update] ')
+
+   local err = jac.testDiagHessianInput(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+   local err = jac.testDiagHessianWeight(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+   local err = jac.testDiagHessianBias(module, input)
+   mytester:assertlt(err , precision, 'error on diag HessianBias')
 
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
@@ -1555,6 +1593,15 @@ function nntest.SpatialConvolutionMap()
    local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
    mytester:assertlt(err , precision, 'error on bias ')
 
+   local err = jac.testDiagHessianInput(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+   local err = jac.testDiagHessianWeight(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+   local err = jac.testDiagHessianBias(module, input)
+   mytester:assertlt(err , precision, 'error on diag HessianBias')
+
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
                          'error on weight [%s]', t))
@@ -1592,6 +1639,15 @@ function nntest.SpatialConvolutionMap()
 
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'batch error on bias [direct update] ')
+
+   local err = jac.testDiagHessianInput(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+   local err = jac.testDiagHessianWeight(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+   local err = jac.testDiagHessianBias(module, input)
+   mytester:assertlt(err , precision, 'error on diag HessianBias')
 
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
@@ -1637,6 +1693,15 @@ function nntest.SpatialFullConvolution()
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'error on bias [direct update] ')
 
+   local err = jac.testDiagHessianInput(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+   local err = jac.testDiagHessianWeight(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+   local err = jac.testDiagHessianBias(module, input)
+   mytester:assertlt(err , precision, 'error on diag HessianBias')
+
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
                          'error on weight [%s]', t))
@@ -1668,6 +1733,15 @@ function nntest.SpatialFullConvolution()
 
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'batch error on bias [direct update] ')
+
+   local err = jac.testDiagHessianInput(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+   local err = jac.testDiagHessianWeight(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+   local err = jac.testDiagHessianBias(module, input)
+   mytester:assertlt(err , precision, 'error on diag HessianBias')
 
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
@@ -1713,6 +1787,15 @@ function nntest.SpatialFullConvolutionMap()
 
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'error on bias [direct update] ')
+
+   local err = jac.testDiagHessianInput(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianInput')
+
+   local err = jac.testDiagHessianWeight(module, input)
+   mytester:assertlt(err , precision, 'error on diagHessianWeight')
+
+   local err = jac.testDiagHessianBias(module, input)
+   mytester:assertlt(err , precision, 'error on diag HessianBias')
 
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format(
