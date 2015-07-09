@@ -2929,6 +2929,13 @@ function nntest.SplitTable()
       module = nn.SplitTable(d, 2)
       mytester:asserteq(#module:forward(input), input:size(d+1), "dimension " .. d)
    end
+
+   -- Negative indices
+   local module = nn.SplitTable(-3)
+   local input = torch.randn(3,4,5)
+   mytester:asserteq(#module:forward(input), 3, "negative index")
+   local input = torch.randn(2,3,4,5)
+   mytester:asserteq(#module:forward(input), 3, "negative index (minibatch)")
 end
 
 function nntest.SelectTable()
