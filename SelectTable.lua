@@ -7,7 +7,13 @@ function SelectTable:__init(index)
 end
 
 function SelectTable:updateOutput(input)
-   self.output = input[self.index]
+   assert(math.abs(self.index) <= #input, "arg 1 table idx out of range")
+   if self.index < 0 then
+      self.output = input[#input + self.index + 1]
+   else
+      self.output = input[self.index]
+   end
+   
    return self.output
 end
 
@@ -31,7 +37,11 @@ local function zeroTableCopy(t1, t2)
 end
 
 function SelectTable:updateGradInput(input, gradOutput)
-   self.gradInput[self.index] = gradOutput
+   if self.index < 0 then
+      self.gradInput[#input + self.index + 1] = gradOutput
+   else
+      self.gradInput[self.index] = gradOutput
+   end
    zeroTableCopy(self.gradInput, input)
    return self.gradInput
 end
