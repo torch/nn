@@ -5,16 +5,19 @@ function Module:__init()
    self.output = torch.Tensor()
 end
 
-function Module:parameters()
-   if self.weight and self.bias then
+function Module:parameters(specific)
+   assert(specific == nil or specific == 'weight' or specific == 'bias',  "If specified parameters - must be 'weight' or 'bias'")
+
+   if not specific and self.weight and self.bias then
       return {self.weight, self.bias}, {self.gradWeight, self.gradBias}
-   elseif self.weight then
+   elseif (specific == 'weight') and self.weight then
       return {self.weight}, {self.gradWeight}
-   elseif self.bias then
+   elseif (specific == 'bias') and self.bias then
       return {self.bias}, {self.gradBias}
    else
       return
    end
+
 end
 
 function Module:updateOutput(input)
@@ -137,9 +140,9 @@ end
 function Module:reset()
 end
 
-function Module:getParameters()
+function Module:getParameters(...)
    -- get parameters
-   local parameters,gradParameters = self:parameters()
+   local parameters,gradParameters = self:parameters(...)
 
    local function storageInSet(set, storage)
       local storageAndOffset = set[torch.pointer(storage)]
