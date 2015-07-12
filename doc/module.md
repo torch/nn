@@ -117,8 +117,8 @@ situations.
 Keep in mind that, this function uses a simple trick to achieve its
 goal and it might not be valid for a custom module.
 
-Also note that compared to accGradParameters(), the gradients are not retained 
-for future use. 
+Also note that compared to accGradParameters(), the gradients are not retained
+for future use.
 
 ```lua
 function Module:accUpdateGradParameters(input, gradOutput, lr)
@@ -156,12 +156,12 @@ Example:
 ```lua
 
 -- make an mlp
-mlp1=nn.Sequential(); 
+mlp1=nn.Sequential();
 mlp1:add(nn.Linear(100,10));
 
 -- make a second mlp
-mlp2=nn.Sequential(); 
-mlp2:add(nn.Linear(100,10)); 
+mlp2=nn.Sequential();
+mlp2:add(nn.Linear(100,10));
 
 -- the second mlp shares the bias of the first
 mlp2:share(mlp1,'bias');
@@ -191,7 +191,7 @@ some shared parameters.
 Example:
 ```lua
 -- make an mlp
-mlp1=nn.Sequential(); 
+mlp1=nn.Sequential();
 mlp1:add(nn.Linear(100,10));
 
 -- make a copy that shares the weights and biases
@@ -235,7 +235,7 @@ a `Module`. The object pointer is _never_ supposed to change. However, its
 contents (including its size if it is a Tensor) are supposed to change.
 
 In general state variables are
-[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md). 
+[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 However, some special sub-classes
 like [table layers](table.md#nn.TableLayers) contain something else. Please,
 refer to each module specification for further information.
@@ -250,7 +250,7 @@ This contains the output of the module, computed with the last call of
 #### gradInput ####
 
 This contains the gradients with respect to the inputs of the module, computed with the last call of
-[updateGradInput(input, gradOutput)](#nn.Module.updateGradInput). 
+[updateGradInput(input, gradOutput)](#nn.Module.updateGradInput).
 
 ### Parameters and gradients w.r.t parameters ###
 
@@ -259,17 +259,20 @@ train!). The name of these parameters, and gradients w.r.t these parameters
 are module dependent.
 
 <a name="nn.Module.parameters"/>
-### [{weights}, {gradWeights}] parameters() ###
+### [{weights}, {gradWeights}] parameters([specific]) ###
 
 This function should returns two tables. One for the learnable
 parameters `{weights}` and another for the gradients of the energy
 wrt to the learnable parameters `{gradWeights}`.
 
+Type of parameters can be specified by setting `specific` to either
+'weight' or 'bias'.
+
 Custom modules should override this function if they use learnable
 parameters that are stored in tensors.
 
 <a name="nn.Module.getParameters"/>
-### [flatParameters, flatGradParameters] getParameters() ###
+### [flatParameters, flatGradParameters] getParameters([specific]) ###
 
 This function returns two tensors. One for the flattened learnable
 parameters `flatParameters` and another for the gradients of the energy
@@ -278,6 +281,9 @@ wrt to the learnable parameters `flatGradParameters`.
 Custom modules should not override this function. They should instead override [parameters(...)](#nn.Module.parameters) which is, in turn, called by the present function.
 
 This function will go over all the weights and gradWeights and make them view into a single tensor (one for weights and one for gradWeights). Since the storage of every weight and gradWeight is changed, this function should be called only once on a given network.
+
+Type of parameters can be specified by setting `specific` to either
+'weight' or 'bias'.
 
 <a name="nn.Module.training"/>
 ### training() ###
@@ -334,9 +340,9 @@ end
 <a name="nn.Module.listModules"/>
 ### listModules() ###
 
-List all Modules instances in a network. Returns a flattened list of modules, 
-including container modules (which will be listed first), self, and any other 
-component modules. 
+List all Modules instances in a network. Returns a flattened list of modules,
+including container modules (which will be listed first), self, and any other
+component modules.
 
 For example :
 ```lua
