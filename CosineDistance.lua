@@ -12,28 +12,33 @@ function CosineDistance:updateOutput(input)
       input1 = input1:view(1,-1)
       input2 = input2:view(1,-1)
    end
-   
+
    if not self.buffer then
       self.buffer = input1.new()
       self.w1  = input1.new()
       self.w22 = input1.new()
-      self.w2  = input1.new()
+      self.w  = input1.new()
       self.w32 = input1.new()
-      self.w3  = input1.new()
+      self.ones = input1.new()
    end
- 
+
    self.buffer:cmul(input1,input2)
    self.w1:sum(self.buffer,2)
 
+   local epsilon = 1e-12
    self.buffer:cmul(input1,input1)
-   self.w22:sum(self.buffer,2)
-   self.w2:sqrt(self.w22)
+   self.w22:sum(self.buffer,2):add(epsilon)
+   self.ones:resizeAs(self.w22):fill(1)
+   self.w22:cdiv(self.ones, self.w22)
+   self.w:resizeAs(self.w22):copy(self.w22)
 
    self.buffer:cmul(input2,input2)
-   self.w32:sum(self.buffer,2)
-   self.w3:sqrt(self.w32)
+   self.w32:sum(self.buffer,2):add(epsilon)
+   self.w32:cdiv(self.ones, self.w32)
+   self.w:cmul(self.w32)
+   self.w:sqrt()
 
-   self.output:cdiv(self.w1,self.w2):cdiv(self.w3)
+   self.output:cmul(self.w1,self.w)
    self.output = self.output:select(2,1)
 
    return self.output
@@ -52,22 +57,19 @@ function CosineDistance:updateGradInput(input, gradOutput)
 
    local gw1 = self.gradInput[1]
    local gw2 = self.gradInput[2]
-   gw1:resizeAs(v1):zero() 
-   gw2:resizeAs(v1):zero()
+   gw1:resizeAs(v1):copy(v2)
+   gw2:resizeAs(v1):copy(v1)
 
-   self.buffer:cmul(self.w2,self.w3)
-   self.buffer = self.buffer:expandAs(v1)
-
-   gw1:cdiv(v2,self.buffer)
-   gw2:cdiv(v1,self.buffer)
-
-   self.buffer:cdiv(self.w1,self.w22):cdiv(self.w2):cdiv(self.w3)
+   self.w = self.w:expandAs(v1)
+   self.buffer:cmul(self.w1,self.w22)
    self.buffer = self.buffer:expandAs(v1)
    gw1:addcmul(-1,self.buffer,v1)
+   gw1:cmul(self.w)
 
-   self.buffer:cdiv(self.w1,self.w32):cdiv(self.w2):cdiv(self.w3)
+   self.buffer:cmul(self.w1,self.w32)
    self.buffer = self.buffer:expandAs(v1)
    gw2:addcmul(-1,self.buffer,v2)
+   gw2:cmul(self.w)
 
    local go = gradOutput:view(-1,1):expandAs(v1)
    gw1:cmul(go)
@@ -77,6 +79,10 @@ function CosineDistance:updateGradInput(input, gradOutput)
       self.gradInput[1] = gw1:select(1,1)
       self.gradInput[2] = gw2:select(1,1)
    end
+
+   -- fix for torch bug 
+   -- https://github.com/torch/torch7/issues/289
+   self.buffer:resize()
 
    return self.gradInput
 end
