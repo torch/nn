@@ -102,6 +102,7 @@ include('SelectTable.lua')
 include('MixtureTable.lua')
 include('CriterionTable.lua')
 include('FlattenTable.lua')
+include('NarrowTable.lua')
 include('Identity.lua')
 
 include('Criterion.lua')

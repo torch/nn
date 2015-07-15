@@ -30,5 +30,19 @@ function nn.utils.recursiveResizeAs(t1,t2)
    return t1, t2
 end
 
+function nn.utils.recursiveFill(t2, val)
+   if torch.type(t2) == 'table' then
+      for key,_ in pairs(t2) do
+         t2[key] = nn.utils.recursiveFill(t2[key], val)
+      end
+   elseif torch.isTensor(t2) then
+      t2:fill(val)
+   else
+      error("expecting tensor or table thereof. Got "
+           ..torch.type(t2).." instead")
+   end
+   return t2
+end
+
 
 table.unpack = table.unpack or unpack
