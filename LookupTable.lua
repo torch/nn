@@ -7,12 +7,17 @@ function LookupTable:__init(nIndex, nOutput)
 
    self.weight = torch.Tensor(nIndex, nOutput)
    self.gradWeight = torch.Tensor(nIndex, nOutput):zero()
-   self._count = torch.IntTensor()
-   self._input = torch.LongTensor()
-
-   self.shouldScaleGradByFreq = false
 
    self:reset()
+end
+
+function LookupTable:backCompatibility()
+    self._count = self._count or torch.IntTensor()
+    self._input = self._input or torch.LongTensor()
+
+    if self.shouldScaleGradByFreq == nil then
+        self.shouldScaleGradByFreq = false
+    end
 end
 
 function LookupTable:accUpdateOnly()
@@ -42,6 +47,7 @@ function LookupTable:makeInputContiguous(input)
 end
 
 function LookupTable:updateOutput(input)
+   self:backCompatibility()
    input = self:makeInputContiguous(input)
    if input:dim() == 1 then
       self.output:index(self.weight, 1, input)
@@ -55,6 +61,7 @@ function LookupTable:updateOutput(input)
 end
 
 function LookupTable:accGradParameters(input, gradOutput, scale)
+   self:backCompatibility()
    input = self.copiedInput and self._input or input
    if input:dim() == 2 then
       input = input:view(-1)
