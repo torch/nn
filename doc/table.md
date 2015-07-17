@@ -11,6 +11,7 @@ This allows one to build very rich architectures:
    * [`JoinTable`](#nn.JoinTable): joins a `table` of `Tensor`s into a `Tensor`;
    * [`MixtureTable`](#nn.MixtureTable): mixture of experts weighted by a gater;
    * [`SelectTable`](#nn.SelectTable): select one element from a `table`;
+   * [`NarrowTable`](#nn.NarrowTable): select a slice of elements from a `table`;
    * [`FlattenTable`](#nn.FlattenTable): flattens a nested `table` hierarchy;
  * Pair Modules compute a measure like distance or similarity from a pair (`table`) of input `Tensor`s:
    * [`PairwiseDistance`](#nn.PairwiseDistance): outputs the `p`-norm. distance between inputs;
@@ -721,6 +722,46 @@ Example 2:
 0 0
 0 0
 [torch.DoubleTensor of dimension 2x2]
+
+```
+
+<a name="nn.NarrowTable"/>
+## NarrowTable ##
+
+`module` = `NarrowTable(offset [, length])`
+
+Creates a module that takes a `table` as input and outputs the subtable 
+starting at index `offset` having `length` elements (defaults to 1 element).
+The elements can be either a `table` or a [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
+
+The gradients of the elements not included in the subtable are zeroed `Tensor`s of the same size. 
+This is true regardless of the dept of the encapsulated `Tensor` as the function used internally to do so is recursive.
+
+Example:
+```lua
+> input = {torch.randn(2, 3), torch.randn(2, 1), torch.randn(1, 2)}
+> =nn.NarrowTable(2,2):forward(input)
+{
+  1 : DoubleTensor - size: 2x1
+  2 : DoubleTensor - size: 1x2
+}
+
+> =nn.NarrowTable(1):forward(input)
+{
+  1 : DoubleTensor - size: 2x3
+}
+
+> =table.unpack(nn.NarrowTable(1,2):backward(input, {torch.randn(2, 3), torch.randn(2, 1)}))
+ 1.9528 -0.1381  0.2023
+ 0.2297 -1.5169 -1.1871
+[torch.DoubleTensor of size 2x3]
+
+-1.2023
+-0.4165
+[torch.DoubleTensor of size 2x1]
+
+ 0  0
+[torch.DoubleTensor of size 1x2]
 
 ```
 
