@@ -68,7 +68,6 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
    elseif input:dim() ~= 1 then
       error("input must be a vector or matrix")
    end
-
    self.gradWeight.nn.LookupTable_accGradParameters(self, input, gradOutput, scale)
 end
 
@@ -79,6 +78,8 @@ function LookupTable:type(type)
       -- CUDA uses _sorted and _indices temporary tensors
       self._sorted = self.weight.new()
       self._indices = self.weight.new()
+      self._count = self.weight.new()
+      self._input = self.weight.new()
    else
       -- self._count and self._input should only be converted if using Cuda
       self._count = torch.IntTensor()
