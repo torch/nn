@@ -47,12 +47,6 @@
 #include "generic/SoftMax.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/Max.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/Min.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/MSECriterion.c"
 #include "THGenerateFloatTypes.h"
 
@@ -136,8 +130,6 @@ int luaopen_libnn(lua_State *L)
   lua_pushvalue(L, -1);
   lua_setglobal(L, "nn");
 
-  nn_FloatMin_init(L);
-  nn_FloatMax_init(L);
   nn_FloatSqrt_init(L);
   nn_FloatSquare_init(L);
   nn_FloatHardTanh_init(L);
@@ -178,8 +170,6 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSpatialUpSamplingNearest_init(L);
   nn_FloatLookupTable_init(L);
 
-  nn_DoubleMin_init(L);
-  nn_DoubleMax_init(L);
   nn_DoubleSqrt_init(L);
   nn_DoubleSquare_init(L);
   nn_DoubleHardTanh_init(L);
