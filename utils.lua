@@ -44,5 +44,25 @@ function nn.utils.recursiveFill(t2, val)
    return t2
 end
 
+function nn.utils.addSingletonDimension(t, dim)
+  local view = t.new()
+  local size = torch.LongStorage(t:dim() + 1)
+  local stride = torch.LongStorage(t:dim() + 1)
+
+  for d = 1, dim - 1 do
+    size[d] = t:size(d)
+    stride[d] = t:stride(d)
+  end
+  size[dim] = 1
+  stride[dim] = 1
+  for d = dim + 1, t:dim() + 1 do
+    size[d] = t:size(d - 1)
+    stride[d] = t:stride(d - 1)
+  end
+
+  view:set(t:storage(), t:storageOffset(), size, stride)
+  return view
+end
+
 
 table.unpack = table.unpack or unpack
