@@ -21,7 +21,23 @@ end
 
 
 function ClassNLLCriterion:updateOutput(input, target)
-   if input:type() == 'torch.CudaTensor' and not self.weights then
+   if input:type() == 'torch.CudaTensor' then
+      if self.weights == nil then
+         -- The CUDA implementation requires self.weights be non-nil
+         self.weights = torch.CudaTensor()
+      end
+      assert(self.weights:dim() == 0 or self.weights:dim() == 1,
+         'weights must be 1D or empty')
+      -- The cuda code wont check weight size, so we must do it here.
+      if self.weights:dim() == 1 then
+         if input:dim() == 1 then
+            assert(self.weights:size(1) == input:size(1), 
+               'Wrong number of weights')
+         else
+            assert(self.weights:size(1) == input:size(2),
+               'Wrong number of weights')
+         end
+      end
       if input:dim() == 1 then
          self._target = self._target or input.new(1)
          if type(target) == 'number' then
@@ -66,7 +82,9 @@ function ClassNLLCriterion:updateGradInput(input, target)
    self.gradInput:resizeAs(input)
    self.gradInput:zero()
 
-  if input:type() == 'torch.CudaTensor' and not self.weights then
+  if input:type() == 'torch.CudaTensor' then
+     -- Note: we'll assume that updateOutput() has been called and self.weights
+     -- is non-nil.
      if input:dim() == 1 then
         self._target = self._target or input.new(1)
          if type(target) == 'number' then
