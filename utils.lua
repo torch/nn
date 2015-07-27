@@ -66,6 +66,10 @@ function nn.utils.recursiveAdd(t1, val, t2)
 end
 
 function nn.utils.addSingletonDimension(t, dim)
+  assert(torch.isTensor(t), "input tensor expected")
+  local dim = dim or 1
+  assert(dim > 0 and dim <= t:dim(), "invalid dimension: " .. dim)
+
   local view = t.new()
   local size = torch.LongStorage(t:dim() + 1)
   local stride = torch.LongStorage(t:dim() + 1)

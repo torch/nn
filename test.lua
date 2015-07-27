@@ -3993,6 +3993,32 @@ function nntest.Padding()
    mytester:assertTensorEq(gradInput, input, 0.00001, "Padding backward error")
 end
 
+function nntest.addSingletonDimension()
+   local dims = torch.random(5)
+   local size = torch.LongTensor(dims):random(10)
+   local perm = torch.randperm(dims):totable()
+   local tensor = torch.Tensor(unpack(size:totable())):uniform():permute(unpack(perm))
+   size = torch.gather(size, 1, torch.LongTensor(perm))
+
+   local firstDim = nn.utils.addSingletonDimension(tensor)
+   mytester:assertTableEq(firstDim:size():totable(), {1, unpack(size:totable())},
+                          "wrong size for singleton dimension 1")
+   mytester:assertTensorEq(firstDim[1], tensor, 0,
+                           "wrong content for singleton dimension 1")
+
+   local dim = torch.random(dims)
+   local result = nn.utils.addSingletonDimension(tensor, dim)
+   local resultSize = size:totable()
+   table.insert(resultSize, dim, 1)
+   mytester:assertTableEq(result:size():totable(), resultSize,
+                          "wrong size for random singleton dimension")
+   mytester:assertTensorEq(result:select(dim, 1), tensor, 0,
+                           "wrong content for random singleton dimension")
+
+   mytester:assertError(function() nn.utils.addSingletonDimension(tensor, dims + 1) end,
+                        "invalid dimension not detected")
+end
+
 mytester:add(nntest)
 
 if not nn then
