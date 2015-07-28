@@ -13,7 +13,7 @@ function SelectTable:updateOutput(input)
    else
       self.output = input[self.index]
    end
-   
+
    return self.output
 end
 
@@ -43,6 +43,11 @@ function SelectTable:updateGradInput(input, gradOutput)
       self.gradInput[self.index] = gradOutput
    end
    zeroTableCopy(self.gradInput, input)
+
+   for i=#input+1, #self.gradInput do
+       self.gradInput[i] = nil
+   end
+
    return self.gradInput
 end
 
