@@ -20,5 +20,10 @@ function CAddTable:updateGradInput(input, gradOutput)
       self.gradInput[i]:resizeAs(input[i])
       self.gradInput[i]:copy(gradOutput)
    end
+
+   for i=#input+1, #self.gradInput do
+       self.gradInput[i] = nil
+   end
+
    return self.gradInput
 end
