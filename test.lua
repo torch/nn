@@ -851,7 +851,7 @@ function nntest.ParallelCriterion()
    local gradInput = pc:backward(input, target)
    mytester:assertTensorEq(gradInput[1], gradInput2[1], 0.000001, "ParallelCriterion backward error 1")
    mytester:assertTensorEq(gradInput[2], gradInput2[2], 0.000001, "ParallelCriterion backward error 2")
-   
+
    -- test type
    pc:float()
    gradInput[1], gradInput[2] = gradInput[1]:clone(), gradInput[2]:clone()
@@ -862,7 +862,7 @@ function nntest.ParallelCriterion()
    mytester:assert(math.abs(output3 - output) < 0.00001, "ParallelCriterion forward error type")
    mytester:assertTensorEq(gradInput[1]:float(), gradInput3[1], 0.000001, "ParallelCriterion backward error 1 type")
    mytester:assertTensorEq(gradInput[2]:float(), gradInput3[2], 0.000001, "ParallelCriterion backward error 2 type")
-   
+
    -- test repeatTarget
    local input = {torch.rand(2,10), torch.randn(2,10)}
    local target = torch.randn(2,10)
@@ -875,7 +875,7 @@ function nntest.ParallelCriterion()
    local gradInput2 = {mse:backward(input[1], target):clone():div(2), mse:backward(input[2], target)}
    mytester:assertTensorEq(gradInput[1], gradInput2[1], 0.000001, "ParallelCriterion repeatTarget backward error 1")
    mytester:assertTensorEq(gradInput[2], gradInput2[2], 0.000001, "ParallelCriterion repeatTarget backward error 2")
-   
+
    -- table input
    local input = {torch.randn(2,10), {torch.rand(2,10), torch.randn(2,10)}}
    local target = {torch.IntTensor{2,5}, {torch.IntTensor{1,8}, torch.randn(2,10)}}
@@ -888,7 +888,7 @@ function nntest.ParallelCriterion()
    local output2 = nll2:forward(input[1], target[1])*0.4 + nll:forward(input[2][1], target[2][1])/2 + mse:forward(input[2][2], target[2][2])
    mytester:assert(math.abs(output2 - output) < 0.00001, "ParallelCriterion table forward error")
    local gradInput2 = {
-       nll2:backward(input[1], target[1]):clone():mul(0.4), 
+       nll2:backward(input[1], target[1]):clone():mul(0.4),
       {nll:backward(input[2][2], target[2][1]):clone():div(2), mse:backward(input[2][2], target[2][2])}
    }
    local gradInput = pc2:backward(input, target)
@@ -909,7 +909,7 @@ function nntest.MultiCriterion()
    local gradInput = mc:backward(input, target)
    local gradInput2 = nll:backward(input, target):clone():div(2):add(nll2:backward(input, target))
    mytester:assertTensorEq(gradInput, gradInput2, 0.000001, "MultiCriterion backward error ")
-   
+
    -- test type
    mc:float()
    gradInput = gradInput:clone()
@@ -919,7 +919,7 @@ function nntest.MultiCriterion()
    local gradInput3 = mc:backward(input3, target3)
    mytester:assert(math.abs(output3 - output) < 0.00001, "MultiCriterion forward error type")
    mytester:assertTensorEq(gradInput:float(), gradInput3, 0.000001, "MultiCriterion backward error type")
-   
+
    -- test table input
    mc:double()
    local input = {torch.randn(2,10), {torch.randn(2,10), torch.randn(2,10)}}
@@ -1936,6 +1936,7 @@ function nntest.SpatialConvolutionBatchCompare()
    local inj = (outj-1)*sj+kj
 
    local module = nn.SpatialConvolution(from, to, ki, kj, si, sj)
+   module:zeroGradParameters()
    local input = torch.randn(from,inj,ini)
 
    batchcompare(module,input, {'weight','bias','gradWeight','gradBias'})
@@ -1952,6 +1953,7 @@ function nntest.SpatialFullConvolutionBatchCompare()
    local inj = math.random(5,9)
 
    local module = nn.SpatialFullConvolution(from, to, ki, kj, si, sj)
+   module:zeroGradParameters()
    local input = torch.randn(from, inj, ini)
 
    batchcompare(module,input, {'weight','bias','gradWeight','gradBias'})
@@ -1970,6 +1972,7 @@ function nntest.SpatialSubSamplingBatchCompare()
    local ini = (outi-1)*si+ki
    local inj = (outj-1)*sj+kj
    local module = nn.SpatialSubSampling(from, ki, kj, si, sj)
+   module:zeroGradParameters()
    local input = torch.randn(from,inj,ini)--torch.Tensor(from, inj, ini):zero()
 
    batchcompare(module,input, {'weight','bias','gradWeight','gradBias'})
@@ -2064,7 +2067,7 @@ function nntest.SpatialMaxPooling()
       local padH =  math.min(math.random(0,1),math.floor(kj/2))
       local ini = (outi-1)*si+ki-2*padW
       local inj = (outj-1)*sj+kj-2*padH
- 
+
       local ceil_string = ceil_mode and 'ceil' or 'floor'
       local module = nn.SpatialMaxPooling(ki,kj,si,sj,padW,padH)
       if ceil_mode then module:ceil() else module:floor() end
@@ -2501,6 +2504,7 @@ function nntest.VolumetricConvolutionBatchCompare()
    local ini = (outi-1)*si+ki
    local inj = (outj-1)*sj+kj
    local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj)
+   module:zeroGradParameters()
    local input = torch.randn(from, int, inj, ini)
    batchcompare(module,input, {'weight','bias','gradWeight','gradBias'})
 end
@@ -3096,7 +3100,7 @@ function nntest.SelectTable()
       equal(gradInput[idx], gradOutputs[idx], "gradInput[idx] dimension " .. idx)
       equal(gradInput[nonIdx[idx]], zeros[nonIdx[idx]], "gradInput[nonIdx] dimension " .. idx)
    end
-   
+
    -- test negative index
    local idx = -2
    module = nn.SelectTable(idx)
@@ -3105,7 +3109,7 @@ function nntest.SelectTable()
    local gradInput = module:backward(input, gradOutputs[#input+idx+1])
    equal(gradInput[#input+idx+1], gradOutputs[#input+idx+1], "gradInput[idx] dimension " .. idx)
    equal(gradInput[nonIdx[#input+idx+1]], zeros[nonIdx[#input+idx+1]], "gradInput[nonIdx] dimension " .. idx)
-   
+
    -- test typecast
    local idx = #input
    module = nn.SelectTable(idx)
@@ -3264,7 +3268,7 @@ function nntest.NarrowTable()
    local gradInput2 = seq2:backward(input, gradOutput)
    mytester:assertTensorEq(output, output2, 0.0000001, "NarrowTable output err")
    mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "NarrowTable gradInput err")
-   
+
    -- now try it with a smaller input
    local input = input:narrow(2, 1, 8)
    local output = seq:forward(input)
@@ -3273,7 +3277,7 @@ function nntest.NarrowTable()
    local gradInput2 = seq2:backward(input, gradOutput)
    mytester:assertTensorEq(output, output2, 0.0000001, "NarrowTable small output err")
    mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "NarrowTable small gradInput err")
-   
+
    -- test type-cast
    local input = input:float()
    local gradOutput = gradOutput:float()
@@ -3814,7 +3818,7 @@ function nntest.CosineDistance()
 
   local err = jac.testJacobian(module,input)
   mytester:assertlt(err,precision, 'batch error on state ')
- 
+
 end
 
 function nntest.CosineEmbeddingCriterion()
