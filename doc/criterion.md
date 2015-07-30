@@ -401,12 +401,12 @@ Creates a criterion that measures the loss given  an input `x` which is a 1-dime
 This is usually used for measuring whether two inputs are similar or dissimilar, e.g. using the L1 pairwise distance, and is typically used for learning nonlinear embeddings or semi-supervised learning.
 
 ```lua
-             ⎧ x,                  if y ==  1
-loss(x, y) = ⎨
-             ⎩ max(0, margin - x), if y == -1
+                 ⎧ x_i,                  if y_i ==  1
+loss(x, y) = 1/n ⎨
+                 ⎩ max(0, margin - x_i), if y_i == -1
 ```
 
-The `margin` has a default value of `1`, or can be set in the constructor.
+If `x` and `y` are `n`-dimensional `Tensor`s, the sum operation still operates over all the elements, and divides by `n` (this can be avoided if one sets the internal variable `sizeAverage` to `false`). The `margin` has a default value of `1`, or can be set in the constructor.
 
 ### Example
 
