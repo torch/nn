@@ -28,6 +28,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Power](#nn.Power) : an element-wise [pow](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchpowres-x) operation ;
     * [Square](#nn.Square) : an element-wise square operation ;
     * [Sqrt](#nn.Sqrt) : an element-wise [sqrt](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchsqrtres-x) operation ;
+    * [Normalize](#nn.Normalize) : normalizes the input to have unit `L_p` norm ;
     * [MM](#nn.MM) : matrix-matrix multiplication (also supports batches of matrices) ;
   * Miscellaneous Modules :
     * [BatchNormalization](#nn.BatchNormalization) - mean/std normalization over the mini-batch inputs (with an optional affine transform) ;
@@ -886,6 +887,23 @@ gnuplot.grid(true)
 
 ![](image/power.png)
 
+<a name="nn.Normalize"></a>
+## Normalize ##
+
+```lua
+module = nn.Normalize(p, [eps])
+```
+Normalizes the input Tensor to have unit `L_p` norm. The smoothing parameter `eps` prevents division by zero when the input contains all zero elements (default = `1e-10`).
+
+Input can be 1D or 2D (in which case it's considered as in batch mode)
+
+```lua
+A = torch.randn(3, 5)
+m = nn.Normalize(2)
+B = m:forward(A) -- B is also 3 x 5
+-- take the L2 norm over the second axis:
+print(torch.norm(B, 2, 2)) -- norms is [1, 1, 1]
+```
 
 <a name="nn.MM"></a>
 ## MM ##
