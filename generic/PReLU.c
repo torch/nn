@@ -89,7 +89,6 @@ static int nn_(PReLU_updateGradInput)(lua_State *L)
   }
   else
   {
-    long input_ndim = THTensor_(nDimension)(input);
     const real* input_data = THTensor_(data)(input);
     const real* gradOutput_data = THTensor_(data)(gradOutput);
     const real* weight_data = THTensor_(data)(weight);
@@ -144,7 +143,7 @@ static int nn_(PReLU_updateGradInput)(lua_State *L)
       }
     }
   }
-  
+
   return 1;
 }
 
@@ -208,7 +207,6 @@ static int nn_(PReLU_accGradParameters)(lua_State *L)
 
       for (j=0; j < nOutputPlane; ++j)
       {
-	real w = weight_data[j];
 	real sum = 0;
 	for (k=0; k < ks; ++k)
 	  if (n_input_data[k] <= 0)
