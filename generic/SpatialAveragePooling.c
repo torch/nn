@@ -51,6 +51,7 @@ static int nn_(SpatialAveragePooling_updateOutput)(lua_State *L)
     THTensor_(resize4d)(output, input->size[0], nInputPlane, outputHeight, outputWidth);
   
   input = THTensor_(newContiguous)(input);
+  luaL_argcheck(L, THTensor_(isContiguous)(output), 1, "");
   input_data = THTensor_(data)(input);
   output_data = THTensor_(data)(output);
   
@@ -135,6 +136,11 @@ static int nn_(SpatialAveragePooling_updateGradInput)(lua_State *L)
   input_data = THTensor_(data)(input);
 
   THTensor_(resizeAs)(gradInput, input);
+
+  input = THTensor_(newContiguous)(input);
+  gradOutput = THTensor_(newContiguous)(gradOutput);
+  luaL_argcheck(L, THTensor_(isContiguous)(gradInput), 1, "");
+
   gradInput_data = THTensor_(data)(gradInput);
   gradOutput_data = THTensor_(data)(gradOutput);
 
@@ -171,6 +177,8 @@ static int nn_(SpatialAveragePooling_updateGradInput)(lua_State *L)
     }
   }
 
+  THTensor_(free)(input);
+  THTensor_(free)(gradOutput);
   return 1;
 }
 
