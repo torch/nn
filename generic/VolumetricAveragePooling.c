@@ -185,7 +185,6 @@ static int nn_(VolumetricAveragePooling_updateGradInput)(lua_State *L) {
   int owidth;
   real *gradInput_data;
   real *gradOutput_data;
-  real *indices_data;
 
   int dimN = 0;
   int dimt = 1;
