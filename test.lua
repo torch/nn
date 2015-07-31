@@ -4023,7 +4023,7 @@ function nntest.addSingletonDimension()
    mytester:assertTensorEq(firstDim[1], tensor, 0,
                            "wrong content for singleton dimension 1")
 
-   local dim = torch.random(dims)
+   local dim = torch.random(dims + 1)
    local result = nn.utils.addSingletonDimension(tensor, dim)
    local resultSize = size:totable()
    table.insert(resultSize, dim, 1)
