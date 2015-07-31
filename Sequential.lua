@@ -29,8 +29,13 @@ function Sequential:remove(index)
       error"index out of range"
    end
    table.remove(self.modules, index)
-   self.output = self.modules[#self.modules].output
-   self.gradInput = self.modules[1].gradInput
+   if #self.modules > 0 then
+       self.output = self.modules[#self.modules].output
+       self.gradInput = self.modules[1].gradInput
+   else
+       self.output = torch.Tensor()
+       self.gradInput = torch.Tensor()
+   end
 end
 
 function Sequential:updateOutput(input)
