@@ -4032,7 +4032,7 @@ function nntest.addSingletonDimension()
    mytester:assertTensorEq(result:select(dim, 1), tensor, 0,
                            "wrong content for random singleton dimension")
 
-   mytester:assertError(function() nn.utils.addSingletonDimension(tensor, dims + 1) end,
+   mytester:assertError(function() nn.utils.addSingletonDimension(tensor, dims + 2) end,
                         "invalid dimension not detected")
 end
 
