@@ -219,9 +219,9 @@ function Module:getParameters()
    -- get parameters
    local parameters,gradParameters = self:parameters()
    -- flatten parameters and gradients
-   local flatParameters = Module.flatten(parameters)
+   local flatParameters = nn.Module.flatten(parameters)
    collectgarbage()
-   local flatGradParameters = Module.flatten(gradParameters)
+   local flatGradParameters = nn.Module.flatten(gradParameters)
    collectgarbage()
 
    -- return new flat vector that contains all discrete parameters
