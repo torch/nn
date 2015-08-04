@@ -42,6 +42,6 @@ function Padding:updateGradInput(input, gradOutput)
    else
       gradOutputWindow = gradOutput:narrow(dim, 1 - self.pad, input:size(dim))
    end
-   self.gradInput:copy(gradOutputWindow:copy(input))
+   self.gradInput:copy(gradOutputWindow)
    return self.gradInput
 end
