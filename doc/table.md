@@ -4,27 +4,27 @@
 This set of modules allows the manipulation of `table`s through the layers of a neural network.
 This allows one to build very rich architectures:
 
- * `table` Container Modules encapsulate sub-Modules:
-   * [`ConcatTable`](#nn.ConcatTable): applies each member module to the same input     [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor) and outputs a `table`;
-   * [`ParallelTable`](#nn.ParallelTable): applies the `i`-th member module to the `i`-th input and outputs a `table`;
- * Table Conversion Modules convert between `table`s and `Tensor`s or `table`s:
-   * [`SplitTable`](#nn.SplitTable): splits a `Tensor` into a `table` of `Tensor`s;
-   * [`JoinTable`](#nn.JoinTable): joins a `table` of `Tensor`s into a `Tensor`;
-   * [`MixtureTable`](#nn.MixtureTable): mixture of experts weighted by a gater;
-   * [`SelectTable`](#nn.SelectTable): select one element from a `table`;
-   * [`NarrowTable`](#nn.NarrowTable): select a slice of elements from a `table`;
-   * [`FlattenTable`](#nn.FlattenTable): flattens a nested `table` hierarchy;
- * Pair Modules compute a measure like distance or similarity from a pair (`table`) of input `Tensor`s:
-   * [`PairwiseDistance`](#nn.PairwiseDistance): outputs the `p`-norm. distance between inputs;
-   * [`DotProduct`](#nn.DotProduct): outputs the dot product (similarity) between inputs;
-   * [`CosineDistance`](#nn.CosineDistance): outputs the cosine distance between inputs;
- * CMath Modules perform element-wise operations on a `table` of `Tensor`s:
-   * [`CAddTable`](#nn.CAddTable): addition of input `Tensor`s;
-   * [`CSubTable`](#nn.CSubTable): substraction of input `Tensor`s;
-   * [`CMulTable`](#nn.CMulTable): multiplication of input `Tensor`s;
-   * [`CDivTable`](#nn.CDivTable): division of input `Tensor`s;
- * `Table` of Criteria:
-   * [`CriterionTable`](#nn.CriterionTable): wraps a [Criterion](criterion.md#nn.Criterion) so that it can accept a `table` of inputs.
+  * `table` Container Modules encapsulate sub-Modules:
+    * [`ConcatTable`](#nn.ConcatTable): applies each member module to the same input     [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor) and outputs a `table`;
+    * [`ParallelTable`](#nn.ParallelTable): applies the `i`-th member module to the `i`-th input and outputs a `table`;
+  * Table Conversion Modules convert between `table`s and `Tensor`s or `table`s:
+    * [`SplitTable`](#nn.SplitTable): splits a `Tensor` into a `table` of `Tensor`s;
+    * [`JoinTable`](#nn.JoinTable): joins a `table` of `Tensor`s into a `Tensor`;
+    * [`MixtureTable`](#nn.MixtureTable): mixture of experts weighted by a gater;
+    * [`SelectTable`](#nn.SelectTable): select one element from a `table`;
+    * [`NarrowTable`](#nn.NarrowTable): select a slice of elements from a `table`;
+    * [`FlattenTable`](#nn.FlattenTable): flattens a nested `table` hierarchy;
+  * Pair Modules compute a measure like distance or similarity from a pair (`table`) of input `Tensor`s:
+    * [`PairwiseDistance`](#nn.PairwiseDistance): outputs the `p`-norm. distance between inputs;
+    * [`DotProduct`](#nn.DotProduct): outputs the dot product (similarity) between inputs;
+    * [`CosineDistance`](#nn.CosineDistance): outputs the cosine distance between inputs;
+  * CMath Modules perform element-wise operations on a `table` of `Tensor`s:
+    * [`CAddTable`](#nn.CAddTable): addition of input `Tensor`s;
+    * [`CSubTable`](#nn.CSubTable): substraction of input `Tensor`s;
+    * [`CMulTable`](#nn.CMulTable): multiplication of input `Tensor`s;
+    * [`CDivTable`](#nn.CDivTable): division of input `Tensor`s;
+  * `Table` of Criteria:
+    * [`CriterionTable`](#nn.CriterionTable): wraps a [Criterion](criterion.md#nn.Criterion) so that it can accept a `table` of inputs.
 
 `table`-based modules work by supporting `forward()` and `backward()` methods that can accept `table`s as inputs.
 It turns out that the usual [`Sequential`](containers.md#nn.Sequential) module can do this, so all that is needed is other child modules that take advantage of such `table`s.

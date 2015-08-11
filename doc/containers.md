@@ -2,11 +2,11 @@
 # Containers #
 Complex neural networks are easily built using container classes:
 
- * [Container](#nn.Container) : abstract class inherited by containers ;
-   * [Sequential](#nn.Sequential) : plugs layers in a feed-forward fully connected manner ;
-   * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
-   * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
-     * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
+  * [Container](#nn.Container) : abstract class inherited by containers ;
+    * [Sequential](#nn.Sequential) : plugs layers in a feed-forward fully connected manner ;
+    * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
+    * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
+      * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
  
 See also the [Table Containers](#nn.TableContainers) for manipulating tables of [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 

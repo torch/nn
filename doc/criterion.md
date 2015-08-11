@@ -4,25 +4,25 @@
 [`Criterions`](#nn.Criterion) are helpful to train a neural network. Given an input and a
 target, they compute a gradient according to a given loss function.
 
- * Classification criterions:
-  * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
-  * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
-  * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
-  * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
-  * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
-  * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
- * Regression criterions:
-  * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
-  * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
-  * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
- * Embedding criterions (measuring whether two inputs are similar or dissimilar):
-  * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
-  * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
-  * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
- * Miscelaneus criterions:
-  * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
-  * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
-  * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
+  * Classification criterions:
+    * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
+    * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
+    * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
+    * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
+    * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
+    * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
+  * Regression criterions:
+    * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
+    * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
+    * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
+  * Embedding criterions (measuring whether two inputs are similar or dissimilar):
+    * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
+    * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
+    * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
+  * Miscelaneus criterions:
+    * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
+    * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
+    * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
 
 <a name="nn.Criterion"></a>
 ## Criterion ##
