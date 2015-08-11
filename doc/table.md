@@ -1,8 +1,9 @@
-<a name="nn.TableLayers"/>
+<a name="nn.TableLayers"></a>
 # Table Layers #
 
 This set of modules allows the manipulation of `table`s through the layers of a neural network.
 This allows one to build very rich architectures:
+
  * `table` Container Modules encapsulate sub-Modules:
    * [`ConcatTable`](#nn.ConcatTable): applies each member module to the same input     [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor) and outputs a `table`;
    * [`ParallelTable`](#nn.ParallelTable): applies the `i`-th member module to the `i`-th input and outputs a `table`;
@@ -35,7 +36,7 @@ pred = mlp:forward(t)
 pred = mlp:forward{x, y, z}      -- This is equivalent to the line before
 ```
 
-<a name="nn.ConcatTable"/>
+<a name="nn.ConcatTable"></a>
 ## ConcatTable ##
 
 ```lua
@@ -115,7 +116,7 @@ which gives the output (using [th](https://github.com/torch/trepl)):
 ```
 
 
-<a name="nn.ParallelTable"/>
+<a name="nn.ParallelTable"></a>
 ## ParallelTable ##
 
 ```lua
@@ -164,7 +165,7 @@ which gives the output:
 ```
 
 
-<a name="nn.SplitTable"/>
+<a name="nn.SplitTable"></a>
 ## SplitTable ##
 
 ```lua
@@ -399,7 +400,7 @@ end
 ```
 
 
-<a name="nn.JoinTable"/>
+<a name="nn.JoinTable"></a>
 ## JoinTable ##
 
 ```lua
@@ -534,7 +535,7 @@ end
 ```
 
 
-<a name='nn.MixtureTable'/>
+<a name='nn.MixtureTable'></a>
 ## MixtureTable ##
 
 `module` = `MixtureTable([dim])`
@@ -632,7 +633,7 @@ Forwarding a batch of 2 examples gives us something like this:
 
 ```
 
-<a name="nn.SelectTable"/>
+<a name="nn.SelectTable"></a>
 ## SelectTable ##
 
 `module` = `SelectTable(index)`
@@ -725,7 +726,7 @@ Example 2:
 
 ```
 
-<a name="nn.NarrowTable"/>
+<a name="nn.NarrowTable"></a>
 ## NarrowTable ##
 
 `module` = `NarrowTable(offset [, length])`
@@ -765,7 +766,7 @@ Example:
 
 ```
 
-<a name="nn.FlattenTable"/>
+<a name="nn.FlattenTable"></a>
 ## FlattenTable ##
 
 `module` = `FlattenTable()`
@@ -802,7 +803,7 @@ gives the output:
 }
 ```
 
-<a name="nn.PairwiseDistance"/>
+<a name="nn.PairwiseDistance"></a>
 ## PairwiseDistance ##
 
 `module` = `PairwiseDistance(p)` creates a module that takes a `table` of two vectors as input and outputs the distance between them using the `p`-norm.
@@ -885,7 +886,7 @@ end
 
 ```
 
-<a name="nn.DotProduct"/>
+<a name="nn.DotProduct"></a>
 ## DotProduct ##
 
 `module` = `DotProduct()` creates a module that takes a `table` of two vectors as input and outputs the dot product between them.
@@ -978,7 +979,7 @@ end
 ```
 
 
-<a name="nn.CosineDistance"/>
+<a name="nn.CosineDistance"></a>
 ## CosineDistance ##
 
 `module` = `CosineDistance()` creates a module that takes a `table` of two vectors (or matrices if in batch mode) as input and outputs the cosine distance between them.
@@ -1065,7 +1066,7 @@ end
 
 
 
-<a name="nn.CriterionTable"/>
+<a name="nn.CriterionTable"></a>
 ## CriterionTable ##
 
 `module` = `CriterionTable(criterion)`
@@ -1115,7 +1116,7 @@ for i = 1, 20 do                                 -- Train for a few iterations
 end
 ```
 
-<a name="nn.CAddTable"/>
+<a name="nn.CAddTable"></a>
 ## CAddTable ##
 
 Takes a `table` of `Tensor`s and outputs summation of all `Tensor`s.
@@ -1157,7 +1158,7 @@ m = nn.CAddTable()
 ```
 
 
-<a name="nn.CSubTable"/>
+<a name="nn.CSubTable"></a>
 ## CSubTable ##
 
 Takes a `table` with two `Tensor` and returns the component-wise
@@ -1174,7 +1175,7 @@ m = nn.CSubTable()
 [torch.DoubleTensor of dimension 5]
 ```
 
-<a name="nn.CMulTable"/>
+<a name="nn.CMulTable"></a>
 ## CMulTable ##
 
 Takes a `table` of `Tensor`s and outputs the multiplication of all of them.
@@ -1192,7 +1193,7 @@ m = nn.CMulTable()
 
 ```
 
-<a name="nn.CDivTable"/>
+<a name="nn.CDivTable"></a>
 ## CDivTable ##
 
 Takes a `table` with two `Tensor` and returns the component-wise

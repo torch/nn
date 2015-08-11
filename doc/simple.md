@@ -1,6 +1,7 @@
-<a name="nn.simplelayers.dok"/>
+<a name="nn.simplelayers.dok"></a>
 # Simple layers #
 Simple Modules are used for various tasks like adapting Tensor methods and providing affine transformations :
+
  * Parameterized Modules :
    * [Linear](#nn.Linear) : a linear transformation ;
    * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
@@ -36,7 +37,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
    * [Padding](#nn.Padding) : adds padding to a dimension ;
    * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity);
 
-<a name="nn.Linear"/>
+<a name="nn.Linear"></a>
 ## Linear ##
 
 ```lua
@@ -79,7 +80,7 @@ x = torch.Tensor(10) -- 10 inputs
 y = module:forward(x)
 ```
 
-<a name="nn.SparseLinear"/>
+<a name="nn.SparseLinear"></a>
 ## SparseLinear ##
 
 ```lua
@@ -113,7 +114,7 @@ x = torch.Tensor({ {1, 0.1}, {2, 0.3}, {10, 0.3}, {31, 0.2} })
 
 The first column contains indices, the second column contains values in a a vector where all other elements are zeros. The indices should not exceed the stated dimensions of the input to the layer (10000 in the example).
 
-<a name="nn.Dropout"/>
+<a name="nn.Dropout"></a>
 ## Dropout ##
 
 ```lua
@@ -183,7 +184,7 @@ We can return to training our model by first calling [Module:training()](module.
 
 When used, `Dropout` should normally be applied to the input of parameterized [Modules](module.md#nn.Module) like [Linear](#nn.Linear) or [SpatialConvolution](convolution.md#nn.SpatialConvolution). A `p` of `0.5` (the default) is usually okay for hidden layers. `Dropout` can sometimes be used successfully on the dataset inputs with a `p` around `0.2`. It sometimes works best following [Transfer](transfer.md) Modules like [ReLU](transfer.md#nn.ReLU). All this depends a great deal on the dataset so its up to the user to try different combinations.
 
-<a name="nn.SpatialDropout"/>
+<a name="nn.SpatialDropout"></a>
 ## SpatialDropout ##
 
 `module` = `nn.SpatialDropout(p)`
@@ -194,7 +195,7 @@ As described in the paper "Efficient Object Localization Using Convolutional Net
 
 ```nn.SpatialDropout``` accepts 3D or 4D inputs.  If the input is 3D than a layout of (features x height x width) is assumed and for 4D (batch x features x height x width) is assumed.
 
-<a name="nn.Abs"/>
+<a name="nn.Abs"></a>
 ## Abs ##
 
 ```lua
@@ -214,7 +215,7 @@ gnuplot.grid(true)
 ![](image/abs.png)
 
 
-<a name='nn.Add'/>
+<a name='nn.Add'></a>
 ## Add ##
 
 ```lua
@@ -264,7 +265,7 @@ gives the output:
 i.e. the network successfully learns the input `x` has been shifted to produce the output `y`.
 
 
-<a name="nn.Mul"/>
+<a name="nn.Mul"></a>
 ## Mul ##
 
 ```lua
@@ -309,7 +310,7 @@ gives the output:
 
 i.e. the network successfully learns the input `x` has been scaled by pi.
 
-<a name='nn.CMul'/>
+<a name='nn.CMul'></a>
 ## CMul ##
 
 ```lua
@@ -362,7 +363,7 @@ gives the output:
 i.e. the network successfully learns the input `x` has been scaled by those scaling factors to produce the output `y`.
 
 
-<a name="nn.Max"/>
+<a name="nn.Max"></a>
 ## Max ##
 
 ```lua
@@ -373,7 +374,7 @@ Applies a max operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
 
 
-<a name="nn.Min"/>
+<a name="nn.Min"></a>
 ## Min ##
 
 ```lua
@@ -384,7 +385,7 @@ Applies a min operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
 
 
-<a name="nn.Mean"/>
+<a name="nn.Mean"></a>
 ## Mean ##
 
 ```lua
@@ -394,7 +395,7 @@ module = nn.Mean(dimension)
 Applies a mean operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
 
-<a name="nn.Sum"/>
+<a name="nn.Sum"></a>
 ## Sum ##
 
 ```lua
@@ -405,7 +406,7 @@ Applies a sum operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
 
 
-<a name="nn.Euclidean"/>
+<a name="nn.Euclidean"></a>
 ## Euclidean ##
 
 ```lua
@@ -416,7 +417,7 @@ Outputs the Euclidean distance of the input to `outputSize` centers, i.e. this l
 
 The distance `y_j` between center `j` and input `x` is formulated as `y_j = || w_j - x ||`.
 
-<a name="nn.WeightedEuclidean"/>
+<a name="nn.WeightedEuclidean"></a>
 ## WeightedEuclidean ##
 
 ```lua
@@ -429,7 +430,7 @@ In other words, for each of the `outputSize` centers `w_j`, there is a diagonal 
 
 The distance `y_j` between center `j` and input `x` is formulated as `y_j = || c_j * (w_j - x) ||`.
 
-<a name="nn.Identity"/>
+<a name="nn.Identity"></a>
 ## Identity ##
 
 ```lua
@@ -488,7 +489,7 @@ for i = 1, 100 do           -- Do a few training iterations
 end
 ```
 
-<a name="nn.Copy"/>
+<a name="nn.Copy"></a>
 ## Copy ##
 
 ```lua
@@ -498,7 +499,7 @@ module = nn.Copy(inputType, outputType, [forceCopy, dontCast])
 This layer copies the input to output with type casting from input type from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transfered as the output. The default `forceCopy` is false.
 When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module's `output` and `gradInput` Tensors to the new type. The default is false.
 
-<a name="nn.Narrow"/>
+<a name="nn.Narrow"></a>
 ## Narrow ##
 
 ```lua
@@ -507,7 +508,7 @@ module = nn.Narrow(dimension, offset, length)
 
 Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module.
 
-<a name="nn.Replicate"/>
+<a name="nn.Replicate"></a>
 ## Replicate ##
 
 ```lua
@@ -552,7 +553,7 @@ This allows the module to replicate the same non-batch dimension `dim` for both 
 ```
 
 
-<a name="nn.Reshape"/>
+<a name="nn.Reshape"></a>
 ## Reshape ##
 
 ```lua
@@ -640,7 +641,7 @@ Example:
 
 ```
 
-<a name="nn.View"/>
+<a name="nn.View"></a>
 ## View ##
 
 ```lua
@@ -723,7 +724,7 @@ Example 2:
 [torch.LongStorage of size 2]
 ```
 
-<a name="nn.Select"/>
+<a name="nn.Select"></a>
 ## Select ##
 
 ```lua
@@ -798,7 +799,7 @@ for i = 1, 10000 do     -- Train for a few iterations
 end
 ```
 
-<a name="nn.Exp"/>
+<a name="nn.Exp"></a>
 ## Exp ##
 
 ```lua
@@ -820,7 +821,7 @@ gnuplot.grid(true)
 ![](image/exp.png)
 
 
-<a name="nn.Square"/>
+<a name="nn.Square"></a>
 ## Square ##
 
 ```lua
@@ -842,7 +843,7 @@ gnuplot.grid(true)
 ![](image/square.png)
 
 
-<a name="nn.Sqrt"/>
+<a name="nn.Sqrt"></a>
 ## Sqrt ##
 
 ```lua
@@ -864,7 +865,7 @@ gnuplot.grid(true)
 ![](image/sqrt.png)
 
 
-<a name="nn.Power"/>
+<a name="nn.Power"></a>
 ## Power ##
 
 ```lua
@@ -886,7 +887,7 @@ gnuplot.grid(true)
 ![](image/power.png)
 
 
-<a name="nn.MM"/>
+<a name="nn.MM"></a>
 ## MM ##
 
 ```lua
@@ -905,7 +906,7 @@ C = model.forward({A, B})  -- C will be of size `b x m x n`
 ```
 
 
-<a name="nn.BatchNormalization"/>
+<a name="nn.BatchNormalization"></a>
 ## BatchNormalization ##
 
 ```lua
@@ -945,7 +946,7 @@ A = torch.randn(b, m)
 C = model.forward(A)  -- C will be of size `b x m`
 ```
 
-<a name="nn.Padding"/>
+<a name="nn.Padding"></a>
 ## Padding ##
 
 `module` = `nn.Padding(dim, pad [, nInputDim, value])`
@@ -978,7 +979,7 @@ module:forward(torch.randn(2, 3)) --batch input
 ```
 
 
-<a name="nn.L1Penalty"/>
+<a name="nn.L1Penalty"></a>
 ## L1Penalty ##
 
 ```lua
