@@ -1,36 +1,36 @@
-<a name="nn.Criterions"/>
+<a name="nn.Criterions"></a>
 # Criterions #
 
 [`Criterions`](#nn.Criterion) are helpful to train a neural network. Given an input and a
 target, they compute a gradient according to a given loss function.
 
- * Classification criterions:
-  * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
-  * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
-  * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
-  * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
-  * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
-  * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
- * Regression criterions:
-  * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
-  * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
-  * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
- * Embedding criterions (measuring whether two inputs are similar or dissimilar):
-  * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
-  * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
-  * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
- * Miscelaneus criterions:
-  * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
-  * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
-  * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
+  * Classification criterions:
+    * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
+    * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
+    * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
+    * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
+    * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
+    * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
+  * Regression criterions:
+    * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
+    * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
+    * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
+  * Embedding criterions (measuring whether two inputs are similar or dissimilar):
+    * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
+    * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
+    * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
+  * Miscelaneus criterions:
+    * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
+    * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
+    * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
 
-<a name="nn.Criterion"/>
+<a name="nn.Criterion"></a>
 ## Criterion ##
 
 This is an abstract class which declares methods defined in all criterions.
 This class is [serializable](https://github.com/torch/torch7/blob/master/doc/file.md#serialization-methods).
 
-<a name="nn.Criterion.forward"/>
+<a name="nn.Criterion.forward"></a>
 ### [output] forward(input, target) ###
 
 Given an `input` and a `target`, compute the loss function associated to the criterion and return the result.
@@ -41,7 +41,7 @@ The `output` returned should be a scalar in general.
 The state variable [`self.output`](#nn.Criterion.output) should be updated after a call to `forward()`.
 
 
-<a name="nn.Criterion.backward"/>
+<a name="nn.Criterion.backward"></a>
 ### [gradInput] backward(input, target) ###
 
 Given an `input` and a `target`, compute the gradients of the loss function associated to the criterion and return the result.
@@ -50,19 +50,19 @@ In general `input`, `target` and `gradInput` are [`Tensor`s](..:torch:tensor), b
 The state variable [`self.gradInput`](#nn.Criterion.gradInput) should be updated after a call to `backward()`.
 
 
-<a name="nn.Criterion.output"/>
+<a name="nn.Criterion.output"></a>
 ### State variable: output ###
 
 State variable which contains the result of the last [`forward(input, target)`](#nn.Criterion.forward) call.
 
 
-<a name="nn.Criterion.gradInput"/>
+<a name="nn.Criterion.gradInput"></a>
 ### State variable: gradInput ###
 
 State variable which contains the result of the last [`backward(input, target)`](#nn.Criterion.backward) call.
 
 
-<a name="nn.AbsCriterion"/>
+<a name="nn.AbsCriterion"></a>
 ## AbsCriterion ##
 
 ```lua
@@ -85,7 +85,7 @@ criterion.sizeAverage = false
 ```
 
 
-<a name="nn.ClassNLLCriterion"/>
+<a name="nn.ClassNLLCriterion"></a>
 ## ClassNLLCriterion ##
 
 ```lua
@@ -128,7 +128,7 @@ end
 ```
 
 
-<a name="nn.CrossEntropyCriterion"/>
+<a name="nn.CrossEntropyCriterion"></a>
 ## CrossEntropyCriterion ##
 
 ```lua
@@ -157,7 +157,7 @@ loss(x, class) = weights[class] * (-x[class] + log(\sum_j exp(x[j])))
 ```
 
 
-<a name="nn.DistKLDivCriterion"/>
+<a name="nn.DistKLDivCriterion"></a>
 ## DistKLDivCriterion ##
 
 ```lua
@@ -177,7 +177,7 @@ loss(x, target) = \sum(target_i * (log(target_i) - x_i))
 ```
 
 
-<a name="nn.BCECriterion"/>
+<a name="nn.BCECriterion"></a>
 ## BCECriterion
 
 ```lua
@@ -193,7 +193,7 @@ loss(t, o) = -(t * log(o) + (1 - t) * log(1 - o))
 This is used for measuring the error of a reconstruction in for example an auto-encoder.
 
 
-<a name="nn.MarginCriterion"/>
+<a name="nn.MarginCriterion"></a>
 ## MarginCriterion ##
 
 ```lua
@@ -256,7 +256,7 @@ gives the output:
 i.e. the mlp successfully separates the two data points such that they both have a `margin` of `1`, and hence a loss of `0`.
 
 
-<a name="nn.MultiMarginCriterion"/>
+<a name="nn.MultiMarginCriterion"></a>
 ## MultiMarginCriterion ##
 
 ```lua
@@ -281,7 +281,7 @@ mlp:add(nn.MulConstant(-1)) -- distance to similarity
 ```
 
 
-<a name="nn.MultiLabelMarginCriterion"/>
+<a name="nn.MultiLabelMarginCriterion"></a>
 ## MultiLabelMarginCriterion ##
 
 ```lua
@@ -309,7 +309,7 @@ criterion:forward(input, target)
 ```
 
 
-<a name="nn.MSECriterion"/>
+<a name="nn.MSECriterion"></a>
 ## MSECriterion ##
 
 ```lua
@@ -333,7 +333,7 @@ criterion.sizeAverage = false
 ```
 
 
-<a name="nn.MultiCriterion"/>
+<a name="nn.MultiCriterion"></a>
 ## MultiCriterion ##
 
 ```lua
@@ -360,7 +360,7 @@ mc = nn.MultiCriterion():add(nll, 0.5):add(nll2)
 output = mc:forward(input, target)
 ```
 
-<a name="nn.ParallelCriterion"/>
+<a name="nn.ParallelCriterion"></a>
 ## ParallelCriterion ##
 
 ```lua
@@ -390,7 +390,7 @@ output = pc:forward(input, target)
 ```
 
 
-<a name="nn.HingeEmbeddingCriterion"/>
+<a name="nn.HingeEmbeddingCriterion"></a>
 ## HingeEmbeddingCriterion ##
 
 ```lua
@@ -469,7 +469,7 @@ end
 ```
 
 
-<a name="nn.L1HingeEmbeddingCriterion"/>
+<a name="nn.L1HingeEmbeddingCriterion"></a>
 ## L1HingeEmbeddingCriterion ##
 
 ```lua
@@ -486,7 +486,7 @@ loss(x, y) = ⎨
 
 The `margin` has a default value of `1`, or can be set in the constructor.
 
-<a name="nn.CosineEmbeddingCriterion"/>
+<a name="nn.CosineEmbeddingCriterion"></a>
 ## CosineEmbeddingCriterion ##
 
 ```lua
@@ -508,7 +508,7 @@ loss(x, y) = ⎨
 ```
 
 
-<a name="nn.MarginRankingCriterion"/>
+<a name="nn.MarginRankingCriterion"></a>
 ## MarginRankingCriterion ##
 
 ```lua

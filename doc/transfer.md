@@ -1,8 +1,8 @@
-<a name="nn.transfer.dok"/>
+<a name="nn.transfer.dok"></a>
 # Transfer Function Layers #
 Transfer functions are normally used to introduce a non-linearity after a parameterized layer like [Linear](simple.md#nn.Linear) and  [SpatialConvolution](convolution.md#nn.SpatialConvolution). Non-linearities allows for dividing the problem space into more complex regions than what a simple logistic regressor would permit.
 
-<a name="nn.HardTanh"/>
+<a name="nn.HardTanh"></a>
 ## HardTanh ##
 
 Applies the `HardTanh` function element-wise to the input Tensor,
@@ -26,7 +26,7 @@ gnuplot.grid(true)
 ![](image/htanh.png)
 
 
-<a name="nn.HardShrink"/>
+<a name="nn.HardShrink"></a>
 ## HardShrink ##
 
 `module = nn.HardShrink(lambda)`
@@ -51,7 +51,7 @@ gnuplot.grid(true)
 ```
 ![](image/hshrink.png)
 
-<a name="nn.SoftShrink"/>
+<a name="nn.SoftShrink"></a>
 ## SoftShrink ##
 
 `module = nn.SoftShrink(lambda)`
@@ -77,7 +77,7 @@ gnuplot.grid(true)
 ![](image/sshrink.png)
 
 
-<a name="nn.SoftMax"/>
+<a name="nn.SoftMax"></a>
 ## SoftMax ##
 
 Applies the `Softmax` function to an n-dimensional input Tensor,
@@ -99,7 +99,7 @@ gnuplot.grid(true)
 
 Note that this module doesn't work directly with [ClassNLLCriterion](criterion.md#nn.ClassNLLCriterion), which expects the `nn.Log` to be computed between the `SoftMax` and itself. Use [LogSoftMax](#nn.LogSoftMax) instead (it's faster).
 
-<a name="nn.SoftMin"/>
+<a name="nn.SoftMin"></a>
 ## SoftMin ##
 
 Applies the `Softmin` function to an n-dimensional input Tensor,
@@ -119,7 +119,7 @@ gnuplot.grid(true)
 ```
 ![](image/softmin.png)
 
-<a name="nn.SoftPlus"/>
+<a name="nn.SoftPlus"></a>
 ### SoftPlus ###
 
 Applies the `SoftPlus` function to an n-dimensioanl input Tensor.
@@ -138,7 +138,7 @@ gnuplot.grid(true)
 ```
 ![](image/softplus.png)
 
-<a name="nn.SoftSign"/>
+<a name="nn.SoftSign"></a>
 ## SoftSign ##
 
 Applies the `SoftSign` function to an n-dimensioanl input Tensor.
@@ -156,7 +156,7 @@ gnuplot.grid(true)
 ```
 ![](image/softsign.png)
 
-<a name="nn.LogSigmoid"/>
+<a name="nn.LogSigmoid"></a>
 ## LogSigmoid ##
 
 Applies the `LogSigmoid` function to an n-dimensional input Tensor.
@@ -176,7 +176,7 @@ gnuplot.grid(true)
 ![](image/logsigmoid.png)
 
 
-<a name="nn.LogSoftMax"/>
+<a name="nn.LogSoftMax"></a>
 ## LogSoftMax ##
 
 Applies the `LogSoftmax` function to an n-dimensional input Tensor.
@@ -195,7 +195,7 @@ gnuplot.grid(true)
 ```
 ![](image/logsoftmax.png)
 
-<a name="nn.Sigmoid"/>
+<a name="nn.Sigmoid"></a>
 ## Sigmoid ##
 
 Applies the `Sigmoid` function element-wise to the input Tensor,
@@ -214,7 +214,7 @@ gnuplot.grid(true)
 ```
 ![](image/sigmoid.png)
 
-<a name="nn.Tanh"/>
+<a name="nn.Tanh"></a>
 ## Tanh ##
 
 Applies the `Tanh` function element-wise to the input Tensor,
@@ -231,7 +231,7 @@ gnuplot.grid(true)
 ```
 ![](image/tanh.png)
 
-<a name="nn.ReLU"/>
+<a name="nn.ReLU"></a>
 ## ReLU ##
 
 Applies the rectified linear unit (`ReLU`) function element-wise to the input Tensor,
@@ -253,7 +253,7 @@ gnuplot.grid(true)
 ```
 ![](image/relu.png)
 
-<a name="nn.PReLU"/>
+<a name="nn.PReLU"></a>
 ## PReLU ##
 
 Applies parametric ReLU, which parameter varies the slope of the negative part:
@@ -267,7 +267,7 @@ Note that weight decay should not be used on it. For reference see http://arxiv.
 
 ![](image/prelu.png)
 
-<a name="nn.AddConstant"/>
+<a name="nn.AddConstant"></a>
 ## AddConstant ##
 
 Adds a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `x + k`, where `k` is a scalar.
@@ -278,7 +278,7 @@ m=nn.AddConstant(k,true) -- true = in-place, false = keeping separate state.
 ```
 In-place mode restores the original input value after the backward pass, allowing it's use after other in-place modules, like [MulConstant](#nn.MulConstant).
 
-<a name="nn.MulConstant"/>
+<a name="nn.MulConstant"></a>
 ## MulConstant ##
 
 Multiplies input tensor by a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `k * x`, where `k` is a scalar.

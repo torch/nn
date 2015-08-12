@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/torch/nn.svg?branch=master)](https://travis-ci.org/torch/nn)
-<a name="nn.dok"/>
+<a name="nn.dok"></a>
 # Neural Network Package #
 
 This package provides an easy and modular way to build and train simple or complex neural networks using [Torch](https://github.com/torch/torch7/blob/master/README.md):
