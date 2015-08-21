@@ -47,6 +47,9 @@
 #include "generic/SoftMax.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/ClassNLLCriterion.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/MSECriterion.c"
 #include "THGenerateFloatTypes.h"
 
@@ -134,6 +137,7 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSquare_init(L);
   nn_FloatHardTanh_init(L);
   nn_FloatLogSoftMax_init(L);
+  nn_FloatClassNLLCriterion_init(L);
   nn_FloatMSECriterion_init(L);
   nn_FloatMarginCriterion_init(L);
   nn_FloatAbsCriterion_init(L);
@@ -174,6 +178,7 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleSquare_init(L);
   nn_DoubleHardTanh_init(L);
   nn_DoubleLogSoftMax_init(L);
+  nn_DoubleClassNLLCriterion_init(L);
   nn_DoubleMSECriterion_init(L);
   nn_DoubleMarginCriterion_init(L);
   nn_DoubleAbsCriterion_init(L);
