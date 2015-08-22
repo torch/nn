@@ -902,7 +902,7 @@ The module also accepts 3D inputs which are interpreted as batches of matrices. 
 model = nn.MM()
 A = torch.randn(b, m, n)
 B = torch.randn(b, n, p)
-C = model.forward({A, B})  -- C will be of size `b x m x n`
+C = model:forward({A, B})  -- C will be of size `b x m x p`
 ```
 
 
