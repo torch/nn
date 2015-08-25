@@ -938,12 +938,12 @@ The module only accepts 2D inputs.
 -- with learnable parameters
 model = nn.BatchNormalization(m)
 A = torch.randn(b, m)
-C = model.forward(A)  -- C will be of size `b x m`
+C = model:forward(A)  -- C will be of size `b x m`
 
 -- without learnable parameters
 model = nn.BatchNormalization(m, nil, nil, false)
 A = torch.randn(b, m)
-C = model.forward(A)  -- C will be of size `b x m`
+C = model:forward(A)  -- C will be of size `b x m`
 ```
 
 <a name="nn.Padding"></a>
