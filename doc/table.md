@@ -1,3 +1,38 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Table Layers](#table-layers)
+  - [ConcatTable](#concattable)
+    - [Example 1](#example-1)
+    - [Example 2](#example-2)
+  - [ParallelTable](#paralleltable)
+    - [Example](#example)
+  - [SplitTable](#splittable)
+    - [Example 1](#example-1-1)
+    - [Example 2](#example-2-1)
+    - [Example 3](#example-3)
+    - [Example](#example-1)
+    - [A more complicated example](#a-more-complicated-example)
+  - [JoinTable](#jointable)
+    - [Example 1](#example-1-2)
+    - [Example 2](#example-2-2)
+    - [A more complicated example](#a-more-complicated-example-1)
+  - [MixtureTable](#mixturetable)
+  - [SelectTable](#selecttable)
+  - [NarrowTable](#narrowtable)
+  - [FlattenTable](#flattentable)
+  - [PairwiseDistance](#pairwisedistance)
+  - [DotProduct](#dotproduct)
+  - [CosineDistance](#cosinedistance)
+  - [CriterionTable](#criteriontable)
+  - [CAddTable](#caddtable)
+  - [CSubTable](#csubtable)
+  - [CMulTable](#cmultable)
+  - [CDivTable](#cdivtable)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.TableLayers"></a>
 # Table Layers #
 

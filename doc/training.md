@@ -1,3 +1,17 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Training a neural network](#training-a-neural-network)
+  - [StochasticGradient](#stochasticgradient)
+    - [StochasticGradient(module, criterion)](#stochasticgradientmodule-criterion)
+    - [train(dataset)](#traindataset)
+    - [Parameters](#parameters)
+  - [Example of training using StochasticGradient](#example-of-training-using-stochasticgradient)
+  - [Example of manual training of a neural network](#example-of-manual-training-of-a-neural-network)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.traningneuralnet.dok"></a>
 # Training a neural network #
 

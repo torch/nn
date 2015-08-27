@@ -1,3 +1,22 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Containers](#containers)
+  - [Container](#container)
+    - [add(module)](#addmodule)
+    - [get(index)](#getindex)
+    - [size()](#size)
+  - [Sequential](#sequential)
+    - [remove([index])](#removeindex)
+    - [insert(module, [index])](#insertmodule-index)
+  - [Parallel](#parallel)
+  - [Concat](#concat)
+  - [DepthConcat](#depthconcat)
+  - [Table Containers](#table-containers)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.Containers"></a>
 # Containers #
 Complex neural networks are easily built using container classes:

@@ -1,3 +1,24 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Transfer Function Layers](#transfer-function-layers)
+  - [HardTanh](#hardtanh)
+  - [HardShrink](#hardshrink)
+  - [SoftShrink](#softshrink)
+  - [SoftMax](#softmax)
+  - [SoftMin](#softmin)
+    - [SoftPlus](#softplus)
+  - [SoftSign](#softsign)
+  - [LogSigmoid](#logsigmoid)
+  - [LogSoftMax](#logsoftmax)
+  - [Sigmoid](#sigmoid)
+  - [Tanh](#tanh)
+  - [ReLU](#relu)
+  - [PReLU](#prelu)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.transfer.dok"></a>
 # Transfer Function Layers #
 Transfer functions are normally used to introduce a non-linearity after a parameterized layer like [Linear](simple.md#nn.Linear) and  [SpatialConvolution](convolution.md#nn.SpatialConvolution). Non-linearities allows for dividing the problem space into more complex regions than what a simple logistic regressor would permit.

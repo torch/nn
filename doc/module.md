@@ -1,3 +1,35 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Module](#module)
+  - [[output] forward(input)](#output-forwardinput)
+  - [[gradInput] backward(input, gradOutput)](#gradinput-backwardinput-gradoutput)
+  - [updateOutput(input)](#updateoutputinput)
+  - [updateGradInput(input, gradOutput)](#updategradinputinput-gradoutput)
+  - [accGradParameters(input, gradOutput, scale)](#accgradparametersinput-gradoutput-scale)
+  - [zeroGradParameters()](#zerogradparameters)
+  - [updateParameters(learningRate)](#updateparameterslearningrate)
+  - [accUpdateGradParameters(input, gradOutput, learningRate)](#accupdategradparametersinput-gradoutput-learningrate)
+  - [share(mlp,s1,s2,...,sn)](#sharemlps1s2sn)
+  - [clone(mlp,...)](#clonemlp)
+  - [type(type)](#typetype)
+  - [float()](#float)
+  - [double()](#double)
+  - [cuda()](#cuda)
+  - [State Variables](#state-variables)
+    - [output](#output)
+    - [gradInput](#gradinput)
+  - [Parameters and gradients w.r.t parameters](#parameters-and-gradients-wrt-parameters)
+  - [[{weights}, {gradWeights}] parameters()](#weights-gradweights-parameters)
+  - [[flatParameters, flatGradParameters] getParameters()](#flatparameters-flatgradparameters-getparameters)
+  - [training()](#training)
+  - [evaluate()](#evaluate)
+  - [findModules(typename)](#findmodulestypename)
+  - [listModules()](#listmodules)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.Module"></a>
 ## Module ##
 

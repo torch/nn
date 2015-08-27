@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Simple layers](#simple-layers)
+  - [Linear](#linear)
+  - [SparseLinear](#sparselinear)
+  - [Dropout](#dropout)
+  - [SpatialDropout](#spatialdropout)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.simplelayers.dok"></a>
 # Simple layers #
 Simple Modules are used for various tasks like adapting Tensor methods and providing affine transformations :
