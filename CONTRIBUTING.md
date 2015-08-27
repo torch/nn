@@ -1,6 +1,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+Table of Content
 
 - [Contributing to Torch7 Core (torch7, nn, cutorch, cunn)](#contributing-to-torch7-core-torch7-nn-cutorch-cunn)
   - [Using the issue tracker](#using-the-issue-tracker)
