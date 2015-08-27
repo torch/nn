@@ -105,7 +105,7 @@ An `example` has to be an object which implements the operator
 features) or `2` (corresponding label which will be given to the
 criterion).  The input is usually a Tensor (except if you use special
 kind of gradient modules, like [table layers](table.md#nn.TableLayers)). The
-label type depends of the criterion.  For example, the
+label type depends on the criterion.  For example, the
 [MSECriterion](criterion.md#nn.MSECriterion) expect a Tensor, but the
 [ClassNLLCriterion](criterion.md#nn.ClassNLLCriterion) except a integer number (the
 class).
