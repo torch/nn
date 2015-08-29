@@ -148,19 +148,20 @@ function Module.flatten(parameters)
       local _, offset = table.unpack(storageAndOffset)
       return offset
    end
-
+   
    if not parameters or #parameters == 0 then
       return torch.Tensor()
    end
    local Tensor = parameters[1].new
    local dtype = parameters[1]:type()
-
+   
    local storages = {}
    local nParameters = 0
    for k = 1,#parameters do
       if parameters[k]:type() ~= dtype then
-         error("Inconsistent parameter types. " .. parameters[k]:type() ..
-               " ~= " .. dtype)
+         error(
+            "Inconsistent parameter types. " .. parameters[k]:type() ..
+            " ~= " .. dtype)
       end
       local storage = parameters[k]:storage()
       if not storageInSet(storages, storage) then
@@ -168,38 +169,40 @@ function Module.flatten(parameters)
          nParameters = nParameters + storage:size()
       end
    end
-
+   
    local flatParameters = Tensor(nParameters):fill(1)
    local flatStorage = flatParameters:storage()
-
+   
    for k = 1,#parameters do
       local storageOffset = storageInSet(storages, parameters[k]:storage())
-      parameters[k]:set(flatStorage,
-                        storageOffset + parameters[k]:storageOffset(),
-                        parameters[k]:size(),
-                        parameters[k]:stride())
+      parameters[k]:set(
+         flatStorage,
+         storageOffset + parameters[k]:storageOffset(),
+         parameters[k]:size(),
+         parameters[k]:stride())
       parameters[k]:zero()
    end
-
+   
    local maskParameters = flatParameters:float():clone()
    local cumSumOfHoles = flatParameters:float():cumsum(1)
    local nUsedParameters = nParameters - cumSumOfHoles[#cumSumOfHoles]
    local flatUsedParameters = Tensor(nUsedParameters)
    local flatUsedStorage = flatUsedParameters:storage()
-
+   
    for k = 1,#parameters do
       local offset = cumSumOfHoles[parameters[k]:storageOffset()]
-      parameters[k]:set(flatUsedStorage,
-                        parameters[k]:storageOffset() - offset,
-                        parameters[k]:size(),
-                        parameters[k]:stride())
+      parameters[k]:set(
+         flatUsedStorage,
+         parameters[k]:storageOffset() - offset,
+         parameters[k]:size(),
+         parameters[k]:stride())
    end
-
+   
    for _, storageAndOffset in pairs(storages) do
       local k, v = table.unpack(storageAndOffset)
       flatParameters[{{v+1,v+k:size()}}]:copy(Tensor():set(k))
    end
-
+   
    if cumSumOfHoles:sum() == 0 then
       flatUsedParameters:copy(flatParameters)
    else
@@ -223,7 +226,7 @@ function Module:getParameters()
    collectgarbage()
    local flatGradParameters = nn.Module.flatten(gradParameters)
    collectgarbage()
-
+   
    -- return new flat vector that contains all discrete parameters
    return flatParameters, flatGradParameters
 end
@@ -291,3 +294,4 @@ function Module:listModules()
    end
    return modules
 end
+

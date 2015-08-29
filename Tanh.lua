@@ -7,3 +7,4 @@ end
 function Tanh:updateGradInput(input, gradOutput)
    return input.nn.Tanh_updateGradInput(self, input, gradOutput)
 end
+

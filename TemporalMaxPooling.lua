@@ -2,12 +2,12 @@ local TemporalMaxPooling, parent = torch.class('nn.TemporalMaxPooling', 'nn.Modu
 
 function TemporalMaxPooling:__init(kW, dW)
    parent.__init(self)
-
+   
    dW = dW or kW
    
    self.kW = kW
    self.dW = dW
-
+   
    self.indices = torch.Tensor()
 end
 
@@ -29,3 +29,4 @@ function TemporalMaxPooling:empty()
    self.indices:resize()
    self.indices:storage():resize(0)
 end
+
