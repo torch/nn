@@ -800,6 +800,45 @@ local function criterionJacobianTest1D(cri, input, target)
    mytester:assertlt(err, precision, 'error in difference between central difference and :backward')
 end
 
+local function criterionJacobianTest1DTable(cri, input0, target)
+   -- supposes input is a tensor, which is splitted in the first dimension
+   local input = input0:split(1,1)
+   for i=1,#input do
+      input[i] = input[i][1]
+   end
+   local eps = 1e-6
+   local _ = cri:forward(input, target)
+   local dfdx = cri:backward(input, target)
+   -- for each input perturbation, do central difference
+   local centraldiff_dfdx = torch.Tensor():resizeAs(input0)
+   local input_s = input0:storage()
+   local centraldiff_dfdx_s = centraldiff_dfdx:storage()
+   for i=1,input0:nElement() do
+      -- f(xi + h)
+      input_s[i] = input_s[i] + eps
+      local fx1 = cri:forward(input, target)
+      -- f(xi - h)
+      input_s[i] = input_s[i] - 2*eps
+      local fx2 = cri:forward(input, target)
+      -- f'(xi) = (f(xi + h) - f(xi - h)) / 2h
+      local cdfx = (fx1 - fx2) / (2*eps)
+      -- store f' in appropriate place
+      centraldiff_dfdx_s[i] = cdfx
+      -- reset input[i]
+      input_s[i] = input_s[i] + eps
+   end
+   local centraldiff_dfdx_t = centraldiff_dfdx:split(1,1)
+   for i=1,#centraldiff_dfdx_t do
+      centraldiff_dfdx_t[i] = centraldiff_dfdx_t[i][1]
+   end
+   for i=1,#centraldiff_dfdx_t do
+      -- compare centraldiff_dfdx with :backward()
+      local err = (centraldiff_dfdx_t[i] - dfdx[i]):abs():max()
+      mytester:assertlt(err, precision, 'error in difference between central difference and :backward')
+   end
+end
+
+
 function nntest.MSECriterion()
    local input = torch.rand(10)
    local target = input:clone():add(torch.rand(10))
@@ -3826,12 +3865,52 @@ function nntest.CosineEmbeddingCriterion()
   local v2 = torch.Tensor{0.5, math.sqrt(3)*0.5}
 
   local crit = nn.CosineEmbeddingCriterion(0.6)
-  local output = crit:forward({v1, v2}, -1) -- must be called before backward
+  local output = crit:forward({v1, v2}, -1) -- must be Called before backward
   local grads = crit:backward({v1, v2}, -1)
 
   local zero = torch.Tensor(2):zero()
   equal(grads[1], zero, 'gradient should be zero')
   equal(grads[2], zero, 'gradient should be zero')
+
+  -- check jacobians
+  local margin = math.random()*2-1
+  local dim = 5
+  local batch_size = 1
+  local crit = nn.CosineEmbeddingCriterion(margin)
+  local v = torch.rand(2,dim)
+  criterionJacobianTest1DTable(crit,v,1)
+  criterionJacobianTest1DTable(crit,v,-1)
+
+  -- batch with hand-computed values
+  local v1 = torch.Tensor{{1, 0}, {0.5, math.sqrt(3)*0.5}}
+  local v2 = torch.Tensor{{0.5, math.sqrt(3)*0.5}, {1, 0}}
+
+  local t = torch.Tensor{-1,-1}
+  local crit = nn.CosineEmbeddingCriterion(0.6)
+  local output = crit:forward({v1, v2}, t) -- must be Called before backward
+  local grads = crit:backward({v1, v2}, t)
+
+  local zero = torch.Tensor(2,2):zero()
+  equal(grads[1], zero, 'gradient should be zero')
+  equal(grads[2], zero, 'gradient should be zero')
+
+  -- batch, sizeAverage true, jacobian
+  local margin = math.random()*2-1
+  local dim = 5
+  local batch_size = 2
+  local crit = nn.CosineEmbeddingCriterion(margin)
+  crit.sizeAverage = true
+  local v = torch.rand(2,batch_size,dim)
+  local t = torch.Tensor(batch_size):random(0,1):mul(2):add(-1)
+  criterionJacobianTest1DTable(crit,v,t)
+
+  -- batch, sizeAverage false, jacobian
+  local margin = math.random()*2-1
+  local crit = nn.CosineEmbeddingCriterion(margin)
+  crit.sizeAverage = false
+  local v = torch.rand(2,batch_size,dim)
+  local t = torch.Tensor(batch_size):random(0,1):mul(2):add(-1)
+  criterionJacobianTest1DTable(crit,v,t)
 end
 
 function nntest.HingeEmbeddingCriterion()

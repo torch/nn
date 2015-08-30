@@ -493,13 +493,13 @@ The `margin` has a default value of `1`, or can be set in the constructor.
 criterion = nn.CosineEmbeddingCriterion([margin])
 ```
 
-Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s, and a label `y` (1 or -1).
+Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s, and a `Tensor` label `y`  with values 1 or -1.
 This is used for measuring whether two inputs are similar or dissimilar, using the cosine distance, and is typically used for learning nonlinear embeddings or semi-supervised learning.
 
 `margin` should be a number from `-1` to `1`, `0` to `0.5` is suggested.
 `Forward` and `Backward` have to be used alternately. If `margin` is missing, the default value is `0`.
 
-The loss function is:
+The loss function for each sample is:
 
 ```lua
              ⎧ 1 - cos(x1, x2),              if y ==  1
@@ -507,6 +507,7 @@ loss(x, y) = ⎨
              ⎩ max(0, cos(x1, x2) - margin), if y == -1
 ```
 
+For batched inputs, if the internal variable `sizeAverage` is equal to `true`, the loss function averages the loss over the batch samples; if `sizeAverage` is `false`, then the loss function sums over the batch samples. By default, `sizeAverage` equals to `true`.
 
 <a name="nn.MarginRankingCriterion"></a>
 ## MarginRankingCriterion ##
