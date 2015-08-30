@@ -1,3 +1,34 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Table of Content
+
+- [Criterions](#criterions)
+  - [Criterion](#criterion)
+    - [[output] forward(input, target)](#output-forwardinput-target)
+    - [[gradInput] backward(input, target)](#gradinput-backwardinput-target)
+    - [State variable: output](#state-variable-output)
+    - [State variable: gradInput](#state-variable-gradinput)
+  - [AbsCriterion](#abscriterion)
+  - [ClassNLLCriterion](#classnllcriterion)
+  - [CrossEntropyCriterion](#crossentropycriterion)
+  - [DistKLDivCriterion](#distkldivcriterion)
+  - [BCECriterion](#bcecriterion)
+  - [MarginCriterion](#margincriterion)
+    - [Example](#example)
+  - [MultiMarginCriterion](#multimargincriterion)
+  - [MultiLabelMarginCriterion](#multilabelmargincriterion)
+  - [MSECriterion](#msecriterion)
+  - [MultiCriterion](#multicriterion)
+  - [ParallelCriterion](#parallelcriterion)
+  - [HingeEmbeddingCriterion](#hingeembeddingcriterion)
+    - [Example](#example-1)
+  - [L1HingeEmbeddingCriterion](#l1hingeembeddingcriterion)
+  - [CosineEmbeddingCriterion](#cosineembeddingcriterion)
+  - [MarginRankingCriterion](#marginrankingcriterion)
+    - [Example](#example-2)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.Criterions"></a>
 # Criterions #
 

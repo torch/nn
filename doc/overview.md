@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Table of Content
+
+- [Overview](#overview)
+  - [Detailed Overview](#detailed-overview)
+    - [Module](#module)
+    - [Plug and play](#plug-and-play)
+    - [Training a neural network](#training-a-neural-network)
+      - [Low Level Training](#low-level-training)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.overview.dok"></a>
 # Overview #
 

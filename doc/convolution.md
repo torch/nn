@@ -1,3 +1,35 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Table of Content
+
+- [Convolutional layers](#convolutional-layers)
+  - [Temporal Modules](#temporal-modules)
+  - [TemporalConvolution](#temporalconvolution)
+  - [TemporalMaxPooling](#temporalmaxpooling)
+  - [TemporalSubSampling](#temporalsubsampling)
+  - [LookupTable](#lookuptable)
+  - [Spatial Modules](#spatial-modules)
+    - [SpatialConvolution](#spatialconvolution)
+    - [SpatialConvolutionMap](#spatialconvolutionmap)
+      - [Full Connection Table](#full-connection-table)
+      - [One to One Connection Table](#one-to-one-connection-table)
+      - [Random Connection Table](#random-connection-table)
+    - [SpatialLPPooling](#spatiallppooling)
+    - [SpatialMaxPooling](#spatialmaxpooling)
+    - [SpatialAveragePooling](#spatialaveragepooling)
+    - [SpatialAdaptiveMaxPooling](#spatialadaptivemaxpooling)
+    - [SpatialSubSampling](#spatialsubsampling)
+    - [SpatialUpSamplingNearest](#spatialupsamplingnearest)
+    - [SpatialZeroPadding](#spatialzeropadding)
+    - [SpatialSubtractiveNormalization](#spatialsubtractivenormalization)
+  - [SpatialBatchNormalization](#spatialbatchnormalization)
+  - [Volumetric Modules](#volumetric-modules)
+    - [VolumetricConvolution](#volumetricconvolution)
+    - [VolumetricMaxPooling](#volumetricmaxpooling)
+    - [VolumetricAveragePooling](#volumetricaveragepooling)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 <a name="nn.convlayers.dok"></a>
 # Convolutional layers #
 
