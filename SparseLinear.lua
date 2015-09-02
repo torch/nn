@@ -60,3 +60,7 @@ function SparseLinear:updateGradInput(input, gradOutput)
       return self.gradInput
    end
 end
+
+function SparseLinear:updateParameters(learningRate)
+   self.lastInput.nn.SparseLinear_updateParameters(self, learningRate)
+end
