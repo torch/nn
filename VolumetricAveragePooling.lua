@@ -3,11 +3,11 @@ local VolumetricAveragePooling, parent = torch.class(
 
 function VolumetricAveragePooling:__init(kT, kW, kH, dT, dW, dH)
    parent.__init(self)
-
+   
    dT = dT or kT
    dW = dW or kW
    dH = dH or kH
-
+   
    self.kT = kT
    self.kH = kH
    self.kW = kW
@@ -32,3 +32,4 @@ function VolumetricAveragePooling:empty()
    self.output:resize()
    self.output:storage():resize(0)
 end
+

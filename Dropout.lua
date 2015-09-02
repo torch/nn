@@ -42,5 +42,6 @@ function Dropout:setp(p)
 end
 
 function Dropout:__tostring__()
-  return string.format('%s(%f)', torch.type(self), self.p)
+   return string.format('%s(%f)', torch.type(self), self.p)
 end
+

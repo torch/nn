@@ -2,7 +2,7 @@ local SpatialAveragePooling, parent = torch.class('nn.SpatialAveragePooling', 'n
 
 function SpatialAveragePooling:__init(kW, kH, dW, dH)
    parent.__init(self)
-
+   
    self.kW = kW
    self.kH = kH
    self.dW = dW or 1
@@ -15,7 +15,7 @@ function SpatialAveragePooling:updateOutput(input)
    -- for backward compatibility with saved models
    -- which are not supposed to have "divide" field
    if not self.divide then
-     self.output:mul(self.kW*self.kH)
+      self.output:mul(self.kW*self.kH)
    end
    return self.output
 end
@@ -25,7 +25,7 @@ function SpatialAveragePooling:updateGradInput(input, gradOutput)
       input.nn.SpatialAveragePooling_updateGradInput(self, input, gradOutput)
       -- for backward compatibility
       if not self.divide then
-	self.gradInput:mul(self.kW*self.kH)
+         self.gradInput:mul(self.kW*self.kH)
       end
       return self.gradInput
    end
@@ -33,5 +33,6 @@ end
 
 function SpatialAveragePooling:__tostring__()
    return string.format('%s(%d,%d,%d,%d)', torch.type(self),
-         self.kW, self.kH, self.dW, self.dH)
+      self.kW, self.kH, self.dW, self.dH)
 end
+
