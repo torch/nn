@@ -34,7 +34,7 @@ function ParallelCriterion:updateGradInput(input, target)
    return self.gradInput
 end
 
-function ParallelCriterion:type(type)
+function ParallelCriterion:type(type, tensorCache)
    self.gradInput = {}
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
 end

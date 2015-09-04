@@ -171,7 +171,7 @@ function Euclidean:accGradParameters(input, gradOutput, scale)
    end
 end
 
-function Euclidean:type(type)
+function Euclidean:type(type, tensorCache)
    if type then
       -- prevent premature memory allocations
       self._input = nil
@@ -186,5 +186,5 @@ function Euclidean:type(type)
       self._repeat = nil
       self._repeat2 = nil
    end
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
 end

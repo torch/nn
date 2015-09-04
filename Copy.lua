@@ -34,9 +34,9 @@ function Copy:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
-function Copy:type(type)
+function Copy:type(type, tensorCache)
    if type and self.dontCast then
       return self
    end
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
 end

@@ -149,7 +149,7 @@ function MixtureTable:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
-function MixtureTable:type(type)
+function MixtureTable:type(type, tensorCache)
    self._gaterView = nil
    self._expert = nil
    self._expertView = nil
@@ -157,5 +157,5 @@ function MixtureTable:type(type)
    self._gradInput = nil
    self._expert2 = nil
    self._expertView2 = nil
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
 end

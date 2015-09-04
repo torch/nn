@@ -150,8 +150,6 @@ Note that this function if called on a [Container](containers.md#nn.Containers)
 module will share the same parameters for all the contained modules as
 well.
 
-**NOTE: If you ever type-cast your network to another precision, i.e. net:cuda() for example, the sharing gets untied, and you have to reshare your modules again.**
-
 Example:
 ```lua
 
@@ -186,8 +184,6 @@ If arguments are provided to the `clone(...)` function it also calls
 module after creating it, hence making a deep copy of this module with
 some shared parameters.
 
-**NOTE: If you ever type-cast your network to another precision, i.e. net:cuda() for example, the sharing gets untied, and you have to reshare your modules again.**
-
 Example:
 ```lua
 -- make an mlp
@@ -206,11 +202,34 @@ print(mlp2:get(1).bias[1])
 ```
 
 <a name="nn.Module.type"></a>
-### type(type) ###
+### type(type[, tensorCache]) ###
 
 This function converts all the parameters of a module to the given
 `type`. The `type` can be one of the types defined for
 [torch.Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md).
+
+If tensors (or their storages) are shared between multiple modules in a 
+network, this sharing will be preserved after type is called.
+
+To preserve sharing between multiple modules and/or tensors, use
+`nn.utils.recursiveType`:
+
+```lua
+-- make an mlp
+mlp1=nn.Sequential(); 
+mlp1:add(nn.Linear(100,10));
+
+-- make a second mlp
+mlp2=nn.Sequential(); 
+mlp2:add(nn.Linear(100,10)); 
+
+-- the second mlp shares the bias of the first
+mlp2:share(mlp1,'bias');
+
+-- mlp1 and mlp2 will be converted to float, and will share bias
+-- note: tensors can be provided as inputs as well as modules
+nn.utils.recursiveType({mlp1, mlp2}, 'torch.FloatTensor')
+```
 
 <a name="nn.Module.float"></a>
 ### float() ###

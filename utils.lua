@@ -1,15 +1,75 @@
 nn.utils = {}
 
-function nn.utils.recursiveType(param, type_str)
+-- oops; someone forgot to add torch.Storage.type
+-- TODO replace with torch.Storage.type when implemented
+local function torch_Storage_type(self, type)
+   local current = torch.typename(self)
+   if not type then return current end
+   if type ~= current then
+      local new = torch.getmetatable(type).new()
+      if self:size() > 0 then
+         new:resize(self:size()):copy(self)
+      end
+      return new
+   else
+      return self
+   end
+end
+
+-- tensorCache maintains a list of all tensors and storages that have been
+-- converted (recursively) by calls to recursiveType() and type().
+-- It caches conversions in order to preserve sharing semantics
+-- i.e. if two tensors share a common storage, then type conversion
+-- should preserve that.
+--
+-- You can preserve sharing semantics across multiple networks by
+-- passing tensorCache between the calls to type, e.g.
+--
+-- > tensorCache = {}
+-- > net1:type('torch.CudaTensor', tensorCache)
+-- > net2:type('torch.CudaTensor', tensorCache)
+-- > nn.utils.recursiveType(anotherTensor, 'torch.CudaTensor', tensorCache)
+--
+-- Implementation note: to make Lua table lookup behave correctly,
+-- tensor keys are stored as actual tensor objects, while storage
+-- keys are stored as the pointers themselves (as numbers).
+function nn.utils.recursiveType(param, type, tensorCache)
+   tensorCache = tensorCache or {}
+
    if torch.type(param) == 'table' then
       for k, v in pairs(param) do
-         param[k] = nn.utils.recursiveType(v, type_str)
+         param[k] = nn.utils.recursiveType(v, type, tensorCache)
       end
    elseif torch.isTypeOf(param, 'nn.Module') or
           torch.isTypeOf(param, 'nn.Criterion') then
-      param:type(type_str)
+      param:type(type, tensorCache)
    elseif torch.isTensor(param) then
-       param = param:type(type_str)
+      if torch.typename(param) ~= type then
+         local newparam
+         if tensorCache[param] then
+            newparam = tensorCache[param]
+         else
+            newparam = torch.Tensor():type(type)
+            local storageType = type:gsub('Tensor','Storage')
+            if param:storage() then
+               local storage_key = torch.pointer(param:storage())
+               if not tensorCache[storage_key] then
+                  tensorCache[storage_key] = torch_Storage_type(
+                        param:storage(), storageType)
+               end
+               assert(torch.type(tensorCache[storage_key]) == storageType)
+               newparam:set(
+                  tensorCache[storage_key],
+                  param:storageOffset(),
+                  param:size(),
+                  param:stride()
+               )
+               tensorCache[param] = newparam
+            end
+         end
+         assert(torch.type(newparam) == type)
+         param = newparam
+      end
    end
    return param
 end
@@ -89,6 +149,5 @@ function nn.utils.addSingletonDimension(t, dim)
   view:set(t:storage(), t:storageOffset(), size, stride)
   return view
 end
-
 
 table.unpack = table.unpack or unpack
