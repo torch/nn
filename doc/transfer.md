@@ -271,6 +271,20 @@ Note that weight decay should not be used on it. For reference see [Delving Deep
 
 ![](image/prelu.png)
 
+<a name="nn.SpatialSoftMax"></a>
+## SpatialSoftMax ##
+
+Applies [SoftMax](#nn.SoftMax) over features to each spatial location (height x width of planes).
+The module accepts 1D (vector), 2D (batch of vectors), 3D (vectors in space) or 4D (batch of vectors in space) tensor as input.
+Functionally it is equivalent to [SoftMax](#nn.SoftMax) when 1D or 2D input is used.
+The output dimension is always the same as input dimension.
+
+```lua
+ii=torch.randn(4,8,16,16)  -- batchSize x features x height x width
+m=nn.SpatialSoftMax()
+oo = m:forward(ii)
+```
+
 <a name="nn.AddConstant"></a>
 ## AddConstant ##
 
