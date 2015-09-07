@@ -1643,11 +1643,11 @@ function nntest.SpatialConvolutionMM()
    -- non-contiguous
    local input = torch.randn(batch,from,ini,inj):transpose(3,4) -- non-contiguous
    local inputc = input:contiguous() -- contiguous
-   local output = module:forward(input)
-   local outputc = module:forward(inputc)
+   local output = module:forward(input):clone()
+   local outputc = module:forward(inputc):clone()
    mytester:asserteq(0, (output-outputc):abs():max(), torch.typename(module) .. ' - contiguous err ')
-   local gradInput = module:backward(input, output)
-   local gradInputc = module:backward(inputc, outputc)
+   local gradInput = module:backward(input, output):clone()
+   local gradInputc = module:backward(inputc, outputc):clone()
    mytester:asserteq(0, (gradInput-gradInputc):abs():max(), torch.typename(module) .. ' - contiguous err ')
 end
 
