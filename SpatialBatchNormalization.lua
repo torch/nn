@@ -72,14 +72,7 @@ function BN:updateOutput(input)
 
    -- buffers that are reused
    self.buffer = self.buffer or input.new()
-   self.buffer2 = self.buffer2 or input.new()
-   self.centered = self.centered or input.new()
-   self.centered:resizeAs(input)
-   self.std = self.std or input.new()
-   self.normalized = self.normalized or input.new()
-   self.normalized:resizeAs(input)
    self.output:resizeAs(input)
-   self.gradInput:resizeAs(input)
    if self.train == false then
       self.output:copy(input)
       self.buffer:repeatTensor(self.running_mean:view(1, nFeature, 1, 1), nBatch, 1, iH, iW)
@@ -87,6 +80,13 @@ function BN:updateOutput(input)
       self.buffer:repeatTensor(self.running_std:view(1, nFeature, 1, 1), nBatch, 1, iH, iW)
       self.output:cmul(self.buffer)
    else -- training mode
+      self.buffer2 = self.buffer2 or input.new()
+      self.centered = self.centered or input.new()
+      self.centered:resizeAs(input)
+      self.std = self.std or input.new()
+      self.normalized = self.normalized or input.new()
+      self.normalized:resizeAs(input)
+      self.gradInput:resizeAs(input)
       -- calculate mean over mini-batch, over feature-maps
       local in_folded = input:view(nBatch, nFeature, iH * iW)
       self.buffer:mean(in_folded, 1)
