@@ -181,13 +181,19 @@ loss(x, target) = \sum(target_i * (log(target_i) - x_i))
 ## BCECriterion
 
 ```lua
-criterion = nn.BCECriterion()
+criterion = nn.BCECriterion([weights])
 ```
 
 Creates a criterion that measures the Binary Cross Entropy between the target and the output:
 
 ```lua
-loss(t, o) = -(t * log(o) + (1 - t) * log(1 - o))
+loss(t, o) = - sum_i (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
+```
+
+or in the case of the weights argument being specified:
+
+```lua
+loss(t, o) = - sum_i weights[i] * (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
 ```
 
 This is used for measuring the error of a reconstruction in for example an auto-encoder.
