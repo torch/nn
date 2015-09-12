@@ -13,7 +13,7 @@ target, they compute a gradient according to a given loss function.
     * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
   * Regression criterions:
     * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
-    * [`SmoothL1Criterion`](#nn.SmoothL1Criterion): a mixture of Abs and MSE, uses L1 for errors > 1 and L2 otherwise;
+    * [`SmoothL1Criterion`](#nn.SmoothL1Criterion): a smooth version of the AbsCriterion;
     * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
     * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
   * Embedding criterions (measuring whether two inputs are similar or dissimilar):
