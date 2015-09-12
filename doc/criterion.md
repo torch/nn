@@ -13,6 +13,7 @@ target, they compute a gradient according to a given loss function.
     * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
   * Regression criterions:
     * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
+    * [`SmoothL1Criterion`](#nn.SmoothL1Criterion): a mixture of Abs and MSE, uses L1 for errors > 1 and L2 otherwise;
     * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
     * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
   * Embedding criterions (measuring whether two inputs are similar or dissimilar):
@@ -390,6 +391,31 @@ output = pc:forward(input, target)
 ```
 
 
+<a name="nn.SmoothL1Criterion"></a>
+## SmoothL1Criterion ##
+
+```lua
+criterion = nn.SmoothL1Criterion()
+```
+
+Creates a criterion that can be thought of as a smooth version of the [`AbsCriterion`](#nn.AbsCriterion). It uses a squared term if the absolute element-wise error falls below 1. It is less sensitive to outliers than the [`MSECriterion`](#nn.MSECriterion) and in some cases prevents exploding gradients (e.g. see Fast R-CNN paper).
+
+```lua
+                      ⎧ 0.5 * (x_i - y_i)^2    if |x_i - y_i| < 1
+loss(x, y) = 1/n \sum ⎨
+                      ⎩ |x_i - y_i| - 0.5      otherwise
+```
+
+If `x` and `y` are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation still operates over all the elements, and divides by `n`.
+
+The division by `n` can be avoided if one sets the internal variable `sizeAverage` to `false`:
+
+```lua
+criterion = nn.SmoothL1Criterion()
+criterion.sizeAverage = false
+```
+
+
 <a name="nn.HingeEmbeddingCriterion"></a>
 ## HingeEmbeddingCriterion ##
 
@@ -397,7 +423,7 @@ output = pc:forward(input, target)
 criterion = nn.HingeEmbeddingCriterion([margin])
 ```
 
-Creates a criterion that measures the loss given  an input `x` which is a 1-dimensional vector and a label `y` (`1` or `-1`).
+Creates a criterion that measures the loss given an input `x` which is a 1-dimensional vector and a label `y` (`1` or `-1`).
 This is usually used for measuring whether two inputs are similar or dissimilar, e.g. using the L1 pairwise distance, and is typically used for learning nonlinear embeddings or semi-supervised learning.
 
 ```lua
