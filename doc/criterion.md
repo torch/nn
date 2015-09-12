@@ -398,12 +398,12 @@ output = pc:forward(input, target)
 criterion = nn.SmoothL1Criterion()
 ```
 
-Creates a criterion that can be thought of as a smooth version of the [`AbsCriterion`](#nn.AbsCriterion). It uses a squared term if the absolute element-wise error falls below 1. It is less sensitive to outliers than the [`MSECriterion`](#nn.MSECriterion) and in some cases prevents exploding gradients (e.g. see Fast R-CNN paper).
+Creates a criterion that can be thought of as a smooth version of the [`AbsCriterion`](#nn.AbsCriterion). It uses a squared term if the absolute element-wise error falls below 1. It is less sensitive to outliers than the [`MSECriterion`](#nn.MSECriterion) and in some cases prevents exploding gradients (e.g. see "Fast R-CNN" paper by Ross Girshick).
 
 ```lua
-                      ⎧ 0.5 * (x_i - y_i)^2    if |x_i - y_i| < 1
+                      ⎧ 0.5 * (x_i - y_i)^2, if |x_i - y_i| < 1
 loss(x, y) = 1/n \sum ⎨
-                      ⎩ |x_i - y_i| - 0.5      otherwise
+                      ⎩ |x_i - y_i| - 0.5,   otherwise
 ```
 
 If `x` and `y` are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation still operates over all the elements, and divides by `n`.
