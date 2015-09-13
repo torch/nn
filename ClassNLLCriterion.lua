@@ -16,7 +16,7 @@ function ClassNLLCriterion:__init(weights, sizeAverage)
     end
 
     self.output_tensor = torch.zeros(1)
-    self.total_weight_tensor = torch.zeros(1)
+    self.total_weight_tensor = torch.ones(1)
     self.target = torch.zeros(1):long()
 end
 
