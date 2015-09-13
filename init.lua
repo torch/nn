@@ -107,6 +107,7 @@ include('Identity.lua')
 
 include('Criterion.lua')
 include('MSECriterion.lua')
+include('SmoothL1Criterion.lua')
 include('MarginCriterion.lua')
 include('AbsCriterion.lua')
 include('ClassNLLCriterion.lua')

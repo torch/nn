@@ -839,6 +839,12 @@ local function criterionJacobianTest1DTable(cri, input0, target)
    end
 end
 
+function nntest.SmoothL1Criterion()
+   local input = torch.rand(10)
+   local target = input:clone():add(torch.rand(10))
+   local cri = nn.SmoothL1Criterion()
+   criterionJacobianTest1D(cri, input, target)
+end
 
 function nntest.MSECriterion()
    local input = torch.rand(10)
