@@ -419,6 +419,49 @@ function nntest.Power()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.Normalize()
+   -- compare forward against torch implementation
+   -- and check gradient
+   for _,p in pairs({1,2,1.5}) do
+      local ini = math.random(3,10)
+      local input = torch.randn(ini)
+      local module = nn.Normalize(p)
+      local out = module:forward(input)
+      local expected = torch.div(input,input:norm(p))
+      mytester:assertTensorEq(out, expected, 1e-7,
+                              torch.typename(module) ..' (' .. p ..') - forward err ')
+     
+      local err = jac.testJacobian(module, input, -2, 2)
+      mytester:assertlt(err, precision, 'error norm '..p..' on state ')
+   end
+   
+   -- batch mode
+   for _,p in pairs({1,2,torch.uniform()*math.random(1,10)}) do
+      local ini = math.random(3,5)
+      local inj = math.random(3,5)
+      local ink = math.random(3,5)
+      local input = torch.Tensor(inj, ini):zero()
+
+      local module = nn.Normalize(p)
+
+      local err = jac.testJacobian(module, input, -2, 2)
+      mytester:assertlt(err, precision, 'error norm '..p..' on state ')
+   end
+
+   -- test IO correctness
+   local ini = math.random(3,5)
+   local inj = math.random(3,5)
+   local ink = math.random(3,5)
+   local input = torch.Tensor(inj, ini):zero()
+
+   local module = nn.Normalize(2)
+
+   local ferr, berr = jac.testIO(module,input, 0.1, 2)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+
+end
+
 function nntest.Square()
    local in1 = torch.rand(5,7)
    local module = nn.Square()
