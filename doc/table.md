@@ -642,7 +642,7 @@ Creates a module that takes a `table` as input and outputs the element at index 
 This can be either a `table` or a [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
 
 The gradients of the non-`index` elements are zeroed `Tensor`s of the same size. This is true regardless of the
-dept of the encapsulated `Tensor` as the function used internally to do so is recursive.
+depth of the encapsulated `Tensor` as the function used internally to do so is recursive.
 
 Example 1:
 ```lua

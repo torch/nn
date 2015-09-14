@@ -37,7 +37,7 @@ Applies the hard shrinkage function element-wise to the input
 `HardShrinkage` operator is defined as:
 
   * `f(x) = x, if x > lambda`
-  * `f(x) = -x, if x < -lambda`
+  * `f(x) = x, if x < -lambda`
   * `f(x) = 0, otherwise`
 
 ```lua
@@ -62,7 +62,7 @@ Applies the hard shrinkage function element-wise to the input
 `HardShrinkage` operator is defined as:
 
   * `f(x) = x-lambda, if x > lambda`
-  * `f(x) = -x+lambda, if x < -lambda`
+  * `f(x) = x+lambda, if x < -lambda`
   * `f(x) = 0, otherwise`
 
 ```lua
@@ -107,7 +107,7 @@ rescaling them so that the elements of the n-dimensional output Tensor
 lie in the range (0,1) and sum to 1.
 
 `Softmin` is defined as `f_i(x)` = `exp(-x_i-shift) / sum_j exp(-x_j-shift)`,
-where `shift` = `max_i x_i`.
+where `shift` = `max_i -x_i`.
 
 
 ```lua
@@ -220,6 +220,8 @@ gnuplot.grid(true)
 Applies the `Tanh` function element-wise to the input Tensor,
 thus outputting a Tensor of the same dimension.
 
+`Tanh` is defined as `f(x)` = `(exp(x)-exp(-x))/(exp(x)+exp(-x))`.
+
 ```lua
 ii=torch.linspace(-3,3)
 m=nn.Tanh()
@@ -236,6 +238,8 @@ gnuplot.grid(true)
 
 Applies the rectified linear unit (`ReLU`) function element-wise to the input Tensor,
 thus outputting a Tensor of the same dimension.
+
+`ReLU` is defined as `f(x)` = `max(0,x)`
 
 Can optionally do it's operation in-place without using extra state memory:
 ```lua
@@ -258,12 +262,12 @@ gnuplot.grid(true)
 
 Applies parametric ReLU, which parameter varies the slope of the negative part:
 
-```max(0,y_i) + a_i * min(0,y_i)```
+`PReLU` is defined as `f(x)` = `max(0,x) + a * min(0,x)`
 
 When called without a number on input as ```nn.PReLU()``` uses shared version, meaning
 has only one parameter. Otherwise if called ```nn.PReLU(nOutputPlane)``` has ```nOutputPlane```
 parameters, one for each input map. The output dimension is always equal to input dimension.
-Note that weight decay should not be used on it. For reference see http://arxiv.org/abs/1502.01852
+Note that weight decay should not be used on it. For reference see [Delving Deep into Rectifiers](http://arxiv.org/abs/1502.01852).
 
 ![](image/prelu.png)
 
