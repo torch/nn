@@ -165,6 +165,13 @@ function nntest.Dropout()
    mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
    local gradInput = module:backward(input, input)
    mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
+   -- test inplace version
+   local module = nn.Dropout(p,nil,true)
+   local output = module:forward(input:clone())
+   mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
+   local gradInput = module:backward(input:clone(), input:clone())
+   mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
+   
    -- version 1 (old nnx version)
    local input = input:fill(1)
    local module = nn.Dropout(p,true)
