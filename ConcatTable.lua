@@ -14,12 +14,15 @@ function ConcatTable:updateOutput(input)
 end
 
 local function retable(t1, t2, f)
-   for k, v in pairs(t2) do
+   for k, v in ipairs(t2) do
       if (torch.type(v) == "table") then
          t1[k] = retable(t1[k] or {}, t2[k], f)
       else
          f(t1, k, v)
       end
+   end
+   for i=#t2+1, #t1 do
+      t1[i] = nil
    end
    return t1
 end

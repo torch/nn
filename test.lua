@@ -3595,6 +3595,23 @@ function nntest.ConcatTable()
    local gradInput = module:backward(input, gradOutput)
    local gradInput2 = {_gradOutput[1]:sum(1), _gradOutput[2]:sum(1), {_gradOutput[3]:sum(1)}}
    equal(gradInput, gradInput2, "ConcatTable table gradInput")
+
+   -- test outputs for variable length inputs
+   local test = nn.ConcatTable()
+   test:add(nn.Identity())
+   test:add(nn.Identity())
+
+   local x = {torch.randn(5), torch.randn(5)}
+   local y = {torch.randn(5)}
+
+   local o1 = #(test:forward(x))
+   local go1 = #(test:backward(x, {x, x}))
+   local o2 = #(test:forward(y))
+   local go2 = #(test:backward(y, {y, y}))
+   mytester:assert(o1 == 2, "ConcatTable table variable length")
+   mytester:assert(go1 == 2, "ConcatTable table variable length")
+   mytester:assert(o2 == 2, "ConcatTable table variable length")
+   mytester:assert(go2 == 1, "ConcatTable table variable length")
 end
 
 function nntest.FlattenTable()
