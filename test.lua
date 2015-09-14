@@ -2,8 +2,6 @@
 -- th -lnn -e "nn.test{'LookupTable'}"
 -- th -lnn -e "nn.test{'LookupTable', 'Add'}"
 
-nn.hessian.enable()
-
 local mytester = torch.Tester()
 local jac
 local sjac
@@ -171,7 +169,7 @@ function nntest.Dropout()
    mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
    local gradInput = module:backward(input:clone(), input:clone())
    mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
-   
+
    -- version 1 (old nnx version)
    local input = input:fill(1)
    local module = nn.Dropout(p,true)
@@ -430,11 +428,11 @@ function nntest.Normalize()
       local expected = torch.div(input,input:norm(p))
       mytester:assertTensorEq(out, expected, 1e-7,
                               torch.typename(module) ..' (' .. p ..') - forward err ')
-     
+
       local err = jac.testJacobian(module, input, -2, 2)
       mytester:assertlt(err, precision, 'error norm '..p..' on state ')
    end
-   
+
    -- batch mode
    for _,p in pairs({1,2,torch.uniform()*math.random(1,10)}) do
       local ini = math.random(3,5)
@@ -536,6 +534,8 @@ function nntest.Linear()
 
      local err = jac.testJacobianUpdateParameters(module, input, module.bias)
      mytester:assertlt(err,precision, 'error on bias [direct update] ')
+
+     nn.hessian.enable()
 
      local err = jac.testDiagHessianInput(module, input)
      mytester:assertlt(err , precision, 'error on diagHessianInput')
@@ -1537,6 +1537,8 @@ function nntest.SpatialConvolution()
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'error on bias [direct update] ')
 
+   nn.hessian.enable()
+
    local err = jac.testDiagHessianInput(module, input)
    mytester:assertlt(err , precision, 'error on diagHessianInput')
 
@@ -1726,6 +1728,8 @@ function nntest.SpatialConvolutionMap()
    local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
    mytester:assertlt(err , precision, 'error on bias ')
 
+   nn.hessian.enable()
+
    local err = jac.testDiagHessianInput(module, input)
    mytester:assertlt(err , precision, 'error on diagHessianInput')
 
@@ -1826,6 +1830,8 @@ function nntest.SpatialFullConvolution()
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'error on bias [direct update] ')
 
+   nn.hessian.enable()
+
    local err = jac.testDiagHessianInput(module, input)
    mytester:assertlt(err , precision, 'error on diagHessianInput')
 
@@ -1920,6 +1926,8 @@ function nntest.SpatialFullConvolutionMap()
 
    local err = jac.testJacobianUpdateParameters(module, input, module.bias)
    mytester:assertlt(err , precision, 'error on bias [direct update] ')
+
+   nn.hessian.enable()
 
    local err = jac.testDiagHessianInput(module, input)
    mytester:assertlt(err , precision, 'error on diagHessianInput')
@@ -3050,7 +3058,7 @@ function nntest.AddConstant()
   -- Test BPROP
   local err = jac.testJacobian(mod, input)
   mytester:assertlt(err, precision, 'bprop error ')
- 
+
   -- inplace comparisons
   local ini = math.random(3,5)
   local inj = math.random(3,5)
@@ -3075,7 +3083,7 @@ function nntest.AddConstant()
   local gradInput1 = module1:backward(input1, gradOutput1)
   local gradInput2 = module2:backward(input2, gradOutput2)
 
-  mytester:asserteq(0, (gradInput1-gradInput2):abs():max(), 
+  mytester:asserteq(0, (gradInput1-gradInput2):abs():max(),
                 torch.typename(module1) .. ' - in-place backward err ')
 
   local input1 = torch.rand(ink, inj, ini)
@@ -3085,7 +3093,7 @@ function nntest.AddConstant()
   module1:backward(module1.output,torch.rand(input1:size()))
 
   local err = (input1-input2):abs():max()
-  mytester:asserteq(err, 0, torch.typename(module1) .. 
+  mytester:asserteq(err, 0, torch.typename(module1) ..
                           ' - inplace input change err ')
 end
 
@@ -3107,7 +3115,7 @@ function nntest.MulConstant()
   -- Test BPROP
   local err = jac.testJacobian(mod, input)
   mytester:assertlt(err, precision, 'bprop error ')
- 
+
   -- inplace comparisons
   local ini = math.random(3,5)
   local inj = math.random(3,5)
@@ -3126,13 +3134,13 @@ function nntest.MulConstant()
   local out1 = module1:forward(input1)
   local out2 = module2:forward(input2)
 
-  mytester:asserteq(0, (out1-out2):abs():max(), torch.typename(module1) .. 
+  mytester:asserteq(0, (out1-out2):abs():max(), torch.typename(module1) ..
                     ' - in-place forward err ')
 
   local gradInput1 = module1:backward(input1, gradOutput1)
   local gradInput2 = module2:backward(input2, gradOutput2)
-  
-  mytester:asserteq(0, (gradInput1-gradInput2):abs():max(), 
+
+  mytester:asserteq(0, (gradInput1-gradInput2):abs():max(),
                 torch.typename(module1) .. ' - in-place backward err ')
 
   local input1 = torch.rand(ink, inj, ini)
@@ -3142,7 +3150,7 @@ function nntest.MulConstant()
   module1:backward(module1.output,torch.rand(input1:size()))
 
   local err = (input1-input2):abs():max()
-  mytester:assertalmosteq(err, 0, 1e-15, torch.typename(module1) .. 
+  mytester:assertalmosteq(err, 0, 1e-15, torch.typename(module1) ..
                           ' - inplace input change err ')
 end
 
