@@ -1044,6 +1044,15 @@ function nntest.BCECriterion()
    local target = torch.rand(10)*(1-eps) + eps/2
    local cri = nn.BCECriterion()
    criterionJacobianTest1D(cri, input, target)
+   --with weights
+   local weights= torch.rand(10)*(1-eps) + eps/2
+   local cri = nn.BCECriterion(weights)
+   criterionJacobianTest1D(cri, input, target)
+   -- with weights + batch
+   local bsz = 5
+   local input = torch.rand(bsz, 10)*(1-eps) + eps/2
+   local target = torch.rand(bsz, 10)*(1-eps) + eps/2
+   criterionJacobianTest1D(cri, input, target)
 end
 
 function nntest.DistKLDivCriterion()
