@@ -8,7 +8,7 @@ function BCECriterion:__init()
 end
 
 function BCECriterion:updateOutput(input, target)
-   -- log(input) * target + log(1 - input) * (1 - target)
+   -- -(log(input) * target + log(1 - input) * (1 - target))
 
    self.term1 = self.term1 or input.new()
    self.term2 = self.term2 or input.new()
