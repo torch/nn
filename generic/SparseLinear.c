@@ -104,6 +104,7 @@ static int nn_(SparseLinear_accGradParameters)(lua_State *L)
   THTensor * input = luaT_checkudata(L, 2, torch_Tensor);
   THTensor * gradOutput = luaT_checkudata(L, 3, torch_Tensor);
   real scale = luaL_optnumber(L, 4, 1);
+  THTensor * bias = luaT_getfieldcheckudata(L, 1, "bias", torch_Tensor);
   THTensor * weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
   THTensor * gradBias = luaT_getfieldcheckudata(L, 1, "gradBias", torch_Tensor);
   THTensor * gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_Tensor);
@@ -145,8 +146,19 @@ static int nn_(SparseLinear_accGradParameters)(lua_State *L)
 
   THTensor_(cadd)(gradBias, gradBias, scale, gradOutput);
 
-  if(weightDecay != 0)
-    THTensor_(cadd)(gradWeight, gradWeight, weightDecay, weight);
+  if(weightDecay != 0) {
+    #pragma omp parallel for private(i) schedule(static) if(outDim * nnz > 100000)
+    for(i = 0; i < nnz; i++) {
+      long offset = (long)(THTensor_(get2d)(input, i, 0)) - 1;
+      THBlas_(axpy)(outDim,
+                    weightDecay,
+                    THTensor_(data)(weight) + offset*weight->stride[1],
+                    weight->stride[0],
+                    THTensor_(data)(gradWeight)+offset*gradWeight->stride[1],
+                    gradWeight->stride[0]);
+    }
+    THTensor_(cadd)(gradBias, gradBias, weightDecay, bias);
+  }
 
   return 0;
 }
