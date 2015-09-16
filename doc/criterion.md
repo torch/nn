@@ -5,7 +5,7 @@
 target, they compute a gradient according to a given loss function.
 
   * Classification criterions:
-    * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
+    * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy for [`Sigmoid`](transfer.md#nn.Sigmoid) (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
     * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
     * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
     * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
