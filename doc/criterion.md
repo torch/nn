@@ -196,7 +196,7 @@ or in the case of the weights argument being specified:
 loss(t, o) = - sum_i weights[i] * (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
 ```
 
-This is used for measuring the error of a reconstruction in for example an auto-encoder.
+This is used for measuring the error of a reconstruction in for example an auto-encoder. Note that the targets `t[i]` should be numbers between 0 and 1, for instance, the output of an [`nn.Sigmoid`](transfer.md#nn.Sigmoid) layer.
 
 
 <a name="nn.MarginCriterion"></a>
