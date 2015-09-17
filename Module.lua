@@ -244,7 +244,7 @@ function Module.flatten(parameters)
          "Cannot gather tensors that are not compact")
 
       flatParameters = TmpTensor(nUsedParameters):copy(
-            flatParameters:maskedSelect(maskParameters))
+         flatParameters:maskedSelect(maskParameters:typeAs(flatParameters)))
       for k = 1,#parameters do
         parameterMeta[k].storageOffset =
               compactOffsets[parameterMeta[k].storageOffset]
