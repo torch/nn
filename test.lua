@@ -2993,6 +2993,28 @@ function nntest.PairwiseDistance()
   end
 end
 
+function nntest.Index()
+    local net = nn.Index(1)
+
+    -- test 1D
+    local input = {torch.Tensor{10, 20, 30}, torch.LongTensor{1, 2, 2, 3}}
+    local output = net:forward(input)
+    equal(output, torch.Tensor{10, 20, 20, 30}, "error in 1D forward pass")
+
+    local gradOutput = torch.Tensor{1, 1, 1, 3 }
+    local gradInput = net:backward(input, gradOutput)
+    equal(gradInput[1], torch.Tensor{1, 2, 3}, "error in 1D backward pass")
+
+    -- test 2D
+    local input = {torch.Tensor{{10, 20}, {30, 40}}, torch.LongTensor{1, 1}}
+    local output = net:forward(input)
+    equal(output, torch.Tensor{{10, 20}, {10, 20}}, "error in 2D forward pass")
+
+    local gradOutput = torch.Tensor{{1, 2}, {1, 2}}
+    local gradInput = net:backward(input, gradOutput)
+    equal(gradInput[1], torch.Tensor{{2, 4}, {0, 0}}, "error in 2D backward pass")
+end
+
 function nntest.LookupTable()
    local totalIndex = math.random(6,9)
    local nIndex = math.random(3,5)
