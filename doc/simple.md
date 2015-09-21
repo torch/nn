@@ -18,6 +18,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Reshape](#nn.Reshape) : a [reshape](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchreshaperes-x-m-n) of the inputs ;
     * [View](#nn.View) : a [view](https://github.com/torch/torch7/blob/master/doc/tensor.md#result-viewresult-tensor-sizes) of the inputs ;
     * [Select](#nn.Select) : a [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index) over a given dimension ;
+    * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
   * Modules that adapt mathematical Tensor methods :
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
@@ -798,6 +799,23 @@ for i = 1, 10000 do     -- Train for a few iterations
    mlp:updateParameters(0.01)
    print(err)
 end
+```
+
+<a name="nn.Index"></a>
+## Index ##
+
+```lua
+module = nn.Index(dim)
+```
+
+Applies the Tensor [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) operation along the given dimension. So
+
+```lua 
+nn.Index(dim):forward{t,i} 
+```
+gives the same output as 
+```lua
+t:index(dim, i)
 ```
 
 <a name="nn.Exp"></a>
