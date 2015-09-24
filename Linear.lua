@@ -49,8 +49,25 @@ function Linear:updateOutput(input)
       end
       self.output:addmm(0, self.output, 1, input, self.weight:t())
       self.output:addr(1, self.addBuffer, self.bias)
+   elseif input:dim() == 3 then
+      local nframe = input:size(1)
+      local nLength = input:size(2)
+      local nDimOut = self.weight:size(1)
+      local nDimIn = self.weight:size(2)
+      local nElement = self.output:nElement()
+      self.output:resize(nframe * nLength, nDimOut)
+      if self.output:nElement() ~= nElement then
+         self.output:zero()
+      end
+      if not self.addBuffer or self.addBuffer:nElement() ~= (nframe * nLength) then
+         self.addBuffer = input.new(nframe * nLength):fill(1)
+      end
+      self.output:addmm(0, self.output, 1, input:resize(nframe * nLength, nDimIn), self.weight:t())
+      self.output:addr(1, self.addBuffer, self.bias)
+      self.output:resize(nframe, nLength, nDimOut)
+      input:resize(nframe, nLength, nDimIn)
    else
-      error('input must be vector or matrix')
+      error('input must be vector or matrix or 3D tensor')
    end
 
    return self.output
@@ -68,6 +85,15 @@ function Linear:updateGradInput(input, gradOutput)
          self.gradInput:addmv(0, 1, self.weight:t(), gradOutput)
       elseif input:dim() == 2 then
          self.gradInput:addmm(0, 1, gradOutput, self.weight)
+      elseif input:dim() == 3 then
+         local nframe = gradOutput:size(1)
+         local nLength = gradOutput:size(2)
+         local nDimOut = self.weight:size(1)
+         local nDimIn = self.weight:size(2)
+         self.gradInput:resize(nframe * nLength, nDimIn)
+         self.gradInput:addmm(0, 1, gradOutput:resize(nframe * nLength, nDimOut), self.weight)
+         self.gradInput:resize(nframe, nLength, nDimIn)
+         gradOutput:resize(nframe, nLength, nDimOut)
       end
 
       return self.gradInput
@@ -82,6 +108,17 @@ function Linear:accGradParameters(input, gradOutput, scale)
    elseif input:dim() == 2 then
       self.gradWeight:addmm(scale, gradOutput:t(), input)
       self.gradBias:addmv(scale, gradOutput:t(), self.addBuffer)
+   elseif input:dim() == 3 then
+      local nframe = gradOutput:size(1)
+      local nLength = gradOutput:size(2)
+      local nDimOut = self.weight:size(1)
+      local nDimIn = self.weight:size(2)
+      gradOutput:resize(nframe * nLength, nDimOut)
+      input:resize(nframe * nLength, nDimIn)
+      self.gradWeight:addmm(scale, gradOutput:t(), input)
+      self.gradBias:addmv(scale, gradOutput:t(), self.addBuffer)
+      gradOutput:resize(nframe, nLength, nDimOut)
+      input:resize(nframe, nLength, nDimIn)
    end
 end
 
