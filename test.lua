@@ -596,7 +596,7 @@ function nntest.Linear()
 
      -- 3D
      local nframe = math.random(50,70)
-     local nLength = math.random(50, 70)
+     local nLength = math.random(20, 30)
      local input = torch.Tensor(nframe, nLength, ini):zero()
 
      local err = jac.testJacobian(module,input)
