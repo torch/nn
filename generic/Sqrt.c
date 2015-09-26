@@ -9,21 +9,7 @@ static int nn_(Sqrt_updateOutput)(lua_State *L)
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   THTensor_(resizeAs)(output, input);
-  
-  if (input->nDimension == 1 || !THTensor_(isContiguous)(input) || !THTensor_(isContiguous)(output))
-  {
-    TH_TENSOR_APPLY2(real, output, real, input,   \
-         *output_data = sqrt(*input_data + bias););
-  }
-  else
-  {
-    real* output_data = THTensor_(data)(output);
-    real* input_data  = THTensor_(data)(input);
-    long i;
-#pragma omp parallel for private(i)
-    for(i = 0; i < THTensor_(nElement)(input); i++)
-      output_data[i] = sqrt(input_data[i] + bias);
-  }
+  THTensor_(sqrt)(output, input);
   return 1;
 }
 

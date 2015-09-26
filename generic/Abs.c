@@ -8,9 +8,7 @@ static int nn_(Abs_updateOutput)(lua_State *L)
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   THTensor_(resizeAs)(output, input);
-
-  TH_TENSOR_APPLY2(real, output, real, input, \
-                   *output_data = fabs(*input_data);)
+  THTensor_(abs)(output, input);
   return 1;
 }
 
