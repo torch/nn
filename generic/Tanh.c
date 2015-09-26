@@ -8,21 +8,7 @@ static int nn_(Tanh_updateOutput)(lua_State *L)
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   THTensor_(resizeAs)(output, input);
-
-  if (input->nDimension == 1 || !THTensor_(isContiguous)(input) || !THTensor_(isContiguous)(output))
-  {
-    TH_TENSOR_APPLY2(real, output, real, input,   \
-         *output_data = tanh(*input_data););
-  }
-  else
-  {
-    real* ptr_output = THTensor_(data)(output);
-    real* ptr_input  = THTensor_(data)(input);
-    long i;
-#pragma omp parallel for private(i)
-    for(i = 0; i < THTensor_(nElement)(input); i++)
-      ptr_output[i] = tanh(ptr_input[i]);
-  }
+  THTensor_(tanh)(output, input);
   return 1;
 }
 
