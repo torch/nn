@@ -44,8 +44,9 @@ function Linear:updateOutput(input)
       if self.output:nElement() ~= nElement then
          self.output:zero()
       end
-      if not self.addBuffer or self.addBuffer:nElement() ~= nframe then
-         self.addBuffer = input.new(nframe):fill(1)
+      self.addBuffer = self.addBuffer or input.new()
+      if self.addBuffer:nElement() ~= nframe then
+         self.addBuffer:resize(nframe):fill(1)
       end
       self.output:addmm(0, self.output, 1, input, self.weight:t())
       self.output:addr(1, self.addBuffer, self.bias)
