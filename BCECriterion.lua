@@ -49,7 +49,7 @@ function BCECriterion:updateOutput(input, target)
     output = torch.dot(target, buffer)
 
     -- log(1 - input) * (1 - target)
-    buffer:mul(input, -1):add(1 + eps):log()
+    buffer:mul(input, -1):add(1):add(eps):log()
     if weights ~= nil then buffer:cmul(weights) end
 
     output = output + torch.sum(buffer)
@@ -86,7 +86,7 @@ function BCECriterion:updateGradInput(input, target)
 
     buffer:resizeAs(input)
     -- - x ( 1 + eps -x ) + eps
-    buffer:add(input, -1-eps):cmul(input):add(-eps)
+    buffer:add(input, -1):add(-eps):cmul(input):add(-eps)
 
     gradInput:resizeAs(input)
     -- y - x
