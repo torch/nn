@@ -8,6 +8,9 @@ function LeakyReLU:__init(negval,ip)
    end
    -- default for inplace is false
    self.inplace = ip or false
+   if negval < 0 then
+      self.inplace = false
+   end
    if (ip and type(ip) ~= 'boolean') then
       error('in-place flag must be boolean')
    end
