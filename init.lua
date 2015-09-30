@@ -23,6 +23,7 @@ include('Replicate.lua')
 include('Transpose.lua')
 include('BatchNormalization.lua')
 include('Padding.lua')
+include('GradientReversal.lua')
 
 include('Copy.lua')
 include('Min.lua')
