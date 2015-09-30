@@ -32,12 +32,13 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Normalize](#nn.Normalize) : normalizes the input to have unit `L_p` norm ;
     * [MM](#nn.MM) : matrix-matrix multiplication (also supports batches of matrices) ;
   * Miscellaneous Modules :
-    * [BatchNormalization](#nn.BatchNormalization) - mean/std normalization over the mini-batch inputs (with an optional affine transform) ;
-    * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable));
+    * [BatchNormalization](#nn.BatchNormalization) : mean/std normalization over the mini-batch inputs (with an optional affine transform) ;
+    * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable)) ;
     * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
-    * [SpatialDropout](#nn.SpatialDropout) : Same as Dropout but for spatial inputs where adjacent pixels are strongly correlated ;
+    * [SpatialDropout](#nn.SpatialDropout) : same as Dropout but for spatial inputs where adjacent pixels are strongly correlated ;
     * [Padding](#nn.Padding) : adds padding to a dimension ;
-    * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity);
+    * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity) ;
+    * [GradientReversal](#nn.GradientReversal) : reverses the gradient (to maximize an objective function) ;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1043,3 +1044,10 @@ autoencoder:add(decoder)
 criterion = nn.MSECriterion()  -- To measure reconstruction error
 -- ...
 ```
+
+<a name="nn.GradientReversal"></a>
+## GradientReversal ##
+
+`module` = `nn.GradientReversal()`
+
+This module preserves the input, but reverses the gradient. This can be used to maximise an objective function whilst using gradient descent, as in "Domain-Adversarial Training of Neural Networks" (http://arxiv.org/abs/1505.07818).
