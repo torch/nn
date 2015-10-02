@@ -196,7 +196,7 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
 
   if (outputWidth < 1 || outputHeight < 1)
     THError("Given input size: (%dx%dx%d). Calculated output size: (%dx%dx%d). Output size is too small",
-        nInputPlane,inputHeight,inputWidth,nInputPlane,outputHeight,outputWidth);
+        nInputPlane,inputHeight,inputWidth,nOutputPlane,outputHeight,outputWidth);
 
   if(input->nDimension == 3)
   {
