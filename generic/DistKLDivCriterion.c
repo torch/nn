@@ -11,7 +11,7 @@ static int nn_(DistKLDivCriterion_updateOutput)(lua_State *L)
 
   sum = 0;
   TH_TENSOR_APPLY2(real, input, real, target,
-                   sum += *target_data > 0 ? *target_data * (log(*target_data) - *input_data) : 0;)
+                   sum += *target_data > 0 ? *target_data * (TH_LOG(*target_data) - *input_data) : 0;)
 
   if(sizeAverage)
     sum /= THTensor_(nElement)(input);

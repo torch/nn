@@ -12,9 +12,9 @@ static int nn_(LogSigmoid_updateOutput)(lua_State *L)
   THTensor_(resizeAs)(buffer, input);
 
   TH_TENSOR_APPLY3(real, output, real, input, real, buffer,    \
-                   real z = exp(-*input_data);                 \
+                   real z = TH_EXP(-*input_data);                 \
                    *buffer_data = z;                           \
-                   *output_data = -log(1. + z);)
+                   *output_data = -TH_LOG(1. + z);)
 
   return 1;
 }

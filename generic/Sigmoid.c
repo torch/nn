@@ -10,7 +10,7 @@ static int nn_(Sigmoid_updateOutput)(lua_State *L)
   THTensor_(resizeAs)(output, input);
 
   TH_TENSOR_APPLY2(real, output, real, input, \
-                   *output_data = 1./(1.+ exp(- *input_data));)
+                   *output_data = 1./(1.+ TH_EXP(- *input_data));)
 
   return 1;
 }
