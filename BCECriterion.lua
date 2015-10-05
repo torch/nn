@@ -39,7 +39,7 @@ function BCECriterion:updateOutput(input, target)
     buffer:resizeAs(input)
 
     if weights ~= nil and target:dim() ~= 1 then
-        weights = self.weights:view(1, target:size()[2]):expandAs(target)
+        weights = self.weights:view(1, target:size(2)):expandAs(target)
     end
 
     -- log(input) * target
@@ -81,7 +81,7 @@ function BCECriterion:updateGradInput(input, target)
     local gradInput = self.gradInput
 
     if weights ~= nil and target:dim() ~= 1 then
-        weights = self.weights:view(1, target:size()[2]):expandAs(target)
+        weights = self.weights:view(1, target:size(2)):expandAs(target)
     end
 
     buffer:resizeAs(input)
