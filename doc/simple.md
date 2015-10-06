@@ -8,7 +8,6 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Add](#nn.Add) : adds a bias term to the incoming data ;
     * [Mul](#nn.Mul) : multiply a single scalar factor to the incoming data ;
     * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
-    * [CDiv](#nn.CDiv) : a component-wise division to the incoming data ;
     * [Euclidean](#nn.Euclidean) : the euclidean distance of the input to `k` mean centers ;
     * [WeightedEuclidean](#nn.WeightedEuclidean) : similar to [Euclidean](#nn.Euclidean), but additionally learns a diagonal covariance matrix ;
   * Modules that adapt basic Tensor methods :
