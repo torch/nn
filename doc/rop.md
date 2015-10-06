@@ -14,11 +14,14 @@ E = sum(y)
 ```
 this code calculates the product of the Hessian with a vector of ones.
 ```lua
+local mini_batch_size = 11
+local input = torch.randn(mini_batch_size, 3)
+
 local model = nn.Sequential()
-   :add(nn.Linear(2, 2))
-   :add(nn.Sigmoid())
-   :add(nn.Linear(2, 2))
-   :add(nn.Sigmoid())
+   model:add(nn.Linear(3, 2))
+   model:add(nn.Sigmoid())
+   model:add(nn.Linear(2, 4))
+   model:add(nn.Sigmoid())
 
 -- We must collect the parameters, which also creates storage to store the
 -- vector we will multiply with the Hessian, and to store the result (which the
@@ -30,19 +33,19 @@ parameters:fill(1)
 rParameters:fill(1)
 
 -- First do the normal forward and backward-propagation
-local input = torch.ones(2)
 model:forward(input)
 
 -- Here we assume that the sum of the output is the cost, so the gradient is a
 -- tensor of ones.
-model:backward(input, torch.ones(2))
+model:backward(input, torch.ones(mini_batch_size,  4))
 
 -- We calculate the R-ops as we go forward
 model:rForward(input)
 
 -- Since we assumed the cost to be the sum of the outputs, the second
 -- derivative is zero which means that R(dE/dy) is zero.
-model:rBackward(input, torch.zeros(2), torch.ones(2), torch.zeros(2))
+model:rBackward(input, torch.zeros(mini_batch_size, 3), 
+      torch.ones(mini_batch_size, 4), torch.zeros( mini_batch_size, 4)) 
 
 -- The R-op applied to the parameters now contains the Hessian times the value
 -- of rParameters

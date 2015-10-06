@@ -146,29 +146,62 @@ Sequential.parameters = Container.parameters
 local Linear = nn.Linear
 
 function Linear:updateROutput(input, rInput)
-   self.rOutput:resize(self.bias:size(1))
-   self.rOutput:mv(self.rWeight, input)
-   self.rOutput:addmv(self.weight, rInput)
-   self.rOutput:add(self.rBias)
-   return self.rOutput
+  if input:dim() == 1 then
+    self.rOutput:resize(self.bias:size(1))
+    self.rOutput:mv(self.rWeight, input)
+    self.rOutput:addmv(self.weight, rInput)
+    self.rOutput:add(self.rBias)
+  elseif  input:dim() == 2 then
+    self.rOutput:resize(input:size(1), self.bias:size(1))
+    self.rOutput:mm(input, self.rWeight:t()) -- a*V'
+    self.rOutput:addmm(rInput, self.weight:t()) -- R(a)*W'
+
+    for i = 1, self.rBias:size(1) do -- add it to the ith column
+      self.rOutput[{{},{i}}]:add(self.rBias[i])
+    end
+  else
+    error('Only two dimensional tensors are supported now')
+  end
+  return self.rOutput
 end
 
 function Linear:updateRGradInput(input, rInput, gradOutput, rGradOutput)
-   self.rGradInput:resizeAs(input)
-   self.rGradInput:mv(self.rWeight:t(), gradOutput)
-   self.rGradInput:addmv(self.weight:t(), rGradOutput)
-   return self.rGradInput
+  if input:dim() == 1 then
+    self.rGradInput:resizeAs(input)
+    self.rGradInput:mv(self.rWeight:t(), gradOutput)
+    self.rGradInput:addmv(self.weight:t(), rGradOutput)
+  elseif  input:dim() == 2 then
+    self.rGradInput:resizeAs(input)
+    self.rGradInput:mm(gradOutput, self.rWeight )
+    self.rGradInput:addmm( rGradOutput, self.weight)
+  else
+    error('Only two dimensional tensors are supported now')
+  end
+  return self.rGradInput
 end
 
 function Linear:accRGradParameters(input, rInput, gradOutput, rGradOutput)
-   self.rGradWeight:addr(rGradOutput, input)
-   self.rGradWeight:add(torch.ger(gradOutput, rInput))
-   self.rGradBias:add(rGradOutput)
+
+  if input:dim() == 1 then
+    self.rGradWeight:addr(rGradOutput, input)
+    self.rGradWeight:add(torch.ger(gradOutput, rInput))
+    self.rGradBias:add(rGradOutput)
+  elseif  input:dim() == 2 then
+    self.rGradWeight:add(torch.mm(rGradOutput:t(), input))
+    self.rGradWeight:add(torch.mm(gradOutput:t(), rInput))
+    self.rGradBias:add(torch.sum(rGradOutput,1))
+
+--    self.rGradWeight:div(input:size(1)) --
+--    self.rGradBias:div(input:size(1))
+  else
+    error('Only two dimensional tensors are supported now')
+  end
 end
+
 
 -- For simple nonlinearities y = f(x) the forward propogation is R(x) * df(x).
 local function TransferUpdateROutput(self, input, rInput)
-   self.grad = self:updateGradInput(input, torch.ones(input:size(1)))
+   self.grad = self:updateGradInput(input, torch.ones(input:size()))
    self.rOutput:resizeAs(input)
    self.rOutput:cmul(rInput, self.grad)
    return self.rOutput
@@ -202,7 +235,7 @@ Sigmoid.updateROutput = TransferUpdateROutput
 
 function Sigmoid:updateRGradInput(input, ...)
    local sigmoid = function(x)
-      return torch.cdiv(torch.ones(input:size(1)), torch.exp(-x):add(1))
+      return torch.cdiv(torch.ones(x:size()), torch.exp(-x):add(1))
    end
    local sigmoid_input = sigmoid(input)
    local rGrad = (sigmoid_input -
