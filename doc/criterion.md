@@ -326,7 +326,7 @@ criterion = nn.MSECriterion()
 Creates a criterion that measures the mean squared error between `n` elements in the input `x` and output `y`:
 
 ```lua
-loss(x, y) = 1/n \sum |x_i - y_i|^2 .
+loss(x, y) = 0.5 * 1/n * \sum |x_i - y_i|^2 .
 ```
 
 If `x` and `y` are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation still operates over all the elements, and divides by `n`.
