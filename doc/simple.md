@@ -28,6 +28,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Power](#nn.Power) : an element-wise [pow](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchpowres-x) operation ;
     * [Square](#nn.Square) : an element-wise square operation ;
     * [Sqrt](#nn.Sqrt) : an element-wise [sqrt](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchsqrtres-x) operation ;
+    * [Clamp](#nn.Clamp) : an element-wise [clamp](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchclampres-tensor1-min_value-max_value) operation ;
     * [Normalize](#nn.Normalize) : normalizes the input to have unit `L_p` norm ;
     * [MM](#nn.MM) : matrix-matrix multiplication (also supports batches of matrices) ;
   * Miscellaneous Modules :
@@ -904,6 +905,32 @@ gnuplot.grid(true)
 ```
 
 ![](image/power.png)
+
+<a name="nn.Clamp"></a>
+## Clamp ##
+
+```lua
+module = nn.Clamp(min_value, max_value)
+```
+
+Clamps all elements into the range `[min_value, max_value]`.
+Output is identical to input in the range, otherwise elements less than `min_value` (or greater than `max_value`) are saturated to `min_value` (or `max_value`).
+
+```lua
+A = torch.randn(2, 5)
+m = nn.Clamp(-0.1, 0.5)
+B = m:forward(A)
+
+print(A)  -- input
+-1.1321  0.0227 -0.4672  0.6519 -0.5380
+ 0.9061 -1.0858  0.3697 -0.8120 -1.6759
+[torch.DoubleTensor of size 3x5]
+
+print(B)  -- output
+-0.1000  0.0227 -0.1000  0.5000 -0.1000
+ 0.5000 -0.1000  0.3697 -0.1000 -0.1000
+[torch.DoubleTensor of size 3x5]
+```
 
 <a name="nn.Normalize"></a>
 ## Normalize ##

@@ -5,6 +5,8 @@
 static int nn_(HardTanh_updateOutput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
+  real min_val = luaT_getfieldchecknumber(L, 1, "min_val");
+  real max_val = luaT_getfieldchecknumber(L, 1, "max_val");
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
   THTensor_(resizeAs)(output, input);
@@ -12,12 +14,12 @@ static int nn_(HardTanh_updateOutput)(lua_State *L)
   if (input->nDimension == 1 || !THTensor_(isContiguous)(input) || !THTensor_(isContiguous)(output))
   {
     TH_TENSOR_APPLY2(real, output, real, input,     \
-         if(*input_data < -1)     \
-           *output_data = -1;   \
-         else if(*input_data <= 1)    \
+         if(*input_data < min_val)     \
+           *output_data = min_val;   \
+         else if(*input_data <= max_val)    \
            *output_data = *input_data;  \
          else       \
-           *output_data = 1;);
+           *output_data = max_val;);
   }
   else
   {
@@ -28,12 +30,12 @@ static int nn_(HardTanh_updateOutput)(lua_State *L)
 #pragma omp parallel for private(i)
     for (i = 0; i < THTensor_(nElement)(input); i++)
     {
-      if(ptr_input[i] < -1)
-	ptr_output[i] = -1;
-      else if (ptr_input[i] <= 1)
-	ptr_output[i] = ptr_input[i];
+      if(ptr_input[i] < min_val)
+        ptr_output[i] = min_val;
+      else if (ptr_input[i] <= max_val)
+        ptr_output[i] = ptr_input[i];
       else
-	ptr_output[i] = 1;
+        ptr_output[i] = max_val;
     }
   }
   return 1;
@@ -42,6 +44,8 @@ static int nn_(HardTanh_updateOutput)(lua_State *L)
 static int nn_(HardTanh_updateGradInput)(lua_State *L)
 {
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
+  real min_val = luaT_getfieldchecknumber(L, 1, "min_val");
+  real max_val = luaT_getfieldchecknumber(L, 1, "max_val");
   THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
@@ -53,7 +57,7 @@ static int nn_(HardTanh_updateGradInput)(lua_State *L)
       !THTensor_(isContiguous)(gradInput))
   {
     TH_TENSOR_APPLY3(real, gradInput, real, gradOutput, real, input,  \
-         if(*input_data < -1 || *input_data > 1)    \
+         if(*input_data < min_val || *input_data > max_val)    \
            *gradInput_data = 0;                             \
          else           \
            *gradInput_data = *gradOutput_data;);
@@ -68,10 +72,10 @@ static int nn_(HardTanh_updateGradInput)(lua_State *L)
 #pragma omp parallel for private(i)
     for (i = 0; i < THTensor_(nElement)(input); i++)
     {
-      if(ptr_input[i] < -1 || ptr_input[i] > 1)
-	ptr_gradInput[i] = 0;
+      if(ptr_input[i] < min_val || ptr_input[i] > max_val)
+        ptr_gradInput[i] = 0;
       else
-	ptr_gradInput[i] = ptr_gradOutput[i];
+        ptr_gradInput[i] = ptr_gradOutput[i];
     }
   }
   return 1;

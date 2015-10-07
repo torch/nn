@@ -266,6 +266,24 @@ function nntest.HardTanh()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.Clamp()
+   local ini = math.random(3,5)
+   local inj = math.random(3,5)
+   local ink = math.random(3,5)
+   local max_value =  math.abs(math.random())
+   local min_value = -math.abs(math.random())
+   local input = torch.Tensor(ink, inj, ini):zero()
+
+   local module = nn.Clamp(min_value, max_value)
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision ,  'error on state ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
 function nntest.Abs()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
