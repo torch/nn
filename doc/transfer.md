@@ -241,7 +241,7 @@ thus outputting a Tensor of the same dimension.
 
 `ReLU` is defined as `f(x)` = `max(0,x)`
 
-Can optionally do it's operation in-place without using extra state memory:
+Can optionally do its operation in-place without using extra state memory:
 ```lua
 m=nn.ReLU(true) -- true = in-place, false = keeping separate state.
 ```
@@ -288,21 +288,21 @@ oo = m:forward(ii)
 <a name="nn.AddConstant"></a>
 ## AddConstant ##
 
-Adds a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `x + k`, where `k` is a scalar.
+Adds a (non-learnable) scalar constant.  This module is sometimes useful for debugging purposes:  `f(x)` = `x + k`, where `k` is a scalar.
 
-Can optionally do it's operation in-place without using extra state memory:
+Can optionally do its operation in-place without using extra state memory:
 ```lua
 m=nn.AddConstant(k,true) -- true = in-place, false = keeping separate state.
 ```
-In-place mode restores the original input value after the backward pass, allowing it's use after other in-place modules, like [MulConstant](#nn.MulConstant).
+In-place mode restores the original input value after the backward pass, allowing its use after other in-place modules, like [MulConstant](#nn.MulConstant).
 
 <a name="nn.MulConstant"></a>
 ## MulConstant ##
 
-Multiplies input tensor by a (non-learnable) scalar constant.  This module is sometimes useful for debuggging purposes:  `f(x)` = `k * x`, where `k` is a scalar.
+Multiplies input tensor by a (non-learnable) scalar constant.  This module is sometimes useful for debugging purposes:  `f(x)` = `k * x`, where `k` is a scalar.
 
-Can optionally do it's operation in-place without using extra state memory:
+Can optionally do its operation in-place without using extra state memory:
 ```lua
 m=nn.MulConstant(k,true) -- true = in-place, false = keeping separate state.
 ```
-In-place mode restores the original input value after the backward pass, allowing it's use after other in-place modules, like [AddConstant](#nn.AddConstant).
+In-place mode restores the original input value after the backward pass, allowing its use after other in-place modules, like [AddConstant](#nn.AddConstant).
