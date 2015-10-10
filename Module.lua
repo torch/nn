@@ -222,8 +222,8 @@ function Module.flatten(parameters)
       tensorsCompact = tensorsCompact and isCompact(tmp)
    end
 
-   local maskParameters  = flatParameters:byte():clone()
-   local compactOffsets  = flatParameters:long():cumsum(1)
+   local maskParameters  = torch.ByteTensor(nParameters):copy(flatParameters)
+   local compactOffsets  = torch.IntTensor(nParameters):copy(flatParameters):cumsum(1)
    local nUsedParameters = compactOffsets[-1]
 
    -- 4. copy storages into the flattened parameter tensor
@@ -269,7 +269,14 @@ end
 function Module:getParameters()
    -- get parameters
    local parameters,gradParameters = self:parameters()
-   return Module.flatten(parameters), Module.flatten(gradParameters)
+   -- flatten parameters and gradients
+   local flatParameters = nn.Module.flatten(parameters)
+   collectgarbage()
+   local flatGradParameters = nn.Module.flatten(gradParameters)
+   collectgarbage()
+
+   -- return new flat vector that contains all discrete parameters
+   return flatParameters, flatGradParameters
 end
 
 function Module:__call__(input, gradOutput)
