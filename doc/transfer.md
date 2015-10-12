@@ -127,17 +127,17 @@ gnuplot.grid(true)
 ### SoftPlus ###
 
 Applies the `SoftPlus` function to an n-dimensioanl input Tensor.
-Can be used to constrain the output of a machine to always be positive.
+`SoftPlus` is a smooth approximation to the [ReLU](#nn.ReLU) function and can be used to constrain the output of a machine to always be positive. For numerical stability the implementation reverts to the linear function for inputs above a certain value (20 by default).
 
 `SoftPlus` is defined as `f_i(x)` = `1/beta * log(1 + exp(beta * x_i))`.
 
 ```lua
-ii=torch.randn(10)
+ii=torch.linspace(-3,3)
 m=nn.SoftPlus()
 oo=m:forward(ii)
-go=torch.ones(10)
+go=torch.ones(100)
 gi=m:backward(ii,go)
-gnuplot.plot({'Input',ii,'+-'},{'Output',oo,'+-'},{'gradInput',gi,'+-'})
+gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
 ![](image/softplus.png)
