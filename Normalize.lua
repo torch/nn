@@ -49,23 +49,29 @@ function Normalize:updateGradInput(input, gradOutput)
 
   local n = input:size(1) -- batch size
   local d = input:size(2) -- dimensionality of vectors
-  -- compute diagonal term
-  self.eye = self.eye or torch.eye(d):typeAs(input):view(1,d,d)
-  local eyeExpand = self.eye:expand(n,d,d)
-  self.diag = self.diag or self.eye.new()
-  self.diag:cmul(eyeExpand, self.normp:view(n,1,1):expand(n,d,d))
-  -- compute cross term
+
+  -- compute diagonal term with gradOutput
+  self.gradInput:resize(n,d,1)
+  gradOutput = gradOutput:view(n,d,1)
+  self.gradInput:cmul(self.normp:view(n,1,1):expand(n,d,1),gradOutput)
+
+  -- compute cross term in two steps
+  self.cross = self.cross or input.new()
+  self.cross:resize(n,1,1)
+
   self.buffer:abs(input):pow(self.p-2):cmul(input)
   local b1 = self.buffer:view(n,d,1)
   local b2 = input:view(n,1,d)
+  -- instead of having a huge temporary matrix (b1*b2),
+  -- do the computations as b1*(b2*gradOutput). This avoids redundant
+  -- computation and also a huge buffer of size n*d^2
+  self.cross:bmm(b2,gradOutput)
+  self.gradInput:baddbmm(-1,b1, self.cross)
 
-  self.diag:baddbmm(-1,b1,b2)
-  -- compute the local gradient of the Lp transformation
-  self.buffer:cmul(self.normp,self.norm)
-  self.diag:cdiv(self.buffer:view(n,1,1):expand(n,d,d))
-  -- chain the gradient
-  self.gradInput:resize(n,d,1)
-  self.gradInput:bmm(self.diag, gradOutput:view(n,d,1))
+  -- reuse cross buffer for normalization
+  self.cross:cmul(self.normp,self.norm)
+  self.gradInput:cdiv(self.cross:view(n,1,1):expand(n,d,1))
+
   self.gradInput = self.gradInput:view(n,d)
   
   if not is_batch then
