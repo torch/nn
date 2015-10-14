@@ -299,7 +299,7 @@ function LogSoftMax:updateROutput(input, rInput)
   return self.rOutput
 end
 
--- here is the explanation: https://cswhjiang.github.io/2015/10/13/Roperator/
+-- explanations: https://cswhjiang.github.io/2015/10/13/Roperator/
 function LogSoftMax:updateRGradInput(input, rInput, gradOutput, rGradOutput)
   if input:dim() == 1 then
     self.rGradInput:resizeAs(rGradOutput)
