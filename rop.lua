@@ -142,7 +142,80 @@ end
 -- TODO Why is this needed?
 Sequential.parameters = Container.parameters
 
--- The Linear module (for now inputDim == 1 is assumed)
+-- Criterion
+---- just for test
+local SUMCriterion, parent = torch.class('SUMCriterion', 'nn.Criterion')
+
+function SUMCriterion:__init()
+  parent.__init(self)
+end
+function SUMCriterion:updateOutput(input, target)
+  return input:sum()
+end
+
+function SUMCriterion:updateGradInput(input, target)
+  return torch.ones(input:size())
+end
+
+function SUMCriterion:rBackward(rInput, target)
+  return self:updateRGradInput(rInput, target)
+end
+
+function SUMCriterion:updateRGradInput(rInput, target)
+  return torch.zeros(rInput:size())
+end
+  
+  
+-- MSE criterion
+local Criterion = nn.Criterion
+local Criterion_init = Criterion.__init
+function Criterion:__init()
+   Criterion_init(self)
+   self.rGradInput = torch.Tensor()
+end
+--
+--function Criterion:rBackward(input, target)
+--end
+
+local MSECriterion = nn.MSECriterion
+--function MSECriterion:updateOutput(input, target)
+--   self.output = torch.add(input, -target):norm()^2/input:numel()
+--   return self.output
+--end
+--
+--function MSECriterion:updateGradInput(input, target)
+--   self.gradInput:resizeAs(input)
+--   self.gradInput:copy(input)
+--   self.gradInput:add(-target)
+--   self.gradInput:div(input:numel()/2)
+--   return self.gradInput
+--end
+
+function MSECriterion:rBackward(rInput, target)
+   return self:updateRGradInput(rInput, target)
+end
+
+function MSECriterion:updateRGradInput(rInput, target) 
+    self.rGradInput:resizeAs(rInput)
+    self.rGradInput:copy(rInput)
+    self.rGradInput:div(rInput:numel()/2)
+    return self.rGradInput
+end
+
+--
+local ClassNLLCriterion = nn.ClassNLLCriterion
+function ClassNLLCriterion:rBackward(rInput, target)
+   return self:updateRGradInput(rInput, target)
+end
+
+function ClassNLLCriterion:updateRGradInput(rInput, target) 
+--    b_size = rInput:size(1) 
+    self.rGradInput:resizeAs(rInput)
+    self.rGradInput:fill(0) ------
+    return self.rGradInput
+end
+
+-- The Linear module (for now inputDim <=2 is assumed)
 local Linear = nn.Linear
 
 function Linear:updateROutput(input, rInput)
@@ -196,6 +269,86 @@ function Linear:accRGradParameters(input, rInput, gradOutput, rGradOutput)
   else
     error('Only two dimensional tensors are supported now')
   end
+end
+
+-- The LogSoftMax module
+local LogSoftMax = nn.LogSoftMax
+function LogSoftMax:updateROutput(input, rInput)
+  if input:dim() == 1 then
+    self.rOutput:resizeAs(rInput)
+    self.rOutput:copy(rInput)
+    
+    local input_exp = torch.exp(input)
+    local input_exp_sum = input_exp:sum()
+    local s = torch.cmul(input_exp, rInput):sum()
+    self.rOutput:add(-s/input_exp_sum)
+  elseif  input:dim() == 2 then
+    self.rOutput:resizeAs(rInput)
+    self.rOutput:copy(rInput)
+    
+    local input_exp = torch.exp(input)
+    local input_exp_sum = input_exp:sum(2)
+    local s = torch.cmul(input_exp, rInput):sum(2)
+    for i = 1, input:size(1) do
+      self.rOutput[i]:add(-s[i][1]/input_exp_sum[i][1])  
+    end
+     
+  else
+    error('Only two dimensional tensors are supported now')
+  end
+  return self.rOutput
+end
+
+-- explanations: https://cswhjiang.github.io/2015/10/13/Roperator/
+function LogSoftMax:updateRGradInput(input, rInput, gradOutput, rGradOutput)
+  if input:dim() == 1 then
+    self.rGradInput:resizeAs(rGradOutput)
+    self.rGradInput:copy(rGradOutput) -- part3
+    
+    local gradOutput_sum = gradOutput:sum() -- delta
+    local rGradOutput_sum = rGradOutput:sum() -- R(delta)
+    
+    local input_exp = torch.exp(input)
+    local input_exp_sum = input_exp:sum()
+    local p = torch.div(input_exp, input_exp_sum)
+    
+    local weightedRInputSum = torch.cmul(p, rInput):sum() -- a number
+    local part1 = -torch.cmul(p, rInput - weightedRInputSum)*gradOutput_sum
+    local part2 = -p*rGradOutput_sum
+    
+    self.rGradInput:add(part1):add(part2)
+  elseif  input:dim() == 2 then
+    self.rGradInput:resizeAs(rGradOutput)
+    self.rGradInput:copy(rGradOutput)
+    
+    local gradOutput_sum = gradOutput:sum(2)
+    local rGradOutput_sum = rGradOutput:sum(2) 
+    
+    local input_exp = torch.exp(input)
+    local input_exp_sum = input_exp:sum(2)
+    local p = torch.Tensor(input_exp:size())
+    for i = 1, p:size(1) do 
+      p[i] = torch.div(input_exp[i], input_exp_sum[i][1])
+    end
+
+    local weightedRInputSum = torch.cmul(p, rInput):sum(2) -- a number
+    local part1 = torch.Tensor(rGradOutput:size())
+    local part2 = torch.Tensor(rGradOutput:size())    
+    
+    for i = 1, part1:size(1) do
+      local temp = torch.add(rInput[i], -weightedRInputSum[i][1])
+      part1[i] = -torch.cmul(p[i], temp)*gradOutput_sum[i][1]
+    end
+    for i = 1, part2:size(1) do
+      part2[i] = -p[i]*rGradOutput_sum[i][1]
+    end  
+    
+    self.rGradInput:add(part1):add(part2)   
+
+  else
+    error('Only two dimensional tensors are supported now')
+  end
+  return self.rGradInput
 end
 
 
