@@ -302,41 +302,47 @@ end
 function LogSoftMax:updateRGradInput(input, rInput, gradOutput, rGradOutput)
   if input:dim() == 1 then
     self.rGradInput:resizeAs(rGradOutput)
-    self.rGradInput:copy(rInput)
+    self.rGradInput:copy(rGradOutput) -- part3
     
-    local gradOutput_sum = gradOutput:sum()
+    local gradOutput_sum = gradOutput:sum() -- delta
+    local rGradOutput_sum = rGradOutput:sum() -- R(delta)
     
     local input_exp = torch.exp(input)
     local input_exp_sum = input_exp:sum()
     local p = torch.div(input_exp, input_exp_sum)
     
-    self.rGradInput:cmul(torch.add(torch.cmul(p,p), -p))
-    self.rGradInput:mul(gradOutput_sum)
+    local weightedRInputSum = torch.cmul(p, rInput):sum() -- a number
+    local part1 = -torch.cmul(p, rInput - weightedRInputSum)*gradOutput_sum
+    local part2 = -p*rGradOutput_sum
     
-    local rGradOutput_sum = rGradOutput:sum()
-    self.rGradInput:add(torch.add(rGradOutput, torch.mul(-p, rGradOutput_sum)))
+    self.rGradInput:add(part1):add(part2)
   elseif  input:dim() == 2 then
-    self.rGradInput:resizeAs(input)
-    self.rGradInput:copy(rInput)
+    self.rGradInput:resizeAs(rGradOutput)
+    self.rGradInput:copy(rGradOutput)
+    
     local gradOutput_sum = gradOutput:sum(2)
+    local rGradOutput_sum = rGradOutput:sum(2) 
     
     local input_exp = torch.exp(input)
     local input_exp_sum = input_exp:sum(2)
     local p = torch.Tensor(input_exp:size())
-    for i = 1, input:size(1) do 
+    for i = 1, p:size(1) do 
       p[i] = torch.div(input_exp[i], input_exp_sum[i][1])
     end
 
-    self.rGradInput:cmul(torch.add(torch.cmul(p,p), -p))
-    for i = 1, input:size(1) do
-      self.rGradInput[i]:mul(gradOutput_sum[i][1])
-    end
+    local weightedRInputSum = torch.cmul(p, rInput):sum(2) -- a number
+    local part1 = torch.Tensor(rGradOutput:size())
+    local part2 = torch.Tensor(rGradOutput:size())    
     
-    local rGradOutput_sum = rGradOutput:sum(2)
-    self.rGradInput:add(rGradOutput)
-    for i = 1, input:size(1) do
-    self.rGradInput[i]:add(torch.mul(-p[i],rGradOutput_sum[i][1] ))
+    for i = 1, part1:size(1) do
+      local temp = torch.add(rInput[i], -weightedRInputSum[i][1])
+      part1[i] = -torch.cmul(p[i], temp)*gradOutput_sum[i][1]
     end
+    for i = 1, part2:size(1) do
+      part2[i] = -p[i]*rGradOutput_sum[i][1]
+    end  
+    
+    self.rGradInput:add(part1):add(part2)   
 
   else
     error('Only two dimensional tensors are supported now')
