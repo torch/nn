@@ -59,6 +59,8 @@ end
 function BN:reset()
    self.weight:uniform()
    self.bias:zero()
+   self.running_mean:zero()
+   self.running_std:fill(1)
 end
 
 function BN:updateOutput(input)
