@@ -10,17 +10,17 @@ end
 
 function Normalize:updateOutput(input)
   assert(input:dim() <= 2, 'only 1d layer supported')
-  local is_batch = true
+  local input_size = input:size()
   if input:dim() == 1 then
     input = input:view(1,-1)
-    is_batch = false
   end
 
-  self.output:resizeAs(input)
-
+  self._output = self._output or input.new()
   self.norm = self.norm or input.new()
   self.normp = self.normp or input.new()
   self.buffer = self.buffer or input.new()
+
+  self._output:resizeAs(input)
 
   if self.p % 2 ~= 0 then
     self.buffer:abs(input):pow(self.p)
@@ -29,11 +29,9 @@ function Normalize:updateOutput(input)
   end
   self.normp:sum(self.buffer,2):add(self.eps)
   self.norm:pow(self.normp,1/self.p)
-  self.output:cdiv(input,self.norm:view(-1,1):expandAs(self.output))
+  self._output:cdiv(input, self.norm:view(-1,1):expandAs(input))
 
-  if not is_batch then
-    self.output = self.output[1]
-  end
+  self.output = self._output:view(input_size)
   return self.output
 end
 
@@ -41,19 +39,19 @@ function Normalize:updateGradInput(input, gradOutput)
   assert(input:dim() <= 2, 'only 1d layer supported')
   assert(gradOutput:dim() <= 2, 'only 1d layer supported')
 
-  local is_batch = true
+  local input_size = input:size()
   if input:dim() == 1 then
     input = input:view(1,-1)
-    is_batch = false
   end
 
   local n = input:size(1) -- batch size
   local d = input:size(2) -- dimensionality of vectors
 
+  self._gradInput = self._gradInput or input.new()
   -- compute diagonal term with gradOutput
-  self.gradInput:resize(n,d,1)
+  self._gradInput:resize(n,d,1)
   gradOutput = gradOutput:view(n,d,1)
-  self.gradInput:cmul(self.normp:view(n,1,1):expand(n,d,1),gradOutput)
+  self._gradInput:cmul(self.normp:view(n,1,1):expand(n,d,1), gradOutput)
 
   -- compute cross term in two steps
   self.cross = self.cross or input.new()
@@ -65,19 +63,16 @@ function Normalize:updateGradInput(input, gradOutput)
   -- instead of having a huge temporary matrix (b1*b2),
   -- do the computations as b1*(b2*gradOutput). This avoids redundant
   -- computation and also a huge buffer of size n*d^2
-  self.cross:bmm(b2,gradOutput)
-  self.gradInput:baddbmm(-1,b1, self.cross)
+  self.cross:bmm(b2, gradOutput)
+  self._gradInput:baddbmm(-1, b1, self.cross)
 
   -- reuse cross buffer for normalization
-  self.cross:cmul(self.normp,self.norm)
-  self.gradInput:cdiv(self.cross:view(n,1,1):expand(n,d,1))
+  self.cross:cmul(self.normp, self.norm)
+  self._gradInput:cdiv(self.cross:view(n,1,1):expand(n,d,1))
 
-  self.gradInput = self.gradInput:view(n,d)
+  self._gradInput = self._gradInput:view(n,d)
   
-  if not is_batch then
-    self.gradInput = self.gradInput[1]
-  end
-
+  self.gradInput = self._gradInput:view(input_size)
   return self.gradInput
 end
 
