@@ -21,7 +21,7 @@ high level way to train the neural network of choice, even though it is
 easy with a simple for loop to [train a neural network yourself](training.md#nn.DoItYourself).
 
 ## Detailed Overview ##
-This section provides a detailed overview of the neural network package. First the omnipresent [Module](#nn.overview.module) is examined, followed by some examples for [combining modules](#nn.overview.plugandplay) together. The last part explores facilities for [training a neural network](#nn.overview.training).
+This section provides a detailed overview of the neural network package. First the omnipresent [Module](#nn.overview.module) is examined, followed by some examples for [combining modules](#nn.overview.plugandplay) together. The last part explores facilities for [training a neural network](#nn.overview.training), and finally some caveats while training networks with [shared parameters](#nn.overview.sharedparams).
 
 <a name="nn.overview.module"></a>
 ### Module ###
@@ -141,3 +141,61 @@ end
 For example, if you wish to use your own criterion you can simple replace 
 `gradCriterion` with the gradient vector of your criterion of choice.
 
+<a name="nn.overview.sharedparams"></a>
+### A Note on Sharing Parameters ###
+
+By using `:share(...)` and the Container Modules, one can easily create very
+complex architectures. In order to make sure that the network is going to
+train properly, one need to pay attention to the way the sharing is applied,
+because it might depend on the optimization procedure.
+
+* If you are using an optimization algorithm that iterates over the modules
+of your network (by calling `:updateParameters` for example), only the
+parameters of the network should be shared.
+* If you use the flattened parameter tensor to optimize the network, 
+obtained by calling `:getParameters`, for example for the package `optim`, 
+then you need to share both the parameters and the gradParameters.
+
+Here is an example for the first case:
+
+```lua
+-- our optimization procedure will iterate over the modules, so only share
+-- the parameters
+mlp = nn.Sequential()
+linear = nn.Linear(2,2)
+linear_clone = linear:clone('weight','bias') -- clone sharing the parameters
+mlp:add(linear)
+mlp:add(linear_clone)
+function gradUpdate(mlp, x, y, criterion, learningRate) 
+  local pred = mlp:forward(x)
+  local err = criterion:forward(pred, y)
+  local gradCriterion = criterion:backward(pred, y)
+  mlp:zeroGradParameters()
+  mlp:backward(x, gradCriterion)
+  mlp:updateParameters(learningRate)
+end
+```
+
+And for the second case:
+
+```lua
+-- our optimization procedure will use all the parameters at once, because
+-- it requires the flattened parameters and gradParameters Tensors. Thus,
+-- we need to share both the parameters and the gradParameters
+mlp = nn.Sequential()
+linear = nn.Linear(2,2)
+-- need to share the parameters and the gradParameters as well
+linear_clone = linear:clone('weight','bias','gradWeight','gradBias')
+mlp:add(linear)
+mlp:add(linear_clone)
+params, gradParams = mlp:getParameters()
+function gradUpdate(mlp, x, y, criterion, learningRate, params, gradParams)
+  local pred = mlp:forward(x)
+  local err = criterion:forward(pred, y)
+  local gradCriterion = criterion:backward(pred, y)
+  mlp:zeroGradParameters()
+  mlp:backward(x, gradCriterion)
+  -- adds the gradients to all the parameters at once
+  params:add(-learningRate, gradParams)
+end
+```
