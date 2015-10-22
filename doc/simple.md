@@ -718,7 +718,7 @@ Example 2:
 > print(#m:forward(input))
 
  6
-[torch.LongStorage of size 2]
+[torch.LongStorage of size 1]
 
 > print(#m:forward(minibatch))
 
