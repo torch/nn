@@ -96,6 +96,7 @@ include('SpatialUpSamplingNearest.lua')
 include('SpatialBatchNormalization.lua')
 
 include('VolumetricConvolution.lua')
+include('VolumetricDeconvolution.lua')
 include('VolumetricMaxPooling.lua')
 include('VolumetricAveragePooling.lua')
 

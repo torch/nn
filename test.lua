@@ -2587,6 +2587,86 @@ function nntest.TemporalMaxPooling()
    mytester:assertTensorEq(inputGrad:select(1,2), inputGrad1D, 0.000001, 'error on 2D vs 1D backward)')
 end
 
+function nntest.VolumetricDeconvolution_simple_test()
+    local module = nn.VolumetricDeconvolution(3, 1, 3, 3, 3, 3, 3, 3);
+    module.weight:fill(1);
+    module.bias:fill(0.1);
+
+    local input = torch.Tensor(1, 3, 2, 2, 2):zero();
+    for c = 1,3 do
+        input[1][c][1][1][1] = 1
+    end
+    local output = module:forward(input)
+    for t = 1,6 do
+        for h = 1,6 do
+            for w = 1,6 do
+                if t <= 3 and h <= 3 and w <= 3 then
+                    mytester:assertlt(output[1][1][t][h][w] - 3.1, precision, 'error on forward ')
+                else
+                    mytester:assertlt(output[1][1][t][h][w] - 0.1, precision, 'error on forward ')
+                end
+            end
+        end
+    end
+
+    local gradOut = torch.Tensor(1, 1, 6, 6, 6):fill(0.1);
+    local gradIn = module:backward(input, gradOut)
+    for t = 1,2 do
+        for h = 1,2 do
+            for w = 1,2 do
+                mytester:assertlt(gradIn[1][1][t][h][w] - 2.7, precision,
+                                  'error on backward input gradients ')
+            end
+        end
+    end
+
+    mytester:assertlt(module.gradBias[1] - 21.6, precision,
+                      'error on backward gradBias ')
+    for c = 1,3 do
+        for t = 1,3 do
+            for h = 1,3 do
+                for w = 1,3 do
+                    mytester:assertlt(module.gradWeight[1][c][t][h][w] - 0.1, precision,
+                                      'error on backward weight gradients ')
+                end
+            end
+        end
+    end
+end
+
+function nntest.VolumetricDeconvolution()
+    local from = math.random(2,3)
+    local to = math.random(2,3)
+    local kt = math.random(3,4)
+    local ki = math.random(3,4)
+    local kj = ki
+    local st = math.random(1,3)
+    local si = math.random(1,3)
+    local sj = si
+    local int = math.random(3,4)
+    local ini = math.random(3,4)
+    local inj = math.random(3,4)
+    local bs = math.random(1, 6)
+    local module = nn.VolumetricDeconvolution(from, to, kt, ki, kj, st, si, sj)
+
+    local input = torch.Tensor(bs, from, int, ini, inj):zero()
+
+    local err = jac.testJacobian(module, input)
+    mytester:assertlt(err, precision, 'error on state ')
+
+    local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+    mytester:assertlt(err , precision, 'error on weight ')
+
+    local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+    mytester:assertlt(err , precision, 'error on bias ')
+
+    local ferr, berr = jac.testIO(module, input)
+    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+end
+
+
+
 function nntest.VolumetricConvolution()
    local from = math.random(2,3)
    local to = math.random(2,3)
