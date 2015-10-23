@@ -2242,6 +2242,81 @@ function nntest.SpatialMaxPooling()
   end
 end
 
+function nntest.SpatialFractionalMaxPooling()
+    local batch = math.random(1, 3)
+    local plane = math.random(1, 3)
+    local outW = math.random(1, 7)
+    local outH = math.random(1, 7)
+    local poolSizeW = math.random(2, 4)
+    local poolSizeH = math.random(2, 4)
+
+    local minInW = outW + poolSizeW
+    local minInH = outH + poolSizeH
+
+    local inW = math.random(minInW, minInW + 6)
+    local inH = math.random(minInH, minInH + 6)
+
+    -- fix the pooling regions so they aren't regenerated with every
+    -- forward(), so testJacobian can work properly
+    local module =
+        nn.SpatialFractionalMaxPooling(poolSizeW, poolSizeH, outW, outH)
+        :fixPoolingRegions()
+    local input = nil
+    if batch == 1 then
+        input = torch.Tensor(plane, inH, inW):zero()
+    else
+        input = torch.Tensor(batch, plane, inH, inW):zero()
+    end
+
+    local err = nn.Jacobian.testJacobian(module, input)
+    mytester:assertlt(err, precision, 'error on state')
+end
+
+function nntest.SpatialFractionalMaxPooling_Ratio()
+    -- Fix a reduction ratio, and test with two different input sizes
+    local reductionRatioW = torch.uniform(0.4, 0.74)
+    local reductionRatioH = torch.uniform(0.4, 0.74)
+
+    for tries = 1, 2 do
+        local batch = math.random(1, 3)
+        local plane = math.random(1, 3)
+        local poolSizeW = math.random(2, 3)
+        local poolSizeH = math.random(2, 3)
+
+        local minInW = math.random(5, 8) + poolSizeW
+        local minInH = math.random(5, 8) + poolSizeH
+
+        local inW = math.random(minInW, minInW + 6)
+        local inH = math.random(minInH, minInH + 6)
+
+        -- fix the pooling regions so they aren't regenerated with every
+        -- forward(), so testJacobian can work properly
+        local module =
+            nn.SpatialFractionalMaxPooling(poolSizeW, poolSizeH,
+                                           reductionRatioW, reductionRatioH)
+            :fixPoolingRegions()
+        local input = nil
+        if batch == 1 then
+            input = torch.Tensor(plane, inH, inW):zero()
+        else
+            input = torch.Tensor(batch, plane, inH, inW):zero()
+        end
+
+        -- Make sure that the output size is based on our ratio
+        local output = module:updateOutput(input)
+        if batch == 1 then
+            mytester:asserteq(output:size(3), math.floor(reductionRatioW * inW))
+            mytester:asserteq(output:size(2), math.floor(reductionRatioH * inH))
+        else
+            mytester:asserteq(output:size(4), math.floor(reductionRatioW * inW))
+            mytester:asserteq(output:size(3), math.floor(reductionRatioH * inH))
+        end
+
+        local err = nn.Jacobian.testJacobian(module, input)
+        mytester:assertlt(err, precision, 'error on state')
+    end
+end
+
 function nntest.SpatialAveragePooling()
    local from = math.random(1,6)
    local ki = math.random(1,5)

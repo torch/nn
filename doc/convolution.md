@@ -13,6 +13,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
     * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
     * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
+    * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
     * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
     * [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling) : a 2D max-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
     * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
@@ -381,6 +382,47 @@ oheight = op((height + 2*padH - kH) / dH + 1)
 
 `op` is a rounding operator. By default, it is `floor`. It can be changed
 by calling `:ceil()` or `:floor()` methods.
+
+<a name="nn.SpatialFractionalMaxPooling"></a>
+### SpatialFractionalMaxPooling ###
+
+```lua
+module = nn.SpatialFractionalMaxPooling(kW, kH, outW, outH)
+--   the output should be the exact size (outH x outW)
+OR
+module = nn.SpatialFractionalMaxPooling(kW, kH, ratioW, ratioH)
+--   the output should be the size (floor(inH x ratioH) x floor(inW x ratioW))
+--   ratios are numbers between (0, 1) exclusive
+```
+
+Applies 2D Fractional max-pooling operation as described in the
+paper ["Fractional Max Pooling" by Ben Graham](http://arxiv.org/abs/1412.6071) in the "pseudorandom" mode.
+
+The max-pooling operation is applied in `kWxkH` regions by a stochastic step size determined by the target output size.
+The number of output features is equal to the number of input planes.
+
+There are two constructors available.
+
+Constructor 1:
+```lua
+module = nn.SpatialFractionalMaxPooling(kW, kH, outW, outH)
+```
+
+Constructor 2:
+```lua
+module = nn.SpatialFractionalMaxPooling(kW, kH, ratioW, ratioH)
+```
+If the input image is a 3D tensor `nInputPlane x height x width`, the output
+image size will be `nOutputPlane x oheight x owidth`
+
+ where
+
+```lua
+owidth  = floor(width * ratioW)
+oheight = floor(height * ratioH)
+```
+ratios are numbers between (0, 1) exclusive
+
 
 <a name="nn.SpatialAveragePooling"></a>
 ### SpatialAveragePooling ###
