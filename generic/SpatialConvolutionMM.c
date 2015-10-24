@@ -11,14 +11,14 @@ static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
                                int inputWidth, int inputHeight,
                                int outputWidth, int outputHeight)
 {
-  int nip;
+  size_t nip;
   real *input_data = THTensor_(data)(input);
   real *finput_data = THTensor_(data)(finput);
 
 #pragma omp parallel for private(nip)
   for(nip = 0; nip < nInputPlane; nip++)
   {
-    int kw, kh, y, x, ix, iy;
+    size_t kw, kh, y, x, ix, iy;
     for(kh = 0; kh < kH; kh++)
     {
       for(kw = 0; kw < kW; kw++)
@@ -26,7 +26,7 @@ static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
         real *src = finput_data + nip*(kH*kW*outputHeight*outputWidth) + kh*(kW*outputHeight*outputWidth) + kw*(outputHeight*outputWidth);
         real *dst = input_data + nip*(inputHeight*inputWidth);
         if (padW > 0 || padH > 0) {
-          int lpad,rpad;
+          size_t lpad,rpad;
           for(y = 0; y < outputHeight; y++) {
             iy = y*dH - padH + kh;
             if (iy < 0 || iy >= inputHeight) {
@@ -78,15 +78,18 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
 
 #pragma omp parallel for private(k)
   for(k = 0; k < nInputPlane*kH*kW; k++) {
-    int nip = k / (kH*kW);
-    int rest = k % (kH*kW);
-    int kh = rest / kW;
-    int kw = rest % kW;
-    int x,y,ix,iy;
+    size_t nip = k / (kH*kW);
+    size_t rest = k % (kH*kW);
+    size_t kh = rest / kW;
+    size_t kw = rest % kW;
+    size_t x,y,ix,iy;
+
+
+
     real *dst = finput_data + nip*(kH*kW*outputHeight*outputWidth) + kh*(kW*outputHeight*outputWidth) + kw*(outputHeight*outputWidth);
     real *src = input_data + nip*(inputHeight*inputWidth);
     if (padW > 0 || padH > 0) {
-      int lpad,rpad;
+      size_t lpad,rpad;
       for(y = 0; y < outputHeight; y++) {
         iy = y*dH - padH + kh;
         if (iy < 0 || iy >= inputHeight) {
@@ -101,6 +104,8 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
              } else {
                 if (lpad > 0) memset(dst+y*outputWidth, 0, sizeof(real)*lpad);
                 memcpy(dst+y*outputWidth+lpad, src+iy*inputWidth+ix+lpad, sizeof(real)*(outputWidth-rpad-lpad));
+
+
                 if (rpad > 0) memset(dst+y*outputWidth + outputWidth - rpad, 0, sizeof(real)*rpad);
              }
           }
@@ -108,7 +113,10 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
             for (x=0; x<outputWidth; x++){
                ix = x*dW - padW + kw;
                if (ix < 0 || ix >= inputWidth)
+               {
+
                  memset(dst+y*outputWidth+x, 0, sizeof(real)*1);
+               }
                else
                  memcpy(dst+y*outputWidth+x, src+iy*inputWidth+ix, sizeof(real)*(1));
             }
