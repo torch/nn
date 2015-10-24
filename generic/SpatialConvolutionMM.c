@@ -83,9 +83,6 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
     size_t kh = rest / kW;
     size_t kw = rest % kW;
     size_t x,y,ix,iy;
-
-
-
     real *dst = finput_data + nip*(kH*kW*outputHeight*outputWidth) + kh*(kW*outputHeight*outputWidth) + kw*(outputHeight*outputWidth);
     real *src = input_data + nip*(inputHeight*inputWidth);
     if (padW > 0 || padH > 0) {
