@@ -438,7 +438,7 @@ end
 function nntest.Normalize()
    -- compare forward against torch implementation
    -- and check gradient
-   for _,p in pairs({1,2,1.5}) do
+   for _,p in pairs({1,2,3,4,1.5}) do
       local ini = math.random(3,10)
       local input = torch.randn(ini)
       local module = nn.Normalize(p)
@@ -452,7 +452,7 @@ function nntest.Normalize()
    end
 
    -- batch mode
-   for _,p in pairs({1,2,torch.uniform()*math.random(1,10)}) do
+   for _,p in pairs({1,2,3,4,torch.uniform()*math.random(1,10)}) do
       local ini = math.random(3,5)
       local inj = math.random(3,5)
       local ink = math.random(3,5)

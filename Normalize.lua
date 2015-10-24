@@ -53,11 +53,28 @@ function Normalize:updateGradInput(input, gradOutput)
   gradOutput = gradOutput:view(n,d,1)
   self._gradInput:cmul(self.normp:view(n,1,1):expand(n,d,1), gradOutput)
 
+  -- small optimizations for different p
+  -- buffer = input*|input|^(p-2)
+  if self.p % 2 ~= 0 then
+    -- for non-even p, need to add absolute value
+    if self.p < 2 then
+      -- add eps to avoid possible division by 0
+      self.buffer:abs(input):add(self.eps):pow(self.p-2):cmul(input)
+    else
+      self.buffer:abs(input):pow(self.p-2):cmul(input)
+    end
+  elseif self.p == 2 then
+    -- special case for p == 2, pow(x,0) = 1
+    self.buffer:copy(input)
+  else
+    -- p is even and > 2, pow(x,p) is always positive
+    self.buffer:pow(input,self.p-2):cmul(input)
+  end
+
   -- compute cross term in two steps
   self.cross = self.cross or input.new()
   self.cross:resize(n,1,1)
 
-  self.buffer:abs(input):pow(self.p-2):cmul(input)
   local b1 = self.buffer:view(n,d,1)
   local b2 = input:view(n,1,d)
   -- instead of having a huge temporary matrix (b1*b2),
