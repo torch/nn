@@ -104,8 +104,6 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
              } else {
                 if (lpad > 0) memset(dst+y*outputWidth, 0, sizeof(real)*lpad);
                 memcpy(dst+y*outputWidth+lpad, src+iy*inputWidth+ix+lpad, sizeof(real)*(outputWidth-rpad-lpad));
-
-
                 if (rpad > 0) memset(dst+y*outputWidth + outputWidth - rpad, 0, sizeof(real)*rpad);
              }
           }
@@ -114,7 +112,6 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
                ix = x*dW - padW + kw;
                if (ix < 0 || ix >= inputWidth)
                {
-
                  memset(dst+y*outputWidth+x, 0, sizeof(real)*1);
                }
                else
