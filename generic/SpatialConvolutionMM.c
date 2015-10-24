@@ -108,9 +108,7 @@ static void nn_(unfolded_copy)(THTensor *finput, THTensor *input,
             for (x=0; x<outputWidth; x++){
                ix = x*dW - padW + kw;
                if (ix < 0 || ix >= inputWidth)
-               {
                  memset(dst+y*outputWidth+x, 0, sizeof(real)*1);
-               }
                else
                  memcpy(dst+y*outputWidth+x, src+iy*inputWidth+ix, sizeof(real)*(1));
             }
