@@ -72,6 +72,7 @@ include('SoftShrink.lua')
 include('Threshold.lua')
 include('ReLU.lua')
 include('PReLU.lua')
+include('LeakyReLU.lua')
 include('SpatialSoftMax.lua')
 
 include('LookupTable.lua')

@@ -275,6 +275,20 @@ Note that weight decay should not be used on it. For reference see [Delving Deep
 
 ![](image/prelu.png)
 
+
+<a name="nn.LeakyReLU"></a>
+## LeakyReLU ##
+
+Applies Leaky ReLU, which parameter `a` sets the slope of the negative part:
+
+`LeakyReLU` is defined as `f(x)` = `max(0,x) + a * min(0,x)`
+
+Can optionally do its operation in-place without using extra state memory:
+
+```lua
+m=nn.LeakyReLU(a,true) -- true = in-place, false = keeping separate state.
+```
+
 <a name="nn.SpatialSoftMax"></a>
 ## SpatialSoftMax ##
 
