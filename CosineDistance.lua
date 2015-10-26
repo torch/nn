@@ -8,6 +8,9 @@ end
 function CosineDistance:updateOutput(input)
    local input1, input2 = input[1], input[2]
 
+   if not input1:isContiguous() then input1 = input1:clone() end
+   if not input2:isContiguous() then input2 = input2:clone() end
+   
    if input1:dim() == 1 then
       input1 = input1:view(1,-1)
       input2 = input2:view(1,-1)
@@ -48,7 +51,10 @@ function CosineDistance:updateGradInput(input, gradOutput)
    local v1  = input[1]
    local v2  = input[2]
    local not_batch = false
-
+   
+   if not v1:isContiguous() then v1 = v1:clone() end
+   if not v2:isContiguous() then v2 = v2:clone() end
+   
    if v1:dim() == 1 then
       v1 = v1:view(1,-1)
       v2 = v2:view(1,-1)
