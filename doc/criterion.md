@@ -207,13 +207,15 @@ This is used for measuring the error of a reconstruction in for example an auto-
 criterion = nn.MarginCriterion([margin])
 ```
 
-Creates a criterion that optimizes a two-class classification hinge loss (margin-based loss) between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a scalar, either `1` or `-1`):
+Creates a criterion that optimizes a two-class classification hinge loss (margin-based loss) between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a tensor containing either `1`s or `-1`s).
+`margin`, if unspecified, is by default `1`.
 
 ```lua
-loss(x, y) = max(0, margin - y*x).
+loss(x, y) = sum_i (max(0, margin - y[i]*x[i])) / x:nElement()
 ```
 
-`margin`, if unspecified, is by default `1`.
+The normalization by the number of elements in the input can be disabled by
+setting `self.sizeAverage` to `false`.
 
 ### Example
 
@@ -231,19 +233,21 @@ mlp = nn.Sequential()
 mlp:add(nn.Linear(5, 1))
 
 x1 = torch.rand(5)
+x1_target = torch.Tensor{1}
 x2 = torch.rand(5)
+x2_target = torch.Tensor{-1}
 criterion=nn.MarginCriterion(1)
 
 for i = 1, 1000 do
-   gradUpdate(mlp, x1, 1, criterion, 0.01)
-   gradUpdate(mlp, x2, -1, criterion, 0.01)
+   gradUpdate(mlp, x1, x1_target, criterion, 0.01)
+   gradUpdate(mlp, x2, x2_target, criterion, 0.01)
 end
 
 print(mlp:forward(x1))
 print(mlp:forward(x2))
 
-print(criterion:forward(mlp:forward(x1), 1))
-print(criterion:forward(mlp:forward(x2), -1))
+print(criterion:forward(mlp:forward(x1), x1_target))
+print(criterion:forward(mlp:forward(x2), x2_target))
 ```
 
 gives the output:
