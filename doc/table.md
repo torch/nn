@@ -889,7 +889,7 @@ end
 <a name="nn.DotProduct"></a>
 ## DotProduct ##
 
-`module` = `DotProduct()` creates a module that takes a `table` of two vectors as input and outputs the dot product between them.
+`module` = `DotProduct()` creates a module that takes a `table` of two vectors (or matrices if in batch mode) as input and outputs the dot product between them.
 
 Example:
 ```lua

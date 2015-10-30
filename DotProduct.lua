@@ -3,27 +3,53 @@ local DotProduct, parent = torch.class('nn.DotProduct', 'nn.Module')
 function DotProduct:__init()
    parent.__init(self)
    self.gradInput = {torch.Tensor(), torch.Tensor()}
-   self.output=torch.Tensor(1)
 end 
  
-function DotProduct:updateOutput(input,y)
-   self.output[1] = input[1]:dot(input[2])
+function DotProduct:updateOutput(input)
+   local input1, input2 = input[1], input[2]
+   if input1:dim() == 1 then
+      -- convert non batch input to batch input
+      input1 = input1:view(1,-1)
+      input2 = input2:view(1,-1)
+   end
+   if not self.buffer then
+      self.buffer = input1.new()
+   end
+   self.buffer:cmul(input1, input2)
+   self.output:sum(self.buffer, 2)
+   self.output:resize(input1:size(1))
    return self.output
 end
 
 function DotProduct:updateGradInput(input, gradOutput)
    local v1 = input[1]
    local v2 = input[2]
-   local gw1=self.gradInput[1];
-   local gw2=self.gradInput[2];
-   gw1:resizeAs(v1) 
-   gw2:resizeAs(v2)
+   local not_batch = false
 
-   gw1:copy( v2)
-   gw1:mul(gradOutput[1])
-   
-   gw2:copy( v1)
-   gw2:mul(gradOutput[1])
+   if v1:dim() == 1 then
+      v1 = v1:view(1,-1)
+      v2 = v2:view(1,-1)
+      not_batch = true
+   end
+
+   local gw1 = self.gradInput[1]
+   local gw2 = self.gradInput[2]
+   gw1:resizeAs(v1):copy(v2)
+   gw2:resizeAs(v2):copy(v1)
+
+   local go = gradOutput:view(-1,1):expandAs(v1)
+   gw1:cmul(go)
+   gw2:cmul(go)
+
+   if not_batch then
+      -- unbatch gradInput
+      self.gradInput[1] = gw1:select(1,1)
+      self.gradInput[2] = gw2:select(1,1)
+   end
+
+   -- fix for torch bug 
+   -- https://github.com/torch/torch7/issues/289
+   self.buffer:resize()
 
    return self.gradInput
 end
