@@ -4151,6 +4151,48 @@ function nntest.BatchMMTransposeBoth()
   end
 end
 
+function nntest.DotProduct()
+  local indim = math.random(1,10)
+
+  -- test 1D forward
+  local input = {torch.rand(indim),torch.rand(indim)}
+  local module = nn.DotProduct()
+  local expected = input[1]:dot(input[2])
+  local output = module:forward(input)
+  mytester:assertlt(math.abs(expected-output[1]), precision, 'error on forward ')
+
+  -- check gradients
+  -- Note: testJacobian doesn't support table inputs, and rather than re-write
+  -- it so that it does, I'll just use a split table module on the input.
+  -- I assume both SplitTable and Sequential do not have bugs, otherwise this
+  -- test will break.
+  local input = torch.rand(2,indim)
+  local module = nn.Sequential()
+  module:add(nn.SplitTable(1))
+  module:add(nn.DotProduct())
+
+  local err = jac.testJacobian(module,input)
+  mytester:assertlt(err,precision, 'error on state ')
+
+  -- IO
+  local ferr,berr = jac.testIO(module,input)
+  mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+  mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+
+  -- batch
+  -- rebuild module to avoid correlated tests
+  local module = nn.Sequential()
+  module:add(nn.SplitTable(1))
+  module:add(nn.DotProduct())
+
+  local nframes = math.random(1,10)
+  local indim = math.random(1,10)
+  local input = torch.rand(2,nframes,indim)
+
+  local err = jac.testJacobian(module,input)
+  mytester:assertlt(err,precision, 'batch error on state ')
+end
+
 function nntest.CosineDistance()
   local indim = math.random(1,10)
   local input = {torch.rand(indim),torch.rand(indim)}
