@@ -564,9 +564,13 @@ module = nn.Reshape(dimension1, dimension2, ... [, batchMode])
 ```
 
 
-Reshapes an `nxpxqx..`  Tensor into a `dimension1xdimension2x...` Tensor, taking the elements column-wise.
+Reshapes an `n x p x q x..`  Tensor into a `dimension1 x dimension2 x...` Tensor, taking the elements column-wise.
 
-The optional last argument `batchMode`, when `true` forces the first dimension of the input to be considered the batch dimension, and thus keep its size fixed. This is necessary when dealing with batch sizes of one. When `false`, it forces the entire input (including the first dimension) to be reshaped to the input size. Default `batchMode=nil`, which means that the module considers inputs with more elements than the produce of provided sizes, i.e. `dimension1xdimension2x...`, to be batches.
+The optional last argument `batchMode`, when `true` forces the first dimension of the input to be considered as the batch dimension (i.e., the size of the first dimension will be treated as the batch size), and thus keep the size of the first dimension fixed and only reshape the other dimensions. When `false`, it forces the entire input (including the first dimension) to be reshaped to the input size. The default for `batchMode` is `nil`, which means that this moudle will reshape all the dimensions only when the wo statements below
+* `input:size(1) ~= 1` (i.e.,the size of the 1st dimension of the input is not 1.)
+* `input:nElement()` equals the product of provided sizes (i.e. `dimension1 x dimension2 x...`)
+
+both are true, and in all other cases this module behaves the same as `batchMode = true`.
 
 Example:
 
