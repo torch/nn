@@ -47,9 +47,5 @@ function DotProduct:updateGradInput(input, gradOutput)
       self.gradInput[2] = gw2:select(1,1)
    end
 
-   -- fix for torch bug 
-   -- https://github.com/torch/torch7/issues/289
-   self.buffer:resize()
-
    return self.gradInput
 end
