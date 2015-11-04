@@ -9,6 +9,7 @@ function ParallelCriterion:__init(repeatTarget)
 end
 
 function ParallelCriterion:add(criterion, weight)
+   assert(criterion, 'no criterion provided')
    weight = weight or 1
    table.insert(self.criterions, criterion)
    table.insert(self.weights, weight)
