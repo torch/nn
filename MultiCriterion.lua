@@ -7,6 +7,7 @@ function MultiCriterion:__init()
 end
 
 function MultiCriterion:add(criterion, weight)
+   assert(criterion, 'no criterion provided')
    weight = weight or 1
    table.insert(self.criterions, criterion)
    self.weights:resize(#self.criterions, true)
