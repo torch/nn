@@ -60,10 +60,10 @@ gnuplot.grid(true)
 
 `module = nn.SoftShrink(lambda)`
 
-Applies the hard shrinkage function element-wise to the input
+Applies the soft shrinkage function element-wise to the input
 [Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md). The output is the same size as the input.
 
-`HardShrinkage` operator is defined as:
+`SoftShrinkage` operator is defined as:
 
   * `f(x) = x-lambda, if x > lambda`
   * `f(x) = x+lambda, if x < -lambda`
