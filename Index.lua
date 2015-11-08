@@ -19,9 +19,7 @@ function Index:updateGradInput(input, gradOutput)
 
     local gradInput = self.gradInput[1] -- no gradient for the index variable
     gradInput:resizeAs(t):zero()
-    for n = 1, index:size(1) do
-        gradInput:narrow(self.dimension, index[n], 1):add(gradOutput:narrow(self.dimension, n, 1))
-    end
+    gradInput:indexAdd(self.dimension, index, gradOutput)
     return self.gradInput
 end
 
