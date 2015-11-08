@@ -380,6 +380,63 @@ function nntest.PReLU()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.RReLU()
+   local nframe = math.random(1,7)
+   local size = math.random(1,7)
+   local kW, kH = math.random(1,8), math.random(1,8)
+   local input = torch.Tensor(nframe, size, kW, kH):zero()
+
+   local l = 1/math.random(5,8)
+   local u = 1/math.random(3,5)
+
+   -- test in evaluation mode (not inplace), RReLU behaves like LeakyReLU
+   local module = nn.RReLU(l, u, false)
+   mytester:assert(module.train, 'default mode ')
+   module:evaluate()
+
+   -- gradient check
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+ 
+   -- IO
+   local ferr,berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- test training and evalation mode
+   for _,train in ipairs({true,false}) do
+      -- test with separate output buffer and inplace
+      for _,inplace in ipairs({false,true}) do
+         module = nn.RReLU(l, u, inplace)
+         if train then
+            module:training()
+         else
+            module:evaluate()
+         end
+         input = torch.rand(nframe, size, kW, kH) - 0.5
+         input:storage()[1] = -1
+         local original_input = input:clone()
+         local output = module:forward(input)
+         mytester:assert(output:sign():eq(original_input:sign()):all(), 'sign flipped forward ')
+         local gradOutput = torch.ones(output:size())
+         local gradInput = module:backward(input, gradOutput)
+         mytester:assert(gradInput:gt(0):eq(input:ne(0)):all(), 'gradient ')
+         mytester:assert(gradInput:lt(1):eq(input:le(0)):all(), 'backward negative inputs ')
+         mytester:assert(gradInput:eq(1):eq(input:gt(0)):all(), 'backward positive inputs ') 
+         if not train then
+            local err = gradInput[input:le(0)]:mean()-(module.lower+module.upper)/2
+            mytester:assertlt(err, precision, 'error on gradient ')
+         end
+
+         input = -torch.rand(1000)
+         module:forward(input) -- fill internal noise tensor
+         local g = module:backward(input, torch.ones(1000))
+         local err = math.abs(g[input:le(0)]:mean()-(module.lower+module.upper)/2)
+         mytester:assertlt(err, 0.05, 'mean deviation of gradient for negative inputs ')
+      end
+   end
+end
+
 function nntest.HardShrink()
    local ini = math.random(3,5)
    local inj = math.random(3,5)

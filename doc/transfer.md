@@ -275,6 +275,36 @@ Note that weight decay should not be used on it. For reference see [Delving Deep
 
 ![](image/prelu.png)
 
+<a name="nn.RReLU"></a>
+## RReLU ##
+
+Applies the randomized leaky rectified linear unit (RReLU) element-wise to the input tensor, thus outputting a tensor of the same dimension. Informally the RReLU is also known as 'insanity' layer.
+
+`RReLU` is defined as `f(x)` = `max(0,x) + a * min(0,x)`, where `a` ~ `U(l,u)`.
+
+In training mode negative inputs are multiplied by a factor `a` drawn from a uniform random distribution `U(l, u)`. In evaluation mode a RReLU behaves like a LeakyReLU with a constant mean factor `a` = `(l+u)/2`.
+
+Syntax:
+```lua
+m=nn.ReLU(
+   l,       -- minimum factor for negative inputs, default: 1/8;
+   u,       -- maximum factor for negative inputs, default: 1/3;
+   inplace  -- if true the result will be written to the input tensor, default: false;
+)
+```
+If `l == u` a RReLU effectively becomes a LeakyReLU. Regardless of operating in in-place mode a RReLU will internally allocate an input-sized `noise` tensor to store random factors for negative inputs. The backward() operation assumes that forward() has been called before. 
+
+For reference see [Empirical Evaluation of Rectified Activations in Convolutional Network](http://arxiv.org/abs/1505.00853).
+```lua
+ii=torch.linspace(-3, 3)
+m=nn.RReLU()
+oo=m:forward(ii):clone()
+gi=m:backward(ii,torch.ones(100))
+gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
+gnuplot.grid(true)
+```
+![](image/rrelu.png)
+
 <a name="nn.SpatialSoftMax"></a>
 ## SpatialSoftMax ##
 
