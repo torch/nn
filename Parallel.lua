@@ -3,7 +3,6 @@ local Parallel, parent = torch.class('nn.Parallel', 'nn.Container')
 function Parallel:__init(inputDimension,outputDimension)
    parent.__init(self)
    self.modules = {}
-   self.size = torch.LongStorage() 
    self.inputDimension = inputDimension
    self.outputDimension = outputDimension
 end
@@ -11,6 +10,7 @@ end
 function Parallel:updateOutput(input)
    local nModule=input:size(self.inputDimension)
    local outputs = {}
+   local totalOutputSize = torch.LongStorage() 
 
    for i=1,nModule do
       local currentInput = input:select(self.inputDimension,i)
@@ -19,13 +19,13 @@ function Parallel:updateOutput(input)
       local outputSize = currentOutput:size(self.outputDimension)
       
       if i == 1 then
-         self.size:resize(currentOutput:dim()):copy(currentOutput:size())
+         totalOutputSize:resize(currentOutput:dim()):copy(currentOutput:size())
       else
-         self.size[self.outputDimension] = self.size[self.outputDimension] + outputSize
+         totalOutputSize[self.outputDimension] = totalOutputSize[self.outputDimension] + outputSize
       end
       
    end
-   self.output:resize(self.size)
+   self.output:resize(totalOutputSize)
    
    local offset = 1
    for i=1,nModule do
