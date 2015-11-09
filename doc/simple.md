@@ -370,33 +370,34 @@ i.e. the network successfully learns the input `x` has been scaled by those scal
 ## Max ##
 
 ```lua
-module = nn.Max(dimension)
+module = nn.Max(dimension, nInputDim)
 ```
 
 Applies a max operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
-
+When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dimension` to apply the max operation will be dimension `dimension + 1`.
 
 <a name="nn.Min"></a>
 ## Min ##
 
 ```lua
-module = nn.Min(dimension)
+module = nn.Min(dimension, nInputDim)
 ```
 
 Applies a min operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
-
+When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dimension` to apply the min operation will be dimension `dimension + 1`.
 
 <a name="nn.Mean"></a>
 ## Mean ##
 
 ```lua
-module = nn.Mean(dimension)
+module = nn.Mean(dimension, nInputDim)
 ```
 
 Applies a mean operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
+When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dimension` to apply the mean operation will be dimension `dimension + 1`.
 
 <a name="nn.Sum"></a>
 ## Sum ##
