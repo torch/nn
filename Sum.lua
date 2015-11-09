@@ -4,7 +4,7 @@ function Sum:__init(dimension, nInputDims)
    parent.__init(self)
    dimension = dimension or 1
    self.dimension = dimension
-   -- do no assign default value to nInputDims or it will break backward compatibility
+   -- do not assign default value to nInputDims or it will break backward compatibility
    self.nInputDims = nInputDims
 end
 
@@ -19,7 +19,7 @@ function Sum:_getPositiveDimension(input)
 end
 
 function Sum:updateOutput(input)
-  local dimension = self:_getPositiveDimension(input)
+   local dimension = self:_getPositiveDimension(input)
    if type(self.output) == 'number' then
       self.output = input.new()
    end
@@ -31,15 +31,15 @@ function Sum:updateOutput(input)
 end
 
 function Sum:updateGradInput(input, gradOutput)
-  local dimension = self:_getPositiveDimension(input)
-  -- zero-strides dont work with MKL/BLAS, so
-  -- dont set self.gradInput to zero-stride tensor.
-  -- Instead, do a deepcopy
-  local size = input:size()
-  size[dimension] = 1
-  gradOutput = gradOutput:view(size)
-  self.gradInput:resizeAs(input)
-  self.gradInput:copy(gradOutput:expandAs(input))
+   local dimension = self:_getPositiveDimension(input)
+   -- zero-strides dont work with MKL/BLAS, so
+   -- dont set self.gradInput to zero-stride tensor.
+   -- Instead, do a deepcopy
+   local size = input:size()
+   size[dimension] = 1
+   gradOutput = gradOutput:view(size)
+   self.gradInput:resizeAs(input)
+   self.gradInput:copy(gradOutput:expandAs(input))
 
-  return self.gradInput
+   return self.gradInput
 end
