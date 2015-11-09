@@ -402,11 +402,12 @@ Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `n
 ## Sum ##
 
 ```lua
-module = nn.Sum(dimension)
+module = nn.Sum(dimension, nInputDim)
 ```
 
 Applies a sum operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
+When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
 
 
 <a name="nn.Euclidean"></a>

@@ -2525,6 +2525,22 @@ function nntest.Sum()
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,precision, 'error on state ')
 
+   -- negative dimension with 1D non batch and 2D batch
+   local module = nn.Sum(-1, 1)
+   -- non batch
+   local input = torch.Tensor({1, 2, 3})
+   local expected = torch.Tensor({6})
+   local output = module:forward(input)
+   mytester:assertlt(torch.norm(output-expected), precision, 'error on forward ')
+   -- batch
+   local input = torch.Tensor({{1, 2, 3},{4, 5, 6}})
+   local expected = torch.Tensor({6, 15})
+   local output = module:forward(input)
+   mytester:assertlt(torch.norm(output-expected), precision, 'error on forward ')
+   
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err,precision, 'error on state ')
+   
    -- 3D
    local ini = math.random(3,5)
    local inj = math.random(3,5)
