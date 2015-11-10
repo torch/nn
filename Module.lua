@@ -5,15 +5,27 @@ function Module:__init()
    self.output = torch.Tensor()
 end
 
-function Module:parameters()
-   if self.weight and self.bias then
-      return {self.weight, self.bias}, {self.gradWeight, self.gradBias}
-   elseif self.weight then
+
+function Module:parameters(specific)
+   assert(specific == nil or specific == 'weight' or specific == 'bias',  "If specified parameters - must be 'weight' or 'bias'")
+   if specific then
+     if (specific == 'weight') and self.weight then
       return {self.weight}, {self.gradWeight}
-   elseif self.bias then
+     elseif (specific == 'bias') and self.bias then
       return {self.bias}, {self.gradBias}
-   else
+     else
       return
+     end
+   else
+     if self.weight and self.bias then
+        return {self.weight, self.bias}, {self.gradWeight, self.gradBias}
+     elseif self.weight then
+        return {self.weight}, {self.gradWeight}
+     elseif self.bias then
+        return {self.bias}, {self.gradBias}
+     else
+        return
+     end
    end
 end
 
@@ -266,9 +278,9 @@ function Module.flatten(parameters)
    return flatParameters
 end
 
-function Module:getParameters()
+function Module:getParameters(specific)
    -- get parameters
-   local parameters,gradParameters = self:parameters()
+   local parameters,gradParameters = self:parameters(specific)
    return Module.flatten(parameters), Module.flatten(gradParameters)
 end
 
