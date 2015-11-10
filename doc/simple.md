@@ -967,13 +967,18 @@ print(A,B,maxA)
 module = nn.MM(transA, transB)
 ```
 
-Performs multiplications on one or more pairs of matrices. If `transA` is set, the first matrix is transposed before multiplication. If `transB` is set, the second matrix is transposed before multiplication. By default, the matrices do not get transposed.
+Performs multiplications on one or more pairs of matrices. If `transA` is set to true, the first matrix is transposed before multiplication. If `transB` is set to true, the second matrix is transposed before multiplication. By default, the matrices do not get transposed.
 
-The module also accepts 3D inputs which are interpreted as batches of matrices. When using batches, the first input matrix should be of size `b x m x n` and the second input matrix should be of size `b x n x p` (assuming `transA` and `transB` are not set).
+The module also accepts 3D inputs which are interpreted as batches of matrices. When using batches, the first input matrix should be of size `b x m x n` and the second input matrix should be of size `b x n x p` (assuming `transA` and `transB` are not set). If `transA` or `transB` is set, transpose takes place between the second and the third dimensions for the corresponding matrix.
 
 ```lua
 model = nn.MM()
 A = torch.randn(b, m, n)
+B = torch.randn(b, n, p)
+C = model:forward({A, B})  -- C will be of size `b x m x p`
+
+model = nn.MM(true, false)
+A = torch.randn(b, n, m)
 B = torch.randn(b, n, p)
 C = model:forward({A, B})  -- C will be of size `b x m x p`
 ```
