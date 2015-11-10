@@ -2,6 +2,12 @@
 #define TH_GENERIC_FILE "generic/SpatialConvolutionMM.c"
 #else
 
+#ifdef _WIN32
+# include <windows.h>
+#endif
+
+
+
 /* note: due to write issues, this one cannot be parallelized as well as unfolded_copy */
 static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
                                int kW, int kH,
@@ -11,7 +17,12 @@ static void nn_(unfolded_acc)(THTensor *finput, THTensor *input,
                                int inputWidth, int inputHeight,
                                int outputWidth, int outputHeight)
 {
+#ifdef _WIN32
+  LONG_PTR nip;
+#else
   size_t nip;
+#endif
+
   real *input_data = THTensor_(data)(input);
   real *finput_data = THTensor_(data)(finput);
 
