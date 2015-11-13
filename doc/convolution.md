@@ -25,7 +25,7 @@ a kernel for computing the weighted average in a neighborhood ;
     * [SpatialUpsamplingNearest](#nn.SpatialUpSamplingNearest): A simple upsampler applied to every channel of the feature map.
   * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
     * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
-    * [VolumetricDeconvolution](#nn.VolumetricDeconvolution) : a 3D convolution over an input video (a sequence of images) ;
+    * [VolumetricDeconvolution](#nn.VolumetricDeconvolution) : a 3D deconvolution over an input video (a sequence of images) ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
 
