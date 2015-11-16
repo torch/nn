@@ -259,7 +259,7 @@ Outputs something like:
 
 <a name="nn.SpatialModules"></a>
 ## Spatial Modules ##
-Excluding and optional batch dimension, spatial layers expect a 3D Tensor as input. The
+Excluding an optional batch dimension, spatial layers expect a 3D Tensor as input. The
 first dimension is the number of features (e.g. `frameSize`), the last two dimenstions
 are spatial (e.g. `height x width`). These are commonly used for processing images.
 
@@ -612,7 +612,7 @@ C = model:forward(A)  -- C will be of size `b x m x h x w`
 
 <a name="nn.VolumetricModules"></a>
 ## Volumetric Modules ##
-Excluding and optional batch dimension, volumetric layers expect a 4D Tensor as input. The
+Excluding an optional batch dimension, volumetric layers expect a 4D Tensor as input. The
 first dimension is the number of features (e.g. `frameSize`), the second is sequential (e.g. `time`) and the
 last two dimenstions are spatial (e.g. `height x width`). These are commonly used for processing videos (sequences of images).
 
