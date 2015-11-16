@@ -35,16 +35,16 @@ function Min:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
-function Min:type(type)
+function Min:type(type, tensorCache)
   -- torch.min expects a LongTensor as indices, whereas cutorch.max expects a CudaTensor.
   if type == 'torch.CudaTensor' then
-    parent.type(self, type)
+    parent.type(self, type, tensorCache)
   else
     -- self._indices must be a LongTensor. Setting it to nil temporarily avoids
     -- unnecessary memory allocations.
     local indices
     indices, self._indices = self._indices, nil
-    parent.type(self, type)
+    parent.type(self, type, tensorCache)
     self._indices = indices and indices:long() or nil
   end
   return self
