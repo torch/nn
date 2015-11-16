@@ -97,16 +97,13 @@ function CosineEmbeddingCriterion:updateGradInput(input, y)
    gw1:resizeAs(v1):copy(v2)
    gw2:resizeAs(v1):copy(v1)
 
-   self.w = self.w:expandAs(v1)
    self.buffer:cmul(self.w1,self.w22)
-   self.buffer = self.buffer:expandAs(v1)
-   gw1:addcmul(-1,self.buffer,v1)
-   gw1:cmul(self.w)
+   gw1:addcmul(-1,self.buffer:expandAs(v1),v1)
+   gw1:cmul(self.w:expandAs(v1))
 
    self.buffer:cmul(self.w1,self.w32)
-   self.buffer = self.buffer:expandAs(v1)
-   gw2:addcmul(-1,self.buffer,v2)
-   gw2:cmul(self.w)
+   gw2:addcmul(-1,self.buffer:expandAs(v1),v2)
+   gw2:cmul(self.w:expandAs(v1))
 
    -- self._idx = self._outputs <= 0
    y.le(self._idx,self._outputs,0)
@@ -125,13 +122,9 @@ function CosineEmbeddingCriterion:updateGradInput(input, y)
    end
 
    if not_batch then
-      self.gradInput[1] = gw1:select(1,1)
-      self.gradInput[2] = gw2:select(1,1)
+      self.gradInput[1]:resize(gw1:size(2))
+      self.gradInput[2]:resize(gw2:size(2))
    end
-
-   -- fix for torch bug 
-   -- https://github.com/torch/torch7/issues/289
-   self.buffer:resize()
 
    return self.gradInput
 end
