@@ -509,7 +509,7 @@ function nntest.Normalize()
    end
 
    -- batch mode
-   for _,p in pairs({1,2,3,4,torch.uniform()*math.random(1,10)}) do
+   for _,p in pairs({1,2,3,4,torch.uniform()*math.random(1,10),math.huge}) do
       local ini = math.random(3,5)
       local inj = math.random(3,5)
       local ink = math.random(3,5)

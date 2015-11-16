@@ -17,18 +17,29 @@ function Normalize:updateOutput(input)
 
   self._output = self._output or input.new()
   self.norm = self.norm or input.new()
-  self.normp = self.normp or input.new()
   self.buffer = self.buffer or input.new()
 
   self._output:resizeAs(input)
 
-  if self.p % 2 ~= 0 then
-    self.buffer:abs(input):pow(self.p)
+  if self.p == math.huge then
+    -- specialization for the infinity norm
+    self._indices = self._indices or
+      (torch.type(self.output) == 'torch.CudaTensor' and
+       torch.CudaTensor() or torch.LongTensor())
+
+    self.buffer:abs(input)
+    torch.max(self.norm, self._indices, self.buffer, 2)
+    self.norm:add(self.eps)
   else
-    self.buffer:pow(input,self.p)
+    self.normp = self.normp or input.new()
+    if self.p % 2 ~= 0 then
+      self.buffer:abs(input):pow(self.p)
+    else
+      self.buffer:pow(input,self.p)
+    end
+    self.normp:sum(self.buffer,2):add(self.eps)
+    self.norm:pow(self.normp,1/self.p)
   end
-  self.normp:sum(self.buffer,2):add(self.eps)
-  self.norm:pow(self.normp,1/self.p)
   self._output:cdiv(input, self.norm:view(-1,1):expandAs(input))
 
   self.output = self._output:view(input_size)
@@ -48,31 +59,41 @@ function Normalize:updateGradInput(input, gradOutput)
   local d = input:size(2) -- dimensionality of vectors
 
   self._gradInput = self._gradInput or input.new()
+  self.cross = self.cross or input.new()
   -- compute diagonal term with gradOutput
   self._gradInput:resize(n,d,1)
   gradOutput = gradOutput:view(n,d,1)
-  self._gradInput:cmul(self.normp:view(n,1,1):expand(n,d,1), gradOutput)
 
-  -- small optimizations for different p
-  -- buffer = input*|input|^(p-2)
-  if self.p % 2 ~= 0 then
-    -- for non-even p, need to add absolute value
-    if self.p < 2 then
-      -- add eps to avoid possible division by 0
-      self.buffer:abs(input):add(self.eps):pow(self.p-2):cmul(input)
-    else
-      self.buffer:abs(input):pow(self.p-2):cmul(input)
-    end
-  elseif self.p == 2 then
-    -- special case for p == 2, pow(x,0) = 1
-    self.buffer:copy(input)
+  if self.p == math.huge then
+    -- specialization for the inf case
+    self._gradInput:cmul(self.norm:view(n,1,1):expand(n,d,1),gradOutput)
+    self.buffer:resizeAs(input):zero()
+    self.cross:resize(n,1)
+    self.cross:gather(input,2,self._indices)
+    self.cross:cdiv(self.norm)
+    self.buffer:scatter(2,self._indices,self.cross)
   else
-    -- p is even and > 2, pow(x,p) is always positive
-    self.buffer:pow(input,self.p-2):cmul(input)
+    self._gradInput:cmul(self.normp:view(n,1,1):expand(n,d,1), gradOutput)
+    -- small optimizations for different p
+    -- buffer = input*|input|^(p-2)
+    if self.p % 2 ~= 0 then
+      -- for non-even p, need to add absolute value
+      if self.p < 2 then
+        -- add eps to avoid possible division by 0
+        self.buffer:abs(input):add(self.eps):pow(self.p-2):cmul(input)
+      else
+        self.buffer:abs(input):pow(self.p-2):cmul(input)
+      end
+    elseif self.p == 2 then
+      -- special case for p == 2, pow(x,0) = 1
+      self.buffer:copy(input)
+    else
+      -- p is even and > 2, pow(x,p) is always positive
+      self.buffer:pow(input,self.p-2):cmul(input)
+    end
   end
 
   -- compute cross term in two steps
-  self.cross = self.cross or input.new()
   self.cross:resize(n,1,1)
 
   local b1 = self.buffer:view(n,d,1)
@@ -84,7 +105,11 @@ function Normalize:updateGradInput(input, gradOutput)
   self._gradInput:baddbmm(-1, b1, self.cross)
 
   -- reuse cross buffer for normalization
-  self.cross:cmul(self.normp, self.norm)
+  if self.p == math.huge then
+    self.cross:cmul(self.norm,self.norm)
+  else
+    self.cross:cmul(self.normp,self.norm)
+  end
   self._gradInput:cdiv(self.cross:view(n,1,1):expand(n,d,1))
 
   self._gradInput = self._gradInput:view(n,d)
@@ -102,4 +127,19 @@ function Normalize:__tostring__()
     s = '%s(%f)'
   end
   return string.format(s,torch.type(self),self.p)
+end
+
+function Normalize:type(type, tensorCache)
+  -- torch.max expects a LongTensor as indices, whereas cutorch.max expects a CudaTensor.
+  if type == 'torch.CudaTensor' then
+    parent.type(self, type, tensorCache)
+  else
+    -- self._indices must be a LongTensor. Setting it to nil temporarily avoids
+    -- unnecessary memory allocations.
+    local indices
+    indices, self._indices = self._indices, nil
+    parent.type(self, type, tensorCache)
+    self._indices = indices and indices:long() or nil
+  end
+  return self
 end
