@@ -1,8 +1,12 @@
 local MSECriterion, parent = torch.class('nn.MSECriterion', 'nn.Criterion')
 
-function MSECriterion:__init()
+function MSECriterion:__init(sizeAverage)
    parent.__init(self)
-   self.sizeAverage = true
+   if sizeAverage ~= nil then
+     self.sizeAverage = sizeAverage
+   else
+     self.sizeAverage = true
+   end
 end
 
 function MSECriterion:updateOutput(input, target)
