@@ -1,6 +1,6 @@
 local VolumetricConvolution, parent = torch.class('nn.VolumetricConvolution', 'nn.Module')
 
-function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH)
+function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH, padT, padW, padH)
    parent.__init(self)
 
    dT = dT or 1
@@ -15,6 +15,9 @@ function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT,
    self.dT = dT
    self.dW = dW
    self.dH = dH
+   self.padT = padT or 0
+   self.padW = padW or self.padT
+   self.padH = padH or self.padW
 
    self.weight = torch.Tensor(nOutputPlane, nInputPlane, kT, kH, kW)
    self.bias = torch.Tensor(nOutputPlane)
