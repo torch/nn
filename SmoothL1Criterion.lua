@@ -1,8 +1,12 @@
 local SmoothL1Criterion, parent = torch.class('nn.SmoothL1Criterion', 'nn.Criterion')
 
-function SmoothL1Criterion:__init()
+function SmoothL1Criterion:__init(sizeAverage)
    parent.__init(self)
-   self.sizeAverage = true
+   if sizeAverage ~= nil then
+     self.sizeAverage = sizeAverage
+   else
+     self.sizeAverage = true
+   end
 end
 
 function SmoothL1Criterion:updateOutput(input, target)
