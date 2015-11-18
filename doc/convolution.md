@@ -83,46 +83,40 @@ output[t][i] = bias[i]
 Here is a simple example:
 
 ```lua
-inp=5;  -- dimensionality of one sequence element
-outp=1; -- number of derived features for one sequence element
-kw=1;   -- kernel only operates on one sequence element per step
-dw=1;   -- we step once and go on to the next sequence element
+> require 'nn'
+> inp=5;  -- dimensionality of one sequence element
+> outp=1; -- number of derived features for one sequence element
+> kw=1;   -- kernel only operates on one sequence element per step
+> dw=1;   -- we step once and go on to the next sequence element
 
-mlp=nn.TemporalConvolution(inp,outp,kw,dw)
+> mlp=nn.TemporalConvolution(inp,outp,kw,dw)
+> mlp.weight
+ 0.2740  0.0081  0.4157  0.1198  0.2953
+[torch.DoubleTensor of size 1x5]
+> mlp.bias
+ 0.1485
+[torch.DoubleTensor of size 1]
 
-x=torch.rand(7,inp) -- a sequence of 7 elements
-print(mlp:forward(x))
-```
-which gives:
-```lua
--0.9109
--0.9872
--0.6808
--0.9403
--0.9680
--0.6901
--0.6387
-[torch.Tensor of dimension 7x1]
-```
+> x=torch.rand(7,inp) -- a sequence of 7 elements
+> x
+ 0.3071  0.2370  0.1964  0.3261  0.8709
+ 0.4220  0.6326  0.7177  0.4861  0.8439
+ 0.2495  0.1980  0.6770  0.9709  0.0766
+ 0.0033  0.3745  0.7748  0.9743  0.9652
+ 0.5612  0.2216  0.1066  0.2672  0.5496
+ 0.3994  0.7125  0.4629  0.2480  0.1111
+ 0.8861  0.8240  0.4006  0.7038  0.5451
+[torch.DoubleTensor of size 7x5]
 
-This is equivalent to:
-```lua
-weights=torch.reshape(mlp.weight,inp) -- weights applied to all
-bias= mlp.bias[1];
-for i=1,x:size(1) do -- for each sequence element
-   element= x[i]; -- features of ith sequence element
-   print(element:dot(weights) + bias)
-end
-```
-which gives:
-```lua
--0.91094998687717
--0.98721705771773
--0.68075004276185
--0.94030132495887
--0.96798754116609
--0.69008470895581
--0.63871422284166
+> mlp:forward(x)
+ 0.6125    -- mlp.weight * x[1] + mlp.bias
+ 0.8751    -- mlp.weight * x[2] + mlp.bias
+ 0.6388    -- mlp.weight * x[3] + mlp.bias
+ 0.8763    -- mlp.weight * x[4] + mlp.bias
+ 0.5426    -- mlp.weight * x[5] + mlp.bias
+ 0.5187    -- mlp.weight * x[6] + mlp.bias
+ 0.8097    -- mlp.weight * x[7] + mlp.bias
+[torch.DoubleTensor of size 7x1]
 ```
 
 <a name="nn.TemporalMaxPooling"></a>
@@ -134,13 +128,41 @@ module = nn.TemporalMaxPooling(kW, [dW])
 
 Applies 1D max-pooling operation in `kW` regions by step size
 `dW` steps. Input sequence composed of `nInputFrame` frames. The `input` tensor in
-`forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`)
-or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`).
+`forward(input)` is expected to be a 2D tensor (`nInputFrame x kW`)
+or a 3D tensor (`nBatchFrame x nInputFrame x kW`).
 
-If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be
-`nOutputFrame x inputFrameSize` where
+If the input sequence is a 2D tensor of dimension `nInputFrame x kW`, the output sequence will be
+`nOutputFrame x kW` where
 ```lua
 nOutputFrame = (nInputFrame - kW) / dW + 1
+```
+Example:
+```lua
+-- For 2D input
+> x=torch.rand(5,2)
+> x
+ 0.2413  0.9529
+ 0.1680  0.1107
+ 0.1301  0.3916
+ 0.5944  0.2479
+ 0.3462  0.6947
+[torch.DoubleTensor of size 5x2]
+
+> kw=2; dw=1
+> module=nn.TemporalMaxPooling(kw,dw)
+> module:forward(x)
+ 0.2413  0.9529
+ 0.1680  0.3916
+ 0.5944  0.3916
+ 0.5944  0.6947
+[torch.DoubleTensor of size 4x2]
+
+> kw=2; dw=2
+> module=nn.TemporalMaxPooling(kw,dw)
+> module:forward(x)
+ 0.2413  0.9529
+ 0.5944  0.3916
+[torch.DoubleTensor of size 2x2]
 ```
 
 <a name="nn.TemporalSubSampling"></a>
