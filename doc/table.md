@@ -736,7 +736,7 @@ starting at index `offset` having `length` elements (defaults to 1 element).
 The elements can be either a `table` or a [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
 
 The gradients of the elements not included in the subtable are zeroed `Tensor`s of the same size. 
-This is true regardless of the dept of the encapsulated `Tensor` as the function used internally to do so is recursive.
+This is true regardless of the depth of the encapsulated `Tensor` as the function used internally to do so is recursive.
 
 Example:
 ```lua
@@ -844,7 +844,7 @@ prl = nn.ParallelTable()
 prl:add(p1_mlp)
 prl:add(p2_mlp)
 
--- now we define our top level network that takes this parallel table and computes the pairwise distance betweem
+-- now we define our top level network that takes this parallel table and computes the pairwise distance between
 -- the pair of outputs
 mlp= nn.Sequential()
 mlp:add(prl)
@@ -1027,7 +1027,7 @@ prl = nn.ParallelTable()
 prl:add(p1_mlp)
 prl:add(p2_mlp)
 
--- now we define our top level network that takes this parallel table and computes the cosine distance betweem
+-- now we define our top level network that takes this parallel table and computes the cosine distance between
 -- the pair of outputs
 mlp= nn.Sequential()
 mlp:add(prl)
