@@ -9,6 +9,7 @@ static int nn_(SpatialAveragePooling_updateOutput)(lua_State *L)
   int kH = luaT_getfieldcheckint(L, 1, "kH");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
+  int ceil_mode = luaT_getfieldcheckboolean(L, 1,"ceil_mode");
   
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
 
@@ -40,8 +41,13 @@ static int nn_(SpatialAveragePooling_updateOutput)(lua_State *L)
   inputWidth = input->size[dimw];
   inputHeight = input->size[dimh];
   nInputPlane = input->size[dimc];
-  outputWidth = (inputWidth - kW) / dW + 1;
-  outputHeight = (inputHeight - kH) / dH + 1;
+  if (ceil_mode) {
+    outputWidth = (long)(ceil((float)(inputWidth - kW) / dW)) + 1;
+    outputHeight = (long)(ceil((float)(inputHeight - kH) / dH)) + 1;
+  } else {
+    outputWidth = (inputWidth - kW) / dW + 1;
+    outputHeight = (inputHeight - kH) / dH + 1;
+  }
 
   luaL_argcheck(L, inputWidth >= kW && inputHeight >= kH, 2, "input image smaller than kernel size");
 
@@ -49,7 +55,7 @@ static int nn_(SpatialAveragePooling_updateOutput)(lua_State *L)
     THTensor_(resize3d)(output, nInputPlane, outputHeight, outputWidth);
   else
     THTensor_(resize4d)(output, input->size[0], nInputPlane, outputHeight, outputWidth);
-  
+
   input = THTensor_(newContiguous)(input);
   luaL_argcheck(L, THTensor_(isContiguous)(output), 1, "");
   input_data = THTensor_(data)(input);
@@ -64,27 +70,28 @@ static int nn_(SpatialAveragePooling_updateOutput)(lua_State *L)
       long xx, yy;
       /* For all output pixels... */
       real *ptr_output = output_data + p*nInputPlane*outputWidth*outputHeight + k*outputWidth*outputHeight;
-      long i;
-      for(i = 0; i < outputWidth*outputHeight; i++)
-        ptr_output[i] = 0;
       
       for(yy = 0; yy < outputHeight; yy++)
       {
         for(xx = 0; xx < outputWidth; xx++)
         {
+          /* Get effective pooling window size */
+          long hend = fminf(kH, inputHeight - yy*dH);
+          long wend = fminf(kW, inputWidth  - xx*dW);
+
           /* Compute the mean of the input image... */
           real *ptr_input = input_data + p*nInputPlane*inputWidth*inputHeight + k*inputWidth*inputHeight + yy*dH*inputWidth+xx*dW;
           real sum = 0;
           long kx, ky;
 
-          for(ky = 0; ky < kH; ky++)
+          for(ky = 0; ky < hend; ky++)
           {
-            for(kx = 0; kx < kW; kx++)
+            for(kx = 0; kx < wend; kx++)
               sum += ptr_input[kx];
             ptr_input += inputWidth; /* next input line */
           }
           /* Update output */
-          *ptr_output++ += sum/(kW*kH);
+          *ptr_output++ = sum/(wend*hend);
         }
       }
     }
@@ -102,6 +109,7 @@ static int nn_(SpatialAveragePooling_updateGradInput)(lua_State *L)
   int kH = luaT_getfieldcheckint(L, 1, "kH");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
+  int ceil_mode = luaT_getfieldcheckboolean(L, 1,"ceil_mode");
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
   int dimw = 2;
@@ -130,12 +138,18 @@ static int nn_(SpatialAveragePooling_updateGradInput)(lua_State *L)
   inputWidth = input->size[dimw];
   inputHeight = input->size[dimh];
   nInputPlane = input->size[dimc];
-  outputWidth = (inputWidth - kW) / dW + 1;
-  outputHeight = (inputHeight - kH) / dH + 1;
+  if (ceil_mode) {
+    outputWidth = (long)(ceil((float)(inputWidth - kW) / dW)) + 1;
+    outputHeight = (long)(ceil((float)(inputHeight - kH) / dH)) + 1;
+  } else {
+    outputWidth = (inputWidth - kW) / dW + 1;
+    outputHeight = (inputHeight - kH) / dH + 1;
+  }
 
   input_data = THTensor_(data)(input);
 
   THTensor_(resizeAs)(gradInput, input);
+  THTensor_(zero)(gradInput);
 
   input = THTensor_(newContiguous)(input);
   gradOutput = THTensor_(newContiguous)(gradOutput);
@@ -154,22 +168,23 @@ static int nn_(SpatialAveragePooling_updateGradInput)(lua_State *L)
       long xx, yy;
 
       real* ptr_gi = gradInput_data + p*nInputPlane*inputWidth*inputHeight + k*inputWidth*inputHeight;
-      long i;
-      for(i=0; i<inputWidth*inputHeight; i++)
-        ptr_gi[i] = 0.0;
 
       for(yy = 0; yy < outputHeight; yy++)
       {
         for(xx = 0; xx < outputWidth; xx++)
         {
+          /* Get effective pooling window size */
+          long hend = fminf(kH, inputHeight - yy*dH);
+          long wend = fminf(kW, inputWidth  - xx*dW);
+
           real *ptr_gradInput = gradInput_data + p*nInputPlane*inputWidth*inputHeight + k*inputWidth*inputHeight + yy*dH*inputWidth+xx*dW;
           real z = *ptr_gradOutput++;
           long kx, ky;
 
-          for(ky = 0; ky < kH; ky++)
+          for(ky = 0; ky < hend; ky++)
           {
-            for(kx = 0; kx < kW; kx++)
-              ptr_gradInput[kx] += z/(kW*kH);
+            for(kx = 0; kx < wend; kx++)
+              ptr_gradInput[kx] += z/(wend*hend);
             ptr_gradInput += inputWidth;
           }
         }
