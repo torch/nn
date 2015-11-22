@@ -8,9 +8,23 @@ function SpatialAveragePooling:__init(kW, kH, dW, dH)
    self.dW = dW or 1
    self.dH = dH or 1
    self.divide = true
+   self.ceil_mode = false
+end
+
+function SpatialAveragePooling:ceil()
+   self.ceil_mode = true
+   return self
+end
+
+function SpatialAveragePooling:floor()
+   self.ceil_mode = false
+   return self
 end
 
 function SpatialAveragePooling:updateOutput(input)
+   -- backward compatibility
+   self.ceil_mode = self.ceil_mode or false
+
    input.nn.SpatialAveragePooling_updateOutput(self, input)
    -- for backward compatibility with saved models
    -- which are not supposed to have "divide" field
