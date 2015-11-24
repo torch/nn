@@ -92,7 +92,7 @@ mlp:add(nn.Linear(HUs, outputs))
 
 __Training__
 
-We choose the Mean Squared Error criterion and train the beast.
+We choose the Mean Squared Error criterion and train the dataset.
 ```lua
 criterion = nn.MSECriterion()  
 trainer = nn.StochasticGradient(mlp, criterion)
