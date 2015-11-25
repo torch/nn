@@ -72,16 +72,28 @@ local function batchsize(input, size, numInputDims, numElements)
 end
 
 function View:updateOutput(input)
-   local bsz = batchsize(input, self.size, self.numInputDims, self.numElements)
-   if bsz then
-      self.output = input:view(bsz, table.unpack(self.size:totable()))
-   else
-      self.output = input:view(self.size)
-   end
-   return self.output
+  if not input:isContiguous() then
+    self._input = self._input or torch.Tensor()
+    self._input:resizeAs(input):copy(input)
+    input = self._input
+  end
+  
+  local bsz = batchsize(input, self.size, self.numInputDims, self.numElements)
+  if bsz then
+    self.output = input:view(bsz, table.unpack(self.size:totable()))
+  else
+    self.output = input:view(self.size)
+  end
+  return self.output
 end
 
 function View:updateGradInput(input, gradOutput)
-   self.gradInput = gradOutput:view(input:size())
-   return self.gradInput
+  if not gradOutput:isContiguous() then
+    self._gradOutput = self._gradOutput or torch.Tensor()
+    self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
+    gradOutput = self._gradOutput
+  end
+  
+  self.gradInput = gradOutput:view(input:size())
+  return self.gradInput
 end
