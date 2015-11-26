@@ -100,7 +100,8 @@ function VolumetricConvolution:updateGradInput(input, gradOutput)
          input, gradOutput = makeContiguous(self, input, gradOutput)
          local out = input.nn.VolumetricConvolutionMM_updateGradInput(self, input, gradOutput)
          unviewWeight(self)
-      return out
+         return out
+      end
    end
 end
 
