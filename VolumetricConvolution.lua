@@ -80,27 +80,38 @@ local function unviewWeight(self)
 end
 
 function VolumetricConvolution:updateOutput(input)
-   viewWeight(self)
-   input = makeContiguous(self, input)
-   local out = input.nn.VolumetricConvolutionMM_updateOutput(self, input)
-   unviewWeight(self)
-   return out
-end
-
-function VolumetricConvolution:updateGradInput(input, gradOutput)
-   if self.gradInput then
+   if input:type() == 'torch.CudaTensor' then
+      return input.nn.VolumetricConvolution_updateOutput(self, input)   
+   else
       viewWeight(self)
-      input, gradOutput = makeContiguous(self, input, gradOutput)
-      local out = input.nn.VolumetricConvolutionMM_updateGradInput(self, input, gradOutput)
+      input = makeContiguous(self, input)
+      local out = input.nn.VolumetricConvolutionMM_updateOutput(self, input)
       unviewWeight(self)
       return out
    end
 end
 
+function VolumetricConvolution:updateGradInput(input, gradOutput)
+   if input:type() == 'torch.CudaTensor' then
+      return input.nn.VolumetricConvolution_updateGradInput(self, input, gradOutput)   
+   else
+      if self.gradInput then
+         viewWeight(self)
+         input, gradOutput = makeContiguous(self, input, gradOutput)
+         local out = input.nn.VolumetricConvolutionMM_updateGradInput(self, input, gradOutput)
+         unviewWeight(self)
+      return out
+   end
+end
+
 function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
-   input, gradOutput = makeContiguous(self, input, gradOutput)
-   viewWeight(self)
-   local out = input.nn.VolumetricConvolutionMM_accGradParameters(self, input, gradOutput, scale)
-   unviewWeight(self)
-   return out
+   if input:type() == 'torch.CudaTensor' then
+      return input.nn.VolumetricConvolution_accGradParameters(self, input, gradOutput, scale)
+   else
+      input, gradOutput = makeContiguous(self, input, gradOutput)
+      viewWeight(self)
+      local out = input.nn.VolumetricConvolutionMM_accGradParameters(self, input, gradOutput, scale)
+      unviewWeight(self)
+      return out
+   end
 end
