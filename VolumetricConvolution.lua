@@ -1,6 +1,6 @@
 local VolumetricConvolution, parent = torch.class('nn.VolumetricConvolution', 'nn.Module')
 
-function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH)
+function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH, padT, padW, padH)
    parent.__init(self)
 
    dT = dT or 1
@@ -15,6 +15,9 @@ function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT,
    self.dT = dT
    self.dW = dW
    self.dH = dH
+   self.padT = padT or 0
+   self.padW = padW or self.padT
+   self.padH = padH or self.padW
 
    self.weight = torch.Tensor(nOutputPlane, nInputPlane, kT, kH, kW)
    self.bias = torch.Tensor(nOutputPlane)
@@ -45,14 +48,59 @@ function VolumetricConvolution:reset(stdv)
    end
 end
 
+local function makeContiguous(self, input, gradOutput)
+   if not input:isContiguous() then
+      self._input = self._input or input.new()
+      self._input:resizeAs(input):copy(input)
+      input = self._input
+   end
+   if gradOutput then
+      if not gradOutput:isContiguous() then
+    self._gradOutput = self._gradOutput or gradOutput.new()
+    self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
+    gradOutput = self._gradOutput
+      end
+   end
+   return input, gradOutput
+end
+
+-- function to re-view the weight layout in a way that would make the MM ops happy
+local function viewWeight(self)
+   self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kT * self.kH * self.kW)
+   if self.gradWeight and self.gradWeight:dim() > 0 then 
+      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kT * self.kH * self.kW)
+   end
+end
+
+local function unviewWeight(self)
+   self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kT, self.kH, self.kW)
+   if self.gradWeight and self.gradWeight:dim() > 0 then 
+      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kT, self.kH, self.kW)
+   end
+end
+
 function VolumetricConvolution:updateOutput(input)
-   return input.nn.VolumetricConvolution_updateOutput(self, input)
+   viewWeight(self)
+   input = makeContiguous(self, input)
+   local out = input.nn.VolumetricConvolutionMM_updateOutput(self, input)
+   unviewWeight(self)
+   return out
 end
 
 function VolumetricConvolution:updateGradInput(input, gradOutput)
-   return input.nn.VolumetricConvolution_updateGradInput(self, input, gradOutput)
+   if self.gradInput then
+      viewWeight(self)
+      input, gradOutput = makeContiguous(self, input, gradOutput)
+      local out = input.nn.VolumetricConvolutionMM_updateGradInput(self, input, gradOutput)
+      unviewWeight(self)
+      return out
+   end
 end
 
 function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
-   return input.nn.VolumetricConvolution_accGradParameters(self, input, gradOutput, scale)
+   input, gradOutput = makeContiguous(self, input, gradOutput)
+   viewWeight(self)
+   local out = input.nn.VolumetricConvolutionMM_accGradParameters(self, input, gradOutput, scale)
+   unviewWeight(self)
+   return out
 end

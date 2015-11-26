@@ -2816,21 +2816,24 @@ end
 
 
 function nntest.VolumetricConvolution()
-   local from = math.random(2,3)
-   local to = math.random(2,3)
-   local kt = math.random(3,4)
-   local ki = math.random(3,4)
-   local kj = math.random(3,4)
-   local st = math.random(2,3)
-   local si = math.random(2,3)
-   local sj = math.random(2,3)
-   local outt = math.random(3,4)
-   local outi = math.random(3,4)
-   local outj = math.random(3,4)
-   local int = (outt-1)*st+kt
-   local ini = (outi-1)*si+ki
-   local inj = (outj-1)*sj+kj
-   local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj)
+   local from = math.random(2,5)
+   local to = math.random(1,5)
+   local kt = math.random(1,5)
+   local ki = math.random(1,5)
+   local kj = math.random(1,5)
+   local st = math.random(1,4)
+   local si = math.random(1,4)
+   local sj = math.random(1,4)
+   local padT = math.random(0,2)
+   local padW = math.random(0,2)
+   local padH = math.random(0,2)
+   local outt = math.random(5,9)
+   local outi = math.random(5,9)
+   local outj = math.random(5,9)
+   local int = (outt-1)*st+kt-padT*2
+   local ini = (outi-1)*si+ki-padW*2
+   local inj = (outj-1)*sj+kj-padH*2
+   local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj, padT, padW, padH)
    local input = torch.Tensor(from, int, inj, ini):zero()
 
    local err = jac.testJacobian(module, input)
@@ -2872,13 +2875,16 @@ function nntest.VolumetricConvolutionBatchCompare()
    local st = math.random(2,3)
    local si = math.random(2,3)
    local sj = math.random(2,3)
+   local padT = math.random(0,2)
+   local padW = math.random(0,2)
+   local padH = math.random(0,2)
    local outt = math.random(3,4)
    local outi = math.random(3,4)
    local outj = math.random(3,4)
-   local int = (outt-1)*st+kt
-   local ini = (outi-1)*si+ki
-   local inj = (outj-1)*sj+kj
-   local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj)
+   local int = (outt-1)*st+kt-padT*2
+   local ini = (outi-1)*si+ki-padW*2
+   local inj = (outj-1)*sj+kj-padH*2
+   local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj, padT, padW, padH)
    module:zeroGradParameters()
    local input = torch.randn(from, int, inj, ini)
    batchcompare(module,input, {'weight','bias','gradWeight','gradBias'})
