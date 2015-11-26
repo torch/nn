@@ -3789,6 +3789,22 @@ function nntest.View()
       "Error in minibatch generalization nElement")
 end
 
+function nntest.ViewNonContiguous()
+  local nonContigInput = torch.randn(2, 2, 2):select(2, 1)
+  local contigInput = nonContigInput:clone()
+  local nonContigGradOut = torch.randn(4, 2):select(2, 2)
+  local contigGradOut = nonContigGradOut:clone()
+  local viewModule = nn.View(4)
+  local outputNonContig = viewModule:forward(nonContigInput)
+  local outputContig = viewModule:forward(contigInput)
+  mytester:assertTensorEq(outputNonContig, outputContig, 0.000001, 
+			  "View.forward should have same result with contig and nonContig input.")
+  local gradInputNonContig = viewModule:backward(contigInput, nonContigGradOut)
+  local gradInputContig = viewModule:backward(contigInput, contigGradOut)
+  mytester:assertTensorEq(gradInputNonContig, gradInputContig, 0.000001, 
+			  "View.backward should have same result with contig and nonContig gradOutput.")
+end
+
 function nntest.Reshape()
    local input = torch.rand(10)
    local template = torch.rand(5,2)
