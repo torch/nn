@@ -566,7 +566,7 @@ loss(x, y) = max(0, -y * (x[1] - x[2]) + margin)
 
 ```lua
 p1_mlp = nn.Linear(5, 2)
-p2_mlp = p1_mlp:clone('weight', 'bias', 'gradWeight', 'gradBias')
+p2_mlp = p1_mlp:clone('weight', 'bias')
 
 prl = nn.ParallelTable()
 prl:add(p1_mlp)
@@ -576,7 +576,7 @@ mlp1 = nn.Sequential()
 mlp1:add(prl)
 mlp1:add(nn.DotProduct())
 
-mlp2 = mlp1:clone('weight', 'bias', 'gradWeight', 'gradBias')
+mlp2 = mlp1:clone('weight', 'bias')
 
 mlpa = nn.Sequential()
 prla = nn.ParallelTable()
