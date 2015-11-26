@@ -54,7 +54,7 @@ function Container:reset(stdv)
     self:applyToModules(function(module) module:reset(stdv) end)
 end
 
-function Container:parameters()
+function Container:parameters(specific)
     local function tinsert(to, from)
         if type(from) == 'table' then
             for i=1,#from do
@@ -67,7 +67,7 @@ function Container:parameters()
     local w = {}
     local gw = {}
     for i=1,#self.modules do
-        local mw,mgw = self.modules[i]:parameters()
+        local mw,mgw = self.modules[i]:parameters(specific)
         if mw then
             tinsert(w,mw)
             tinsert(gw,mgw)
