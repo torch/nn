@@ -74,6 +74,7 @@ include('ReLU.lua')
 include('PReLU.lua')
 include('SpatialSoftMax.lua')
 include('RReLU.lua')
+include('ExponentialLU.lua')
 
 include('LookupTable.lua')
 include('SpatialConvolution.lua')
