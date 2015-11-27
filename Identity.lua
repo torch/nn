@@ -2,8 +2,6 @@ local Identity, parent = torch.class('nn.Identity', 'nn.Module')
 
 function Identity:__init()
    parent.__init(self)
-   self.tensorOutput = torch.Tensor{}
-   self.output = self.tensorOutput
    self.tensorGradInput = torch.Tensor{}
    self.gradInput = self.tensorGradInput
 end
