@@ -305,6 +305,33 @@ gnuplot.grid(true)
 ```
 ![](image/rrelu.png)
 
+<a name="nn.ELU"></a>
+## ELU ##
+
+Applies exponential linear unit (ELU), which parameter a varies the convergence value of the exponential function below zero:
+
+`ELU` is defined as `f(x)` = `max(0,x) + min(0,a*(exp(x)-1))`
+
+It is called with the parameter a as ```nn.ELU(a)``` with the default value `a=1`. The output dimension is always equal to input dimension.
+
+For reference see [Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs)](http://arxiv.org/abs/1511.07289).
+```lua
+require 'nn'
+require 'gnuplot'
+
+xs = torch.linspace(-3,3,200)
+go = torch.ones(xs:size(1))
+function f(a) return nn.ELU(a):forward(xs) end
+function df(a) local m = nn.ELU(a) m:forward(xs) return m:backward(xs, go) end
+
+gnuplot.plot({'fw ELU, alpha=0.1', xs,  f(0.1), '-'},
+             {'fw ELU, alpha=1.0', xs,  f(1.0), '-'},
+             {'bw ELU, alpha=0.1', xs, df(0.1), '-'},
+             {'bw ELU, alpha=1.0', xs, df(1.0), '-'})
+gnuplot.grid(true)
+```
+![](image/elu.png)
+
 <a name="nn.SpatialSoftMax"></a>
 ## SpatialSoftMax ##
 
