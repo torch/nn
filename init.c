@@ -44,6 +44,9 @@
 #include "generic/PReLU.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/ELU.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/RReLU.c"
 #include "THGenerateFloatTypes.h"
 
@@ -169,6 +172,7 @@ int luaopen_libnn(lua_State *L)
   nn_FloatThreshold_init(L);
   nn_FloatPReLU_init(L);
   nn_FloatRReLU_init(L);
+  nn_FloatELU_init(L);
   nn_FloatSparseLinear_init(L);
   nn_FloatTemporalConvolution_init(L);
   nn_FloatTemporalSubSampling_init(L);
@@ -215,6 +219,7 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleThreshold_init(L);
   nn_DoublePReLU_init(L);
   nn_DoubleRReLU_init(L);
+  nn_DoubleELU_init(L);
   nn_DoubleSparseLinear_init(L);
   nn_DoubleTemporalConvolution_init(L);
   nn_DoubleTemporalSubSampling_init(L);
