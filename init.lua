@@ -49,6 +49,7 @@ include('PairwiseDistance.lua')
 include('CosineDistance.lua')
 include('DotProduct.lua')
 include('Normalize.lua')
+include('Cosine.lua')
 
 include('Exp.lua')
 include('Log.lua')
