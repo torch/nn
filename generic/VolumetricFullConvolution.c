@@ -1,8 +1,8 @@
 #ifndef TH_GENERIC_FILE
-#define TH_GENERIC_FILE "generic/VolumetricDeconvolution.c"
+#define TH_GENERIC_FILE "generic/VolumetricFullConvolution.c"
 #else
 
-static int nn_(VolumetricDeconvolution_updateOutput)(lua_State *L) {
+static int nn_(VolumetricFullConvolution_updateOutput)(lua_State *L) {
   // Input
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
 
@@ -95,7 +95,7 @@ static int nn_(VolumetricDeconvolution_updateOutput)(lua_State *L) {
   return 1;
 }
 
-static int nn_(VolumetricDeconvolution_updateGradInput)(lua_State *L) {
+static int nn_(VolumetricFullConvolution_updateGradInput)(lua_State *L) {
   // Input
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
@@ -180,7 +180,7 @@ static int nn_(VolumetricDeconvolution_updateGradInput)(lua_State *L) {
   return 1;
 }
 
-static int nn_(VolumetricDeconvolution_accGradParameters)(lua_State *L) {
+static int nn_(VolumetricFullConvolution_accGradParameters)(lua_State *L) {
   // Inputs
   THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
   THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
@@ -279,17 +279,17 @@ static int nn_(VolumetricDeconvolution_accGradParameters)(lua_State *L) {
   return 0;
 }
 
-static const struct luaL_Reg nn_(VolumetricDeconvolution__) [] = {
-  {"VolumetricDeconvolution_updateOutput", nn_(VolumetricDeconvolution_updateOutput)},
-  {"VolumetricDeconvolution_updateGradInput", nn_(VolumetricDeconvolution_updateGradInput)},
-  {"VolumetricDeconvolution_accGradParameters", nn_(VolumetricDeconvolution_accGradParameters)},
+static const struct luaL_Reg nn_(VolumetricFullConvolution__) [] = {
+  {"VolumetricFullConvolution_updateOutput", nn_(VolumetricFullConvolution_updateOutput)},
+  {"VolumetricFullConvolution_updateGradInput", nn_(VolumetricFullConvolution_updateGradInput)},
+  {"VolumetricFullConvolution_accGradParameters", nn_(VolumetricFullConvolution_accGradParameters)},
   {NULL, NULL}
 };
 
-static void nn_(VolumetricDeconvolution_init)(lua_State *L)
+static void nn_(VolumetricFullConvolution_init)(lua_State *L)
 {
   luaT_pushmetatable(L, torch_Tensor);
-  luaT_registeratname(L, nn_(VolumetricDeconvolution__), "nn");
+  luaT_registeratname(L, nn_(VolumetricFullConvolution__), "nn");
   lua_pop(L,1);
 }
 
