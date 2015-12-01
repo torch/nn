@@ -10,6 +10,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
     * [Euclidean](#nn.Euclidean) : the euclidean distance of the input to `k` mean centers ;
     * [WeightedEuclidean](#nn.WeightedEuclidean) : similar to [Euclidean](#nn.Euclidean), but additionally learns a diagonal covariance matrix ;
+    * [Cosine](#nn.Cosine) : the cosine similarity of the input to `k` mean centers ;
   * Modules that adapt basic Tensor methods :
     * [Copy](#nn.Copy) : a [copy](https://github.com/torch/torch7/blob/master/doc/tensor.md#torch.Tensor.copy) of the input with [type](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-or-string-typetype) casting ;
     * [Narrow](#nn.Narrow) : a [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation over a given dimension ;
@@ -434,6 +435,18 @@ This module is similar to [Euclidean](#nn.Euclidean), but additionally learns a 
 In other words, for each of the `outputSize` centers `w_j`, there is a diagonal covariance matrices `c_j`, for `j` = `1`,..,`outputSize`, where `c_j` are stored as vectors of size `inputSize`.
 
 The distance `y_j` between center `j` and input `x` is formulated as `y_j = || c_j * (w_j - x) ||`.
+
+<a name="nn.Cosine"></a>
+## Cosine ##
+
+```lua
+module = nn.Cosine(inputSize,outputSize)
+```
+
+Outputs the [cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) of the input to `outputSize` centers, i.e. this layer has the weights `w_j`,  for `j` = `1`,..,`outputSize`, where `w_j` are vectors of dimension `inputSize`.
+
+The distance `y_j` between center `j` and input `x` is formulated as `y_j = (x · w_j) / ( || w_j || * || x || )`.
+
 
 <a name="nn.Identity"></a>
 ## Identity ##

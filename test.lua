@@ -4770,6 +4770,70 @@ function nntest.Module_apply()
   mytester:asserteq(s2.modules[1].bias:size(1), 20)
 end
 
+function nntest.Cosine()
+   local inputSize = 4
+   local outputSize = 5
+   
+   -- test 1D
+   local input = torch.randn(inputSize)
+   local gradOutput = torch.randn(outputSize)
+   local cosine = nn.Cosine(inputSize,outputSize)
+   local output = cosine:forward(input)
+   local inputNorm = input:norm()+1e-12
+   local weight2 = cosine.weight[2]
+   local output2 = torch.dot(weight2, input)/((weight2:norm()+1e-12)*inputNorm)
+   mytester:assert(math.abs(output2 - output[2]) < 0.000001,"Cosine output 1D err weight[2]")
+   local output2 = torch.mv(cosine.weight, input)
+   output2:cdiv(cosine.weight:norm(2,2)+1e-12):div(inputNorm)
+   mytester:assertTensorEq(output, output2, 0.000001, "Cosine output 1D err") 
+   local gradInput = cosine:updateGradInput(input, gradOutput)
+   local gradInput2 = gradInput:clone():zero()
+   for j=1,outputSize do
+      local w_j = cosine.weight[j]
+      local nw_j = w_j:norm()+1e-12
+      for i=1,inputSize do
+         local w_ij = w_j[i]
+         local grad_i = (w_ij/(inputNorm*nw_j))
+         grad_i = grad_i - (output[j]*input[i]/(inputNorm*inputNorm))
+         grad_i = grad_i * gradOutput[j]
+         gradInput2[i] = gradInput2[i] + grad_i
+      end
+   end
+   mytester:assertTensorEq(gradInput2, gradInput, 0.000001, "Cosine gradInput 1D err")
+   cosine:zeroGradParameters()
+   cosine:accGradParameters(input, gradOutput, 1)
+   local gradWeight2 = cosine.weight:clone():zero()
+   for j=1,outputSize do
+      local w_j = cosine.weight[j]
+      local nw_j = w_j:norm()+1e-12
+      for i=1,inputSize do
+         local w_ij = w_j[i]
+         local gW_ij = (gradOutput[j]/nw_j)  * ( ( input[i] / inputNorm ) - (output[j] * w_ij / nw_j) )
+         gradWeight2[{j,i}] = gW_ij
+      end
+   end
+   mytester:assertTensorEq(cosine.gradWeight, gradWeight2, 0.000001, "Cosine gradWeight 2D err")
+   
+   -- test 2D
+   local batchSize = 3
+   local input = torch.randn(batchSize, inputSize)
+   local gradOutput = torch.randn(batchSize, outputSize)
+   cosine:zeroGradParameters()
+   local cosine2 = cosine:clone()
+   local output = cosine:forward(input)
+   local output2 = cosine2:forward(input[2])
+   mytester:assertTensorEq(output[2], output2, 0.000001, "Cosine output 2D err") 
+   local gradInput = cosine:backward(input, gradOutput)
+   
+   local gradInput2 = gradInput:clone():zero()
+   for i=1,batchSize do
+      cosine2:forward(input[i], gradOutput[i])
+      gradInput2[i]:copy(cosine2:backward(input[i], gradOutput[i]))
+   end
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001, "Cosine gradInput 2D err")
+   mytester:assertTensorEq(cosine.gradWeight, cosine2.gradWeight, 0.000001, "Cosine gradWeight 2D err")
+end
+
 mytester:add(nntest)
 
 if not nn then
