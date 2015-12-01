@@ -413,12 +413,12 @@ function nntest.RReLU()
    -- gradient check
    local err = jac.testJacobian(module, input)
    mytester:assertlt(err, precision, 'error on state ')
- 
+
    -- IO
    local ferr,berr = jac.testIO(module, input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
-   
+
    -- test training and evalation mode
    for _,train in ipairs({true,false}) do
       -- test with separate output buffer and inplace
@@ -438,7 +438,7 @@ function nntest.RReLU()
          local gradInput = module:backward(input, gradOutput)
          mytester:assert(gradInput:gt(0):eq(input:ne(0)):all(), 'gradient ')
          mytester:assert(gradInput:lt(1):eq(input:le(0)):all(), 'backward negative inputs ')
-         mytester:assert(gradInput:eq(1):eq(input:gt(0)):all(), 'backward positive inputs ') 
+         mytester:assert(gradInput:eq(1):eq(input:gt(0)):all(), 'backward positive inputs ')
          if not train then
             local err = gradInput[input:le(0)]:mean()-(module.lower+module.upper)/2
             mytester:assertlt(err, precision, 'error on gradient ')
@@ -1864,7 +1864,7 @@ function nntest.SpatialConvolutionMM()
    mytester:asserteq(0, (gradInput-gradInputc):abs():max(), torch.typename(module) .. ' - contiguous err ')
 end
 
-function nntest.SpatialDeconvolution()
+function nntest.SpatialFullConvolution()
    local from = math.random(2,5)
    local to = math.random(1,5)
    local ki = math.random(1,5)
@@ -1876,8 +1876,8 @@ function nntest.SpatialDeconvolution()
    local outi = math.random(5,9)
    local outj = math.random(5,9)
    local ini = (outi + padW*2 - ki)/di + 1
-   local inj = (outj + padH*2 - kj)/dj + 1 
-   local module = nn.SpatialDeconvolution(from, to, ki, kj, di, dj, padW, padH)
+   local inj = (outj + padH*2 - kj)/dj + 1
+   local module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH)
    local input = torch.Tensor(from, inj, ini):zero()
 
    -- stochastic
@@ -1912,7 +1912,7 @@ function nntest.SpatialDeconvolution()
    --verbose = true
    local batch = math.random(2,5)
 
-   module = nn.SpatialDeconvolution(from, to, ki, kj, di, dj, padW, padH)
+   module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH)
    input = torch.Tensor(batch,from,inj,ini):zero()
 
    local err = jac.testJacobian(module, input)
@@ -2683,10 +2683,10 @@ function nntest.Sum()
    local expected = torch.Tensor({6, 15})
    local output = module:forward(input)
    mytester:assertlt(torch.norm(output-expected), precision, 'error on forward ')
-   
+
    local err = jac.testJacobian(module, input)
    mytester:assertlt(err,precision, 'error on state ')
-   
+
    -- 3D
    local ini = math.random(3,5)
    local inj = math.random(3,5)
@@ -2881,8 +2881,8 @@ function nntest.TemporalMaxPooling()
    mytester:assertTensorEq(inputGrad:select(1,2), inputGrad1D, 0.000001, 'error on 2D vs 1D backward)')
 end
 
-function nntest.VolumetricDeconvolution_simple_test()
-    local module = nn.VolumetricDeconvolution(3, 1, 3, 3, 3, 3, 3, 3);
+function nntest.VolumetricFullConvolution_simple_test()
+    local module = nn.VolumetricFullConvolution(3, 1, 3, 3, 3, 3, 3, 3);
     module.weight:fill(1);
     module.bias:fill(0.1);
 
@@ -2928,7 +2928,7 @@ function nntest.VolumetricDeconvolution_simple_test()
     end
 end
 
-function nntest.VolumetricDeconvolution()
+function nntest.VolumetricFullConvolution()
     local from = math.random(2,3)
     local to = math.random(2,3)
     local kt = math.random(3,4)
@@ -2941,7 +2941,7 @@ function nntest.VolumetricDeconvolution()
     local ini = math.random(3,4)
     local inj = math.random(3,4)
     local bs = math.random(1, 6)
-    local module = nn.VolumetricDeconvolution(from, to, kt, ki, kj, st, si, sj)
+    local module = nn.VolumetricFullConvolution(from, to, kt, ki, kj, st, si, sj)
 
     local input = torch.Tensor(bs, from, int, ini, inj):zero()
 
@@ -4864,7 +4864,7 @@ end
 function nntest.Cosine()
    local inputSize = 4
    local outputSize = 5
-   
+
    -- test 1D
    local input = torch.randn(inputSize)
    local gradOutput = torch.randn(outputSize)
@@ -4876,7 +4876,7 @@ function nntest.Cosine()
    mytester:assert(math.abs(output2 - output[2]) < 0.000001,"Cosine output 1D err weight[2]")
    local output2 = torch.mv(cosine.weight, input)
    output2:cdiv(cosine.weight:norm(2,2)+1e-12):div(inputNorm)
-   mytester:assertTensorEq(output, output2, 0.000001, "Cosine output 1D err") 
+   mytester:assertTensorEq(output, output2, 0.000001, "Cosine output 1D err")
    local gradInput = cosine:updateGradInput(input, gradOutput)
    local gradInput2 = gradInput:clone():zero()
    for j=1,outputSize do
@@ -4904,7 +4904,7 @@ function nntest.Cosine()
       end
    end
    mytester:assertTensorEq(cosine.gradWeight, gradWeight2, 0.000001, "Cosine gradWeight 2D err")
-   
+
    -- test 2D
    local batchSize = 3
    local input = torch.randn(batchSize, inputSize)
@@ -4913,9 +4913,9 @@ function nntest.Cosine()
    local cosine2 = cosine:clone()
    local output = cosine:forward(input)
    local output2 = cosine2:forward(input[2])
-   mytester:assertTensorEq(output[2], output2, 0.000001, "Cosine output 2D err") 
+   mytester:assertTensorEq(output[2], output2, 0.000001, "Cosine output 2D err")
    local gradInput = cosine:backward(input, gradOutput)
-   
+
    local gradInput2 = gradInput:clone():zero()
    for i=1,batchSize do
       cosine2:forward(input[i], gradOutput[i])

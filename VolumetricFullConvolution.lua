@@ -1,6 +1,6 @@
-local VolumetricDeconvolution, parent = torch.class('nn.VolumetricDeconvolution', 'nn.Module')
+local VolumetricFullConvolution, parent = torch.class('nn.VolumetricFullConvolution', 'nn.Module')
 
-function VolumetricDeconvolution:__init(nInputPlane, nOutputPlane, kT, kH, kW, dT, dH, dW, pT, pH, pW)
+function VolumetricFullConvolution:__init(nInputPlane, nOutputPlane, kT, kH, kW, dT, dH, dW, pT, pH, pW)
    parent.__init(self)
 
    dT = dT or 1
@@ -33,7 +33,7 @@ function VolumetricDeconvolution:__init(nInputPlane, nOutputPlane, kT, kH, kW, d
    self:reset()
 end
 
-function VolumetricDeconvolution:reset(stdv)
+function VolumetricFullConvolution:reset(stdv)
   -- initialization of parameters
    if stdv then
       stdv = stdv * math.sqrt(3)
@@ -53,14 +53,14 @@ function VolumetricDeconvolution:reset(stdv)
    end
 end
 
-function VolumetricDeconvolution:updateOutput(input)
-   return input.nn.VolumetricDeconvolution_updateOutput(self, input)
+function VolumetricFullConvolution:updateOutput(input)
+   return input.nn.VolumetricFullConvolution_updateOutput(self, input)
 end
 
-function VolumetricDeconvolution:updateGradInput(input, gradOutput)
-   return input.nn.VolumetricDeconvolution_updateGradInput(self, input, gradOutput)
+function VolumetricFullConvolution:updateGradInput(input, gradOutput)
+   return input.nn.VolumetricFullConvolution_updateGradInput(self, input, gradOutput)
 end
 
-function VolumetricDeconvolution:accGradParameters(input, gradOutput, scale)
-   return input.nn.VolumetricDeconvolution_accGradParameters(self, input, gradOutput, scale)
+function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
+   return input.nn.VolumetricFullConvolution_accGradParameters(self, input, gradOutput, scale)
 end

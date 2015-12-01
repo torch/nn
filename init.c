@@ -95,9 +95,6 @@
 #include "generic/SpatialConvolutionMM.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/SpatialDeconvolution.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SpatialConvolutionMap.c"
 #include "THGenerateFloatTypes.h"
 
@@ -122,7 +119,7 @@
 #include "generic/VolumetricConvolutionMM.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/VolumetricDeconvolution.c"
+#include "generic/VolumetricFullConvolution.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/VolumetricMaxPooling.c"
@@ -184,7 +181,6 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSpatialFullConvolution_init(L);
   nn_FloatSpatialFullConvolutionMap_init(L);
   nn_FloatSpatialConvolutionMM_init(L);
-  nn_FloatSpatialDeconvolution_init(L);
   nn_FloatSpatialConvolutionMap_init(L);
   nn_FloatSpatialSubSampling_init(L);
   nn_FloatSpatialMaxPooling_init(L);
@@ -193,7 +189,7 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSpatialAdaptiveMaxPooling_init(L);
   nn_FloatVolumetricConvolution_init(L);
   nn_FloatVolumetricConvolutionMM_init(L);
-  nn_FloatVolumetricDeconvolution_init(L);
+  nn_FloatVolumetricFullConvolution_init(L);
   nn_FloatVolumetricMaxPooling_init(L);
   nn_FloatVolumetricAveragePooling_init(L);
   nn_FloatMultiMarginCriterion_init(L);
@@ -232,7 +228,7 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleSpatialFullConvolution_init(L);
   nn_DoubleSpatialFullConvolutionMap_init(L);
   nn_DoubleSpatialConvolutionMM_init(L);
-  nn_DoubleSpatialDeconvolution_init(L);
+  nn_DoubleSpatialFullConvolution_init(L);
   nn_DoubleSpatialConvolutionMap_init(L);
   nn_DoubleSpatialSubSampling_init(L);
   nn_DoubleSpatialMaxPooling_init(L);
@@ -241,7 +237,7 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleSpatialAdaptiveMaxPooling_init(L);
   nn_DoubleVolumetricConvolution_init(L);
   nn_DoubleVolumetricConvolutionMM_init(L);
-  nn_DoubleVolumetricDeconvolution_init(L);
+  nn_DoubleVolumetricFullConvolution_init(L);
   nn_DoubleVolumetricMaxPooling_init(L);
   nn_DoubleVolumetricAveragePooling_init(L);
   nn_DoubleMultiMarginCriterion_init(L);

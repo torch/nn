@@ -11,7 +11,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [LookupTable](#nn.LookupTable) : a convolution of width `1`, commonly used for word embeddings ;
   * [Spatial Modules](#nn.SpatialModules) apply to inputs with two-dimensional relationships (e.g. images):
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
-    * [SpatialDeconvolution](#nn.SpatialDeconvolution) : a 2D deconvolution over an input image ;
+    * [SpatialFullConvolution](#nn.SpatialFullConvolution) : a 2D full convolution over an input image ;
     * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
     * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
@@ -26,7 +26,7 @@ a kernel for computing the weighted average in a neighborhood ;
     * [SpatialUpsamplingNearest](#nn.SpatialUpSamplingNearest): A simple upsampler applied to every channel of the feature map.
   * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
     * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
-    * [VolumetricDeconvolution](#nn.VolumetricDeconvolution) : a 3D deconvolution over an input video (a sequence of images) ;
+    * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
 
@@ -353,34 +353,34 @@ This table is randomly populated such that each output unit has
 `nto` incoming connections. The algorihtm tries to assign uniform
 number of outgoing connections to each input node if possible.
 
-<a name="nn.SpatialDeconvolution"></a>
-### SpatialDeconvolution ###
+<a name="nn.SpatialFullConvolution"></a>
+### SpatialFullConvolution ###
 
 ```lua
-module = nn.SpatialDeconvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH])
+module = nn.SpatialFullConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH])
 ```
 
-Applies a 2D deconvolution over an input image composed of several input planes. The `input` tensor in
+Applies a 2D full convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D or 4D tensor.
 
 The parameters are the following:
   * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
   * `nOutputPlane`: The number of output planes the convolution layer will produce.
-  * `kW`: The kernel width of the deconvolution
-  * `kH`: The kernel height of the deconvolution
-  * `dW`: The step of the deconvolution in the width dimension. Default is `1`.
-  * `dH`: The step of the deconvolution in the height dimension. Default is `1`.
+  * `kW`: The kernel width of the convolution
+  * `kH`: The kernel height of the convolution
+  * `dW`: The step of the convolution in the width dimension. Default is `1`.
+  * `dH`: The step of the convolution in the height dimension. Default is `1`.
   * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
   * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
 
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
 will be `nOutputPlane x oheight x owidth` where
 ```lua
-owidth  = (width  - 1) * dW - 2*padW + kW 
+owidth  = (width  - 1) * dW - 2*padW + kW
 oheight = (height - 1) * dH - 2*padH + kH
 ```
 
-Further information about the deconvolution can be found in the following paper: [Fully Convolutional Networks for Semantic Segmentation](http://www.cs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf).
+Further information about the full convolution can be found in the following paper: [Fully Convolutional Networks for Semantic Segmentation](http://www.cs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf).
 
 <a name="nn.SpatialLPPooling"></a>
 ### SpatialLPPooling ###
@@ -683,25 +683,25 @@ size `nOutputPlane x nInputPlane x kT x kH x kW`) and `self.bias` (Tensor of
 size `nOutputPlane`). The corresponding gradients can be found in
 `self.gradWeight` and `self.gradBias`.
 
-<a name="nn.VolumetricDeconvolution"></a>
-### VolumetricDeconvolution ###
+<a name="nn.VolumetricFullConvolution"></a>
+### VolumetricFullConvolution ###
 
 ```lua
-module = nn.VolumetricDeconvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH])
+module = nn.VolumetricFullConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH])
 ```
 
-Applies a 3D deconvolution over an input image composed of several input planes. The `input` tensor in
+Applies a 3D full convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 4D or 5D tensor.
 
 The parameters are the following:
 * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
 * `nOutputPlane`: The number of output planes the convolution layer will produce.
-* `kT`: The kernel depth of the deconvolution
-* `kW`: The kernel width of the deconvolution
-* `kH`: The kernel height of the deconvolution
-* `dT`: The step of the deconvolution in the depth dimension. Default is `1`.
-* `dW`: The step of the deconvolution in the width dimension. Default is `1`.
-* `dH`: The step of the deconvolution in the height dimension. Default is `1`.
+* `kT`: The kernel depth of the convolution
+* `kW`: The kernel width of the convolution
+* `kH`: The kernel height of the convolution
+* `dT`: The step of the convolution in the depth dimension. Default is `1`.
+* `dW`: The step of the convolution in the width dimension. Default is `1`.
+* `dH`: The step of the convolution in the height dimension. Default is `1`.
 * `padT`: The additional zeros added per depth to the input planes. Default is `0`, a good number is `(kT-1)/2`.
 * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
 * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
