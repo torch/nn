@@ -149,7 +149,7 @@ function Cosine:accGradParameters(input, gradOutput, scale)
    end
 end
 
-function Cosine:type(type)
+function Cosine:type(type, tensorCache)
    if type then
       -- prevent premature memory allocations
       self._input = nil
@@ -159,5 +159,5 @@ function Cosine:type(type)
       self._gradOutput = nil
       self._sum = nil
    end
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
 end
