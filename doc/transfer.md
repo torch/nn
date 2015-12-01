@@ -292,7 +292,7 @@ m=nn.ReLU(
    inplace  -- if true the result will be written to the input tensor, default: false;
 )
 ```
-If `l == u` a RReLU effectively becomes a LeakyReLU. Regardless of operating in in-place mode a RReLU will internally allocate an input-sized `noise` tensor to store random factors for negative inputs. The backward() operation assumes that forward() has been called before. 
+If `l == u` a RReLU effectively becomes a LeakyReLU. Regardless of operating in in-place mode a RReLU will internally allocate an input-sized `noise` tensor to store random factors for negative inputs. The backward() operation assumes that forward() has been called before.
 
 For reference see [Empirical Evaluation of Rectified Activations in Convolutional Network](http://arxiv.org/abs/1505.00853).
 ```lua
@@ -331,6 +331,19 @@ gnuplot.plot({'fw ELU, alpha=0.1', xs,  f(0.1), '-'},
 gnuplot.grid(true)
 ```
 ![](image/elu.png)
+
+<a name="nn.LeakyReLU"></a>
+## LeakyReLU ##
+
+Applies Leaky ReLU, which parameter `a` sets the slope of the negative part:
+
+`LeakyReLU` is defined as `f(x)` = `max(0,x) + a * min(0,x)`
+
+Can optionally do its operation in-place without using extra state memory:
+
+```lua
+m=nn.LeakyReLU(a,true) -- true = in-place, false = keeping separate state.
+```
 
 <a name="nn.SpatialSoftMax"></a>
 ## SpatialSoftMax ##

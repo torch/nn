@@ -453,6 +453,32 @@ function nntest.RReLU()
    end
 end
 
+function nntest.LeakyReLU()
+   local input = torch.randn(3,4)
+   local gradOutput = torch.randn(3,4)
+   local negval = math.random()
+   local module = nn.LeakyReLU(negval)
+   local output = module:forward(input)
+   local output2 = input:clone():gt(input, 0):cmul(input) + input:clone():le(input,0):cmul(input) * module.negval
+   mytester:assertTensorEq(output, output2, 0.000001, 'LeakyReLU output')
+   local gradInput = module:backward(input, gradOutput)
+   local gradInput2 = input:clone():gt(input, 0):cmul(gradOutput) + input:clone():le(input,0):cmul(gradOutput) * module.negval
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001, 'LeakyReLU gradInput')
+end
+
+function nntest.LeakyReLUIP()
+   local input = torch.randn(3,4)
+   local gradOutput = torch.randn(3,4)
+   local negval = math.random()
+   local module = nn.LeakyReLU(negval,true)
+   local output = input:clone():gt(input, 0):cmul(input) + input:clone():le(input,0):cmul(input) * module.negval
+   local output2 = module:forward(input)
+   mytester:assertTensorEq(output2, output, 0.000001, 'LeakyReLU output')
+   local gradInput = input:clone():gt(input, 0):cmul(gradOutput) + input:clone():le(input,0):cmul(gradOutput) * module.negval
+   local gradInput2 = module:backward(input, gradOutput)
+   mytester:assertTensorEq(gradInput2, gradInput, 0.000001, 'LeakyReLU gradInput')
+end
+
 function nntest.HardShrink()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
