@@ -385,7 +385,7 @@ print(pred)
 for i = 1, 100 do           -- A few steps of training such a network..
    x = torch.ones(10, 2)
    y = torch.Tensor(3)
-   y:copy(x:select(2, 1, 1):narrow(1, 1, 3))
+   y:copy(x:select(2, 1):narrow(1, 1, 3))
    pred = mlp:forward(x)
 
    criterion = nn.MSECriterion()
