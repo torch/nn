@@ -602,7 +602,7 @@ for i = 1, n do
    local expert = nn.Sequential()
    expert:add(nn.Linear(3, 4))
    expert:add(nn.Tanh())
-   expert:add(nn.Linear(4, 2*5))
+   expert:add(nn.Linear(4, 4*2*5))
    expert:add(nn.Tanh())
    expert:add(nn.Reshape(4, 2, 5, 1))
    experts:add(expert)
