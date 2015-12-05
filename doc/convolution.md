@@ -33,7 +33,7 @@ a kernel for computing the weighted average in a neighborhood ;
 <a name="nn.TemporalModules"></a>
 ## Temporal Modules ##
 Excluding an optional first batch dimension, temporal layers expect a 2D Tensor as input. The
-first dimension is the number of frames in the sequence (e.g. `nInputFrame`), the last dimenstion
+first dimension is the number of frames in the sequence (e.g. `nInputFrame`), the last dimension
 is the number of features per frame (e.g. `inputFrameSize`). The output will normally have the same number
 of dimensions, although the size of each dimension may change. These are commonly used for processing acoustic signals or sequences of words, i.e. in Natural Language Processing.
 
@@ -261,7 +261,7 @@ Outputs something like:
 <a name="nn.SpatialModules"></a>
 ## Spatial Modules ##
 Excluding an optional batch dimension, spatial layers expect a 3D Tensor as input. The
-first dimension is the number of features (e.g. `frameSize`), the last two dimenstions
+first dimension is the number of features (e.g. `frameSize`), the last two dimensions
 are spatial (e.g. `height x width`). These are commonly used for processing images.
 
 <a name="nn.SpatialConvolution"></a>
@@ -350,7 +350,7 @@ table = nn.tables.random(nin,nout, nto)
 ```
 
 This table is randomly populated such that each output unit has
-`nto` incoming connections. The algorihtm tries to assign uniform
+`nto` incoming connections. The algorithm tries to assign uniform
 number of outgoing connections to each input node if possible.
 
 <a name="nn.SpatialFullConvolution"></a>
@@ -644,7 +644,7 @@ C = model:forward(A)  -- C will be of size `b x m x h x w`
 ## Volumetric Modules ##
 Excluding an optional batch dimension, volumetric layers expect a 4D Tensor as input. The
 first dimension is the number of features (e.g. `frameSize`), the second is sequential (e.g. `time`) and the
-last two dimenstions are spatial (e.g. `height x width`). These are commonly used for processing videos (sequences of images).
+last two dimensions are spatial (e.g. `height x width`). These are commonly used for processing videos (sequences of images).
 
 <a name="nn.VolumetricConvolution"></a>
 ### VolumetricConvolution ###
