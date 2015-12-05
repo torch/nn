@@ -71,7 +71,7 @@ accordingly.
 ### accGradParameters(input, gradOutput, scale) ###
 
 Computing the gradient of the module with respect to its
-ownparameters. Many modules do not perform this step as they do not
+own parameters. Many modules do not perform this step as they do not
 have any parameters. The state variable name for the parameters is
 module dependent. The module is expected to _accumulate_ the
 gradients with respect to the parameters in some variable.
@@ -109,7 +109,7 @@ If the module does not have parameters, it does nothing.
 
 This is a convenience module that performs two functions at
 once. Calculates and accumulates the gradients with respect to the
-weights after mutltiplying with negative of the learning rate
+weights after multiplying with negative of the learning rate
 `learningRate`. Performing these two operations at once is more
 performance efficient and it might be advantageous in certain
 situations.
