@@ -2375,6 +2375,54 @@ function nntest.SpatialMaxPooling()
   end
 end
 
+function nntest.SpatialMaxUnpooling()
+   for _,ceil_mode in pairs({true,false}) do
+      local from = math.random(1,5)
+      local ki = math.random(2,4)
+      local kj = math.random(2,4)
+      local si, sj = ki, kj
+      local outi = math.random(4,5)
+      local outj = math.random(4,5)
+      local padW = math.min(math.random(0,1),math.floor(ki/2))
+      local padH = math.min(math.random(0,1),math.floor(kj/2))
+      local ini = (outi-1)*si+ki-2*padW
+      local inj = (outj-1)*sj+kj-2*padH
+
+      local ceil_string = ceil_mode and 'ceil' or 'floor'
+      local poolingModule = nn.SpatialMaxPooling(ki,kj,si,sj,padW,padH)
+      if ceil_mode then poolingModule:ceil() else poolingModule:floor() end
+      local module = nn.SpatialMaxUnpooling(poolingModule)
+      
+      local original = torch.rand(from,inj,ini)
+      local input = poolingModule:forward(original)
+      local output = module:forward(input)
+
+      mytester:assert(output:isSameSizeAs(original),'SpatialMaxUnpooling output size err')
+
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state ')
+
+      local ferr, berr = jac.testIO(module, input)
+      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+
+      -- batch
+      local nbatch = math.random(2,5)
+      original = torch.rand(nbatch,from,inj,ini)
+      input = poolingModule:forward(original)
+      output = module:forward(input)
+
+      mytester:assert(output:isSameSizeAs(original),'SpatialMaxUnpooling batch output size err')
+
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state (Batch)')
+
+      local ferr, berr = jac.testIO(module, input)
+      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
+      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+  end
+end
+
 function nntest.SpatialFractionalMaxPooling()
     local batch = math.random(1, 3)
     local plane = math.random(1, 3)

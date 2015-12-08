@@ -488,6 +488,23 @@ y_i_start = floor((i   /oheight) * iheight)
 y_i_end   = ceil(((i+1)/oheight) * iheight)
 ```
 
+<a name="nn.SpatialMaxUnpooling"></a>
+### SpatialMaxUnpooling ###
+
+```lua
+module = nn.SpatialMaxUnpooling(poolingModule)
+```
+
+Applies 2D "max-unpooling" operation using the indices previously computed 
+by the SpatialMaxPooling module `poolingModule`.
+
+When `B = poolingModule:forward(A)` is called, the indices of the maximal 
+values (corresponding to their position within each map) are stored: 
+`B[{n,k,i,j}] = A[{n,k,indices[{n,k,i}],indices[{n,k,j}]}]`. 
+If `C` is a tensor of same size as `B`, `module:updateOutput(C)` outputs a 
+tensor `D` of same size as `A` such that: 
+`D[{n,k,indices[{n,k,i}],indices[{n,k,j}]}] = C[{n,k,i,j}]`.
+
 <a name="nn.SpatialSubSampling"></a>
 ### SpatialSubSampling ###
 
