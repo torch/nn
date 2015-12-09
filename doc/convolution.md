@@ -572,7 +572,7 @@ Applies a spatial subtraction operation on a series of 2D inputs using
 neighborhood is defined for a local spatial region that is the size as
 kernel and across all features. For a an input image, since there is
 only one feature, the region is only spatial. For an RGB image, the
-weighted anerage is taken over RGB channels and a spatial region.
+weighted average is taken over RGB channels and a spatial region.
 
 If the `kernel` is 1D, then it will be used for constructing and seperable
 2D kernel. The operations will be much more efficient in this case.
