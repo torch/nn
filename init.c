@@ -29,9 +29,6 @@
 #include "generic/Tanh.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/Abs.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/HardShrink.c"
 #include "THGenerateFloatTypes.h"
 
@@ -172,7 +169,6 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSoftMax_init(L);
   nn_FloatSoftPlus_init(L);
   nn_FloatTanh_init(L);
-  nn_FloatAbs_init(L);
   nn_FloatHardShrink_init(L);
   nn_FloatSoftShrink_init(L);
   nn_FloatThreshold_init(L);
@@ -221,7 +217,6 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleSoftMax_init(L);
   nn_DoubleSoftPlus_init(L);
   nn_DoubleTanh_init(L);
-  nn_DoubleAbs_init(L);
   nn_DoubleHardShrink_init(L);
   nn_DoubleSoftShrink_init(L);
   nn_DoubleThreshold_init(L);
