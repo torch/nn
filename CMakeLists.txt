@@ -41,6 +41,8 @@ ENDIF (WITH_OPENMP)
 
 LINK_DIRECTORIES("${Torch_INSTALL_LIB}")
 
+ADD_SUBDIRECTORY(lib)
+
 SET(src init.c)
 
 FILE(GLOB luasrc *.lua)

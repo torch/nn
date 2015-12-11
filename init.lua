@@ -1,7 +1,9 @@
 require('torch')
 require('libnn')
+require('nn.THNN')
 
 include('utils.lua')
+
 
 include('ErrorMessages.lua')
 include('Module.lua')
