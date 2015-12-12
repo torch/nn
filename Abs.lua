@@ -10,7 +10,6 @@ function Abs:updateOutput(input)
    THNN.runKernel(
      'Abs_updateOutput',
      input:type(),
-     THNN.getState(),
      input:cdata(),
      self.output:cdata()
    )
@@ -21,7 +20,6 @@ function Abs:updateGradInput(input, gradOutput)
    THNN.runKernel(
      'Abs_updateGradInput',
      input:type(),
-     THNN.getState(),
      input:cdata(),
      gradOutput:cdata(),
      self.gradInput:cdata()
