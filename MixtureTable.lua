@@ -14,7 +14,7 @@ function MixtureTable:updateOutput(input)
    local gaterInput, expertInputs = table.unpack(input)
    
    -- buffers 
-   self._gaterView = self.gaterView or input[1].new()
+   self._gaterView = self._gaterView or input[1].new()
    self._expert = self._expert or input[1].new()
    self._expertView = self._expertView or input[1].new()
    
