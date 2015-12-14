@@ -458,12 +458,30 @@ ratios are numbers between (0, 1) exclusive
 ### SpatialAveragePooling ###
 
 ```lua
-module = nn.SpatialAveragePooling(kW, kH [, dW, dH])
+module = nn.SpatialAveragePooling(kW, kH [, dW, dH, padW, padH])
 ```
 
 Applies 2D average-pooling operation in `kWxkH` regions by step size
 `dWxdH` steps. The number of output features is equal to the number of
 input planes.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output
+image size will be `nOutputPlane x oheight x owidth` where
+
+```lua
+owidth  = op((width  + 2*padW - kW) / dW + 1)
+oheight = op((height + 2*padH - kH) / dH + 1)
+```
+
+`op` is a rounding operator. By default, it is `floor`. It can be changed
+by calling `:ceil()` or `:floor()` methods.
+
+By default, the output of each pooling region is divided by the number of
+elements inside the padded image (which is usually `kW*kH`, except in some
+corner cases in which it can be smaller). You can also divide by the number
+of elements inside the original non-padded image. To switch between different
+division factors, call `:setCountIncludePad()` or `:setCountExcludePad()`. If
+`padW=padH=0`, both options give the same results.
 
 <a name="nn.SpatialAdaptiveMaxPooling"></a>
 ### SpatialAdaptiveMaxPooling ###
