@@ -78,7 +78,7 @@ local ok,result
 if ffi.os == "OSX" then
   ok,result = pcall(ffi.load, 'libTHNN.dylib')
 else
-  ok,result = pcall(ffi.load, 'libTHNN.so')
+  ok,result = pcall(ffi.load, 'THNN')
 end
 if not ok then
   print(result)
