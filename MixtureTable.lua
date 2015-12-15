@@ -60,7 +60,6 @@ function MixtureTable:updateOutput(input)
          end
          self.size[self.dim] = gaterInput:size(self.dimG)
          self.output:resizeAs(expertInputs:select(self.dim, 1))
-         self.gradInput[2] = self._gradInput
          self.batchSize = batchSize
          self.backwardSetup = false
       end
@@ -80,7 +79,6 @@ function MixtureTable:updateGradInput(input, gradOutput)
    
    -- buffers
    self._sum = self._sum or input[1].new()
-   self._gradInput = self._gradInput or {input[1].new(), {}}
    self._expertView2 = self._expertView2 or input[1].new()
    self._expert2 = self._expert2 or input[1].new()
       
@@ -154,7 +152,6 @@ function MixtureTable:type(type, tensorCache)
    self._expert = nil
    self._expertView = nil
    self._sum = nil
-   self._gradInput = nil
    self._expert2 = nil
    self._expertView2 = nil
    return parent.type(self, type, tensorCache)
