@@ -1680,8 +1680,8 @@ function nntest.SpatialContrastiveNormalization()
    gradOutput2[2]:copy(gradOutput)
    local gradInput2 = module:backward(input2, gradOutput2)
 
-   mytester:assertTensorEq(output2[2], output:float(), 0.000001, "SpatialContrastiveNormalization 2d forward batch err")
-   mytester:assertTensorEq(gradOutput2[2], gradOutput:float(), 0.000001, "SpatialContrastiveNormalization 2d backward batch err")
+   mytester:assertTensorEq(output2[2], output:float(), 0.000002, "SpatialContrastiveNormalization 2d forward batch err")
+   mytester:assertTensorEq(gradOutput2[2], gradOutput:float(), 0.000002, "SpatialContrastiveNormalization 2d backward batch err")
 
    module:double()
    input2 = input2:double()
