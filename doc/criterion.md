@@ -98,7 +98,7 @@ If provided, the optional argument `weights` should be a 1D `Tensor` assigning w
 This is particularly useful when you have an unbalanced training set.
 
 The `input` given through a `forward()` is expected to contain _log-probabilities_ of each class: `input` has to be a 1D `Tensor` of size `n`.
-Obtaining log-probabilities in a neural network is easily achieved by adding a [`LogSoftMax`](#nn.LogSoftMax) layer in the last layer of your neural network.
+Obtaining log-probabilities in a neural network is easily achieved by adding a [`LogSoftMax`](transfer.md#nn.LogSoftMax) layer in the last layer of your neural network.
 You may use [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion) instead, if you prefer not to add an extra layer to your network.
 This criterion expects a class index (1 to the number of class) as `target` when calling [`forward(input, target`)](#nn.CriterionForward) and [`backward(input, target)`](#nn.CriterionBackward).
 
