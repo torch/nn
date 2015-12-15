@@ -28,9 +28,6 @@ function PairwiseDistance:updateOutput(input)
    else
       error('input must be vector or matrix')
    end
-   if input[1]:dim() > 2 then
-      error('input must be vector or matrix')
-   end  
  
    return self.output
 end
