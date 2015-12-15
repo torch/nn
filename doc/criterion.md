@@ -119,7 +119,7 @@ The following is a code fragment showing how to make a gradient step given an in
 ```lua
 function gradUpdate(mlp, x, y, learningRate)
    local criterion = nn.ClassNLLCriterion()
-   pred = mlp:forward(x)
+   local pred = mlp:forward(x)
    local err = criterion:forward(pred, y)
    mlp:zeroGradParameters()
    local t = criterion:backward(pred, y)
