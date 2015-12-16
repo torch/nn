@@ -1,5 +1,3 @@
-local THNN = require('nn.THNN')
-
 local Abs, parent = torch.class('nn.Abs', 'nn.Module')
 
 function Abs:__init()
@@ -7,9 +5,7 @@ function Abs:__init()
 end
 
 function Abs:updateOutput(input)
-   THNN.runKernel(
-     'Abs_updateOutput',
-     input:type(),
+   input.THNN.Abs_updateOutput(
      input:cdata(),
      self.output:cdata()
    )
@@ -17,9 +13,7 @@ function Abs:updateOutput(input)
 end
 
 function Abs:updateGradInput(input, gradOutput)
-   THNN.runKernel(
-     'Abs_updateGradInput',
-     input:type(),
+   input.THNN.Abs_updateGradInput(
      input:cdata(),
      gradOutput:cdata(),
      self.gradInput:cdata()

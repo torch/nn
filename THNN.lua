@@ -2,6 +2,11 @@ local ffi = require 'ffi'
 
 local THNN = {}
 
+-- load libTHNN
+local cpath = package.cpath
+if ffi.os == 'OSX' then cpath = string.gsub(package.cpath, '%?%.so;', '?.dylib;') end
+THNN.C = ffi.load(package.searchpath('libTHNN', cpath))
+
 local generic_THNN_h = [[
 TH_API void THNN_(Abs_updateOutput)(
           THNNState *state,
@@ -74,19 +79,6 @@ function THNN.optionalTensor(t)
   return t and t:cdata() or THNN.NULL
 end
 
-local ok,result
-if ffi.os == "OSX" then
-  ok,result = pcall(ffi.load, 'libTHNN.dylib')
-else
-  ok,result = pcall(ffi.load, 'THNN')
-end
-if not ok then
-  print(result)
-  error("Ops, could not load 'libTHNN' CPU backend library.")
-else
-  THNN.C = result
-end
-
 local function extract_function_names(s)
   local t = {}
   for n in string.gmatch(s, 'TH_API void THNN_%(([%a%d_]+)%)') do
@@ -103,6 +95,8 @@ function THNN.bind(lib, base_names, type_name, state_getter)
     local ok,v = pcall(function() return lib[prefix .. n] end)
     if ok then
       ftable[n] = function(...) v(state_getter(), ...) end   -- implicitely add state
+    else
+      print('not found: ' .. prefix .. n .. v)
     end
   end
   return ftable
