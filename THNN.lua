@@ -3,9 +3,7 @@ local ffi = require 'ffi'
 local THNN = {}
 
 -- load libTHNN
-local cpath = package.cpath
-if ffi.os == 'OSX' then cpath = string.gsub(package.cpath, '%?%.so;', '?.dylib;') end
-THNN.C = ffi.load(package.searchpath('libTHNN', cpath))
+THNN.C = ffi.load(package.searchpath('libTHNN', package.cpath))
 
 local generic_THNN_h = [[
 TH_API void THNN_(Abs_updateOutput)(
