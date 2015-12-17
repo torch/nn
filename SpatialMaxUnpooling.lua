@@ -40,10 +40,5 @@ function SpatialMaxUnpooling:empty()
 end
 
 function SpatialMaxUnpooling:__tostring__()
-   local s =  string.format('%s(%d,%d,%d,%d', torch.type(self), self.kW, self.kH, self.dW, self.dH)
-   if (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
-      s = s .. ',' .. self.padW .. ','.. self.padH
-   end
-
-   return 'nn.SpatialMaxUnpooling associated to '.. s .. ')'
+   return 'nn.SpatialMaxUnpooling associated to '..tostring(self.pooling)
 end
