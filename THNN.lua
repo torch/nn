@@ -2,9 +2,6 @@ local ffi = require 'ffi'
 
 local THNN = {}
 
--- load libTHNN
-THNN.C = ffi.load(package.searchpath('libTHNN', package.cpath))
-
 local generic_THNN_h = [[
 TH_API void THNN_(Abs_updateOutput)(
           THNNState *state,
@@ -46,6 +43,25 @@ typedef struct {
   int normal_is_valid;
 } THGenerator;
 ]]
+
+-- polyfill for LUA 5.1
+if not package.searchpath then
+    local sep = package.config:sub(1,1)
+    function package.searchpath(mod, path)
+        mod = mod:gsub('%.', sep)
+        for m in path:gmatch('[^;]+') do
+            local nm = m:gsub('?', mod)
+            local f = io.open(nm, 'r')
+            if f then
+              f:close()
+              return nm
+            end
+        end
+    end
+end
+
+-- load libTHNN
+THNN.C = ffi.load(package.searchpath('libTHNN', package.cpath))
 
 ffi.cdef(base_declarations)
 
