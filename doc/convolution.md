@@ -17,6 +17,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
     * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
     * [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling) : a 2D max-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
+    * [SpatialMaxUnpooling](#nn.SpatialMaxUnpooling) : a 2D max-unpooling operation ;
     * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
     * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
     * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
@@ -505,6 +506,27 @@ x_j_end   = ceil(((j+1)/owidth)  * iwidth)
 y_i_start = floor((i   /oheight) * iheight)
 y_i_end   = ceil(((i+1)/oheight) * iheight)
 ```
+
+<a name="nn.SpatialMaxUnpooling"></a>
+### SpatialMaxUnpooling ###
+
+```lua
+module = nn.SpatialMaxUnpooling(poolingModule)
+```
+
+Applies 2D "max-unpooling" operation using the indices previously computed 
+by the SpatialMaxPooling module `poolingModule`.
+
+When `B = poolingModule:forward(A)` is called, the indices of the maximal 
+values (corresponding to their position within each map) are stored: 
+`B[{n,k,i,j}] = A[{n,k,indices[{n,k,i}],indices[{n,k,j}]}]`. 
+If `C` is a tensor of same size as `B`, `module:updateOutput(C)` outputs a 
+tensor `D` of same size as `A` such that: 
+`D[{n,k,indices[{n,k,i}],indices[{n,k,j}]}] = C[{n,k,i,j}]`.
+
+Module inspired by:
+   "Visualizing and understanding convolutional networks" (2014)
+                   by Matthew Zeiler, Rob Fergus
 
 <a name="nn.SpatialSubSampling"></a>
 ### SpatialSubSampling ###
