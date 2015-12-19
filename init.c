@@ -107,6 +107,9 @@
 #include "generic/SpatialMaxPooling.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/SpatialMaxUnpooling.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/SpatialFractionalMaxPooling.c"
 #include "THGenerateFloatTypes.h"
 
@@ -188,6 +191,7 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSpatialConvolutionMap_init(L);
   nn_FloatSpatialSubSampling_init(L);
   nn_FloatSpatialMaxPooling_init(L);
+  nn_FloatSpatialMaxUnpooling_init(L);
   nn_FloatSpatialFractionalMaxPooling_init(L);
   nn_FloatSpatialAveragePooling_init(L);
   nn_FloatSpatialAdaptiveMaxPooling_init(L);
@@ -229,6 +233,7 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleTemporalConvolution_init(L);
   nn_DoubleTemporalSubSampling_init(L);
   nn_DoubleTemporalMaxPooling_init(L);
+  nn_DoubleSpatialMaxUnpooling_init(L);
   nn_DoubleSpatialConvolution_init(L);
   nn_DoubleSpatialFullConvolution_init(L);
   nn_DoubleSpatialFullConvolutionMap_init(L);
