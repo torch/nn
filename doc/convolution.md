@@ -364,6 +364,8 @@ module = nn.SpatialFullConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH]
 Applies a 2D full convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D or 4D tensor.
 
+Other frameworks call this operation "In-network Upsampling", "Fractionally-strided convolution", "Backwards Convolution," "Deconvolution", or "Upconvolution."
+
 The parameters are the following:
   * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
   * `nOutputPlane`: The number of output planes the convolution layer will produce.
