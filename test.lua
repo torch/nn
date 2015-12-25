@@ -1537,14 +1537,14 @@ function nntest.SpatialContrastiveNormalization()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
-function nntest.SpatialCrossLRN()
+function nntest.SpatialCrossMapLRN()
    local inputSize = math.random(6,9)
    local size = math.random(1,3)*2+1
    local nbfeatures = math.random(3,8)
    local alpha = math.random(1,100)/100
    local beta  = math.random(0,100)/100
    local k = math.random(1,3)
-   local module = nn.SpatialCrossLRN(size, alpha, beta, k)
+   local module = nn.SpatialCrossMapLRN(size, alpha, beta, k)
    local input = torch.rand(nbfeatures,inputSize,inputSize)
 
    local err = jac.testJacobian(module,input)
@@ -1568,8 +1568,8 @@ function nntest.SpatialCrossLRN()
    gradOutput2[2]:copy(gradOutput)
    local gradInput2 = module:backward(input2, gradOutput2)
 
-   mytester:assertTensorEq(output2[2], output:float(), 0.000001, "SpatialCrossLRN 2d forward batch err")
-   mytester:assertTensorEq(gradOutput2[2], gradOutput:float(), 0.000001, "SpatialCrossLRN 2d backward batch err")
+   mytester:assertTensorEq(output2[2], output:float(), 0.000001, "SpatialCrossMapLRN 2d forward batch err")
+   mytester:assertTensorEq(gradOutput2[2], gradOutput:float(), 0.000001, "SpatialCrossMapLRN 2d backward batch err")
 
    module:double()
    input2 = input2:double()

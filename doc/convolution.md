@@ -19,7 +19,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
     * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
     * [SpatialSubtractiveNormalization](#nn.SpatialSubtractiveNormalization) : a spatial subtraction operation on a series of 2D inputs using
-    * [SpatialCrossLRN](#nn.SpatialCrossLRN) : a spatial local response normalization between feature maps ;
+    * [SpatialCrossMapLRN](#nn.SpatialCrossMapLRN) : a spatial local response normalization between feature maps ;
     * [SpatialBatchNormalization](#nn.SpatialBatchNormalization): mean/std normalization over the mini-batch inputs and pixels, with an optional affine transform that follows
 a kernel for computing the weighted average in a neighborhood ;
   * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
@@ -524,11 +524,11 @@ w2=image.display(processed)
 ```
 ![](image/lena.jpg)![](image/lenap.jpg)
 
-<a name="nn.SpatialCrossLRN"></a>
-### SpatialCrossLRN ###
+<a name="nn.SpatialCrossMapLRN"></a>
+### SpatialCrossMapLRN ###
 
 ```lua
-module = nn.SpatialCrossLRN(size [,alpha] [,beta] [,k])
+module = nn.SpatialCrossMapLRN(size [,alpha] [,beta] [,k])
 ```
 
 Applies Spatial Local Response Normalization between different feature maps.
