@@ -216,6 +216,22 @@ function nn.hessian.enable()
    function nn.SpatialConvolution.initDiagHessianParameters(self)
       initDiagHessianParameters(self,{'gradWeight','gradBias'},{'diagHessianWeight','diagHessianBias'})
    end
+   
+   ----------------------------------------------------------------------
+   -- SpatialConvolutionLocal
+   ----------------------------------------------------------------------
+   function nn.SpatialConvolutionLocal.updateDiagHessianInput(self, input, diagHessianOutput)
+      updateDiagHessianInput(self, input, diagHessianOutput, {'weight'}, {'weightSq'})
+      return self.diagHessianInput
+   end
+
+   function nn.SpatialConvolutionLocal.accDiagHessianParameters(self, input, diagHessianOutput)
+      accDiagHessianParameters(self,input, diagHessianOutput, {'gradWeight','gradBias'}, {'diagHessianWeight','diagHessianBias'})
+   end
+
+   function nn.SpatialConvolutionLocal.initDiagHessianParameters(self)
+      initDiagHessianParameters(self,{'gradWeight','gradBias'},{'diagHessianWeight','diagHessianBias'})
+   end
 
    ----------------------------------------------------------------------
    -- SpatialFullConvolution

@@ -82,6 +82,7 @@ include('ELU.lua')
 
 include('LookupTable.lua')
 include('SpatialConvolution.lua')
+include('SpatialConvolutionLocal.lua')
 include('SpatialFullConvolution.lua')
 include('SpatialFullConvolutionMap.lua')
 include('SpatialConvolutionMM.lua')
