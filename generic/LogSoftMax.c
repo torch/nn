@@ -45,7 +45,7 @@ static int nn_(LogSoftMax_updateOutput)(lua_State *L)
 
     for(d = 0; d < dim; d++)
       logsum += THExpMinusApprox(maxInput-input_data[d]);
-    logsum = maxInput + log(logsum);
+    logsum = maxInput + TH_LOG(logsum);
 
     for(d = 0; d < dim; d++)
       output_data[d] = input_data[d] - logsum;
@@ -96,7 +96,7 @@ static int nn_(LogSoftMax_updateGradInput)(lua_State *L)
       sum += gradOutput_data[d];
 
     for(d = 0; d < dim; d++)
-      gradInput_data[d] = gradOutput_data[d] - exp(output_data[d])*sum;
+      gradInput_data[d] = gradOutput_data[d] - TH_EXP(output_data[d])*sum;
   }
 
   return 1;

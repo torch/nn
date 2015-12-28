@@ -11,7 +11,7 @@ static int nn_(AbsCriterion_updateOutput)(lua_State *L)
 
   sum = 0;
   TH_TENSOR_APPLY2(real, input, real, target,
-                   sum += fabs(*input_data - *target_data);)
+                   sum += TH_ABS(*input_data - *target_data);)
 
   if(sizeAverage)
     sum /= THTensor_(nElement)(input);

@@ -8,7 +8,7 @@ static int nn_(L1Cost_updateOutput)(lua_State *L)
   accreal sum;
 
   sum = 0;
-  TH_TENSOR_APPLY(real, input, sum += fabs(*input_data););
+  TH_TENSOR_APPLY(real, input, sum += TH_ABS(*input_data););
 
   lua_pushnumber(L, sum);
   lua_setfield(L, 1, "output");

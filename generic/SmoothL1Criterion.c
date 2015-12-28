@@ -11,7 +11,7 @@ static int nn_(SmoothL1Criterion_updateOutput)(lua_State *L)
 
   sum = 0;
   TH_TENSOR_APPLY2(real, input, real, target,
-                   real z = fabs(*input_data - *target_data);
+                   real z = TH_ABS(*input_data - *target_data);
                    sum += z < 1 ? 0.5*z*z : z - 0.5;)
 
   if(sizeAverage)
