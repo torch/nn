@@ -22,6 +22,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
     * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
     * [SpatialSubtractiveNormalization](#nn.SpatialSubtractiveNormalization) : a spatial subtraction operation on a series of 2D inputs using
+    * [SpatialCrossMapLRN](#nn.SpatialCrossMapLRN) : a spatial local response normalization between feature maps ;
     * [SpatialBatchNormalization](#nn.SpatialBatchNormalization): mean/std normalization over the mini-batch inputs and pixels, with an optional affine transform that follows
 a kernel for computing the weighted average in a neighborhood ;
     * [SpatialUpsamplingNearest](#nn.SpatialUpSamplingNearest): A simple upsampler applied to every channel of the feature map.
@@ -638,6 +639,27 @@ w1=image.display(lena)
 w2=image.display(processed)
 ```
 ![](image/lena.jpg)![](image/lenap.jpg)
+
+<a name="nn.SpatialCrossMapLRN"></a>
+### SpatialCrossMapLRN ###
+
+```lua
+module = nn.SpatialCrossMapLRN(size [,alpha] [,beta] [,k])
+```
+
+Applies Spatial Local Response Normalization between different feature maps.
+By default, `alpha = 0.0001`, `beta = 0.75` and `k = 1`
+
+The operation implemented is:
+```
+                          x_f
+y_f =  -------------------------------------------------
+        (k+(alpha/size)* sum_{l=l1 to l2} (x_l^2))^beta
+```
+where `x_f` is the input at spatial locations `h,w` (not shown for simplicity) and feature map `f`,
+`l1` corresponds to `max(0,f-ceil(size/2))` and `l2` to `min(F, f-ceil(size/2) + size)`. Here, `F`
+is the number of feature maps.
+More information can be found [here](https://code.google.com/p/cuda-convnet2/wiki/LayerParams#Local_response_normalization_layer_%28across_maps%29).
 
 <a name="nn.SpatialBatchNormalization"></a>
 ## SpatialBatchNormalization ##
