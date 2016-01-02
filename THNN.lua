@@ -12,7 +12,7 @@ TH_API void THNN_(Abs_updateGradInput)(
           THTensor *input,
           THTensor *gradOutput,
           THTensor *gradInput);
-          
+
 TH_API void THNN_(AbsCriterion_updateOutput)(
           THNNState *state,
           THTensor *input,
@@ -25,7 +25,7 @@ TH_API void THNN_(AbsCriterion_updateGradInput)(
           THTensor *target,
           THTensor *gradInput,
           bool sizeAverage);
-          
+
 TH_API void THNN_(ClassNLLCriterion_updateOutput)(
           THNNState *state,
           THTensor *input,
@@ -42,6 +42,19 @@ TH_API void THNN_(ClassNLLCriterion_updateGradInput)(
           bool sizeAverage,
           THTensor *weights,
           THTensor *total_weight);
+
+TH_API void THNN_(DistKLDivCriterion_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *target,
+          real *output,
+          bool sizeAverage);
+TH_API void THNN_(DistKLDivCriterion_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *target,
+          THTensor *gradInput,
+          bool sizeAverage);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
