@@ -11,9 +11,6 @@
 #include "generic/Sqrt.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/HardTanh.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/LogSigmoid.c"
 #include "THGenerateFloatTypes.h"
 
@@ -144,7 +141,6 @@ int luaopen_libnn(lua_State *L)
 
   nn_FloatSqrt_init(L);
   nn_FloatSquare_init(L);
-  nn_FloatHardTanh_init(L);
   nn_FloatLogSoftMax_init(L);
   nn_FloatMSECriterion_init(L);
   nn_FloatSmoothL1Criterion_init(L);
@@ -188,7 +184,6 @@ int luaopen_libnn(lua_State *L)
 
   nn_DoubleSqrt_init(L);
   nn_DoubleSquare_init(L);
-  nn_DoubleHardTanh_init(L);
   nn_DoubleLogSoftMax_init(L);
   nn_DoubleMSECriterion_init(L);
   nn_DoubleSmoothL1Criterion_init(L);
