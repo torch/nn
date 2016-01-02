@@ -9,7 +9,7 @@ function L1Cost:updateOutput(input)
    self.output_tensor = self.output_tensor or input.new(1)
    input.THNN.L1Cost_updateOutput(
       input:cdata(),
-      self.output_tensor:data()
+      self.output_tensor:cdata()
    )
    self.output = self.output_tensor[1]
    return self.output

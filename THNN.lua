@@ -17,7 +17,7 @@ TH_API void THNN_(AbsCriterion_updateOutput)(
           THNNState *state,
           THTensor *input,
           THTensor *target,
-          real *output,
+          THTensor *output,
           bool sizeAverage);
 TH_API void THNN_(AbsCriterion_updateGradInput)(
           THNNState *state,
@@ -47,7 +47,7 @@ TH_API void THNN_(DistKLDivCriterion_updateOutput)(
           THNNState *state,
           THTensor *input,
           THTensor *target,
-          real *output,
+          THTensor *output,
           bool sizeAverage);
 TH_API void THNN_(DistKLDivCriterion_updateGradInput)(
           THNNState *state,
@@ -85,7 +85,7 @@ TH_API void THNN_(HardTanh_updateGradInput)(
 TH_API void THNN_(L1Cost_updateOutput)(
           THNNState *state,
           THTensor *input,
-          real *output);
+          THTensor *output);
 TH_API void THNN_(L1Cost_updateGradInput)(
           THNNState *state,
           THTensor *input,
