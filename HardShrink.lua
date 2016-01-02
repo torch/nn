@@ -6,11 +6,20 @@ function HardShrink:__init(lam)
 end
 
 function HardShrink:updateOutput(input)
-   input.nn.HardShrink_updateOutput(self, input)
+   input.THNN.HardShrink_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.lambda
+   )
    return self.output
 end
 
 function HardShrink:updateGradInput(input, gradOutput)
-   input.nn.HardShrink_updateGradInput(self, input, gradOutput)
+   input.THNN.HardShrink_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.lambda
+   )
    return self.gradInput
 end

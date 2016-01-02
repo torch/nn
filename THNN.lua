@@ -55,6 +55,18 @@ TH_API void THNN_(DistKLDivCriterion_updateGradInput)(
           THTensor *target,
           THTensor *gradInput,
           bool sizeAverage);
+
+TH_API void THNN_(HardShrink_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          real lambda);
+TH_API void THNN_(HardShrink_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          real lambda);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
