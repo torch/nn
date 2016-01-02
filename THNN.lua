@@ -81,6 +81,16 @@ TH_API void THNN_(HardTanh_updateGradInput)(
           THTensor *gradInput,
           real min_val,
           real max_val);
+
+TH_API void THNN_(L1Cost_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          real *output);
+TH_API void THNN_(L1Cost_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
