@@ -10,9 +10,22 @@ end
 function HardTanh:updateOutput(input)
    self.min_val = self.min_val or -1
    self.max_val = self.max_val or 1
-   return input.nn.HardTanh_updateOutput(self, input)
+   input.THNN.HardTanh_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.min_val,
+      self.max_val
+   )
+   return self.output
 end
 
 function HardTanh:updateGradInput(input, gradOutput)
-   return input.nn.HardTanh_updateGradInput(self, input, gradOutput)
+   input.THNN.HardTanh_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.min_val,
+      self.max_val
+   )
+   return self.gradInput
 end

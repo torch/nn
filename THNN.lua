@@ -12,12 +12,12 @@ TH_API void THNN_(Abs_updateGradInput)(
           THTensor *input,
           THTensor *gradOutput,
           THTensor *gradInput);
-          
+
 TH_API void THNN_(AbsCriterion_updateOutput)(
           THNNState *state,
           THTensor *input,
           THTensor *target,
-          real *output,
+          THTensor *output,
           bool sizeAverage);
 TH_API void THNN_(AbsCriterion_updateGradInput)(
           THNNState *state,
@@ -25,6 +25,72 @@ TH_API void THNN_(AbsCriterion_updateGradInput)(
           THTensor *target,
           THTensor *gradInput,
           bool sizeAverage);
+
+TH_API void THNN_(ClassNLLCriterion_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THIndexTensor *target,
+          THTensor *output,
+          bool sizeAverage,
+          THTensor *weights,
+          THTensor *total_weight);
+TH_API void THNN_(ClassNLLCriterion_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THIndexTensor *target,
+          THTensor *gradInput,
+          bool sizeAverage,
+          THTensor *weights,
+          THTensor *total_weight);
+
+TH_API void THNN_(DistKLDivCriterion_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *target,
+          THTensor *output,
+          bool sizeAverage);
+TH_API void THNN_(DistKLDivCriterion_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *target,
+          THTensor *gradInput,
+          bool sizeAverage);
+
+TH_API void THNN_(HardShrink_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          real lambda);
+TH_API void THNN_(HardShrink_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          real lambda);
+
+TH_API void THNN_(HardTanh_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          real min_val,
+          real max_val);
+TH_API void THNN_(HardTanh_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          real min_val,
+          real max_val);
+
+TH_API void THNN_(L1Cost_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output);
+TH_API void THNN_(L1Cost_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
@@ -46,18 +112,18 @@ typedef struct {
 
 -- polyfill for LUA 5.1
 if not package.searchpath then
-    local sep = package.config:sub(1,1)
-    function package.searchpath(mod, path)
-        mod = mod:gsub('%.', sep)
-        for m in path:gmatch('[^;]+') do
-            local nm = m:gsub('?', mod)
-            local f = io.open(nm, 'r')
-            if f then
-              f:close()
-              return nm
-            end
-        end
-    end
+   local sep = package.config:sub(1,1)
+   function package.searchpath(mod, path)
+      mod = mod:gsub('%.', sep)
+      for m in path:gmatch('[^;]+') do
+         local nm = m:gsub('?', mod)
+         local f = io.open(nm, 'r')
+         if f then
+            f:close()
+            return nm
+         end
+     end
+   end
 end
 
 -- load libTHNN
@@ -70,50 +136,50 @@ local preprocessed = string.gsub(generic_THNN_h, 'TH_API void THNN_%(([%a%d_]+)%
 
 local replacements = 
 {
-  { ['TYPE'] = 'Double', ['real'] = 'double', ['THTensor'] = 'THDoubleTensor', ['THIndexTensor'] = 'THLongTensor' },
-  { ['TYPE'] = 'Float',  ['real'] = 'float',  ['THTensor'] = 'THFloatTensor',  ['THIndexTensor'] = 'THLongTensor' }
+   { ['TYPE'] = 'Double', ['real'] = 'double', ['THTensor'] = 'THDoubleTensor', ['THIndexTensor'] = 'THLongTensor' },
+   { ['TYPE'] = 'Float',  ['real'] = 'float',  ['THTensor'] = 'THFloatTensor',  ['THIndexTensor'] = 'THLongTensor' }
 }
 
 for i=1,#replacements do
-  local r = replacements[i]
-  local s = preprocessed
-  for k,v in pairs(r) do
-    s = string.gsub(s, k, v)
-  end
-  ffi.cdef(s)
+   local r = replacements[i]
+   local s = preprocessed
+   for k,v in pairs(r) do
+      s = string.gsub(s, k, v)
+   end
+   ffi.cdef(s)
 end
 
 THNN.NULL = ffi.NULL or nil
 
 function THNN.getState()
-  return ffi.NULL or nil
+   return ffi.NULL or nil
 end
 
 function THNN.optionalTensor(t)
-  return t and t:cdata() or THNN.NULL
+   return t and t:cdata() or THNN.NULL
 end
 
 local function extract_function_names(s)
-  local t = {}
-  for n in string.gmatch(s, 'TH_API void THNN_%(([%a%d_]+)%)') do
-    t[#t+1] = n
-  end
-  return t
+   local t = {}
+   for n in string.gmatch(s, 'TH_API void THNN_%(([%a%d_]+)%)') do
+      t[#t+1] = n
+   end
+   return t
 end
 
 function THNN.bind(lib, base_names, type_name, state_getter)
-  local ftable = {}
-  local prefix = 'THNN_' .. type_name
-  for i,n in ipairs(base_names) do
-    -- use pcall since some libs might not support all functions (e.g. cunn)
-    local ok,v = pcall(function() return lib[prefix .. n] end)
-    if ok then
-      ftable[n] = function(...) v(state_getter(), ...) end   -- implicitely add state
-    else
-      print('not found: ' .. prefix .. n .. v)
-    end
-  end
-  return ftable
+   local ftable = {}
+   local prefix = 'THNN_' .. type_name
+   for i,n in ipairs(base_names) do
+      -- use pcall since some libs might not support all functions (e.g. cunn)
+      local ok,v = pcall(function() return lib[prefix .. n] end)
+      if ok then
+         ftable[n] = function(...) v(state_getter(), ...) end   -- implicitely add state
+      else
+         print('not found: ' .. prefix .. n .. v)
+      end
+   end
+   return ftable
 end
 
 -- build function table
@@ -127,15 +193,15 @@ torch.getmetatable('torch.FloatTensor').THNN = THNN.kernels['torch.FloatTensor']
 torch.getmetatable('torch.DoubleTensor').THNN = THNN.kernels['torch.DoubleTensor']
 
 function THNN.runKernel(f, type, ...)
-  local ftable = THNN.kernels[type]
-  if not ftable then
-    error('Unsupported tensor type: '..type)
-  end
-  local f = ftable[f]
-  if not f then
-    error(string.format("Function '%s' not found for tensor type '%s'.", f, type))
-  end
-  f(...)
+   local ftable = THNN.kernels[type]
+   if not ftable then
+      error('Unsupported tensor type: '..type)
+   end
+   local f = ftable[f]
+   if not f then
+      error(string.format("Function '%s' not found for tensor type '%s'.", f, type))
+   end
+   f(...)
 end
 
 return THNN

@@ -4255,6 +4255,14 @@ function nntest.L1Penalty()
    -- during BPROP is not included in the FPROP output)
 end
 
+function nntest.L1Cost()
+   local input = torch.rand(10) * 2 - 1
+   local m = nn.L1Cost()
+   local output = m:forward(input)
+   local err = output - torch.abs(input):sum()
+   mytester:assertalmosteq(err, 0, 1e-15, 'L1Cost forward')
+end
+
 function nntest.DepthConcat()
    local outputSize = torch.IntTensor{5,6,7,8}
    local input = torch.randn(2,3,12,12)

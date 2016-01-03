@@ -14,7 +14,7 @@ function AbsCriterion:updateOutput(input, target)
    input.THNN.AbsCriterion_updateOutput(
       input:cdata(),
       target:cdata(),
-      self.output_tensor:data(),
+      self.output_tensor:cdata(),
       self.sizeAverage
    )
    self.output = self.output_tensor[1]

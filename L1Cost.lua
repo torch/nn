@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local L1Cost, parent = torch.class('nn.L1Cost','nn.Criterion')
 
 function L1Cost:__init()
@@ -5,10 +6,20 @@ function L1Cost:__init()
 end
 
 function L1Cost:updateOutput(input)
-   return input.nn.L1Cost_updateOutput(self,input)
+   self.output_tensor = self.output_tensor or input.new(1)
+   input.THNN.L1Cost_updateOutput(
+      input:cdata(),
+      self.output_tensor:cdata()
+   )
+   self.output = self.output_tensor[1]
+   return self.output
 end
 
 function L1Cost:updateGradInput(input)
-   return input.nn.L1Cost_updateGradInput(self,input)
+   input.THNN.L1Cost_updateGradInput(
+      input:cdata(),
+      THNN.NULL,
+      self.gradInput:cdata()
+   )
+   return self.gradInput
 end
-

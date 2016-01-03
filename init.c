@@ -11,9 +11,6 @@
 #include "generic/Sqrt.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/HardTanh.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/LogSigmoid.c"
 #include "THGenerateFloatTypes.h"
 
@@ -27,9 +24,6 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/Tanh.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/HardShrink.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SoftShrink.c"
@@ -53,9 +47,6 @@
 #include "generic/SoftMax.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/ClassNLLCriterion.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/MSECriterion.c"
 #include "THGenerateFloatTypes.h"
 
@@ -63,9 +54,6 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/MarginCriterion.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/DistKLDivCriterion.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SparseLinear.c"
@@ -134,9 +122,6 @@
 #include "generic/MultiLabelMarginCriterion.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/L1Cost.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SpatialUpSamplingNearest.c"
 #include "THGenerateFloatTypes.h"
 
@@ -153,19 +138,15 @@ int luaopen_libnn(lua_State *L)
 
   nn_FloatSqrt_init(L);
   nn_FloatSquare_init(L);
-  nn_FloatHardTanh_init(L);
   nn_FloatLogSoftMax_init(L);
-  nn_FloatClassNLLCriterion_init(L);
   nn_FloatMSECriterion_init(L);
   nn_FloatSmoothL1Criterion_init(L);
   nn_FloatMarginCriterion_init(L);
-  nn_FloatDistKLDivCriterion_init(L);
   nn_FloatLogSigmoid_init(L);
   nn_FloatSigmoid_init(L);
   nn_FloatSoftMax_init(L);
   nn_FloatSoftPlus_init(L);
   nn_FloatTanh_init(L);
-  nn_FloatHardShrink_init(L);
   nn_FloatSoftShrink_init(L);
   nn_FloatThreshold_init(L);
   nn_FloatPReLU_init(L);
@@ -194,25 +175,20 @@ int luaopen_libnn(lua_State *L)
   nn_FloatVolumetricAveragePooling_init(L);
   nn_FloatMultiMarginCriterion_init(L);
   nn_FloatMultiLabelMarginCriterion_init(L);
-  nn_FloatL1Cost_init(L);
   nn_FloatSpatialUpSamplingNearest_init(L);
   nn_FloatLookupTable_init(L);
 
   nn_DoubleSqrt_init(L);
   nn_DoubleSquare_init(L);
-  nn_DoubleHardTanh_init(L);
   nn_DoubleLogSoftMax_init(L);
-  nn_DoubleClassNLLCriterion_init(L);
   nn_DoubleMSECriterion_init(L);
   nn_DoubleSmoothL1Criterion_init(L);
   nn_DoubleMarginCriterion_init(L);
-  nn_DoubleDistKLDivCriterion_init(L);
   nn_DoubleLogSigmoid_init(L);
   nn_DoubleSigmoid_init(L);
   nn_DoubleSoftMax_init(L);
   nn_DoubleSoftPlus_init(L);
   nn_DoubleTanh_init(L);
-  nn_DoubleHardShrink_init(L);
   nn_DoubleSoftShrink_init(L);
   nn_DoubleThreshold_init(L);
   nn_DoublePReLU_init(L);
@@ -242,7 +218,6 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleVolumetricAveragePooling_init(L);
   nn_DoubleMultiMarginCriterion_init(L);
   nn_DoubleMultiLabelMarginCriterion_init(L);
-  nn_DoubleL1Cost_init(L);
   nn_DoubleSpatialUpSamplingNearest_init(L);
   nn_DoubleLookupTable_init(L);
 
