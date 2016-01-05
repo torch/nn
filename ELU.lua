@@ -1,8 +1,7 @@
 local ELU, parent = torch.class('nn.ELU', 'nn.Module')
 
-
 --[[
-   Djork-Arné Clevert, Thomas Unterthiner, Sepp Hochreiter
+   Djork-ArnÃ© Clevert, Thomas Unterthiner, Sepp Hochreiter
    Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs) 
    http://arxiv.org/pdf/1511.07289.pdf
 --]]
@@ -14,12 +13,22 @@ function ELU:__init(alpha)
 end
 
 function ELU:updateOutput(input)
-   input.nn.ELU_updateOutput(self, input)
+   input.THNN.ELU_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.alpha
+   )
    return self.output
 end
 
 function ELU:updateGradInput(input, gradOutput)
-   input.nn.ELU_updateGradInput(self, input, gradOutput)
+  input.THNN.ELU_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.output:cdata(),
+      self.alpha
+   )
    return self.gradInput
 end
 

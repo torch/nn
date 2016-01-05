@@ -12,12 +12,17 @@ function LookupTable:__init(nIndex, nOutput)
 end
 
 function LookupTable:backCompatibility()
-    self._count = self._count or torch.IntTensor()
-    self._input = self._input or torch.LongTensor()
+   self._input = self._input or torch.LongTensor()
 
-    if self.shouldScaleGradByFreq == nil then
-        self.shouldScaleGradByFreq = false
-    end
+   if not self._count then
+      self._count = torch.LongTensor()
+   elseif self._count and torch.isTypeOf(self._count, torch.IntTensor) then
+      self._count = self._count:long()
+   end
+
+   if not self.shouldScaleGradByFreq then
+      self.shouldScaleGradByFreq = false
+   end
 end
 
 function LookupTable:accUpdateOnly()
@@ -68,7 +73,15 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
    elseif input:dim() ~= 1 then
       error("input must be a vector or matrix")
    end
-   self.gradWeight.nn.LookupTable_accGradParameters(self, input, gradOutput, scale)
+
+   self.gradWeight.THNN.LookupTable_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      scale or 1,
+      self.shouldScaleGradByFreq or false,
+      self._count:cdata()
+   )
 end
 
 function LookupTable:type(type, tensorCache)
@@ -82,7 +95,7 @@ function LookupTable:type(type, tensorCache)
       self._input = self.weight.new()
    else
       -- self._count and self._input should only be converted if using Cuda
-      self._count = torch.IntTensor()
+      self._count = torch.LongTensor()
       self._input = torch.LongTensor()
    end
 

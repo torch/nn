@@ -123,11 +123,11 @@ int luaopen_libnn(lua_State *L)
 
   nn_FloatSqrt_init(L);
   nn_FloatSquare_init(L);
-  nn_FloatLogSoftMax_init(L);
   nn_FloatMSECriterion_init(L);
   nn_FloatSmoothL1Criterion_init(L);
   nn_FloatMarginCriterion_init(L);
   nn_FloatSigmoid_init(L);
+  nn_FloatSoftMax_init(L);
   nn_FloatSoftPlus_init(L);
   nn_FloatTanh_init(L);
   nn_FloatSoftShrink_init(L);
@@ -160,11 +160,11 @@ int luaopen_libnn(lua_State *L)
 
   nn_DoubleSqrt_init(L);
   nn_DoubleSquare_init(L);
-  nn_DoubleLogSoftMax_init(L);
   nn_DoubleMSECriterion_init(L);
   nn_DoubleSmoothL1Criterion_init(L);
   nn_DoubleMarginCriterion_init(L);
   nn_DoubleSigmoid_init(L);
+  nn_DoubleSoftMax_init(L);
   nn_DoubleSoftPlus_init(L);
   nn_DoubleTanh_init(L);
   nn_DoubleSoftShrink_init(L);

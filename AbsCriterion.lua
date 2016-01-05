@@ -3,9 +3,9 @@ local AbsCriterion, parent = torch.class('nn.AbsCriterion', 'nn.Criterion')
 function AbsCriterion:__init(sizeAverage)
    parent.__init(self)
    if sizeAverage ~= nil then
-     self.sizeAverage = sizeAverage
+      self.sizeAverage = sizeAverage
    else
-     self.sizeAverage = true
+      self.sizeAverage = true
    end
 end
 
