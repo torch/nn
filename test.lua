@@ -4720,21 +4720,21 @@ function nntest.SpatialBatchNormalization()
    local input = torch.zeros(nframes, indim, ini, inj):uniform()
    local module = nn.SpatialBatchNormalization(indim)
 
-   local err = jac.testJacobian(module,input)
+   local err = jac.testJacobian(module, input, -2, 4)
    mytester:assertlt(err,precision, 'error on state ')
 
    local err = jac.testJacobianParameters(module, input,
-                                      module.weight, module.gradWeight)
+                                      module.weight, module.gradWeight, -2, 4)
    mytester:assertlt(err,precision, 'error on weight ')
 
    local err = jac.testJacobianParameters(module, input,
-                                      module.bias, module.gradBias)
+                                      module.bias, module.gradBias, -2, 4)
    mytester:assertlt(err,precision, 'error on weight ')
 
-   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight, -2, 4)
    mytester:assertlt(err,precision, 'error on weight [direct update] ')
 
-   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+   local err = jac.testJacobianUpdateParameters(module, input, module.bias, -2, 4)
    mytester:assertlt(err,precision, 'error on bias [direct update] ')
 
    for t,err in pairs(jac.testAllUpdate(module, input,
