@@ -11,12 +11,6 @@
 #include "generic/Sqrt.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/LogSigmoid.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/LogSoftMax.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/Sigmoid.c"
 #include "THGenerateFloatTypes.h"
 
@@ -35,13 +29,7 @@
 #include "generic/PReLU.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/ELU.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/RReLU.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/LeakyReLU.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SoftMax.c"
@@ -125,9 +113,6 @@
 #include "generic/SpatialUpSamplingNearest.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/LookupTable.c"
-#include "THGenerateFloatTypes.h"
-
 LUA_EXTERNC DLL_EXPORT int luaopen_libnn(lua_State *L);
 
 int luaopen_libnn(lua_State *L)
@@ -142,17 +127,13 @@ int luaopen_libnn(lua_State *L)
   nn_FloatMSECriterion_init(L);
   nn_FloatSmoothL1Criterion_init(L);
   nn_FloatMarginCriterion_init(L);
-  nn_FloatLogSigmoid_init(L);
   nn_FloatSigmoid_init(L);
-  nn_FloatSoftMax_init(L);
   nn_FloatSoftPlus_init(L);
   nn_FloatTanh_init(L);
   nn_FloatSoftShrink_init(L);
   nn_FloatThreshold_init(L);
   nn_FloatPReLU_init(L);
   nn_FloatRReLU_init(L);
-  nn_FloatELU_init(L);
-  nn_FloatLeakyReLU_init(L);
   nn_FloatSparseLinear_init(L);
   nn_FloatTemporalConvolution_init(L);
   nn_FloatTemporalSubSampling_init(L);
@@ -176,7 +157,6 @@ int luaopen_libnn(lua_State *L)
   nn_FloatMultiMarginCriterion_init(L);
   nn_FloatMultiLabelMarginCriterion_init(L);
   nn_FloatSpatialUpSamplingNearest_init(L);
-  nn_FloatLookupTable_init(L);
 
   nn_DoubleSqrt_init(L);
   nn_DoubleSquare_init(L);
@@ -184,17 +164,13 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleMSECriterion_init(L);
   nn_DoubleSmoothL1Criterion_init(L);
   nn_DoubleMarginCriterion_init(L);
-  nn_DoubleLogSigmoid_init(L);
   nn_DoubleSigmoid_init(L);
-  nn_DoubleSoftMax_init(L);
   nn_DoubleSoftPlus_init(L);
   nn_DoubleTanh_init(L);
   nn_DoubleSoftShrink_init(L);
   nn_DoubleThreshold_init(L);
   nn_DoublePReLU_init(L);
   nn_DoubleRReLU_init(L);
-  nn_DoubleELU_init(L);
-  nn_DoubleLeakyReLU_init(L);
   nn_DoubleSparseLinear_init(L);
   nn_DoubleTemporalConvolution_init(L);
   nn_DoubleTemporalSubSampling_init(L);
@@ -219,7 +195,6 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleMultiMarginCriterion_init(L);
   nn_DoubleMultiLabelMarginCriterion_init(L);
   nn_DoubleSpatialUpSamplingNearest_init(L);
-  nn_DoubleLookupTable_init(L);
 
   return 1;
 }
