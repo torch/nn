@@ -144,12 +144,12 @@ TH_API void THNN_(LogSoftMax_updateGradInput)(
 
 TH_API void THNN_(LookupTable_accGradParameters)(
           THNNState *state,
-          THLongTensor *input,
+          THIndexTensor *input,
           THTensor *gradOutput,
           THTensor *gradWeight,
           real lr,
           bool shouldScaleGradByFreq,
-          THLongTensor* count);
+          THIntegerTensor *count);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
@@ -195,8 +195,24 @@ local preprocessed = string.gsub(generic_THNN_h, 'TH_API void THNN_%(([%a%d_]+)%
 
 local replacements = 
 {
-   { ['TYPE'] = 'Double', ['real'] = 'double', ['THTensor'] = 'THDoubleTensor', ['THIndexTensor'] = 'THLongTensor' },
-   { ['TYPE'] = 'Float',  ['real'] = 'float',  ['THTensor'] = 'THFloatTensor',  ['THIndexTensor'] = 'THLongTensor' }
+   {
+      ['TYPE'] = 'Double',
+      ['real'] = 'double',
+      ['THTensor'] = 'THDoubleTensor',
+      ['THIndexTensor'] = 'THLongTensor',
+      ['THIntegerTensor'] = 'THIntTensor',
+      ['THIndex_t'] = 'long',
+      ['THInteger_t'] = 'int'
+   },
+   {
+      ['TYPE'] = 'Float',
+      ['real'] = 'float',
+      ['THTensor'] = 'THFloatTensor',
+      ['THIndexTensor'] = 'THLongTensor',
+      ['THIntegerTensor'] = 'THIntTensor',
+      ['THIndex_t'] = 'long',
+      ['THInteger_t'] = 'int'
+    }
 }
 
 for i=1,#replacements do
