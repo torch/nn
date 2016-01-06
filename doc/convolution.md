@@ -359,7 +359,7 @@ number of outgoing connections to each input node if possible.
 ### SpatialFullConvolution ###
 
 ```lua
-module = nn.SpatialFullConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH])
+module = nn.SpatialFullConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH], [adjW], [adjH])
 ```
 
 Applies a 2D full convolution over an input image composed of several input planes. The `input` tensor in
@@ -376,12 +376,14 @@ The parameters are the following:
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
   * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
   * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `adjW`: Extra width to add to the output image. Default is `0`. Cannot be greater than dW-1.
+  * `adjH`: Extra height to add to the output image. Default is `0`. Cannot be greater than dH-1.
 
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
 will be `nOutputPlane x oheight x owidth` where
 ```lua
-owidth  = (width  - 1) * dW - 2*padW + kW
-oheight = (height - 1) * dH - 2*padH + kH
+owidth  = (width  - 1) * dW - 2*padW + kW + adjW
+oheight = (height - 1) * dH - 2*padH + kH + adjH
 ```
 
 Further information about the full convolution can be found in the following paper: [Fully Convolutional Networks for Semantic Segmentation](http://www.cs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf).
@@ -517,14 +519,14 @@ y_i_end   = ceil(((i+1)/oheight) * iheight)
 module = nn.SpatialMaxUnpooling(poolingModule)
 ```
 
-Applies 2D "max-unpooling" operation using the indices previously computed 
+Applies 2D "max-unpooling" operation using the indices previously computed
 by the SpatialMaxPooling module `poolingModule`.
 
-When `B = poolingModule:forward(A)` is called, the indices of the maximal 
-values (corresponding to their position within each map) are stored: 
-`B[{n,k,i,j}] = A[{n,k,indices[{n,k,i}],indices[{n,k,j}]}]`. 
-If `C` is a tensor of same size as `B`, `module:updateOutput(C)` outputs a 
-tensor `D` of same size as `A` such that: 
+When `B = poolingModule:forward(A)` is called, the indices of the maximal
+values (corresponding to their position within each map) are stored:
+`B[{n,k,i,j}] = A[{n,k,indices[{n,k,i}],indices[{n,k,j}]}]`.
+If `C` is a tensor of same size as `B`, `module:updateOutput(C)` outputs a
+tensor `D` of same size as `A` such that:
 `D[{n,k,indices[{n,k,i}],indices[{n,k,j}]}] = C[{n,k,i,j}]`.
 
 Module inspired by:

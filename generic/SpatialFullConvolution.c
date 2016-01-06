@@ -69,6 +69,8 @@ static int nn_(SpatialFullConvolution_updateOutput)(lua_State *L) {
   int nOutputPlane = luaT_getfieldcheckint(L, 1, "nOutputPlane");
   int padW = luaT_getfieldcheckint(L, 1, "padW");
   int padH = luaT_getfieldcheckint(L, 1, "padH");
+  int adjW = luaT_getfieldcheckint(L, 1, "adjW");
+  int adjH = luaT_getfieldcheckint(L, 1, "adjH");
 
   THTensor *weight  = (THTensor*)luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
   THTensor *bias    = (THTensor*)luaT_getfieldcheckudata(L, 1, "bias", torch_Tensor);
@@ -90,8 +92,8 @@ static int nn_(SpatialFullConvolution_updateOutput)(lua_State *L) {
 
   long inputWidth   = input->size[3];
   long inputHeight  = input->size[2];
-  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW;
-  long outputHeight = (inputHeight - 1) * dH - 2*padH + kH;
+  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW + adjW;
+  long outputHeight = (inputHeight - 1) * dH - 2*padH + kH + adjH;
 
   // Batch size + input planes
   long batchSize = input->size[0];
@@ -194,6 +196,8 @@ static int nn_(SpatialFullConvolution_updateGradInput)(lua_State *L) {
   int nOutputPlane = luaT_getfieldcheckint(L, 1, "nOutputPlane");
   int padW = luaT_getfieldcheckint(L, 1, "padW");
   int padH = luaT_getfieldcheckint(L, 1, "padH");
+  int adjW = luaT_getfieldcheckint(L, 1, "adjW");
+  int adjH = luaT_getfieldcheckint(L, 1, "adjH");
 
   THTensor *weight = (THTensor *)luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
   THTensor *gradColumns = (THTensor*)luaT_getfieldcheckudata(L, 1, "finput", torch_Tensor);
@@ -211,8 +215,8 @@ static int nn_(SpatialFullConvolution_updateGradInput)(lua_State *L) {
 
   long inputWidth   = input->size[3];
   long inputHeight  = input->size[2];
-  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW;
-  long outputHeight = (inputHeight - 1) * dH - 2*padH + kH;
+  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW + adjW;
+  long outputHeight = (inputHeight - 1) * dH - 2*padH + kH + adjH;
 
   // Batch size + input planes
   long batchSize = input->size[0];
@@ -291,6 +295,8 @@ static int nn_(SpatialFullConvolution_accGradParameters)(lua_State *L) {
   int nOutputPlane = luaT_getfieldcheckint(L, 1, "nOutputPlane");
   int padW = luaT_getfieldcheckint(L, 1, "padW");
   int padH = luaT_getfieldcheckint(L, 1, "padH");
+  int adjW = luaT_getfieldcheckint(L, 1, "adjW");
+  int adjH = luaT_getfieldcheckint(L, 1, "adjH");
   float scale = luaL_optnumber(L, 4, 1);
 
   THTensor *gradWeight = (THTensor *)luaT_getfieldcheckudata(L, 1, "gradWeight", torch_Tensor);
@@ -310,8 +316,8 @@ static int nn_(SpatialFullConvolution_accGradParameters)(lua_State *L) {
 
   long inputWidth   = input->size[3];
   long inputHeight  = input->size[2];
-  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW;
-  long outputHeight = (inputHeight - 1) * dH - 2*padH + kH;
+  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW + adjW;
+  long outputHeight = (inputHeight - 1) * dH - 2*padH + kH + adjH;
 
   // Batch size + input planes
   long batchSize = input->size[0];

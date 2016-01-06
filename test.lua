@@ -1946,9 +1946,11 @@ function nntest.SpatialFullConvolution()
    local padH = math.random(0,2)
    local outi = math.random(5,9)
    local outj = math.random(5,9)
-   local ini = (outi + padW*2 - ki)/di + 1
-   local inj = (outj + padH*2 - kj)/dj + 1
-   local module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH)
+   local adjW = (outi + padW*2 - ki) % di
+   local adjH = (outj + padH*2 - kj) % dj
+   local ini = math.floor((outi + padW*2 - ki)/di + 1)
+   local inj = math.floor((outj + padH*2 - kj)/dj + 1)
+   local module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH, adjW, adjH)
    local input = torch.Tensor(from, inj, ini):zero()
 
    -- stochastic
@@ -1983,8 +1985,13 @@ function nntest.SpatialFullConvolution()
    --verbose = true
    local batch = math.random(2,5)
 
-   module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH)
+   module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH, adjW, adjH)
    input = torch.Tensor(batch,from,inj,ini):zero()
+
+   -- Check that the required output size matches the actual output size
+   local output = module:forward(input)
+   mytester:asserteq(output:size(3), outj, 'output height error')
+   mytester:asserteq(output:size(4), outi, 'output width error')
 
    local err = jac.testJacobian(module, input)
    mytester:assertlt(err, precision, 'batch error on state ')
@@ -2437,7 +2444,7 @@ function nntest.SpatialMaxUnpooling()
       local poolingModule = nn.SpatialMaxPooling(ki,kj,si,sj,padW,padH)
       if ceil_mode then poolingModule:ceil() else poolingModule:floor() end
       local module = nn.SpatialMaxUnpooling(poolingModule)
-      
+
       local original = torch.rand(from,inj,ini)
       local input = poolingModule:forward(original)
       local output = module:forward(input)
