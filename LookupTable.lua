@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local LookupTable, parent = torch.class('nn.LookupTable', 'nn.Module')
 
 LookupTable.__version = 4
@@ -75,7 +76,9 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
       self.gradWeight:cdata(),
       scale or 1,
       self.shouldScaleGradByFreq or false,
-      self._count:cdata()
+      self._count:cdata(),
+      THNN.optionalTensor(self._sorted),
+      THNN.optionalTensor(self._indices)
    )
 end
 

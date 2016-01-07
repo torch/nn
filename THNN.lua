@@ -147,9 +147,11 @@ TH_API void THNN_(LookupTable_accGradParameters)(
           THIndexTensor *input,
           THTensor *gradOutput,
           THTensor *gradWeight,
-          real lr,
-          bool shouldScaleGradByFreq,
-          THIntegerTensor *count);
+          real scale,
+          bool scaleGradByFreq,
+          THIntegerTensor *count,
+          THTensor *sorted,
+          THTensor *indices);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
