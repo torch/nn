@@ -1049,6 +1049,24 @@ function nntest.MarginRankingCriterion()
    mytester:assert(torch.type(gradInput2[1]) == 'torch.FloatTensor', "MRC:type() error 1")
    mytester:assertTensorEq(gradInput[2]:float(), gradInput2[2], 0.00001, "MRC:type() backward error 2")
    mytester:assert(torch.type(gradInput2[2]) == 'torch.FloatTensor', "MRC:type() error 2")
+
+   -- batch, sizeAverage true, jacobian
+   local margin = math.random()*2-1
+   local batch_size = math.random(2,10)
+   local crit = nn.MarginRankingCriterion(margin)
+   crit.sizeAverage = true
+   local v = torch.rand(2,batch_size)
+   local t = torch.Tensor(batch_size):random(0,1):mul(2):add(-1)
+   criterionJacobianTest1DTable(crit,v,t)
+
+   -- batch, sizeAverage false, jacobian
+   local margin = math.random()*2-1
+   local crit = nn.MarginRankingCriterion(margin)
+   crit.sizeAverage = false
+   local v = torch.rand(2,batch_size)
+   local t = torch.Tensor(batch_size):random(0,1):mul(2):add(-1)
+   criterionJacobianTest1DTable(crit,v,t)
+
 end
 
 function nntest.ParallelCriterion()
