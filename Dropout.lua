@@ -14,42 +14,38 @@ function Dropout:__init(p,v1,inplace)
 end
 
 function Dropout:updateOutput(input)
-   if self.p > 0 then
-      if self.inplace then
-          self.output = input
-      else
-          self.output:resizeAs(input):copy(input)
-      end
-      if self.train then
-          self.noise:resizeAs(input)
-          self.noise:bernoulli(1-self.p)
-          if self.v2 then
-             self.noise:div(1-self.p)
-          end
-          self.output:cmul(self.noise)
-      elseif not self.v2 then
-          self.output:mul(1-self.p)
-      end
-   else
+   if self.inplace then
       self.output = input
+   else
+      self.output:resizeAs(input):copy(input)
+   end
+   if self.p > 0 then
+      if self.train then
+         self.noise:resizeAs(input)
+         self.noise:bernoulli(1-self.p)
+         if self.v2 then
+            self.noise:div(1-self.p)
+         end
+         self.output:cmul(self.noise)
+      elseif not self.v2 then
+         self.output:mul(1-self.p)
+      end
    end
    return self.output
 end
 
 function Dropout:updateGradInput(input, gradOutput)
-   if self.p > 0 then
-      if self.train then
-         if self.inplace then
-            self.gradInput = gradOutput
-         else
-            self.gradInput:resizeAs(gradOutput):copy(gradOutput)
-         end
-         self.gradInput:cmul(self.noise) -- simply mask the gradients with the noise vector
+   if self.train then
+      if self.inplace then
+         self.gradInput = gradOutput
       else
-         error('backprop only defined while training')
+         self.gradInput:resizeAs(gradOutput):copy(gradOutput)
+      end
+      if self.p > 0 then
+         self.gradInput:cmul(self.noise) -- simply mask the gradients with the noise vector
       end
    else
-      self.gradInput = gradOutput
+      error('backprop only defined while training')
    end
    return self.gradInput
 end
@@ -59,5 +55,5 @@ function Dropout:setp(p)
 end
 
 function Dropout:__tostring__()
-  return string.format('%s(%f)', torch.type(self), self.p)
+   return string.format('%s(%f)', torch.type(self), self.p)
 end
