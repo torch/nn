@@ -574,6 +574,7 @@ criterion = nn.MarginRankingCriterion(margin)
 ```
 
 Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s of size 1 (they contain only scalars), and a label `y` (`1` or `-1`).
+In batch mode, `x` is a table of two `Tensor`s of size `batchsize`, and `y` is a `Tensor` of size `batchsize` containing `1` or `-1` for each corresponding pair of elements in the input `Tensor`.
 
 If `y == 1` then it assumed the first input should be ranked higher (have a larger value) than the second input, and vice-versa for `y == -1`.
 
@@ -582,6 +583,9 @@ The loss function is:
 ```lua
 loss(x, y) = max(0, -y * (x[1] - x[2]) + margin)
 ```
+
+For batched inputs, if the internal variable `sizeAverage` is equal to `true`, the loss function averages the loss over the batch samples; if `sizeAverage` is `false`, then the loss function sums over the batch samples. By default, `sizeAverage` equals to `true`.
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 ### Example
 
