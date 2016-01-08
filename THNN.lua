@@ -43,6 +43,19 @@ TH_API void THNN_(ClassNLLCriterion_updateGradInput)(
           THTensor *weights,
           THTensor *total_weight);
 
+TH_API void THNN_(ELU_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          real alpha);
+TH_API void THNN_(ELU_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *output,
+          real alpha);
+
 TH_API void THNN_(DistKLDivCriterion_updateOutput)(
           THNNState *state,
           THTensor *input,
@@ -91,6 +104,54 @@ TH_API void THNN_(L1Cost_updateGradInput)(
           THTensor *input,
           THTensor *gradOutput,
           THTensor *gradInput);
+
+TH_API void THNN_(LeakyReLU_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          real negval,
+          bool inplace);
+TH_API void THNN_(LeakyReLU_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          real negval,
+          bool inplace);
+
+TH_API void THNN_(LogSigmoid_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *buffer);
+TH_API void THNN_(LogSigmoid_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *buffer);
+
+TH_API void THNN_(LogSoftMax_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output);
+TH_API void THNN_(LogSoftMax_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *output);
+
+TH_API void THNN_(LookupTable_accGradParameters)(
+          THNNState *state,
+          THIndexTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradWeight,
+          real scale,
+          bool scaleGradByFreq,
+          THIntegerTensor *count,
+          THTensor *sorted,
+          THTensor *indices);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
@@ -136,8 +197,24 @@ local preprocessed = string.gsub(generic_THNN_h, 'TH_API void THNN_%(([%a%d_]+)%
 
 local replacements = 
 {
-   { ['TYPE'] = 'Double', ['real'] = 'double', ['THTensor'] = 'THDoubleTensor', ['THIndexTensor'] = 'THLongTensor' },
-   { ['TYPE'] = 'Float',  ['real'] = 'float',  ['THTensor'] = 'THFloatTensor',  ['THIndexTensor'] = 'THLongTensor' }
+   {
+      ['TYPE'] = 'Double',
+      ['real'] = 'double',
+      ['THTensor'] = 'THDoubleTensor',
+      ['THIndexTensor'] = 'THLongTensor',
+      ['THIntegerTensor'] = 'THIntTensor',
+      ['THIndex_t'] = 'long',
+      ['THInteger_t'] = 'int'
+   },
+   {
+      ['TYPE'] = 'Float',
+      ['real'] = 'float',
+      ['THTensor'] = 'THFloatTensor',
+      ['THIndexTensor'] = 'THLongTensor',
+      ['THIntegerTensor'] = 'THIntTensor',
+      ['THIndex_t'] = 'long',
+      ['THInteger_t'] = 'int'
+    }
 }
 
 for i=1,#replacements do

@@ -6,9 +6,20 @@ function LogSigmoid:__init()
 end
 
 function LogSigmoid:updateOutput(input)
-   return input.nn.LogSigmoid_updateOutput(self, input)
+   input.THNN.LogSigmoid_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.buffer:cdata()
+   )
+   return self.output
 end
 
 function LogSigmoid:updateGradInput(input, gradOutput)
-   return input.nn.LogSigmoid_updateGradInput(self, input, gradOutput)
+   input.THNN.LogSigmoid_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.buffer:cdata()
+   )
+   return self.gradInput
 end
