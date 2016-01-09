@@ -77,6 +77,7 @@ include('ReLU.lua')
 include('PReLU.lua')
 include('LeakyReLU.lua')
 include('SpatialSoftMax.lua')
+include('SpatialLogSoftMax.lua')
 include('RReLU.lua')
 include('ELU.lua')
 
