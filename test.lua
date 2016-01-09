@@ -7,7 +7,7 @@ local jac
 local sjac
 
 local precision = 1e-5
-local expprecision = 1e-4
+local expprecision = 1.1e-4
 
 local nntest = torch.TestSuite()
 
@@ -1717,6 +1717,22 @@ function nntest.LogSoftmax()
 
 
 
+end
+
+function nntest.SpatialLogSoftMax()
+   local ini = math.random(3,5)
+   local inj = math.random(3,5)
+   local ink = math.random(3,5)
+   local inl = math.random(3,5)
+   local input = torch.Tensor(inl, ink, inj, ini):zero()
+   local module = nn.SpatialLogSoftMax()
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,expprecision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
 -- function nntest.TemporalLogSoftmax()

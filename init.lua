@@ -90,6 +90,7 @@ require('nn.ReLU6')
 require('nn.PReLU')
 require('nn.LeakyReLU')
 require('nn.SpatialSoftMax')
+require('nn.SpatialLogSoftMax')
 require('nn.RReLU')
 require('nn.ELU')
 
@@ -182,5 +183,6 @@ require('nn.Jacobian')
 require('nn.SparseJacobian')
 require('nn.hessian')
 require('nn.test')
+
 
 return nn
