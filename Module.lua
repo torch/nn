@@ -188,6 +188,31 @@ function Module.flatten(parameters)
    local Tensor = parameters[1].new
    local TmpTensor = Module._flattenTensorBuffer[torch.type(parameters[1])] or Tensor
 
+
+   local function checkContiguous(tensors)
+      local storage, start, nextOffset
+      for i, param in ipairs(parameters) do
+         if param:storage() then
+            if not storage then
+               storage = param:storage()
+               start = param:storageOffset()
+               nextOffset = start
+            end
+            if param:storage() ~= storage or not param:isContiguous() or nextOffset ~= param:storageOffset() then
+               return false
+            end
+            nextOffset = nextOffset + param:nElement()
+         end
+      end
+      return true, Tensor(storage, start, nextOffset - 1)
+   end
+
+   -- 0. If the parameters are already flattened use them as-is
+   local contiguous, flat = checkContiguous(parameters)
+   if contiguous then
+      return flat
+   end
+
    -- 1. construct the set of all unique storages referenced by parameter tensors
    local storages = {}
    local nParameters = 0
