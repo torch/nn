@@ -211,6 +211,9 @@ static int nn_(SpatialConvolutionMM_updateOutput)(lua_State *L)
     THError("Given input size: (%dx%dx%d). Calculated output size: (%dx%dx%d). Output size is too small",
         nInputPlane,inputHeight,inputWidth,nOutputPlane,outputHeight,outputWidth);
 
+  if (nInputPlane*kW*kH != weight->size[1])
+    THError("Wrong number of input channels! Input has %d channels, expected %d",nInputPlane,weight->size[1]/(kW*kH));
+
   if(input->nDimension == 3)
   {
     THTensor_(resize2d)(finput, kW*kH*nInputPlane, outputHeight*outputWidth);
