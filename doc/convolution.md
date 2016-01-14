@@ -12,6 +12,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
   * [Spatial Modules](#nn.SpatialModules) apply to inputs with two-dimensional relationships (e.g. images):
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
     * [SpatialFullConvolution](#nn.SpatialFullConvolution) : a 2D full convolution over an input image ;
+    * [SpatialConvolutionLocal](#nn.SpatialConvolutionLocal) : a 2D locally-connected layer over an input image ; 
     * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
     * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
@@ -387,6 +388,37 @@ oheight = (height - 1) * dH - 2*padH + kH + adjH
 ```
 
 Further information about the full convolution can be found in the following paper: [Fully Convolutional Networks for Semantic Segmentation](http://www.cs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf).
+
+<a name="nn.SpatialConvolutionLocal"></a>
+### SpatialConvolutionLocal ###
+
+```lua
+module = nn.SpatialConvolutionLocal(nInputPlane, nOutputPlane, iW, iH, kW, kH, [dW], [dH], [padW], [padH])
+```
+
+Applies a 2D locally-connected layer over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 3D or 4D tensor.
+
+A locally-connected layer is similar to a convolution layer but without weight-sharing.
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `nOutputPlane`: The number of output planes the locally-connected layer will produce.
+  * `iW`: The input width.
+  * `iH`: The input height.
+  * `kW`: The kernel width.
+  * `kH`: The kernel height.
+  * `dW`: The step in the width dimension. Default is `1`.
+  * `dH`: The step in the height dimension. Default is `1`.
+  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
+  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+ 
+If the input image is a 3D tensor `nInputPlane x iH x iW`, the output image size
+will be `nOutputPlane x oH x oW` where
+```lua
+oW  = floor((iW  + 2*padW - kW) / dW + 1)
+oH = floor((iH + 2*padH - kH) / dH + 1)
+```
 
 <a name="nn.SpatialLPPooling"></a>
 ### SpatialLPPooling ###
