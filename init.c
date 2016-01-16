@@ -110,6 +110,9 @@
 #include "generic/VolumetricMaxPooling.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/VolumetricMaxUnpooling.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/VolumetricAveragePooling.c"
 #include "THGenerateFloatTypes.h"
 
@@ -164,6 +167,7 @@ int luaopen_libnn(lua_State *L)
   nn_FloatVolumetricConvolutionMM_init(L);
   nn_FloatVolumetricFullConvolution_init(L);
   nn_FloatVolumetricMaxPooling_init(L);
+  nn_FloatVolumetricMaxUnpooling_init(L);
   nn_FloatVolumetricAveragePooling_init(L);
   nn_FloatMultiMarginCriterion_init(L);
   nn_FloatMultiLabelMarginCriterion_init(L);
@@ -204,6 +208,7 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleVolumetricConvolutionMM_init(L);
   nn_DoubleVolumetricFullConvolution_init(L);
   nn_DoubleVolumetricMaxPooling_init(L);
+  nn_DoubleVolumetricMaxUnpooling_init(L);
   nn_DoubleVolumetricAveragePooling_init(L);
   nn_DoubleMultiMarginCriterion_init(L);
   nn_DoubleMultiLabelMarginCriterion_init(L);
