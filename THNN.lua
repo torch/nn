@@ -152,6 +152,37 @@ TH_API void THNN_(LookupTable_accGradParameters)(
           THIntegerTensor *count,
           THTensor *sorted,
           THTensor *indices);
+
+TH_API void THNN_(SpatialConvolutionMM_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *weight,
+          THTensor *bias,
+          THTensor* finput,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH);
+TH_API void THNN_(SpatialConvolutionMM_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *weight,
+          THTensor *bias,
+          THTensor *finput,
+          THTensor *fgradInput,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH);
+TH_API void THNN_(SpatialConvolutionMM_accGradParameters)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradWeight,
+          THTensor *gradBias,
+          THTensor *finput,
+          real scale);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
