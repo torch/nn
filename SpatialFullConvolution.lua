@@ -91,10 +91,10 @@ function SpatialFullConvolution:accGradParameters(input, gradOutput, scale)
   return input.nn.SpatialFullConvolution_accGradParameters(self, input, gradOutput, scale)
 end
 
-function SpatialFullConvolution:type(type)
+function SpatialFullConvolution:type(type, tensorCache)
   self.finput = torch.Tensor()
   self.fgradInput = torch.Tensor()
-  return parent.type(self,type)
+  return parent.type(self, type, tensorCache)
 end
 
 function SpatialFullConvolution:__tostring__()
