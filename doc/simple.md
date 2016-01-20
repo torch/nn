@@ -17,6 +17,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Replicate](#nn.Replicate) : [repeats](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-repeattensorresult-sizes) input `n` times along its first dimension ;
     * [Reshape](#nn.Reshape) : a [reshape](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchreshaperes-x-m-n) of the inputs ;
     * [View](#nn.View) : a [view](https://github.com/torch/torch7/blob/master/doc/tensor.md#result-viewresult-tensor-sizes) of the inputs ;
+    * [Contiguous](#nn.Contiguous) : [contiguous](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-contiguous) of the inputs ;
     * [Select](#nn.Select) : a [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index) over a given dimension ;
     * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
   * Modules that adapt mathematical Tensor methods :
@@ -741,6 +742,13 @@ Example 2:
  6
 [torch.LongStorage of size 2]
 ```
+
+<a name="nn.Contiguous"></a>
+## Contiguous ##
+
+Is used to make `input`, `gradOutput` or both contiguous, corresponds to
+`torch.contiguous` function. Only does copy and allocation if `input` or
+`gradOutput` is not contiguous, otherwise passes the same tensor.
 
 <a name="nn.Select"></a>
 ## Select ##
