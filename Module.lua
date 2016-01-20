@@ -3,6 +3,7 @@ local Module = torch.class('nn.Module')
 function Module:__init()
    self.gradInput = torch.Tensor()
    self.output = torch.Tensor()
+   self.train = true
 end
 
 function Module:parameters()
