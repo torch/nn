@@ -51,7 +51,11 @@ function ConcatTable:updateGradInput(input, gradOutput)
          else
             retable(self.gradInput, currentGradInput,
                function(t, k, v)
-                  t[k]:add(v)
+                  if t[k] then
+                     t[k]:add(v)
+                  else
+                     t[k] = v:clone()
+                  end
                end
             )
          end
