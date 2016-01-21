@@ -66,6 +66,8 @@ function BN:reset()
    if self.bias then
       self.bias:zero()
    end
+   self.running_mean:zero()
+   self.running_var:fill(1)
 end
 
 function BN:updateOutput(input)
