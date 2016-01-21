@@ -3331,6 +3331,50 @@ function nntest.VolumetricMaxPooling()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
 end
 
+function nntest.VolumetricMaxUnpooling()
+   local from = math.random(2,3)
+   local kt = math.random(3,4)
+   local ki = math.random(3,4)
+   local kj = math.random(3,4)
+   local st, si, sj = kt, ki, kj
+   local outt = math.random(3,4)
+   local outi = math.random(3,4)
+   local outj = math.random(3,4)
+   local int = (outt-1)*st+kt
+   local ini = (outi-1)*si+ki
+   local inj = (outj-1)*sj+kj
+   
+   local poolingModule = nn.VolumetricMaxPooling(kt,ki,kj,st,si,sj)
+   local module = nn.VolumetricMaxUnpooling(poolingModule)
+
+   local original = torch.rand(from,int,inj,ini)
+   local input = poolingModule:forward(original)
+   local output = module:forward(input)
+   mytester:assert(output:isSameSizeAs(original),'VolumetricMaxUnpooling output size err')
+   
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error ')
+   
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- batch
+   local nbatch = math.random(2,3)
+   original = torch.rand(nbatch,from,int,inj,ini)
+   input = poolingModule:forward(original)
+   output = module:forward(input)
+
+   mytester:assert(output:isSameSizeAs(original),'VolumetricMaxUnpooling batch output size err')
+
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on Batch')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+end
+
 function nntest.Module_getParameters_1()
    local n = nn.Sequential()
    n:add( nn.Linear(10,10) )

@@ -32,6 +32,8 @@ a kernel for computing the weighted average in a neighborhood ;
     * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
+    * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation ;
+    
 
 <a name="nn.TemporalModules"></a>
 ## Temporal Modules ##
@@ -748,7 +750,7 @@ last two dimensions are spatial (e.g. `height x width`). These are commonly used
 ### VolumetricConvolution ###
 
 ```lua
-module = nn.VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH [, dT, dW, dH])
+module = nn.VolumetricConvolution(nInputPlane, nOutputPlane, kT, kW, kH [, dT, dW, dH, padT, padW, padH])
 ```
 
 Applies a 3D convolution over an input image composed of several input planes. The `input` tensor in
@@ -763,6 +765,10 @@ The parameters are the following:
   * `dT`: The step of the convolution in the time dimension. Default is `1`.
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
+  * `padT`: The additional zeros added per time to the input planes. Default is `0`, a good number is `(kT-1)/2`.
+  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
+  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+ 
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
@@ -771,9 +777,9 @@ add proper padding in images.
 If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
 will be `nOutputPlane x otime x owidth x oheight` where
 ```lua
-otime   = (time  - kT)  / dT + 1
-owidth  = (width  - kW) / dW + 1
-oheight = (height - kH) / dH + 1 .
+otime  = floor((time  + 2*padT - kT) / dT + 1)
+owidth  = floor((width  + 2*padW - kW) / dW + 1)
+oheight  = floor((height  + 2*padH - kH) / dH + 1)
 ```
 
 The parameters of the convolution can be found in `self.weight` (Tensor of
@@ -833,3 +839,20 @@ module = nn.VolumetricAveragePooling(kT, kW, kH [, dT, dW, dH])
 Applies 3D average-pooling operation in `kTxkWxkH` regions by step size
 `dTxdWxdH` steps. The number of output features is equal to the number of
 input planes / dT.
+
+<a name="nn.VolumetricMaxUnpooling"></a>
+### VolumetricMaxUnpooling ###
+
+```lua
+module = nn.VolumetricMaxUnpooling(poolingModule)
+```
+
+Applies 3D "max-unpooling" operation using the indices previously computed
+by the VolumetricMaxPooling module `poolingModule`.
+
+When `B = poolingModule:forward(A)` is called, the indices of the maximal
+values (corresponding to their position within each map) are stored:
+`B[{n,k,t,i,j}] = A[{n,k,indices[{n,k,t}],indices[{n,k,i}],indices[{n,k,j}]}]`.
+If `C` is a tensor of same size as `B`, `module:updateOutput(C)` outputs a
+tensor `D` of same size as `A` such that:
+`D[{n,k,indices[{n,k,t}],indices[{n,k,i}],indices[{n,k,j}]}] = C[{n,k,t,i,j}]`.
