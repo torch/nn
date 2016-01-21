@@ -141,6 +141,22 @@ end
 function Module:reset()
 end
 
+function Module:write(file)
+  -- Write all values in the object as a table.
+  local object = {}
+  for k, v in pairs(self) do
+    object[k] = v
+  end
+  file:writeObject(object)
+end
+
+function Module:read(file)
+  local object = file:readObject()
+  for k, v in pairs(object) do
+    self[k] = v
+  end
+end
+
 -- This function is not easy to understand. It works as follows:
 --
 -- - gather all parameter tensors for this module (and children);
