@@ -11,16 +11,35 @@ function PReLU:__init(nOutputPlane)
 end
 
 function PReLU:updateOutput(input)
-   input.nn.PReLU_updateOutput(self, input)
+   input.THNN.PReLU_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.weight:cdata(),
+      self.nOutputPlane
+   )
    return self.output
 end
 
 function PReLU:updateGradInput(input, gradOutput)
-   input.nn.PReLU_updateGradInput(self, input, gradOutput)
+   input.THNN.PReLU_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.weight:cdata(),
+      self.nOutputPlane
+   )
    return self.gradInput
 end
 
 function PReLU:accGradParameters(input, gradOutput, scale)
-   input.nn.PReLU_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.PReLU_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.weight:cdata(),
+      self.gradWeight:cdata(),
+      self.nOutputPlane,
+      scale or 1
+   )
    return self.gradWeight
 end

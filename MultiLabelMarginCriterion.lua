@@ -6,9 +6,23 @@ function MultiLabelMarginCriterion:__init()
 end
 
 function MultiLabelMarginCriterion:updateOutput(input, target)
-   return input.nn.MultiLabelMarginCriterion_updateOutput(self, input, target)
+   self.output_tensor = self.output_tensor or input.new(1)
+   input.THNN.MultiLabelMarginCriterion_updateOutput(
+      input:cdata(),
+      target:cdata(),
+      self.output_tensor:cdata(),
+      self.sizeAverage
+   )
+   self.output = self.output_tensor[1]
+   return self.output
 end
 
 function MultiLabelMarginCriterion:updateGradInput(input, target)
-   return input.nn.MultiLabelMarginCriterion_updateGradInput(self, input, target)
+   input.THNN.MultiLabelMarginCriterion_updateGradInput(
+      input:cdata(),
+      target:cdata(),
+      self.gradInput:cdata(),
+      self.sizeAverage
+   )
+   return self.gradInput
 end

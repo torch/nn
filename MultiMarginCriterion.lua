@@ -9,10 +9,36 @@ end
 
 function MultiMarginCriterion:updateOutput(input, target)
    -- backward compatibility
+   local _target = target
+   if not torch.isTensor(_target) then
+     _target = input.new(1)
+     _target[1] = target
+   end
    self.p = self.p or 1
-   return input.nn.MultiMarginCriterion_updateOutput(self, input, target)
+   self.output_tensor = self.output_tensor or input.new(1)
+   input.THNN.MultiMarginCriterion_updateOutput(
+      input:cdata(),
+      _target:cdata(),
+      self.output_tensor:cdata(),
+      self.sizeAverage,
+      self.p
+   )
+   self.output = self.output_tensor[1]
+   return self.output
 end
 
 function MultiMarginCriterion:updateGradInput(input, target)
-   return input.nn.MultiMarginCriterion_updateGradInput(self, input, target)
+   local _target = target
+   if not torch.isTensor(_target) then
+     _target = input.new(1)
+     _target[1] = target
+   end
+   input.THNN.MultiMarginCriterion_updateGradInput(
+      input:cdata(),
+      _target:cdata(),
+      self.gradInput:cdata(),
+      self.sizeAverage,
+      self.p
+   )
+   return self.gradInput
 end
