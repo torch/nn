@@ -26,22 +26,13 @@
 #include "generic/Threshold.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/PReLU.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/RReLU.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SoftMax.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/MSECriterion.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SmoothL1Criterion.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/MarginCriterion.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SparseLinear.c"
@@ -102,12 +93,6 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/VolumetricAveragePooling.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/MultiMarginCriterion.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/MultiLabelMarginCriterion.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SpatialUpSamplingNearest.c"
