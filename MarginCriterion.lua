@@ -12,8 +12,8 @@ function MarginCriterion:updateOutput(input, target)
       input:cdata(),
       target:cdata(),
       self.output_tensor:cdata(),
-      self.margin,
-      self.sizeAverage
+      self.sizeAverage,
+      self.margin
    )
    self.output = self.output_tensor[1]
    return self.output
@@ -24,8 +24,8 @@ function MarginCriterion:updateGradInput(input, target)
       input:cdata(),
       target:cdata(),
       self.gradInput:cdata(),
-      self.margin,
-      self.sizeAverage
+      self.sizeAverage,
+      self.margin
    )
    return self.gradInput
 end

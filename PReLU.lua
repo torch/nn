@@ -38,6 +38,8 @@ function PReLU:accGradParameters(input, gradOutput, scale)
       self.gradInput:cdata(),
       self.weight:cdata(),
       self.gradWeight:cdata(),
+      self.gradWeightBuf:cdata(),
+      self.gradWeightBuf2:cdata(),
       self.nOutputPlane,
       scale or 1
    )
