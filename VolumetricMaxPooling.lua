@@ -6,7 +6,7 @@ function VolumetricMaxPooling:__init(kT, kW, kH, dT, dW, dH)
    dT = dT or kT
    dW = dW or kW
    dH = dH or kH
-   
+
    self.kT = kT
    self.kH = kH
    self.kW = kW
@@ -14,7 +14,18 @@ function VolumetricMaxPooling:__init(kT, kW, kH, dT, dW, dH)
    self.dW = dW
    self.dH = dH
 
+   self.ceil_mode = false
    self.indices = torch.Tensor()
+end
+
+function VolumetricMaxPooling:ceil()
+    self.ceil_mode = true
+    return self
+end
+
+function VolumetricMaxPooling:floor()
+    self.ceil_mode = false
+    return self
 end
 
 function VolumetricMaxPooling:updateOutput(input)

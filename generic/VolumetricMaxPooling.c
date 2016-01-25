@@ -32,12 +32,15 @@ static void nn_(VolumetricMaxPooling_updateOutput_frame)(
           for(z = 0; z < kT; z++) {
             for(y = 0; y < kH; y++) {
               for(x = 0; x < kW; x++) {
-                real val = *(ip + z * iwidth * iheight + y * iwidth + x);
-                if (val > maxval) {
-                  maxval = val;
-                  mz = z;
-                  my = y;
-                  mx = x;
+                if ( (ti * dT + z < itime) && (i * dH + y < iheight) &&
+                   (j * dW + x < iwidth) ) {
+                  real val = *(ip + z * iwidth * iheight + y * iwidth + x);
+                  if (val > maxval) {
+                    maxval = val;
+                    mz = z;
+                    my = y;
+                    mx = x;
+                  }
                 }
               }
             }
@@ -65,6 +68,7 @@ static int nn_(VolumetricMaxPooling_updateOutput)(lua_State *L)
   int dT = luaT_getfieldcheckint(L, 1, "dT");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
+  int ceil_mode = luaT_getfieldcheckboolean(L,1,"ceil_mode");
   THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
   long nslices;
@@ -102,9 +106,15 @@ static int nn_(VolumetricMaxPooling_updateOutput)(lua_State *L)
   itime   = input->size[dimt];
   iheight = input->size[dimh];
   iwidth  = input->size[dimw];
-  otime   = (itime   - kT) / dT + 1;
-  oheight = (iheight - kH) / dH + 1;
-  owidth  = (iwidth  - kW) / dW + 1;
+  if (ceil_mode) {
+    otime   = (int)(ceil((float)(itime   - kT) / dT) + 1);
+    oheight = (int)(ceil((float)(iheight - kH) / dH) + 1);
+    owidth  = (int)(ceil((float)(iwidth  - kW) / dW) + 1);
+  } else {
+    otime   = (int)(floor((float)(itime   - kT) / dT) + 1);
+    oheight = (int)(floor((float)(iheight - kH) / dH) + 1);
+    owidth  = (int)(floor((float)(iwidth  - kW) / dW) + 1);
+  }
 
   /* get contiguous input */
   input = THTensor_(newContiguous)(input);
