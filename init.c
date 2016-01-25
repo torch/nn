@@ -11,12 +11,6 @@
 #include "generic/Sqrt.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/Sigmoid.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SoftPlus.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/Tanh.c"
 #include "THGenerateFloatTypes.h"
 
@@ -24,15 +18,6 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/Threshold.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/RReLU.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SoftMax.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SmoothL1Criterion.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SparseLinear.c"
@@ -108,14 +93,9 @@ int luaopen_libnn(lua_State *L)
 
   nn_FloatSqrt_init(L);
   nn_FloatSquare_init(L);
-  nn_FloatSmoothL1Criterion_init(L);
-  nn_FloatSigmoid_init(L);
-  nn_FloatSoftMax_init(L);
-  nn_FloatSoftPlus_init(L);
   nn_FloatTanh_init(L);
   nn_FloatSoftShrink_init(L);
   nn_FloatThreshold_init(L);
-  nn_FloatRReLU_init(L);
   nn_FloatSparseLinear_init(L);
   nn_FloatTemporalConvolution_init(L);
   nn_FloatTemporalSubSampling_init(L);
@@ -139,14 +119,9 @@ int luaopen_libnn(lua_State *L)
 
   nn_DoubleSqrt_init(L);
   nn_DoubleSquare_init(L);
-  nn_DoubleSmoothL1Criterion_init(L);
-  nn_DoubleSigmoid_init(L);
-  nn_DoubleSoftMax_init(L);
-  nn_DoubleSoftPlus_init(L);
   nn_DoubleTanh_init(L);
   nn_DoubleSoftShrink_init(L);
   nn_DoubleThreshold_init(L);
-  nn_DoubleRReLU_init(L);
   nn_DoubleSparseLinear_init(L);
   nn_DoubleTemporalConvolution_init(L);
   nn_DoubleTemporalSubSampling_init(L);
