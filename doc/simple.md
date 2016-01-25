@@ -46,10 +46,10 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
 ## Linear ##
 
 ```lua
-module = nn.Linear(inputDimension, outputDimension)
+module = nn.Linear(inputDimension, outputDimension, [bias = true])
 ```
 
-Applies a linear transformation to the incoming data, i.e. `y = Ax + b`. The `input` tensor given in `forward(input)` must be either a vector (1D tensor) or matrix (2D tensor). If the input is a matrix, then each row is assumed to be an input sample of given batch.
+Applies a linear transformation to the incoming data, i.e. `y = Ax + b`. The `input` tensor given in `forward(input)` must be either a vector (1D tensor) or matrix (2D tensor). If the input is a matrix, then each row is assumed to be an input sample of given batch. The layer can be used without bias by setting `bias = false`.
 
 You can create a layer in the following way:
 
