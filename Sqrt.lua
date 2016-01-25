@@ -7,9 +7,20 @@ end
 
 function Sqrt:updateOutput(input)
    self.eps = self.eps or 0
-   return input.nn.Sqrt_updateOutput(self,input)
+   input.THNN.Sqrt_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.eps
+   )
+   return self.output
 end
 
 function Sqrt:updateGradInput(input, gradOutput)
-   return input.nn.Sqrt_updateGradInput(self,input,gradOutput)
+   input.THNN.Sqrt_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.output:cdata()
+   )
+   return self.gradInput
 end
