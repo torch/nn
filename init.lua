@@ -15,6 +15,7 @@ include('Sequential.lua')
 include('DepthConcat.lua')
 
 include('Linear.lua')
+include('Bilinear.lua')
 include('SparseLinear.lua')
 include('Reshape.lua')
 include('View.lua')
