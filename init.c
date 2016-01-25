@@ -5,21 +5,6 @@
 #define torch_Tensor TH_CONCAT_STRING_3(torch.,Real,Tensor)
 #define nn_(NAME) TH_CONCAT_3(nn_, Real, NAME)
 
-#include "generic/Square.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/Sqrt.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/Tanh.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SoftShrink.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/Threshold.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SparseLinear.c"
 #include "THGenerateFloatTypes.h"
 
@@ -91,11 +76,6 @@ int luaopen_libnn(lua_State *L)
   lua_pushvalue(L, -1);
   lua_setglobal(L, "nn");
 
-  nn_FloatSqrt_init(L);
-  nn_FloatSquare_init(L);
-  nn_FloatTanh_init(L);
-  nn_FloatSoftShrink_init(L);
-  nn_FloatThreshold_init(L);
   nn_FloatSparseLinear_init(L);
   nn_FloatTemporalConvolution_init(L);
   nn_FloatTemporalSubSampling_init(L);
@@ -117,11 +97,6 @@ int luaopen_libnn(lua_State *L)
   nn_FloatVolumetricAveragePooling_init(L);
   nn_FloatSpatialUpSamplingNearest_init(L);
 
-  nn_DoubleSqrt_init(L);
-  nn_DoubleSquare_init(L);
-  nn_DoubleTanh_init(L);
-  nn_DoubleSoftShrink_init(L);
-  nn_DoubleThreshold_init(L);
   nn_DoubleSparseLinear_init(L);
   nn_DoubleTemporalConvolution_init(L);
   nn_DoubleTemporalSubSampling_init(L);
