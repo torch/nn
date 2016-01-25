@@ -5,6 +5,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
   * Parameterized Modules :
     * [Linear](#nn.Linear) : a linear transformation ;
     * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
+    * [Bilinear](#nn.Bilinear) : a bilinear transformation with sparse inputs ;
     * [Add](#nn.Add) : adds a bias term to the incoming data ;
     * [Mul](#nn.Mul) : multiply a single scalar factor to the incoming data ;
     * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
@@ -118,6 +119,28 @@ x = torch.Tensor({ {1, 0.1}, {2, 0.3}, {10, 0.3}, {31, 0.2} })
 ```
 
 The first column contains indices, the second column contains values in a a vector where all other elements are zeros. The indices should not exceed the stated dimensions of the input to the layer (10000 in the example).
+
+<a name="nn.Bilinear"></a>
+## Bilinear ##
+
+```lua
+module = nn.Bilinear(inputDimension1, inputDimension2, outputDimension, [bias = true])
+```
+
+Applies a bilinear transformation to the incoming data, i.e. `\forall k: y_k = x_1 A_k x_2 + b`. The `input` tensor given in `forward(input)` is a table containing both inputs `x_1` and `x_2`, which are tensors of size `N x inputDimension1`
+and `N x inputDimension1`, respectively. The layer can be trained without biases by setting `bias = false`.
+
+You can create a layer in the following way:
+
+```lua
+ module = nn.Bilinear(10, 5, 3)  -- 10 and 5 inputs, 3 outputs
+```
+
+Input data for this layer would look as follows:
+```lua
+ input = {torch.randn(128, 10), torch.randn(128, 5)}  -- 128 input examples
+ module:forward(input)
+```
 
 <a name="nn.Dropout"></a>
 ## Dropout ##

@@ -780,6 +780,58 @@ function nntest.SparseLinear()
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.Bilinear()
+
+   -- set up data:
+   local N = 10
+   local D1 = 5
+   local D2 = 4
+   local K  = 3
+   local input  = {torch.randn(N, D1), torch.randn(N, D2)}
+   local target = torch.randn(N, K)
+
+   -- test forward-backward pass:
+   local network = nn.Sequential():add(nn.Bilinear(D1, D2, K))
+   local crit = nn.MSECriterion()
+   crit:forward(network:forward(input), target)
+   network:backward(input, crit:backward(network.output, target))
+
+   -- function for gradient checking (nn.Jacobian does not work with tables):
+   local function checkGradient(perturbation)
+
+      -- prepare some variables:
+      local perturbation = perturbation or 1e-6
+      network:zeroGradParameters()
+      local param, actual = network:getParameters()  -- flattened parameters
+      print(string.format('| checking gradient of %d params', param:nElement()))
+
+      -- loop over all to numerically approximate true Jacobian:
+      local expected = param.new(param:nElement())
+      for i = 1,param:nElement() do
+         local orig = param[i]
+         param[i] = orig - perturbation
+         local outa = crit:forward(network:forward(input), target)
+         param[i] = orig + perturbation
+         local outb = crit:forward(network:forward(input), target)
+         param[i] = orig
+         expected[i] = (outb - outa) / (2 * perturbation)
+      end
+
+      -- compute Jacobian using the model:
+      network:zeroGradParameters()
+      crit:forward(network:forward(input), target)
+      network:backward(input, crit:backward(network.output, target))
+
+      -- compute error in Jacobian:
+      local error = (actual - expected):abs():max()
+      local expmax = expected:clone():abs():max()
+      return ((error ~= 0) and (error / expmax) or 0), actual, expected
+   end
+
+   -- perform gradient check:
+   mytester:assertlt(checkGradient(1e-9), 1e-4)
+end
+
 function nntest.Euclidean()
    local ini = math.random(5,7)
    local inj = math.random(5,7)
