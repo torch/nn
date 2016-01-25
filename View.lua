@@ -1,7 +1,6 @@
 local View, parent = torch.class('nn.View', 'nn.Module')
 
-function View:__init(...)
-   parent.__init(self)
+function View:resetSize(...)
    if select('#', ...) == 1 and torch.typename(select(1, ...)) == 'torch.LongStorage' then
       self.size = select(1, ...)
    else
@@ -21,6 +20,12 @@ function View:__init(...)
       end
    end
 
+   return self
+end
+
+function View:__init(...)
+   parent.__init(self)
+   self:resetSize(...)
    self.output = nil
    self.gradInput = nil
    self.numInputDims = nil
