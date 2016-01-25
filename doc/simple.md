@@ -534,8 +534,8 @@ Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/do
 module = nn.Replicate(nFeature [, dim, ndim])
 ```
 
-This class creates an output where the input is replicated `nFeature` times along dimension `dim` (default 1). 
-There is no memory allocation or memory copy in this module. 
+This class creates an output where the input is replicated `nFeature` times along dimension `dim` (default 1).
+There is no memory allocation or memory copy in this module.
 It sets the [stride](https://github.com/torch/torch7/blob/master/doc/tensor.md#torch.Tensor.stride) along the `dim`th dimension to zero.
 When provided, `ndim` should specify the number of non-batch dimensions.
 This allows the module to replicate the same non-batch dimension `dim` for both batch and non-batch `inputs`.
@@ -669,6 +669,7 @@ module = nn.View(sizes)
 
 This module creates a new view of the input tensor using the `sizes` passed to the constructor. The parameter `sizes` can either be a `LongStorage` or numbers.
 The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules. This makes it possible to use minibatch inputs when using a size `-1` for one of the dimensions.
+The method `resetSize(sizes)` allows to reset the view size of the module after initialization.
 
 Example 1:
 
@@ -834,10 +835,10 @@ module = nn.Index(dim)
 
 Applies the Tensor [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) operation along the given dimension. So
 
-```lua 
-nn.Index(dim):forward{t,i} 
+```lua
+nn.Index(dim):forward{t,i}
 ```
-gives the same output as 
+gives the same output as
 ```lua
 t:index(dim, i)
 ```
