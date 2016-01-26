@@ -13,8 +13,8 @@ function SpatialAdaptiveMaxPooling:updateOutput(input)
    input.THNN.SpatialAdaptiveMaxPooling_updateOutput(
       input:cdata(),
       self.output:cdata(),
-      self.W, self.H,
-      self.indices:cdata()
+      self.indices:cdata(),
+      self.W, self.H
    )
    return self.output
 end

@@ -76,6 +76,7 @@ function SpatialConvolutionMM:updateOutput(input)
       self.weight:cdata(),
       self.bias:cdata(),
       self.finput:cdata(),
+      self.fgradInput:cdata(),
       self.kW, self.kH,
       self.dW, self.dH,
       self.padW, self.padH
@@ -111,6 +112,10 @@ function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
       self.gradWeight:cdata(),
       self.gradBias:cdata(),
       self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.kW, self.kH,
+      self.dW, self.dH,
+      self.padW, self.padH,
       scale
    )
 end
