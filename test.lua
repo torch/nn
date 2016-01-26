@@ -3427,6 +3427,53 @@ function nntest.VolumetricMaxUnpooling()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
 end
 
+function nntest.VolumetricMaxPooling_boundary()
+   -- simple kernel 2x2x2 with striding 2x2x2
+   local module = nn.VolumetricMaxPooling(2, 2, 2, 2, 2, 2):ceil()
+   local nip = math.random(3,256)
+   local input = torch.rand(nip, 2, 7, 7)
+
+   -- do a forward pass
+   local output = module:forward(input)
+
+   -- checking output size
+   mytester:asserteq(output:size(1), nip, 'wrong output channels')
+   mytester:asserteq(output:size(2), 1, 'wrong output temporal length')
+   mytester:asserteq(output:size(3), 4, 'wrong output height')
+   mytester:asserteq(output:size(4), 4, 'wrong output width')
+
+   -- checking output signals at top right
+   for c = 1,nip do
+      local max_val = input[c][1][1][7]
+      for t = 1,2 do
+        for h = 1,2 do
+          max_val = math.max(max_val, input[c][t][h][7])
+        end
+      end
+      mytester:asserteq(output[c][1][1][4], max_val, 'wrong forward execution')
+   end
+   -- checking output signals at bottom left
+   for c = 1,nip do
+       local max_val = input[c][1][7][1]
+       for t = 1,2 do
+         for w = 1,2 do
+           max_val = math.max(max_val, input[c][t][7][w])
+         end
+       end
+       mytester:asserteq(output[c][1][4][1], max_val, 'wrong forward execution')
+   end
+
+   -- check output signals at right bottom
+    for c = 1,nip do
+      local max_val = math.max(input[c][1][7][7], input[c][2][7][7])
+      mytester:asserteq(output[c][1][4][4], max_val, 'wrong forward execution')
+    end
+
+
+   -- backward is supposed to be tested in nntest.VolumetricMaxPooling
+   -- This is only test the boundary cases
+end
+
 function nntest.Module_getParameters_1()
    local n = nn.Sequential()
    n:add( nn.Linear(10,10) )
@@ -5262,7 +5309,10 @@ else
    sjac = nn.SparseJacobian
    function nn.test(tests)
       -- randomize stuff
-      math.randomseed(os.time())
+       local seed = os.time()
+       print('Seed: ', seed)
+       math.randomseed(seed)
+       torch.manualSeed(seed)
       mytester:run(tests)
       return mytester
    end
