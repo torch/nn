@@ -72,9 +72,11 @@ function Bilinear:updateOutput(input)
       self.buff:cmul(input[2])
       torch.sum(self.output:narrow(2, k, 1), self.buff, 2)
    end
-   self.output:add(
-      self.bias:reshape(1, self.bias:nElement()):expandAs(self.output)
-   )
+   if self.bias then
+       self.output:add(
+           self.bias:reshape(1, self.bias:nElement()):expandAs(self.output)
+       )
+   end
    return self.output
 end
 
