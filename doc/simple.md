@@ -422,19 +422,21 @@ module = nn.Mean(dimension, nInputDim)
 
 Applies a mean operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
-When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dimension` to apply the mean operation will be dimension `dimension + 1`.
+When `nInputDim` is provided , inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
+This module is based on [nn.Sum](#nn.Sum).
 
 <a name="nn.Sum"></a>
 ## Sum ##
 
 ```lua
-module = nn.Sum(dimension, nInputDim)
+module = nn.Sum(dimension, nInputDim, sizeAverage)
 ```
 
 Applies a sum operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
-When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
-
+When `nInputDim` is provided , inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
+Negative indexing is allowed by providing a negative value to `nInputDim`. 
+When `sizeAverage` is provided, the sum is divided by the size of the input in this `dimension`. This is equivalent to the mean operation performed by the [nn.Mean](#nn.Mean) module.
 
 <a name="nn.Euclidean"></a>
 ## Euclidean ##
