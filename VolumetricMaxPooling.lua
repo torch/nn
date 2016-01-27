@@ -1,6 +1,8 @@
 local VolumetricMaxPooling, parent = torch.class('nn.VolumetricMaxPooling', 'nn.Module')
 
 function VolumetricMaxPooling:__init(kT, kW, kH, dT, dW, dH, padT, padW, padH)
+VolumetricMaxPooling.__version = 2
+
    parent.__init(self)
 
    dT = dT or kT
@@ -50,4 +52,11 @@ function VolumetricMaxPooling:empty()
    self.output:storage():resize(0)
    self.indices:resize()
    self.indices:storage():resize(0)
+end
+
+function VolumetricMaxPooling:read(file, version)
+   parent.read(self, file)
+   if version < 2 then
+      self.ceil_mode = false
+   end
 end
