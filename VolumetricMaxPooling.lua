@@ -2,7 +2,7 @@ local VolumetricMaxPooling, parent = torch.class('nn.VolumetricMaxPooling', 'nn.
 
 VolumetricMaxPooling.__version = 2
 
-function VolumetricMaxPooling:__init(kT, kW, kH, dT, dW, dH)
+function VolumetricMaxPooling:__init(kT, kW, kH, dT, dW, dH, padT, padW, padH)
    parent.__init(self)
 
    dT = dT or kT
@@ -15,6 +15,11 @@ function VolumetricMaxPooling:__init(kT, kW, kH, dT, dW, dH)
    self.dT = dT
    self.dW = dW
    self.dH = dH
+
+   self.padT = padT or 0
+   self.padW = padW or 0
+   self.padH = padH or 0
+
 
    self.ceil_mode = false
    self.indices = torch.Tensor()
