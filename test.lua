@@ -5333,6 +5333,7 @@ function nntest.Cosine()
 end
 
 mytester:add(nntest)
+
 if not nn then
    require 'nn'
    jac = nn.Jacobian
