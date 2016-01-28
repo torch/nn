@@ -803,7 +803,6 @@ function nntest.Bilinear()
       local perturbation = perturbation or 1e-6
       network:zeroGradParameters()
       local param, actual = network:getParameters()  -- flattened parameters
-      print(string.format('| checking gradient of %d params', param:nElement()))
 
       -- loop over all to numerically approximate true Jacobian:
       local expected = param.new(param:nElement())
@@ -2109,7 +2108,7 @@ function nntest.SpatialConvolutionLocal()
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
-  
+
    -- check against nn.SpatialConvolution
    local conv = nn.SpatialConvolution(from, to, ki, kj, si, sj)
    torch.repeatTensor(module.bias, conv.bias:view(to, 1, 1), 1, outi, outj)
@@ -3415,7 +3414,7 @@ function nntest.VolumetricMaxUnpooling()
    local int = (outt-1)*st+kt-2*padT
    local ini = (outi-1)*si+ki-2*padW
    local inj = (outj-1)*sj+kj-2*padH
-   
+
    local poolingModule = nn.VolumetricMaxPooling(kt, ki, kj, st, si, sj, padT, padW, padH)
    local module = nn.VolumetricMaxUnpooling(poolingModule)
 
@@ -3423,14 +3422,14 @@ function nntest.VolumetricMaxUnpooling()
    local input = poolingModule:forward(original)
    local output = module:forward(input)
    mytester:assert(output:isSameSizeAs(original),'VolumetricMaxUnpooling output size err')
-   
+
    local err = jac.testJacobian(module, input)
    mytester:assertlt(err, precision, 'error ')
-   
+
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
-   
+
    -- batch
    local nbatch = math.random(2,3)
    original = torch.rand(nbatch,from,int,inj,ini)
