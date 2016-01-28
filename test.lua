@@ -4088,6 +4088,27 @@ function nntest.SelectTable()
    local gradInput = module:backward(input, gradOutputs[idx])
    equal(gradInput[idx], gradOutputs[idx], "gradInput[idx] dimension " .. idx)
    equal(gradInput[nonIdx[idx]], zeros[nonIdx[idx]], "gradInput[nonIdx] dimension " .. idx)
+
+   -- test on differently sized sub-input tables given consequetively
+   local input1 = {
+      torch.rand(3,4,5),
+      {torch.rand(3,4,5), torch.rand(3,4,5), torch.rand(3,4,5)}
+   }
+   local input2 = {
+      torch.rand(3,4,5),
+      {torch.rand(3,4,5), torch.rand(3,4,5)}
+   }
+   module = nn.SelectTable(1)
+   local output = module:forward(input1)
+   equal(output, input1[1], "output dimension 1")
+   local gradInput = module:backward(input1, output)
+   mytester:assert(#gradInput == #input1, "Table lengths")
+   mytester:assert(#gradInput[2] == #input1[2], "Sub-Table lengths")
+   output = module:forward(input2)
+   equal(output, input2[1], "output dimension 1")
+   gradInput = module:backward(input2, output)
+   mytester:assert(#gradInput == #input2, "Table lengths")
+   mytester:assert(#gradInput[2] == #input2[2], "Sub-Table lengths")
 end
 
 function nntest.MixtureTable()
