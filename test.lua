@@ -3409,11 +3409,14 @@ function nntest.VolumetricMaxUnpooling()
    local outt = math.random(3,4)
    local outi = math.random(3,4)
    local outj = math.random(3,4)
-   local int = (outt-1)*st+kt
-   local ini = (outi-1)*si+ki
-   local inj = (outj-1)*sj+kj
+   local padT = math.min(math.random(0,2),math.floor(kt/2))
+   local padW = math.min(math.random(0,2),math.floor(ki/2))
+   local padH = math.min(math.random(0,2),math.floor(kj/2))
+   local int = (outt-1)*st+kt-2*padT
+   local ini = (outi-1)*si+ki-2*padW
+   local inj = (outj-1)*sj+kj-2*padH
    
-   local poolingModule = nn.VolumetricMaxPooling(kt,ki,kj,st,si,sj)
+   local poolingModule = nn.VolumetricMaxPooling(kt, ki, kj, st, si, sj, padT, padW, padH)
    local module = nn.VolumetricMaxUnpooling(poolingModule)
 
    local original = torch.rand(from,int,inj,ini)

@@ -822,12 +822,12 @@ oheight = (height - 1) * dH - 2*padH + kH
 ### VolumetricMaxPooling ###
 
 ```lua
-module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH])
+module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH, padT, padW, padH])
 ```
 
 Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
 `dTxdWxdH` steps. The number of output features is equal to the number of
-input planes / dT.
+input planes / dT. The input can optionally be padded with zeros. Padding should be smaller than half of kernel size.  That is, `padT < kT/2`, `padW < kW/2` and `padH < kH/2`.
 
 <a name="nn.VolumetricAveragePooling"></a>
 ### VolumetricAveragePooling ###
