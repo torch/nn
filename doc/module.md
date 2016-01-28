@@ -16,7 +16,7 @@ module. In general `input` and `output` are
 like [table layers](table.md#nn.TableLayers) might expect something else. Please,
 refer to each module specification for further information.
 
-After a `forward()`, the [ouput](#output) state variable should
+After a `forward()`, the [output](#output) state variable should
 have been updated to the new value.
 
 It is not advised to override this function. Instead, one should
