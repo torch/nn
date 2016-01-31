@@ -54,13 +54,43 @@ function VolumetricFullConvolution:reset(stdv)
 end
 
 function VolumetricFullConvolution:updateOutput(input)
-   return input.nn.VolumetricFullConvolution_updateOutput(self, input)
+   input.THNN.VolumetricFullConvolution_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.dT, self.dW, self.dH,
+      self.pT, self.pW, self.pH
+   )
+   return self.output
 end
 
 function VolumetricFullConvolution:updateGradInput(input, gradOutput)
-   return input.nn.VolumetricFullConvolution_updateGradInput(self, input, gradOutput)
+   input.THNN.VolumetricFullConvolution_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.weight:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.dT, self.dW, self.dH,
+      self.pT, self.pW, self.pH
+   )
+   return self.gradInput
 end
 
 function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
-   return input.nn.VolumetricFullConvolution_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.VolumetricFullConvolution_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      self.gradBias:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.dT, self.dW, self.dH,
+      self.pT, self.pW, self.pH,
+      scale or 1
+   )
 end

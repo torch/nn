@@ -74,11 +74,11 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
       input:cdata(),
       gradOutput:cdata(),
       self.gradWeight:cdata(),
-      scale or 1,
-      self.shouldScaleGradByFreq or false,
       self._count:cdata(),
       THNN.optionalTensor(self._sorted),
-      THNN.optionalTensor(self._indices)
+      THNN.optionalTensor(self._indices),
+      self.shouldScaleGradByFreq or false,
+      scale or 1
    )
 end
 

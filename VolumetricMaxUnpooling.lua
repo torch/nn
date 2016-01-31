@@ -30,13 +30,28 @@ end
 
 function VolumetricMaxUnpooling:updateOutput(input)
   self:setParams()
-  input.nn.VolumetricMaxUnpooling_updateOutput(self, input)
+  input.THNN.VolumetricMaxUnpooling_updateOutput(
+     input:cdata(),
+     self.output:cdata(),
+     self.indices:cdata(),
+     self.otime, self.owidth, self.oheight,
+     self.dT, self.dW, self.dH,
+     self.padT, self.padW, self.padH
+  )
   return self.output
 end
 
 function VolumetricMaxUnpooling:updateGradInput(input, gradOutput)
   self:setParams()
-  input.nn.VolumetricMaxUnpooling_updateGradInput(self, input, gradOutput)
+  input.THNN.VolumetricMaxUnpooling_updateGradInput(
+     input:cdata(),
+     gradOutput:cdata(),
+     self.gradInput:cdata(),
+     self.indices:cdata(),
+     self.otime, self.owidth, self.oheight,
+     self.dT, self.dW, self.dH,
+     self.padT, self.padW, self.padH
+  )
   return self.gradInput
 end
 

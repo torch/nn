@@ -36,12 +36,27 @@ function VolumetricMaxPooling:floor()
 end
 
 function VolumetricMaxPooling:updateOutput(input)
-   input.nn.VolumetricMaxPooling_updateOutput(self, input)
+   input.THNN.VolumetricMaxPooling_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.indices:cdata(),
+      self.kT, self.kW, self.kH,
+      self.dT, self.dW, self.dH,
+      self.padT, self.padW, self.padH,
+      self.ceil_mode
+   )
    return self.output
 end
 
 function VolumetricMaxPooling:updateGradInput(input, gradOutput)
-   input.nn.VolumetricMaxPooling_updateGradInput(self, input, gradOutput)
+   input.THNN.VolumetricMaxPooling_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.indices:cdata(),
+      self.dT, self.dW, self.dH,
+      self.padT, self.padW, self.padH
+   )
    return self.gradInput
 end
 
