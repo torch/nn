@@ -29,7 +29,7 @@ function PowConstant:updateGradInput(input, gradOutput)
   if self.gradInput then
     if self.inplace then
       input:pow((self.constant_scalar-1)/self.constant_scalar)
-      gradOutput:mul(input)
+      gradOutput:cmul(input)
       gradOutput:mul(self.constant_scalar)
       self.gradInput = gradOutput
       -- restore previous input value
@@ -38,7 +38,7 @@ function PowConstant:updateGradInput(input, gradOutput)
       self.gradInput:resizeAs(gradOutput)
       self.gradInput:pow(input, self.constant_scalar-1)
       self.gradInput:mul(self.constant_scalar)
-      self.gradInput:mul(gradOutput)
+      self.gradInput:cmul(gradOutput)
     end
     return self.gradInput
   end
