@@ -90,3 +90,7 @@ function View:updateGradInput(input, gradOutput)
    self.gradInput = gradOutput:view(input:size())
    return self.gradInput
 end
+
+function View:__tostring__()
+   return torch.type(self)..'('..table.concat(self.size:totable(),',')..')'
+end
