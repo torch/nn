@@ -157,7 +157,7 @@ function nn.utils.contiguousView(output, input, ...)
   else
     output:resizeAs(input)
     output:copy(input)
-    output:view(...)
+    output:view(output, ...)
   end
   return output
 end
