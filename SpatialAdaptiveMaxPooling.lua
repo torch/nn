@@ -10,12 +10,22 @@ function SpatialAdaptiveMaxPooling:__init(W, H)
 end
 
 function SpatialAdaptiveMaxPooling:updateOutput(input)
-   input.nn.SpatialAdaptiveMaxPooling_updateOutput(self, input)
+   input.THNN.SpatialAdaptiveMaxPooling_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.indices:cdata(),
+      self.W, self.H
+   )
    return self.output
 end
 
 function SpatialAdaptiveMaxPooling:updateGradInput(input, gradOutput)
-   input.nn.SpatialAdaptiveMaxPooling_updateGradInput(self, input, gradOutput)
+   input.THNN.SpatialAdaptiveMaxPooling_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.indices:cdata()
+   )
    return self.gradInput
 end
 
