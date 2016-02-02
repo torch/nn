@@ -5,45 +5,6 @@
 #define torch_Tensor TH_CONCAT_STRING_3(torch.,Real,Tensor)
 #define nn_(NAME) TH_CONCAT_3(nn_, Real, NAME)
 
-#include "generic/Square.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/Sqrt.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/Sigmoid.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SoftPlus.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/Tanh.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SoftShrink.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/Threshold.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/PReLU.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/RReLU.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SoftMax.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/MSECriterion.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SmoothL1Criterion.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/MarginCriterion.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SparseLinear.c"
 #include "THGenerateFloatTypes.h"
 
@@ -104,12 +65,6 @@
 #include "generic/VolumetricAveragePooling.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/MultiMarginCriterion.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/MultiLabelMarginCriterion.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SpatialUpSamplingNearest.c"
 #include "THGenerateFloatTypes.h"
 
@@ -121,19 +76,6 @@ int luaopen_libnn(lua_State *L)
   lua_pushvalue(L, -1);
   lua_setglobal(L, "nn");
 
-  nn_FloatSqrt_init(L);
-  nn_FloatSquare_init(L);
-  nn_FloatMSECriterion_init(L);
-  nn_FloatSmoothL1Criterion_init(L);
-  nn_FloatMarginCriterion_init(L);
-  nn_FloatSigmoid_init(L);
-  nn_FloatSoftMax_init(L);
-  nn_FloatSoftPlus_init(L);
-  nn_FloatTanh_init(L);
-  nn_FloatSoftShrink_init(L);
-  nn_FloatThreshold_init(L);
-  nn_FloatPReLU_init(L);
-  nn_FloatRReLU_init(L);
   nn_FloatSparseLinear_init(L);
   nn_FloatTemporalConvolution_init(L);
   nn_FloatTemporalSubSampling_init(L);
@@ -153,23 +95,8 @@ int luaopen_libnn(lua_State *L)
   nn_FloatVolumetricMaxPooling_init(L);
   nn_FloatVolumetricMaxUnpooling_init(L);
   nn_FloatVolumetricAveragePooling_init(L);
-  nn_FloatMultiMarginCriterion_init(L);
-  nn_FloatMultiLabelMarginCriterion_init(L);
   nn_FloatSpatialUpSamplingNearest_init(L);
 
-  nn_DoubleSqrt_init(L);
-  nn_DoubleSquare_init(L);
-  nn_DoubleMSECriterion_init(L);
-  nn_DoubleSmoothL1Criterion_init(L);
-  nn_DoubleMarginCriterion_init(L);
-  nn_DoubleSigmoid_init(L);
-  nn_DoubleSoftMax_init(L);
-  nn_DoubleSoftPlus_init(L);
-  nn_DoubleTanh_init(L);
-  nn_DoubleSoftShrink_init(L);
-  nn_DoubleThreshold_init(L);
-  nn_DoublePReLU_init(L);
-  nn_DoubleRReLU_init(L);
   nn_DoubleSparseLinear_init(L);
   nn_DoubleTemporalConvolution_init(L);
   nn_DoubleTemporalSubSampling_init(L);
@@ -190,8 +117,6 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleVolumetricMaxPooling_init(L);
   nn_DoubleVolumetricMaxUnpooling_init(L);
   nn_DoubleVolumetricAveragePooling_init(L);
-  nn_DoubleMultiMarginCriterion_init(L);
-  nn_DoubleMultiLabelMarginCriterion_init(L);
   nn_DoubleSpatialUpSamplingNearest_init(L);
 
   return 1;

@@ -40,6 +40,51 @@
 #include "generic/LookupTable.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/MSECriterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/MarginCriterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/MultiLabelMarginCriterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/MultiMarginCriterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/PReLU.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/RReLU.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/Sigmoid.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SmoothL1Criterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SoftMax.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SoftPlus.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SoftShrink.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/Sqrt.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/Square.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/Tanh.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/Threshold.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/unfold.c"
 #include "THGenerateFloatTypes.h"
 

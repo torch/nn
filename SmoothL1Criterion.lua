@@ -10,9 +10,23 @@ function SmoothL1Criterion:__init(sizeAverage)
 end
 
 function SmoothL1Criterion:updateOutput(input, target)
-   return input.nn.SmoothL1Criterion_updateOutput(self, input, target)
+   self.output_tensor = self.output_tensor or input.new(1)
+   input.THNN.SmoothL1Criterion_updateOutput(
+      input:cdata(),
+      target:cdata(),
+      self.output_tensor:cdata(),
+      self.sizeAverage
+   )
+   self.output = self.output_tensor[1]
+   return self.output
 end
 
 function SmoothL1Criterion:updateGradInput(input, target)
-   return input.nn.SmoothL1Criterion_updateGradInput(self, input, target)
+   input.THNN.SmoothL1Criterion_updateGradInput(
+      input:cdata(),
+      target:cdata(),
+      self.gradInput:cdata(),
+      self.sizeAverage
+   )
+   return self.gradInput
 end
