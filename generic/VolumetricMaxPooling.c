@@ -6,7 +6,7 @@ static void nn_(VolumetricMaxPooling_updateOutput_frame)(
   real *input_p, real *output_p, real *indz_p,
   long nslices, long itime, long iwidth, long iheight,
   long otime, long owidth, long oheight,
-  int kT, int kW, int kH, int dT, int dW, int dH) {
+  int kT, int kW, int kH, int dT, int dW, int dH, int padT, int padW, int padH) {
   long k;
 #pragma omp parallel for private(k)
   for (k = 0; k < nslices; k++)
@@ -17,8 +17,21 @@ static void nn_(VolumetricMaxPooling_updateOutput_frame)(
       for(i = 0; i < oheight; i++) {
         for(j = 0; j < owidth; j++) {
           /* local pointers */
+          
+          long start_t = ti * dT - padT;
+          long start_h = i * dH - padH;
+          long start_w = j * dW - padW;
+          
+          long kernel_t = fminf(kT, kT + start_t);
+          long kernel_h = fminf(kH, kH + start_h);
+          long kernel_w = fminf(kW, kW + start_w);
+          
+          start_t = fmaxf(start_t, 0);
+          start_h = fmaxf(start_h, 0);
+          start_w = fmaxf(start_w, 0);
+          
           real *ip = input_p + k * itime * iwidth * iheight
-            + ti * iwidth * iheight * dT + i * iwidth * dH + j * dW;
+            + start_t * iwidth * iheight + start_h * iwidth + start_w;
           real *op = output_p + k * otime * owidth * oheight
             + ti * owidth * oheight + i * owidth + j;
           real *indzp = indz_p + k * otime * owidth * oheight
@@ -29,15 +42,19 @@ static void nn_(VolumetricMaxPooling_updateOutput_frame)(
           int x,y,z;
           int mx, my, mz;
 
-          for(z = 0; z < kT; z++) {
-            for(y = 0; y < kH; y++) {
-              for(x = 0; x < kW; x++) {
-                real val = *(ip + z * iwidth * iheight + y * iwidth + x);
-                if (val > maxval) {
-                  maxval = val;
-                  mz = z;
-                  my = y;
-                  mx = x;
+          for(z = 0; z < kernel_t; z++) {
+            for(y = 0; y < kernel_h; y++) {
+              for(x = 0; x < kernel_w; x++) {
+                if ((start_t + z < itime) && (start_h + y < iheight) && (start_w + x < iwidth))
+                {
+                  real val = *(ip + z * iwidth * iheight + y * iwidth + x);
+                  if (val > maxval) {
+                    maxval = val;
+                    // Store indices w.r.t the kernel dimension
+                    mz = z + (kT - kernel_t); 
+                    my = y + (kH - kernel_h);
+                    mx = x + (kW - kernel_w);
+                  }
                 }
               }
             }
@@ -65,6 +82,10 @@ static int nn_(VolumetricMaxPooling_updateOutput)(lua_State *L)
   int dT = luaT_getfieldcheckint(L, 1, "dT");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
+  int padT = luaT_getfieldcheckint(L, 1, "padT");
+  int padW = luaT_getfieldcheckint(L, 1, "padW");
+  int padH = luaT_getfieldcheckint(L, 1, "padH");
+  int ceil_mode = luaT_getfieldcheckboolean(L,1,"ceil_mode");
   THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
   THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
   long nslices;
@@ -97,14 +118,33 @@ static int nn_(VolumetricMaxPooling_updateOutput)(lua_State *L)
                 input->size[dimh] >= kH && input->size[dimt] >= kT, 2,
                 "input image smaller than kernel size");
 
+  luaL_argcheck(L, kT/2 >= padT && kW/2 >= padW && kH/2 >= padH, 2, "pad should be smaller than half of kernel size");
+
   /* sizes */
   nslices = input->size[dimN];
   itime   = input->size[dimt];
   iheight = input->size[dimh];
   iwidth  = input->size[dimw];
-  otime   = (itime   - kT) / dT + 1;
-  oheight = (iheight - kH) / dH + 1;
-  owidth  = (iwidth  - kW) / dW + 1;
+  if (ceil_mode) {
+    otime   = (int)(ceil((float)(itime   - kT + 2 * padT) / dT) + 1);
+    oheight = (int)(ceil((float)(iheight - kH + 2 * padH) / dH) + 1);
+    owidth  = (int)(ceil((float)(iwidth  - kW + 2 * padW) / dW) + 1);
+  } else {
+    otime   = (int)(floor((float)(itime   - kT + 2 * padT) / dT) + 1);
+    oheight = (int)(floor((float)(iheight - kH + 2 * padH) / dH) + 1);
+    owidth  = (int)(floor((float)(iwidth  - kW + 2 * padW) / dW) + 1);
+  }
+
+  if (padT || padW || padH)
+  {
+    // ensure that the last pooling starts inside the image
+    if ((otime - 1)*dT >= itime + padT)
+      --otime;
+    if ((oheight - 1)*dH >= iheight + padH)
+      --oheight;
+    if ((owidth  - 1)*dW >= iwidth  + padW)
+      --owidth;
+  }
 
   /* get contiguous input */
   input = THTensor_(newContiguous)(input);
@@ -124,7 +164,7 @@ static int nn_(VolumetricMaxPooling_updateOutput)(lua_State *L)
                                                  nslices,
                                                  itime, iwidth, iheight,
                                                  otime, owidth, oheight,
-                                                 kT, kW, kH, dT, dW, dH);
+                                                 kT, kW, kH, dT, dW, dH, padT, padW, padH);
   } else { /* batch mode */
     long p;
     long nBatch = input->size[0];
@@ -150,7 +190,7 @@ static int nn_(VolumetricMaxPooling_updateOutput)(lua_State *L)
         nslices,
         itime, iwidth, iheight,
         otime, owidth, oheight,
-        kT, kW, kH, dT, dW, dH);
+        kT, kW, kH, dT, dW, dH, padT, padW, padH);
     }
   }
 
@@ -164,7 +204,8 @@ static void nn_(VolumetricMaxPooling_updateGradInput_frame)(
   long nslices,
   long itime, long iwidth, long iheight,
   long otime, long owidth, long oheight,
-  int dT, int dW, int dH) {
+  int dT, int dW, int dH,
+  int padT, int padW, int padH) {
   long k;
 #pragma omp parallel for private(k)
   for (k = 0; k < nslices; k++) {
@@ -179,9 +220,9 @@ static void nn_(VolumetricMaxPooling_updateGradInput_frame)(
         for(j = 0; j < owidth; j++) {
           /* retrieve position of max */
           real * indzp = &indz_p_k[ti * oheight * owidth + i * owidth + j];
-          long maxti = ((unsigned char*)(indzp))[0] + ti * dT;
-          long maxi  = ((unsigned char*)(indzp))[1] + i * dH;
-          long maxj  = ((unsigned char*)(indzp))[2] + j * dW;
+          long maxti = ((unsigned char*)(indzp))[0] + ti * dT - padT;
+          long maxi  = ((unsigned char*)(indzp))[1] + i * dH - padH;
+          long maxj  = ((unsigned char*)(indzp))[2] + j * dW - padW;
 
           /* update gradient */
           gradInput_p_k[maxti * iheight * iwidth + maxi * iwidth + maxj] +=
@@ -199,6 +240,9 @@ static int nn_(VolumetricMaxPooling_updateGradInput)(lua_State *L)
   int dT = luaT_getfieldcheckint(L, 1, "dT");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
+  int padT = luaT_getfieldcheckint(L, 1, "padT");
+  int padW = luaT_getfieldcheckint(L, 1, "padW");
+  int padH = luaT_getfieldcheckint(L, 1, "padH");
   THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
   THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
   int nslices;
@@ -254,7 +298,7 @@ static int nn_(VolumetricMaxPooling_updateGradInput)(lua_State *L)
       nslices,
       itime, iwidth, iheight,
       otime, owidth, oheight,
-      dT, dW, dH);
+      dT, dW, dH, padT, padW, padH);
   }
   else { /* batch mode */
     long p;
@@ -272,7 +316,7 @@ static int nn_(VolumetricMaxPooling_updateGradInput)(lua_State *L)
         nslices,
         itime, iwidth, iheight,
         otime, owidth, oheight,
-        dT, dW, dH);
+        dT, dW, dH, padT, padW, padH);
     }
   }
 

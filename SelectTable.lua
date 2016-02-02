@@ -33,6 +33,11 @@ local function zeroTableCopy(t1, t2)
          end
       end
    end
+   for k, v in pairs(t1) do
+      if not t2[k] then
+         t1[k] = nil
+      end
+   end
    return t1
 end
 

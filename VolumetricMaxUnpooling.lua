@@ -23,6 +23,9 @@ function VolumetricMaxUnpooling:setParams()
   self.dT = self.pooling.dT
   self.dH = self.pooling.dH
   self.dW = self.pooling.dW
+  self.padT = self.pooling.padT
+  self.padH = self.pooling.padH
+  self.padW = self.pooling.padW
 end
 
 function VolumetricMaxUnpooling:updateOutput(input)

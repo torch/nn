@@ -7,7 +7,8 @@ static void nn_(VolumetricMaxUnpooling_updateOutput_frame)(real *input_p, real *
                                                       long nslices,
                                                       long itime, long iwidth, long iheight,
                                                       long otime, long owidth, long oheight,
-                                                      int dT, int dW, int dH)
+                                                      int dT, int dW, int dH,
+                                                      int padT, int padW, int padH)
 {
   long k;
 #pragma omp parallel for private(k)
@@ -20,7 +21,11 @@ static void nn_(VolumetricMaxUnpooling_updateOutput_frame)(real *input_p, real *
       {
         for(j = 0; j < iwidth; j++)
         {
-          real *output_p_k = output_p + k*otime*owidth*oheight + ti*owidth*oheight*dT + i*owidth*dH + j*dW;
+          long start_t = ti * dT - padT;
+          long start_h = i * dH - padH;
+          long start_w = j * dW - padW;
+          
+          //real *output_p_k = output_p + k*otime*owidth*oheight + ti*owidth*oheight*dT + i*owidth*dH + j*dW;
           real *input_p_k = input_p + k*itime*iwidth*iheight + ti*iwidth*iheight + i*iwidth + j;
           real *ind_p_k = ind_p + k*itime*iwidth*iheight + ti*iwidth*iheight + i*iwidth + j;
           
@@ -28,11 +33,11 @@ static void nn_(VolumetricMaxUnpooling_updateOutput_frame)(real *input_p, real *
           maxy = ((unsigned char*)(ind_p_k))[1];
           maxx = ((unsigned char*)(ind_p_k))[2];
 
-          if(maxz<0 || maxy<0 || maxx<0 || maxz>=otime || maxy>=oheight || maxx>=owidth)
+          if(start_t+maxz<0 || start_h+maxy<0 || start_w+maxx<0 || start_t+maxz>=otime || start_h+maxy>=oheight || start_w+maxx>=owidth)
           {
-              THError("invalid max index maxz= %d, maxy= %d, maxx= %d, otime= %d, owidth= %d, oheight= %d", maxz, maxy, maxx, otime, owidth, oheight);
+              THError("invalid max index z= %d, y= %d, x= %d, otime= %d, owidth= %d, oheight= %d", start_t+maxz, start_h+maxy, start_w+maxx, otime, owidth, oheight);
           }
-          output_p_k[oheight*owidth*maxz + owidth*maxy + maxx] = *input_p_k; /* update output */
+          output_p[k*otime*owidth*oheight + oheight*owidth*(start_t+maxz) + owidth*(start_h+maxy) + (start_w+maxx)] = *input_p_k; /* update output */
         }
       }
     }
@@ -50,6 +55,9 @@ static int nn_(VolumetricMaxUnpooling_updateOutput)(lua_State *L)
   int dT = luaT_getfieldcheckint(L, 1, "dT");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
+  int padT = luaT_getfieldcheckint(L, 1, "padT");
+  int padH = luaT_getfieldcheckint(L, 1, "padH");
+  int padW = luaT_getfieldcheckint(L, 1, "padW");
   int dimw = 3;
   int dimh = 2;
   int dimt = 1;
@@ -100,7 +108,7 @@ static int nn_(VolumetricMaxUnpooling_updateOutput)(lua_State *L)
                                               nslices,
                                               itime, iwidth, iheight,
                                               otime, owidth, oheight,
-                                              dT, dW, dH);
+                                              dT, dW, dH, padT, padW, padH);
   }
   else
   {
@@ -121,7 +129,7 @@ static int nn_(VolumetricMaxUnpooling_updateOutput)(lua_State *L)
                                                 nslices,
                                                 itime, iwidth, iheight,
                                                 otime, owidth, oheight,
-                                                dT, dW, dH);
+                                                dT, dW, dH, padT, padW, padH);
     }
   }
 
@@ -136,7 +144,8 @@ static void nn_(VolumetricMaxUnpooling_updateGradInput_frame)(real *gradInput_p,
                                                          long nslices,
                                                          long itime, long iwidth, long iheight,
                                                          long otime, long owidth, long oheight,
-                                                         int dT, int dW, int dH)
+                                                         int dT, int dW, int dH,
+                                                         int padT, int padW, int padH)
 {
   long k;
 #pragma omp parallel for private(k)
@@ -149,19 +158,23 @@ static void nn_(VolumetricMaxUnpooling_updateGradInput_frame)(real *gradInput_p,
       {
         for(j = 0; j < iwidth; j++)
         {        
+          long start_t = ti * dT - padT;
+          long start_h = i * dH - padH;
+          long start_w = j * dW - padW;
+          
           real *gradInput_p_k = gradInput_p + k*itime*iwidth*iheight + ti*iwidth*iheight + i*iwidth + j;
-          real *gradOutput_p_k = gradOutput_p + k*otime*owidth*oheight + ti*owidth*oheight*dT + i*owidth*dH + j*dW;
+          //real *gradOutput_p_k = gradOutput_p + k*otime*owidth*oheight + ti*owidth*oheight*dT + i*owidth*dH + j*dW;
           real *ind_p_k = ind_p + k*itime*iwidth*iheight + ti*iwidth*iheight + i*iwidth + j;
           
           maxz = ((unsigned char*)(ind_p_k))[0]; /* retrieve position of max */
           maxy = ((unsigned char*)(ind_p_k))[1];
           maxx = ((unsigned char*)(ind_p_k))[2];
 
-          if(maxz<0 || maxy<0 || maxx<0 || maxz>=otime || maxy>=oheight || maxx>=owidth)
+          if(start_t+maxz<0 || start_h+maxy<0 || start_w+maxx<0 || start_t+maxz>=otime || start_h+maxy>=oheight || start_w+maxx>=owidth)
           {
-              THError("invalid max index maxz= %d, maxy= %d, maxx= %d, otime= %d, owidth= %d, oheight= %d", maxz, maxy, maxx, otime, owidth, oheight);
+              THError("invalid max index z= %d, y= %d, x= %d, otime= %d, owidth= %d, oheight= %d", start_t+maxz, start_h+maxy, start_w+maxx, otime, owidth, oheight);
           }  
-          *gradInput_p_k = gradOutput_p_k[oheight*owidth*maxz + owidth*maxy + maxx]; /* update gradient */
+          *gradInput_p_k = gradOutput_p[k*otime*owidth*oheight + oheight*owidth*(start_t+maxz) + owidth*(start_h+maxy) + (start_w+maxx)]; /* update gradient */
         }
       }
     }
@@ -180,6 +193,9 @@ static int nn_(VolumetricMaxUnpooling_updateGradInput)(lua_State *L)
   int dT = luaT_getfieldcheckint(L, 1, "dT");
   int dH = luaT_getfieldcheckint(L, 1, "dH");
   int dW = luaT_getfieldcheckint(L, 1, "dW");
+  int padT = luaT_getfieldcheckint(L, 1, "padT");
+  int padH = luaT_getfieldcheckint(L, 1, "padH");
+  int padW = luaT_getfieldcheckint(L, 1, "padW");
   int dimw = 3;
   int dimh = 2;
   int dimt = 1;
@@ -234,7 +250,8 @@ static int nn_(VolumetricMaxUnpooling_updateGradInput)(lua_State *L)
                                                  nslices,
                                                  itime, iwidth, iheight,
                                                  otime, owidth, oheight,
-                                                 dT, dW, dH);
+                                                 dT, dW, dH,
+                                                 padT, padW, padH);
   }
   else
   {
@@ -247,7 +264,8 @@ static int nn_(VolumetricMaxUnpooling_updateGradInput)(lua_State *L)
                                                    nslices,
                                                    itime, iwidth, iheight,
                                                    otime, owidth, oheight,
-                                                   dT, dW, dH);
+                                                   dT, dW, dH,
+                                                   padT, padW, padH);
     }
   }
 

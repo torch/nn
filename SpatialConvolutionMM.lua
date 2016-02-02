@@ -70,19 +70,54 @@ function SpatialConvolutionMM:updateOutput(input)
       self.padding = nil
    end
    input = makeContiguous(self, input)
-   return input.nn.SpatialConvolutionMM_updateOutput(self, input)
+   input.THNN.SpatialConvolutionMM_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.kW, self.kH,
+      self.dW, self.dH,
+      self.padW, self.padH
+   )
+   return self.output
 end
 
 function SpatialConvolutionMM:updateGradInput(input, gradOutput)
    if self.gradInput then
       input, gradOutput = makeContiguous(self, input, gradOutput)
-      return input.nn.SpatialConvolutionMM_updateGradInput(self, input, gradOutput)
+      input.THNN.SpatialConvolutionMM_updateGradInput(
+         input:cdata(),
+         gradOutput:cdata(),
+         self.gradInput:cdata(),
+         self.weight:cdata(),
+         self.bias:cdata(),
+         self.finput:cdata(),
+         self.fgradInput:cdata(),
+         self.kW, self.kH,
+         self.dW, self.dH,
+         self.padW, self.padH
+      )
+      return self.gradInput
    end
 end
 
 function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
+   scale = scale or 1
    input, gradOutput = makeContiguous(self, input, gradOutput)
-   return input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.SpatialConvolutionMM_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      self.gradBias:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.kW, self.kH,
+      self.dW, self.dH,
+      self.padW, self.padH,
+      scale
+   )
 end
 
 function SpatialConvolutionMM:type(type,tensorCache)

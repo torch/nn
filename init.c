@@ -74,28 +74,16 @@
 #include "generic/SpatialFullConvolutionMap.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/SpatialConvolutionMM.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SpatialConvolutionMap.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SpatialSubSampling.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/SpatialMaxPooling.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SpatialMaxUnpooling.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SpatialFractionalMaxPooling.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SpatialAveragePooling.c"
-#include "THGenerateFloatTypes.h"
-
-#include "generic/SpatialAdaptiveMaxPooling.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/VolumetricConvolution.c"
@@ -155,14 +143,10 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSpatialConvolutionLocal_init(L);
   nn_FloatSpatialFullConvolution_init(L);
   nn_FloatSpatialFullConvolutionMap_init(L);
-  nn_FloatSpatialConvolutionMM_init(L);
   nn_FloatSpatialConvolutionMap_init(L);
   nn_FloatSpatialSubSampling_init(L);
-  nn_FloatSpatialMaxPooling_init(L);
   nn_FloatSpatialMaxUnpooling_init(L);
   nn_FloatSpatialFractionalMaxPooling_init(L);
-  nn_FloatSpatialAveragePooling_init(L);
-  nn_FloatSpatialAdaptiveMaxPooling_init(L);
   nn_FloatVolumetricConvolution_init(L);
   nn_FloatVolumetricConvolutionMM_init(L);
   nn_FloatVolumetricFullConvolution_init(L);
@@ -196,14 +180,10 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleSpatialConvolutionLocal_init(L);
   nn_DoubleSpatialFullConvolution_init(L);
   nn_DoubleSpatialFullConvolutionMap_init(L);
-  nn_DoubleSpatialConvolutionMM_init(L);
   nn_DoubleSpatialFullConvolution_init(L);
   nn_DoubleSpatialConvolutionMap_init(L);
   nn_DoubleSpatialSubSampling_init(L);
-  nn_DoubleSpatialMaxPooling_init(L);
   nn_DoubleSpatialFractionalMaxPooling_init(L);
-  nn_DoubleSpatialAveragePooling_init(L);
-  nn_DoubleSpatialAdaptiveMaxPooling_init(L);
   nn_DoubleVolumetricConvolution_init(L);
   nn_DoubleVolumetricConvolutionMM_init(L);
   nn_DoubleVolumetricFullConvolution_init(L);

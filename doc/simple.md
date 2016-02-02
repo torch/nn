@@ -5,6 +5,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
   * Parameterized Modules :
     * [Linear](#nn.Linear) : a linear transformation ;
     * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
+    * [Bilinear](#nn.Bilinear) : a bilinear transformation with sparse inputs ;
     * [Add](#nn.Add) : adds a bias term to the incoming data ;
     * [Mul](#nn.Mul) : multiply a single scalar factor to the incoming data ;
     * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
@@ -46,10 +47,10 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
 ## Linear ##
 
 ```lua
-module = nn.Linear(inputDimension, outputDimension)
+module = nn.Linear(inputDimension, outputDimension, [bias = true])
 ```
 
-Applies a linear transformation to the incoming data, i.e. `y = Ax + b`. The `input` tensor given in `forward(input)` must be either a vector (1D tensor) or matrix (2D tensor). If the input is a matrix, then each row is assumed to be an input sample of given batch.
+Applies a linear transformation to the incoming data, i.e. `y = Ax + b`. The `input` tensor given in `forward(input)` must be either a vector (1D tensor) or matrix (2D tensor). If the input is a matrix, then each row is assumed to be an input sample of given batch. The layer can be used without bias by setting `bias = false`.
 
 You can create a layer in the following way:
 
@@ -119,6 +120,28 @@ x = torch.Tensor({ {1, 0.1}, {2, 0.3}, {10, 0.3}, {31, 0.2} })
 
 The first column contains indices, the second column contains values in a a vector where all other elements are zeros. The indices should not exceed the stated dimensions of the input to the layer (10000 in the example).
 
+<a name="nn.Bilinear"></a>
+## Bilinear ##
+
+```lua
+module = nn.Bilinear(inputDimension1, inputDimension2, outputDimension, [bias = true])
+```
+
+Applies a bilinear transformation to the incoming data, i.e. `\forall k: y_k = x_1 A_k x_2 + b`. The `input` tensor given in `forward(input)` is a table containing both inputs `x_1` and `x_2`, which are tensors of size `N x inputDimension1`
+and `N x inputDimension1`, respectively. The layer can be trained without biases by setting `bias = false`.
+
+You can create a layer in the following way:
+
+```lua
+ module = nn.Bilinear(10, 5, 3)  -- 10 and 5 inputs, 3 outputs
+```
+
+Input data for this layer would look as follows:
+```lua
+ input = {torch.randn(128, 10), torch.randn(128, 5)}  -- 128 input examples
+ module:forward(input)
+```
+
 <a name="nn.Dropout"></a>
 ## Dropout ##
 
@@ -129,7 +152,7 @@ module = nn.Dropout(p)
 During training, `Dropout` masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution.
 Each `input` element has a probability of `p` of being dropped, i.e having its commensurate output element be zero. This has proven an effective technique for regularization and preventing the co-adaptation of neurons (see [Hinton et al. 2012](http://arxiv.org/abs/1207.0580)).
 
-Furthermore, the ouputs are scaled by a factor of `1/(1-p)` during training. This allows the `input` to be simply forwarded as-is during evaluation.
+Furthermore, the outputs are scaled by a factor of `1/(1-p)` during training. This allows the `input` to be simply forwarded as-is during evaluation.
 
 In this example, we demonstrate how the call to [forward](module.md#output-forwardinput) samples different `outputs` to dropout (the zeros) given the same `input`:
 
@@ -399,19 +422,21 @@ module = nn.Mean(dimension, nInputDim)
 
 Applies a mean operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
-When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dimension` to apply the mean operation will be dimension `dimension + 1`.
+When `nInputDim` is provided , inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
+This module is based on [nn.Sum](#nn.Sum).
 
 <a name="nn.Sum"></a>
 ## Sum ##
 
 ```lua
-module = nn.Sum(dimension, nInputDim)
+module = nn.Sum(dimension, nInputDim, sizeAverage)
 ```
 
 Applies a sum operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
-When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
-
+When `nInputDim` is provided , inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
+Negative indexing is allowed by providing a negative value to `nInputDim`. 
+When `sizeAverage` is provided, the sum is divided by the size of the input in this `dimension`. This is equivalent to the mean operation performed by the [nn.Mean](#nn.Mean) module.
 
 <a name="nn.Euclidean"></a>
 ## Euclidean ##
@@ -534,8 +559,8 @@ Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/do
 module = nn.Replicate(nFeature [, dim, ndim])
 ```
 
-This class creates an output where the input is replicated `nFeature` times along dimension `dim` (default 1). 
-There is no memory allocation or memory copy in this module. 
+This class creates an output where the input is replicated `nFeature` times along dimension `dim` (default 1).
+There is no memory allocation or memory copy in this module.
 It sets the [stride](https://github.com/torch/torch7/blob/master/doc/tensor.md#torch.Tensor.stride) along the `dim`th dimension to zero.
 When provided, `ndim` should specify the number of non-batch dimensions.
 This allows the module to replicate the same non-batch dimension `dim` for both batch and non-batch `inputs`.
@@ -669,6 +694,7 @@ module = nn.View(sizes)
 
 This module creates a new view of the input tensor using the `sizes` passed to the constructor. The parameter `sizes` can either be a `LongStorage` or numbers.
 The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules. This makes it possible to use minibatch inputs when using a size `-1` for one of the dimensions.
+The method `resetSize(sizes)` allows to reset the view size of the module after initialization.
 
 Example 1:
 
@@ -834,10 +860,10 @@ module = nn.Index(dim)
 
 Applies the Tensor [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) operation along the given dimension. So
 
-```lua 
-nn.Index(dim):forward{t,i} 
+```lua
+nn.Index(dim):forward{t,i}
 ```
-gives the same output as 
+gives the same output as
 ```lua
 t:index(dim, i)
 ```

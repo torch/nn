@@ -152,6 +152,95 @@ TH_API void THNN_(LookupTable_accGradParameters)(
           THIntegerTensor *count,
           THTensor *sorted,
           THTensor *indices);
+
+TH_API void THNN_(SpatialConvolutionMM_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *weight,
+          THTensor *bias,
+          THTensor *finput,
+          THTensor *fgradInput,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH);
+TH_API void THNN_(SpatialConvolutionMM_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *weight,
+          THTensor *bias,
+          THTensor *finput,
+          THTensor *fgradInput,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH);
+TH_API void THNN_(SpatialConvolutionMM_accGradParameters)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradWeight,
+          THTensor *gradBias,
+          THTensor *finput,
+          THTensor *fgradInput,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH,
+          real scale);
+
+TH_API void THNN_(SpatialAdaptiveMaxPooling_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *indices,
+          int owidth, int oheight);
+TH_API void THNN_(SpatialAdaptiveMaxPooling_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *indices);
+
+TH_API void THNN_(SpatialAveragePooling_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH,
+          bool ceil_mode,
+          bool count_include_pad);
+TH_API void THNN_(SpatialAveragePooling_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH,
+          bool ceil_mode,
+          bool count_include_pad);
+
+TH_API void THNN_(SpatialMaxPooling_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *indices,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH,
+          bool ceil_mode);
+TH_API void THNN_(SpatialMaxPooling_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *indices,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH,
+          bool ceil_mode);
 ]]
 
 -- THGenerator struct declaration copied from torch7/lib/TH/THRandom.h
