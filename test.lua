@@ -146,8 +146,20 @@ function nntest.CMul()
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format('error on weight [%s]', t))
    end
+    
+   -- Non-contiguous input or gradOutput
+   local testModule = nn.CMul(4, 3, 5)
+   local testInput = torch.rand(10, 3, 5):resize(10, 1, 3, 5):expand(10, 4, 3, 5)
+   local testOutput = testModule:forward(testInput)
 
+   mytester:assert(testOutput:isSameSizeAs(testInput), 'CMul non-contiguous forward err')
 
+   local testGradOutput = torch.rand(10, 3, 5):resize(10, 1, 3, 5):expand(10, 4, 3, 5)
+   testOutput = testModule:forward(testInput)
+   local testGradInput = testModule:backward(testOutput, testGradOutput)
+
+   mytester:assert(testGradInput:isSameSizeAs(testGradOutput), 'CMul non-contiguous backward err')
+   
    -- IO
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
