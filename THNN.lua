@@ -3,7 +3,6 @@ local ffi = require 'ffi'
 local THNN = {}
 
 local generic_THNN_h = [[
-
 TH_API void THNN_(Abs_updateOutput)(
           THNNState *state,
           THTensor *input,
@@ -475,6 +474,8 @@ TH_API void THNN_(VolumetricConvolution_updateOutput)(
           THTensor *output,
           THTensor *weight,
           THTensor *bias,
+          THTensor *finput,
+          THTensor *fgradInput,
           int dT, int dW, int dH,
           int pT, int pW, int pH);
 TH_API void THNN_(VolumetricConvolution_updateGradInput)(
@@ -483,6 +484,7 @@ TH_API void THNN_(VolumetricConvolution_updateGradInput)(
           THTensor *gradOutput,
           THTensor *gradInput,
           THTensor *weight,
+          THTensor *finput,
           int dT, int dW, int dH,
           int pT, int pW, int pH);
 TH_API void THNN_(VolumetricConvolution_accGradParameters)(
@@ -491,6 +493,8 @@ TH_API void THNN_(VolumetricConvolution_accGradParameters)(
           THTensor *gradOutput,
           THTensor *gradWeight,
           THTensor *gradBias,
+          THTensor *finput,
+          THTensor *fgradInput,
           int dT, int dW, int dH,
           int pT, int pW, int pH,
           real scale);

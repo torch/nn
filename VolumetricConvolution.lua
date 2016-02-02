@@ -81,7 +81,16 @@ end
 
 function VolumetricConvolution:updateOutput(input)
    if input:type() == 'torch.CudaTensor' then
-      return input.nn.VolumetricConvolution_updateOutput(self, input)   
+      input.THNN.VolumetricConvolution_updateOutput(
+        input:cdata(),
+        self.output:cdata(),
+        self.weight:cdata(),
+        self.bias:cdata(),
+        self.finput:cdata(),
+        self.fgradInput:cdata(),
+        self.dT, self.dW, self.dH,
+        self.padT, self.padW, self.padH
+      )
    else
       viewWeight(self)
       input = makeContiguous(self, input)
@@ -96,13 +105,22 @@ function VolumetricConvolution:updateOutput(input)
          self.padT, self.padW, self.padH
       )
       unviewWeight(self)
-      return self.output
    end
+   return self.output
 end
 
 function VolumetricConvolution:updateGradInput(input, gradOutput)
    if input:type() == 'torch.CudaTensor' then
-      return input.nn.VolumetricConvolution_updateGradInput(self, input, gradOutput)   
+      input.THNN.VolumetricConvolution_updateGradInput(
+         input:cdata(),
+         gradOutput:cdata(),
+         self.gradInput:cdata(),
+         self.weight:cdata(),
+         self.finput:cdata(),
+         self.dT, self.dW, self.dH,
+         self.padT, self.padW, self.padH
+      )
+      return self.gradInput
    else
       if self.gradInput then
          viewWeight(self)
@@ -126,7 +144,17 @@ end
 
 function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
    if input:type() == 'torch.CudaTensor' then
-      return input.nn.VolumetricConvolution_accGradParameters(self, input, gradOutput, scale)
+      input.THNN.VolumetricConvolution_accGradParameters(
+         input:cdata(),
+         gradOutput:cdata(),
+         self.gradWeight:cdata(),
+         self.gradBias:cdata(),
+         self.finput:cdata(),
+         self.fgradInput:cdata(),
+         self.dT, self.dW, self.dH,
+         self.padT, self.padW, self.padH,
+         scale or 1
+      )
    else
       input, gradOutput = makeContiguous(self, input, gradOutput)
       viewWeight(self)
