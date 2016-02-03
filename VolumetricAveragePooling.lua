@@ -17,12 +17,23 @@ function VolumetricAveragePooling:__init(kT, kW, kH, dT, dW, dH)
 end
 
 function VolumetricAveragePooling:updateOutput(input)
-   input.nn.VolumetricAveragePooling_updateOutput(self, input)
+   input.THNN.VolumetricAveragePooling_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.kT, self.kW, self.kH,
+      self.dT, self.dW, self.dH
+   )
    return self.output
 end
 
 function VolumetricAveragePooling:updateGradInput(input, gradOutput)
-   input.nn.VolumetricAveragePooling_updateGradInput(self, input, gradOutput)
+   input.THNN.VolumetricAveragePooling_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.kT, self.kW, self.kH,
+      self.dT, self.dW, self.dH
+   )
    return self.gradInput
 end
 
