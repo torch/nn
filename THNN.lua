@@ -25,7 +25,7 @@ local config  =
 local THNN = torchAPI(config, header)
 
 
----- Bind C-functions to Lua library
+---- Bind C-functions to THNN library
 local cstuct = 'libTHNN'
 THNN.kernels = {}
 THNN.kernels['torch.FloatTensor']  = THNN:bind(cstuct, header['forward'], 'Float')

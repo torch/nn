@@ -35,7 +35,7 @@ pattern := '%(([%a%d_]+)%)':
 
 
 Authored: 2016-01-05 (jwilson)
-Modified: 2016-02-03
+Modified: 2016-02-04
 --]]
 
 ---------------- External Dependencies
@@ -125,17 +125,60 @@ function API:c_init(header)
   ---- Expand macros
   local macros = header['macro'] or header['macros']
   if macros then
-    for idx, macro in pairs(macros) do
-      local forward = forward
-      for new, old in pairs(macro) do
+    local macros = self:_interp_macros(macros)
+    local flag   = false
+
+    -- Apply macros with same interpretation everywhere
+    for old, new in pairs(macros) do
+      if type(new) == 'string' then
         forward = forward:gsub(old, new)
+      else
+        flag = true -- Are there additional macros to process?
       end
+    end
+
+    -- Apply macros with alternative interpretations
+    if flag then
+      for id, group in pairs(macros) do
+        if type(group) == 'table' then
+          local forward = forward
+          for old, new in pairs(group) do
+            forward = forward:gsub(old, new)
+          end
+          ffi.cdef(forward)
+        end
+      end
+    else
+      -- No alternatives case
       ffi.cdef(forward)
     end
   else
+    -- No macros case
     ffi.cdef(forward)
   end
+end
 
+function API:_interp_macros(macros, interp)
+  local interp = interp or {}
+  for key, macro in pairs(macros) do
+    if type(macro) == 'string' then     -- Macros without same 
+      assert(type(key) == 'string')     -- interpretation everywhere
+      interp[key] = macro               -- must have string keys    
+    else
+      assert(type(macro) == 'table')    -- Non-global macros must be tables
+      if type(key) == 'number' then     -- Pre-sorted group, i.e. all terms
+        interp[key] = macros            -- in interpetation are already together 
+      else
+        assert(type(key) == 'string')   -- Single term with multiple interps
+        for k, v in pairs(macro) do   
+          assert(type(k) == 'string')   -- To avoid confusion with pre-sorted
+          interp[k] = interp[k] or {}   -- groups; strings must be used to denote
+          interp[k][key] = v            -- membership.
+        end
+      end
+    end
+  end
+  return interp
 end
 
 function API:bind(cstruct, forward, ttype, getter, library, pattern, handles, prefix)
