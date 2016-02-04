@@ -132,12 +132,11 @@ function BN:accGradParameters(input, gradOutput, scale)
 end
 
 function BN:read(file, version)
-   local var = file:readObject()
-   for k,v in pairs(var) do
-      if version < 2 and k == 'running_std' then
-         k = 'running_var'
-         v = v:cmul(v):pow(-1)
+   parent.read(self, file)
+   if version < 2 then
+      if self.running_std then
+         self.running_var = self.running_std:pow(-2):add(-self.eps)
+         self.running_std = nil
       end
-      self[k] = v
    end
 end
