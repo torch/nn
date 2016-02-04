@@ -138,14 +138,14 @@ function SpatialFractionalMaxPooling:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
+-- backward compat
 function SpatialFractionalMaxPooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
-   self.indices:resize()
-   self.indices:storage():resize(0)
-   self.randomSamples = nil
+   self:clearState()
+end
+
+function SpatialFractionalMaxPooling:clearState()
+   nn.utils.clear(self, 'indices', 'randomSamples')
+   return parent.clearState(self)
 end
 
 function SpatialFractionalMaxPooling:__tostring__()

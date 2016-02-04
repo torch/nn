@@ -23,3 +23,9 @@ function LogSigmoid:updateGradInput(input, gradOutput)
    )
    return self.gradInput
 end
+
+function LogSigmoid:clearState()
+   if self.buffer then self.buffer:set() end
+   return parent.clearState(self)
+end
+

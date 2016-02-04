@@ -63,3 +63,8 @@ function Min:type(type, tensorCache)
   end
   return self
 end
+
+function Min:clearState()
+   nn.utils.clear(self, '_indices', '_output')
+   return parent.clearState(self)
+end

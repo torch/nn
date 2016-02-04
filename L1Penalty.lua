@@ -41,3 +41,7 @@ function L1Penalty:updateGradInput(input, gradOutput)
     return self.gradInput 
 end
 
+function L1Penalty:clearState()
+   if self.loss then self.loss:set() end
+   return parent.clearState(self)
+end

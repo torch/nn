@@ -73,6 +73,11 @@ function CosineDistance:updateGradInput(input, gradOutput)
       not_batch = true
    end
 
+   if #self.gradInput ~= 2 then
+      self.gradInput[1] = self.gradInput[1] or v1.new()
+      self.gradInput[2] = self.gradInput[2] or v1.new()
+   end
+
    local gw1 = self.gradInput[1]
    local gw2 = self.gradInput[2]
    gw1:resizeAs(v1):copy(v2)
@@ -96,4 +101,16 @@ function CosineDistance:updateGradInput(input, gradOutput)
    end
 
    return self.gradInput
+end
+
+function CosineDistance:clearState()
+   nn.utils.clear(self, {
+      'buffer',
+      'w1',
+      'w22',
+      'w',
+      'w32',
+      'ones',
+   })
+   return parent.clearState(self)
 end

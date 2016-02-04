@@ -45,3 +45,8 @@ function PReLU:accGradParameters(input, gradOutput, scale)
    )
    return self.gradWeight
 end
+
+function PReLU:clearState()
+   nn.utils.clear(self, 'gradWeightBuf', 'gradWeightBuf2')
+   return parent.clearState(self)
+end

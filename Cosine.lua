@@ -161,3 +161,15 @@ function Cosine:type(type, tensorCache)
    end
    return parent.type(self, type, tensorCache)
 end
+
+function Cosine:clearState()
+   nn.utils.clear(self, {
+      '_input',
+      '_weight',
+      '_gradOutput',
+      '_sum',
+      '_inputNorm',
+      '_weightNorm',
+   })
+   return parent.clearState(self)
+end

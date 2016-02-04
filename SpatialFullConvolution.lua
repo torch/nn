@@ -111,3 +111,9 @@ function SpatialFullConvolution:__tostring__()
   end
   return s .. ')'
 end
+
+function SpatialFullConvolution:clearState()
+   nn.utils.clear(self, 'finput', 'fgradInput', '_input', '_gradOutput')
+   return parent.clearState(self)
+end
+

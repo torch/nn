@@ -126,3 +126,11 @@ function SpatialDivisiveNormalization:updateGradInput(input, gradOutput)
    -- done
    return self.gradInput
 end
+
+function SpatialDivisiveNormalization:clearState()
+   if self.ones then self.ones:set() end
+   if self._coef then self._coef:set() end
+   self.meanestimator:clearState()
+   self.stdestimator:clearState()
+   return parent.clearState(self)
+end

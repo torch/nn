@@ -162,4 +162,27 @@ function nn.utils.contiguousView(output, input, ...)
   return output
 end
 
+-- go over specified fields and clear them. accepts
+-- nn.utils.clearState(self, {'_buffer', '_buffer2'}) and
+-- nn.utils.clearState(self, '_buffer', '_buffer2')
+function nn.utils.clear(self, ...)
+   local arg = {...}
+   if #arg > 0 and type(arg[1]) == 'table' then
+      arg = arg[1]
+   end
+   local function clear(f)
+      if self[f] then
+         if torch.isTensor(self[f]) then
+            self[f]:set()
+         elseif type(self[f]) == 'table' then
+            self[f] = {}
+         else
+            self[f] = nil
+         end
+      end
+   end
+   for i,v in ipairs(arg) do clear(v) end
+   return self
+end
+
 table.unpack = table.unpack or unpack

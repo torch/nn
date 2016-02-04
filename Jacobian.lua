@@ -305,6 +305,7 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
    -- write module
    local filename = os.tmpname()
    local f = torch.DiskFile(filename, 'w'):binary()
+   module:clearState()
    f:writeObject(module)
    f:close()
    -- read module

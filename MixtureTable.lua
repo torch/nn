@@ -156,3 +156,15 @@ function MixtureTable:type(type, tensorCache)
    self._expertView2 = nil
    return parent.type(self, type, tensorCache)
 end
+
+function MixtureTable:clearState()
+   nn.utils.clear(self, {
+     '_gaterView',
+     '_expert',
+     '_expertView',
+     '_sum',
+     '_expert2',
+     '_expertView2',
+   })
+   return parent.clearState(self)
+end

@@ -43,3 +43,8 @@ end
 function RReLU:__tostring__()
   return string.format('%s (l:%f, u:%f)', torch.type(self), self.lower, self.upper)
 end
+
+function RReLU:clearState()
+   if self.noise then self.noise:set() end
+   return parent.clearState(self)
+end

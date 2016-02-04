@@ -140,3 +140,14 @@ function BN:read(file, version)
       end
    end
 end
+
+function BN:clearState()
+   nn.utils.clear(self, {
+      'buffer',
+      'buffer2',
+      'centered',
+      'std',
+      'normalized',
+   })
+   return parent.clearState(self)
+end

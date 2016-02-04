@@ -140,3 +140,8 @@ function Bilinear:__tostring__()
          (self.bias == nil and ' without bias' or '')
       )
 end
+
+function Bilinear:clearState()
+   if self.buff then self.buff:set() end
+   return parent.clearState(self)
+end

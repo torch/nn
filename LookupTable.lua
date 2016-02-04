@@ -100,5 +100,9 @@ function LookupTable:type(type, tensorCache)
    return self
 end
 
+function LookupTable:clearState()
+   return self
+end
+
 -- we do not need to accumulate parameters when sharing
 LookupTable.sharedAccUpdateGradParameters = LookupTable.accUpdateGradParameters

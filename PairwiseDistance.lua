@@ -10,6 +10,7 @@ function PairwiseDistance:__init(p)
 end 
   
 function PairwiseDistance:updateOutput(input)
+   self.output:resize(1)
    if input[1]:dim() == 1 then
       self.output:resize(1)
       self.output[1]=input[1]:dist(input[2],self.norm)
@@ -82,4 +83,9 @@ function PairwiseDistance:updateGradInput(input, gradOutput)
    end
    self.gradInput[2]:zero():add(-1, self.gradInput[1])
    return self.gradInput
+end
+
+function PairwiseDistance:clearState()
+   nn.utils.clear(self, 'diff', 'outExpand', 'grad', 'ones')
+   return parent.clearState(self)
 end

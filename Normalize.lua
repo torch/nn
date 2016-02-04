@@ -140,3 +140,16 @@ function Normalize:type(type, tensorCache)
   end
   return self
 end
+
+function Normalize:clearState()
+   nn.utils.clear(self, {
+      '_output',
+      '_indices',
+      '_gradInput',
+      'buffer',
+      'norm',
+      'normp',
+      'cross',
+   })
+   return parent.clearState(self)
+end

@@ -171,3 +171,9 @@ function SpatialConvolution:__tostring__()
    end
    return s .. ')'
 end
+
+function SpatialConvolution:clearState()
+   nn.utils.clear(self, 'finput', 'fgradInput', '_input', '_gradOutput')
+   return parent.clearState(self)
+end
+

@@ -23,3 +23,8 @@ function L1Cost:updateGradInput(input)
    )
    return self.gradInput
 end
+
+function L1Cost:clearState()
+   if self.output_tensor then self.output_tensor:set() end
+   return parent.clearState(self)
+end

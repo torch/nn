@@ -127,3 +127,9 @@ function SpatialCrossMapLRN:updateGradInput(input, gradOutput)
 
   return self.gradInput
 end
+
+
+function SpatialCrossMapLRN:clearState()
+   nn.utils.clear(self, 'scale', 'paddedRatio', 'accumRatio')
+  return parent.clearState(self)
+end
