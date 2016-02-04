@@ -6,11 +6,20 @@ function SoftShrink:__init(lam)
 end
 
 function SoftShrink:updateOutput(input)
-   input.nn.SoftShrink_updateOutput(self, input)
+   input.THNN.SoftShrink_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.lambda
+   )
    return self.output
 end
 
 function SoftShrink:updateGradInput(input, gradOutput)
-   input.nn.SoftShrink_updateGradInput(self, input, gradOutput)
+   input.THNN.SoftShrink_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.lambda
+   )
    return self.gradInput
 end

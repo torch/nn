@@ -97,9 +97,19 @@ function SpatialConvolution:updateOutput(input)
    backCompatibility(self)
    viewWeight(self)
    input = makeContiguous(self, input)
-   local out = input.nn.SpatialConvolutionMM_updateOutput(self, input)
+   input.THNN.SpatialConvolutionMM_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.kW, self.kH,
+      self.dW, self.dH,
+      self.padW, self.padH
+   )
    unviewWeight(self)
-   return out
+   return self.output
 end
 
 function SpatialConvolution:updateGradInput(input, gradOutput)
@@ -107,19 +117,41 @@ function SpatialConvolution:updateGradInput(input, gradOutput)
       backCompatibility(self)
       viewWeight(self)
       input, gradOutput = makeContiguous(self, input, gradOutput)
-      local out = input.nn.SpatialConvolutionMM_updateGradInput(self, input, gradOutput)
+      input.THNN.SpatialConvolutionMM_updateGradInput(
+         input:cdata(),
+         gradOutput:cdata(),
+         self.gradInput:cdata(),
+         self.weight:cdata(),
+         self.bias:cdata(),
+         self.finput:cdata(),
+         self.fgradInput:cdata(),
+         self.kW, self.kH,
+         self.dW, self.dH,
+         self.padW, self.padH
+      )
       unviewWeight(self)
-      return out
+      return self.gradInput
    end
 end
 
 function SpatialConvolution:accGradParameters(input, gradOutput, scale)
+   scale = scale or 1
    backCompatibility(self)
    input, gradOutput = makeContiguous(self, input, gradOutput)
    viewWeight(self)
-   local out = input.nn.SpatialConvolutionMM_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.SpatialConvolutionMM_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      self.gradBias:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.kW, self.kH,
+      self.dW, self.dH,
+      self.padW, self.padH,
+      scale
+   )
    unviewWeight(self)
-   return out
 end
 
 function SpatialConvolution:type(type,tensorCache)

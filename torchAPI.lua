@@ -100,7 +100,6 @@ function API:c_init(header)
 
     for idx = 1, #templates do
       template = templates[idx]
-      print(template)
 
       ---- Check for special patterns
       if template:match('<tag>') then

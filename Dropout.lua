@@ -14,20 +14,22 @@ function Dropout:__init(p,v1,inplace)
 end
 
 function Dropout:updateOutput(input)
-   if self.inplace then 
+   if self.inplace then
       self.output = input
    else
       self.output:resizeAs(input):copy(input)
    end
-   if self.train then
-      self.noise:resizeAs(input)
-      self.noise:bernoulli(1-self.p)
-      if self.v2 then
-         self.noise:div(1-self.p)
+   if self.p > 0 then
+      if self.train then
+         self.noise:resizeAs(input)
+         self.noise:bernoulli(1-self.p)
+         if self.v2 then
+            self.noise:div(1-self.p)
+         end
+         self.output:cmul(self.noise)
+      elseif not self.v2 then
+         self.output:mul(1-self.p)
       end
-      self.output:cmul(self.noise)
-   elseif not self.v2 then
-      self.output:mul(1-self.p)
    end
    return self.output
 end
@@ -39,7 +41,9 @@ function Dropout:updateGradInput(input, gradOutput)
       else
          self.gradInput:resizeAs(gradOutput):copy(gradOutput)
       end
-      self.gradInput:cmul(self.noise) -- simply mask the gradients with the noise vector
+      if self.p > 0 then
+         self.gradInput:cmul(self.noise) -- simply mask the gradients with the noise vector
+      end
    else
       error('backprop only defined while training')
    end
@@ -51,5 +55,5 @@ function Dropout:setp(p)
 end
 
 function Dropout:__tostring__()
-  return string.format('%s(%f)', torch.type(self), self.p)
+   return string.format('%s(%f)', torch.type(self), self.p)
 end

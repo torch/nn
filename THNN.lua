@@ -1,11 +1,9 @@
+
 ------------------------------------------------
 --                                      Preamble
 ------------------------------------------------
 --[[
-API management file for Torch7 'nn' package.
-
-Authored: 2016-01-06 (jwilson)
-Modified: 2016-02-03
+* API management file for Torch7 'nn' package.
 --]]
 
 ---------------- External Dependencies
@@ -15,7 +13,6 @@ require('torchAPI')
 ------------------------------------------------
 --                                          THNN
 ------------------------------------------------
-
 ---- Load header file
 local header = paths.dofile('THNN_h.lua')
 
@@ -25,9 +22,7 @@ local config  =
   library = 'THNN',           tag   = 'TH_API',
   pattern = '%(([%a%d_]+)%)', rtype = 'void',
 }
-local THNN = torchAPI(config)
-
-THNN:c_init(header)
+local THNN = torchAPI(config, header)
 
 
 ---- Bind C-functions to Lua library
@@ -57,6 +52,5 @@ function THNN.runKernel(f, type, ...)
    end
    f(...)
 end
-
 
 return THNN

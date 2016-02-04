@@ -77,8 +77,8 @@ function CMul:updateGradInput(input, gradOutput)
       self.gradInput:addcmul(1, self.weight, gradOutput)
    else
       local batchSize = input:size(1)
-      self._gradOutput:view(gradOutput, batchSize, -1)
-      self._gradInput:view(self.gradInput, batchSize, -1)
+      nn.utils.contiguousView(self._gradOutput, gradOutput, batchSize, -1)
+      nn.utils.contiguousView(self._gradInput, self.gradInput, batchSize, -1)
       self._weight:view(self.weight, 1, -1)
       self._expand:expandAs(self._weight, self._gradOutput)
       
@@ -104,8 +104,8 @@ function CMul:accGradParameters(input, gradOutput, scale)
       self.gradWeight:addcmul(scale, input, gradOutput)
    else
       local batchSize = input:size(1)
-      self._input:view(input, batchSize, -1)
-      self._gradOutput:view(gradOutput, batchSize, -1)
+      nn.utils.contiguousView(self._input, input, batchSize, -1)
+      nn.utils.contiguousView(self._gradOutput, gradOutput, batchSize, -1)
       self._gradWeight:view(self.gradWeight, 1, -1)
       
       self._repeat:cmul(self._input, self._gradOutput)

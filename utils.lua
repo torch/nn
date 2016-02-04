@@ -150,4 +150,16 @@ function nn.utils.addSingletonDimension(t, dim)
   return view
 end
 
+function nn.utils.contiguousView(output, input, ...)
+  output = output or input.new()
+  if input:isContiguous() then
+    output:view(input, ...)
+  else
+    output:resizeAs(input)
+    output:copy(input)
+    output:view(output, ...)
+  end
+  return output
+end
+
 table.unpack = table.unpack or unpack

@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local LookupTable, parent = torch.class('nn.LookupTable', 'nn.Module')
 
 LookupTable.__version = 4
@@ -12,12 +13,12 @@ function LookupTable:__init(nIndex, nOutput)
 end
 
 function LookupTable:backCompatibility()
-    self._count = self._count or torch.IntTensor()
-    self._input = self._input or torch.LongTensor()
+   self._count = self._count or torch.IntTensor()
+   self._input = self._input or torch.LongTensor()
 
-    if self.shouldScaleGradByFreq == nil then
-        self.shouldScaleGradByFreq = false
-    end
+   if not self.shouldScaleGradByFreq then
+      self.shouldScaleGradByFreq = false
+   end
 end
 
 function LookupTable:accUpdateOnly()
@@ -68,7 +69,17 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
    elseif input:dim() ~= 1 then
       error("input must be a vector or matrix")
    end
-   self.gradWeight.nn.LookupTable_accGradParameters(self, input, gradOutput, scale)
+
+   self.gradWeight.THNN.LookupTable_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      self._count:cdata(),
+      THNN.optionalTensor(self._sorted),
+      THNN.optionalTensor(self._indices),
+      self.shouldScaleGradByFreq or false,
+      scale or 1
+   )
 end
 
 function LookupTable:type(type, tensorCache)

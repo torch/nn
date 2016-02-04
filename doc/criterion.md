@@ -128,6 +128,8 @@ function gradUpdate(mlp, x, y, learningRate)
 end
 ```
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed for each minibatch.
+
 
 <a name="nn.CrossEntropyCriterion"></a>
 ## CrossEntropyCriterion ##
@@ -157,6 +159,8 @@ or in the case of the `weights` argument being specified:
 loss(x, class) = weights[class] * (-x[class] + log(\sum_j exp(x[j])))
 ```
 
+The losses are averaged across observations for each minibatch.
+
 
 <a name="nn.DistKLDivCriterion"></a>
 ## DistKLDivCriterion ##
@@ -174,8 +178,10 @@ This criterion expect a `target` `Tensor` of the same size as the `input` `Tenso
 The loss can be described as:
 
 ```lua
-loss(x, target) = \sum(target_i * (log(target_i) - x_i))
+loss(x, target) = 1/n \sum(target_i * (log(target_i) - x_i))
 ```
+
+By default, the losses are averaged for each minibatch over observations *as well as* over dimensions. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 
 <a name="nn.BCECriterion"></a>
@@ -188,16 +194,18 @@ criterion = nn.BCECriterion([weights])
 Creates a criterion that measures the Binary Cross Entropy between the target and the output:
 
 ```lua
-loss(t, o) = - sum_i (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
+loss(o, t) = - 1/n sum_i (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
 ```
 
 or in the case of the weights argument being specified:
 
 ```lua
-loss(t, o) = - sum_i weights[i] * (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
+loss(o, t) = - 1/n sum_i weights[i] * (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
 ```
 
 This is used for measuring the error of a reconstruction in for example an auto-encoder. Note that the targets `t[i]` should be numbers between 0 and 1, for instance, the output of an [`nn.Sigmoid`](transfer.md#nn.Sigmoid) layer.
+
+By default, the losses are averaged for each minibatch over observations *as well as* over dimensions. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 
 <a name="nn.MarginCriterion"></a>
@@ -266,6 +274,8 @@ gives the output:
 
 i.e. the mlp successfully separates the two data points such that they both have a `margin` of `1`, and hence a loss of `0`.
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
+
 
 <a name="nn.MultiMarginCriterion"></a>
 ## MultiMarginCriterion ##
@@ -290,6 +300,8 @@ mlp = nn.Sequential()
 mlp:add(nn.Euclidean(n, m)) -- outputs a vector of distances
 mlp:add(nn.MulConstant(-1)) -- distance to similarity
 ```
+
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 
 <a name="nn.MultiLabelMarginCriterion"></a>
@@ -342,6 +354,8 @@ The division by `n` can be avoided if one sets the internal variable `sizeAverag
 criterion = nn.MSECriterion()
 criterion.sizeAverage = false
 ```
+
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 
 <a name="nn.MultiCriterion"></a>
@@ -425,6 +439,8 @@ criterion = nn.SmoothL1Criterion()
 criterion.sizeAverage = false
 ```
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
+
 
 <a name="nn.HingeEmbeddingCriterion"></a>
 ## HingeEmbeddingCriterion ##
@@ -504,6 +520,8 @@ for i = 1, 10 do
 end
 ```
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
+
 
 <a name="nn.L1HingeEmbeddingCriterion"></a>
 ## L1HingeEmbeddingCriterion ##
@@ -545,6 +563,9 @@ loss(x, y) = ⎨
 
 For batched inputs, if the internal variable `sizeAverage` is equal to `true`, the loss function averages the loss over the batch samples; if `sizeAverage` is `false`, then the loss function sums over the batch samples. By default, `sizeAverage` equals to `true`.
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
+
+
 <a name="nn.MarginRankingCriterion"></a>
 ## MarginRankingCriterion ##
 
@@ -553,6 +574,7 @@ criterion = nn.MarginRankingCriterion(margin)
 ```
 
 Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s of size 1 (they contain only scalars), and a label `y` (`1` or `-1`).
+In batch mode, `x` is a table of two `Tensor`s of size `batchsize`, and `y` is a `Tensor` of size `batchsize` containing `1` or `-1` for each corresponding pair of elements in the input `Tensor`.
 
 If `y == 1` then it assumed the first input should be ranked higher (have a larger value) than the second input, and vice-versa for `y == -1`.
 
@@ -561,6 +583,9 @@ The loss function is:
 ```lua
 loss(x, y) = max(0, -y * (x[1] - x[2]) + margin)
 ```
+
+For batched inputs, if the internal variable `sizeAverage` is equal to `true`, the loss function averages the loss over the batch samples; if `sizeAverage` is `false`, then the loss function sums over the batch samples. By default, `sizeAverage` equals to `true`.
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 ### Example
 

@@ -3,13 +3,20 @@
 
 #include <stdbool.h>
 #include <TH.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #define THNN_(NAME) TH_CONCAT_3(THNN_, Real, NAME)
 
 #define THIndexTensor THLongTensor
 #define THIndexTensor_(NAME) THLongTensor_ ## NAME
 
-typedef long TH_index_t;
+#define THIntegerTensor THIntTensor
+#define THIntegerTensor_(NAME) THIntTensor_ ## NAME
+
+typedef long THIndex_t;
+typedef int THInteger_t;
 typedef void THNNState;
 
 #include "generic/THNN.h"

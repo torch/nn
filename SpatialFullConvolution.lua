@@ -1,7 +1,7 @@
 local SpatialFullConvolution, parent = torch.class('nn.SpatialFullConvolution','nn.Module')
 
 function SpatialFullConvolution:__init(nInputPlane, nOutputPlane,
-                                       kW, kH, dW, dH, padW, padH)
+                                       kW, kH, dW, dH, padW, padH, adjW, adjH)
    parent.__init(self)
 
    dW = dW or 1
@@ -15,6 +15,13 @@ function SpatialFullConvolution:__init(nInputPlane, nOutputPlane,
    self.dH = dH
    self.padW = padW or 0
    self.padH = padH or 0
+   self.adjW = adjW or 0
+   self.adjH = adjH or 0
+
+   if self.adjW > self.dW - 1 or self.adjH > self.dH - 1 then
+      error('adjW and adjH must be smaller than self.dW - 1' ..
+            ' and self.dH - 1 respectively')
+   end
 
    self.weight = torch.Tensor(nInputPlane, nOutputPlane, kH, kW)
    self.gradWeight = torch.Tensor(nInputPlane, nOutputPlane, kH, kW)
@@ -56,12 +63,21 @@ local function makeContiguous(self, input, gradOutput)
   return input, gradOutput
 end
 
+function SpatialFullConvolution:backCompatibility()
+  self.adjW = self.adjW or 0
+  self.adjH = self.adjH or 0
+end
+
 function SpatialFullConvolution:updateOutput(input)
+  self:backCompatibility()
+
   input = makeContiguous(self, input)
   return input.nn.SpatialFullConvolution_updateOutput(self, input)
 end
 
 function SpatialFullConvolution:updateGradInput(input, gradOutput)
+  self:backCompatibility()
+
   if self.gradInput then
     input, gradOutput = makeContiguous(self, input, gradOutput)
     return input.nn.SpatialFullConvolution_updateGradInput(self, input, gradOutput)
@@ -69,14 +85,16 @@ function SpatialFullConvolution:updateGradInput(input, gradOutput)
 end
 
 function SpatialFullConvolution:accGradParameters(input, gradOutput, scale)
+  self:backCompatibility()
+
   input, gradOutput = makeContiguous(self, input, gradOutput)
   return input.nn.SpatialFullConvolution_accGradParameters(self, input, gradOutput, scale)
 end
 
-function SpatialFullConvolution:type(type)
+function SpatialFullConvolution:type(type, tensorCache)
   self.finput = torch.Tensor()
   self.fgradInput = torch.Tensor()
-  return parent.type(self,type)
+  return parent.type(self, type, tensorCache)
 end
 
 function SpatialFullConvolution:__tostring__()
@@ -87,6 +105,9 @@ function SpatialFullConvolution:__tostring__()
   end
   if (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
     s = s .. ', ' .. self.padW .. ',' .. self.padH
+  end
+  if (self.adjW or self.adjH) and (self.adjW ~= 0 or self.adjH ~= 0) then
+    s = s .. ', ' .. self.adjW .. ',' .. self.adjH
   end
   return s .. ')'
 end
