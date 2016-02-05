@@ -1119,7 +1119,9 @@ end
 <a name="nn.CAddTable"></a>
 ## CAddTable ##
 
-Takes a `table` of `Tensor`s and outputs summation of all `Tensor`s.
+`module` = `CAddTable([inplace])`
+
+Takes a `table` of `Tensor`s and outputs summation of all `Tensor`s. If `inplace` is `true`, the sum is written to the first `Tensor`.
 
 ```lua
 ii = {torch.ones(5), torch.ones(5)*2, torch.ones(5)*3}
