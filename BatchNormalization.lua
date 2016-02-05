@@ -119,27 +119,40 @@ end
 function BN:updateGradInput(input, gradOutput)
    assert(input:dim() == 2, 'only mini-batch supported')
    assert(gradOutput:dim() == 2, 'only mini-batch supported')
-   assert(self.train == true, 'should be in training mode when self.train is true')
    local nBatch = input:size(1)
 
-   self.gradInput:cmul(self.centered, gradOutput)
-   self.buffer:mean(self.gradInput, 1)
-   self.gradInput:repeatTensor(self.buffer, nBatch, 1)
-   self.gradInput:cmul(self.centered):mul(-1)
-   self.buffer:repeatTensor(self.std, nBatch, 1)
-   self.gradInput:cmul(self.buffer):cmul(self.buffer)
+   if self.train then
+      self.gradInput:cmul(self.centered, gradOutput)
+      self.buffer:mean(self.gradInput, 1)
+      self.gradInput:repeatTensor(self.buffer, nBatch, 1)
+      self.gradInput:cmul(self.centered):mul(-1)
+      self.buffer:repeatTensor(self.std, nBatch, 1)
+      self.gradInput:cmul(self.buffer):cmul(self.buffer)
 
-   self.buffer:mean(gradOutput, 1)
-   self.buffer:repeatTensor(self.buffer, nBatch, 1)
-   self.gradInput:add(gradOutput):add(-1, self.buffer)
-   self.buffer:repeatTensor(self.std, nBatch, 1)
-   self.gradInput:cmul(self.buffer)
-
-   if self.affine then
-      self.buffer:repeatTensor(self.weight, nBatch, 1)
+      self.buffer:mean(gradOutput, 1)
+      self.buffer:repeatTensor(self.buffer, nBatch, 1)
+      self.gradInput:add(gradOutput):add(-1, self.buffer)
+      self.buffer:repeatTensor(self.std, nBatch, 1)
       self.gradInput:cmul(self.buffer)
-   end
 
+      if self.affine then
+         self.buffer:repeatTensor(self.weight, nBatch, 1)
+         self.gradInput:cmul(self.buffer)
+      end
+   else
+      if self.affine then
+         self.buffer:repeatTensor(self.bias, nBatch, 1)
+         self.gradInput:add(-1,self.buffer)
+         self.buffer:repeatTensor(self.weight, nBatch, 1)
+         self.gradInput:cdiv(self.buffer)
+      end
+
+      self.gradInput:copy(gradOutput)
+      self.buffer:repeatTensor(self.running_std, nBatch, 1)
+      self.gradInput:cdiv(self.buffer)
+      self.buffer:repeatTensor(self.running_mean, nBatch, 1)
+      self.gradInput:add(self.buffer)
+   end
    return self.gradInput
 end
 
