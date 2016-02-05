@@ -24,7 +24,7 @@
        Defaults to 1e-5
 
    In training time, this layer keeps a running estimate of it's computed mean and std.
-   The running sum is kept with a default momentup of 0.1 (unless over-ridden)
+   The running sum is kept with a default momentum of 0.1 (unless over-ridden)
    In test time, this running mean/std is used to normalize.
 ]]--
 local BN,parent = torch.class('nn.BatchNormalization', 'nn.Module')
