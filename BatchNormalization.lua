@@ -140,18 +140,14 @@ function BN:updateGradInput(input, gradOutput)
          self.gradInput:cmul(self.buffer)
       end
    else
-      if self.affine then
-         self.buffer:repeatTensor(self.bias, nBatch, 1)
-         self.gradInput:add(-1,self.buffer)
-         self.buffer:repeatTensor(self.weight, nBatch, 1)
-         self.gradInput:cdiv(self.buffer)
-      end
-
       self.gradInput:copy(gradOutput)
       self.buffer:repeatTensor(self.running_std, nBatch, 1)
-      self.gradInput:cdiv(self.buffer)
-      self.buffer:repeatTensor(self.running_mean, nBatch, 1)
-      self.gradInput:add(self.buffer)
+      self.gradInput:cmul(self.buffer)
+
+      if self.affine then
+         self.buffer:repeatTensor(self.weight, nBatch, 1)
+         self.gradInput:cmul(self.buffer)
+      end
    end
    return self.gradInput
 end
