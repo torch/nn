@@ -51,7 +51,7 @@ function Dropout:updateGradInput(input, gradOutput)
          self.gradInput:resizeAs(gradOutput):copy(gradOutput)
       end
       if not self.v2 and self.p > 0 then
-         self.gradInput:cdiv(1-self.p)
+         self.gradInput:mul(1-self.p)
       end
    end
    return self.gradInput
