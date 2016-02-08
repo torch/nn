@@ -155,8 +155,8 @@ function SpatialConvolution:accGradParameters(input, gradOutput, scale)
 end
 
 function SpatialConvolution:type(type,tensorCache)
-   self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()
+   self.finput = self.finput and torch.Tensor()
+   self.fgradInput = self.fgradInput and torch.Tensor()
    return parent.type(self,type,tensorCache)
 end
 

@@ -1,11 +1,7 @@
 local LogSigmoid, parent = torch.class('nn.LogSigmoid', 'nn.Module')
 
-function LogSigmoid:__init()
-   parent.__init(self)
-   self.buffer = torch.Tensor()
-end
-
 function LogSigmoid:updateOutput(input)
+   self.buffer = self.buffer or input.new()
    input.THNN.LogSigmoid_updateOutput(
       input:cdata(),
       self.output:cdata(),

@@ -28,9 +28,6 @@ function SpatialFullConvolution:__init(nInputPlane, nOutputPlane,
    self.bias = torch.Tensor(self.nOutputPlane)
    self.gradBias = torch.Tensor(self.nOutputPlane)
 
-   self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()
-
    self:reset()
 end
 
@@ -69,6 +66,8 @@ function SpatialFullConvolution:backCompatibility()
 end
 
 function SpatialFullConvolution:updateOutput(input)
+  self.finput = self.finput or input.new()
+  self.fgradInput = self.fgradInput or input.new()
   self:backCompatibility()
 
   input = makeContiguous(self, input)
@@ -92,8 +91,8 @@ function SpatialFullConvolution:accGradParameters(input, gradOutput, scale)
 end
 
 function SpatialFullConvolution:type(type, tensorCache)
-  self.finput = torch.Tensor()
-  self.fgradInput = torch.Tensor()
+  self.finput = self.finput and torch.Tensor()
+  self.fgradInput = self.fgradInput and torch.Tensor()
   return parent.type(self, type, tensorCache)
 end
 

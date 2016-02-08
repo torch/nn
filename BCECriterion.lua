@@ -30,7 +30,7 @@ function BCECriterion:updateOutput(input, target)
     assert( input:nElement() == target:nElement(),
     "input and target size mismatch")
 
-    self.buffer = self.buffer or torch.Tensor():typeAs(input)
+    self.buffer = self.buffer or input.new()
 
     local buffer = self.buffer
     local weights = self.weights
@@ -74,7 +74,7 @@ function BCECriterion:updateGradInput(input, target)
     assert( input:nElement() == target:nElement(),
     "input and target size mismatch")
 
-    self.buffer = self.buffer or torch.Tensor():typeAs(input)
+    self.buffer = self.buffer or input.new()
 
     local buffer = self.buffer
     local weights = self.weights

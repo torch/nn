@@ -15,7 +15,6 @@ function SpatialFractionalMaxPooling:__init(poolSizeW, poolSizeH, arg1, arg2)
    -- Pool size (how wide the pooling for each output unit is)
    self.poolSizeW = poolSizeW
    self.poolSizeH = poolSizeH
-   self.indices = torch.Tensor()
 
    -- Random samples are drawn for all
    -- batch * plane * (height, width; i.e., 2) points. This determines
@@ -115,6 +114,7 @@ function SpatialFractionalMaxPooling:fixPoolingRegions(val)
 end
 
 function SpatialFractionalMaxPooling:updateOutput(input)
+   self.indices = self.indices or input.new()
    self:initSampleBuffer_(input)
    local outW, outH = self:getOutputSizes_(input)
 
