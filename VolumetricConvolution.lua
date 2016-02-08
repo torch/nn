@@ -169,3 +169,9 @@ function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
       unviewWeight(self)
    end
 end
+
+function VolumetricConvolution:type(type, tensorCache)
+   self.finput:set()
+   self.fgradInput:set()
+   return parent.type(self, type, tensorCache)
+end
