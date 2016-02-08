@@ -16,15 +16,15 @@
    The learning of gamma and beta is optional.
 
    Usage:
-   with    learnable parameters: nn.BatchNormalization(N [,eps] [,momentum])
+   with    learnable parameters: nn.SpatialBatchNormalization(N [,eps] [,momentum])
                                  where N = dimensionality of input
-   without learnable parameters: nn.BatchNormalization(N [,eps] [,momentum], false)
+   without learnable parameters: nn.SpatialBatchNormalization(N [,eps] [,momentum], false)
 
    eps is a small value added to the variance to avoid divide-by-zero.
        Defaults to 1e-5
 
    In training time, this layer keeps a running estimate of it's computed mean and std.
-   The running sum is kept with a default momentup of 0.1 (unless over-ridden)
+   The running sum is kept with a default momentum of 0.1 (unless over-ridden)
    In test time, this running mean/std is used to normalize.
 
 ]]--
