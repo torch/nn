@@ -27,9 +27,6 @@ function VolumetricFullConvolution:__init(nInputPlane, nOutputPlane, kT, kH, kW,
    self.bias = torch.Tensor(nOutputPlane)
    self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane, kT, kH, kW)
    self.gradBias = torch.Tensor(nOutputPlane)
-   -- temporary buffers for unfolding (CUDA)
-   self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()
    self:reset()
 end
 
@@ -54,6 +51,8 @@ function VolumetricFullConvolution:reset(stdv)
 end
 
 function VolumetricFullConvolution:updateOutput(input)
+   self.finput = self.finput or input.new()
+   self.fgradInput = self.fgradInput or input.new()
    input.THNN.VolumetricFullConvolution_updateOutput(
       input:cdata(),
       self.output:cdata(),

@@ -7,11 +7,10 @@ function TemporalMaxPooling:__init(kW, dW)
    
    self.kW = kW
    self.dW = dW
-
-   self.indices = torch.Tensor()
 end
 
 function TemporalMaxPooling:updateOutput(input)
+   self.indices = self.indices or input.new()
    input.nn.TemporalMaxPooling_updateOutput(self, input)
    return self.output
 end

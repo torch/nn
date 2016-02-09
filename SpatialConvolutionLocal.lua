@@ -26,9 +26,6 @@ function SpatialConvolutionLocal:__init(nInputPlane, nOutputPlane, iW, iH ,kW, k
    self.gradWeight = torch.Tensor():resizeAs(self.weight)
    self.gradBias = torch.Tensor():resizeAs(self.bias)
 
-   self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()
-
    self:reset()
 end
 
@@ -117,6 +114,8 @@ local function checkOutputSize(self, input, output)
 end
 
 function SpatialConvolutionLocal:updateOutput(input)
+   self.finput = self.finput or input.new()
+   self.fgradInput = self.fgradInput or input.new()
    checkInputSize(self, input)
    viewWeight(self)
    input = makeContiguous(self, input)
@@ -148,8 +147,8 @@ function SpatialConvolutionLocal:accGradParameters(input, gradOutput, scale)
 end
 
 function SpatialConvolutionLocal:type(type,tensorCache)
-   self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()
+   self.finput = self.finput and torch.Tensor()
+   self.fgradInput = self.fgradInput and torch.Tensor()
    return parent.type(self,type,tensorCache)
 end
 

@@ -29,6 +29,7 @@ function SpatialMaxPooling:floor()
 end
 
 function SpatialMaxPooling:updateOutput(input)
+   self.indices = self.indices or input.new()
    -- backward compatibility
    self.ceil_mode = self.ceil_mode or false
    self.padW = self.padW or 0

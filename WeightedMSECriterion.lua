@@ -3,10 +3,10 @@ local WeightedMSECriterion, parent = torch.class('nn.WeightedMSECriterion','nn.M
 function WeightedMSECriterion:__init(w)
    parent.__init(self)
    self.weight = w:clone()
-   self.buffer = torch.Tensor()
 end
 
 function WeightedMSECriterion:updateOutput(input,target)
+   self.buffer = self.buffer or input.new()
    self.buffer:resizeAs(input):copy(target)
    if input:dim() - 1 == self.weight:dim() then
       for i=1,input:size(1) do

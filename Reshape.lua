@@ -26,14 +26,12 @@ function Reshape:__init(...)
       self.nelement = self.nelement * self.size[i]
       self.batchsize[i+1] = self.size[i]
    end
-   
-   -- only used for non-contiguous input or gradOutput
-   self._input = torch.Tensor()
-   self._gradOutput = torch.Tensor()
 end
 
 function Reshape:updateOutput(input)
    if not input:isContiguous() then
+      self._input = self._input or input.new()
+      self._gradOutput = self._gradOutput or input.new()
       self._input:resizeAs(input)
       self._input:copy(input)
       input = self._input

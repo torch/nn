@@ -36,6 +36,7 @@ function VolumetricMaxPooling:floor()
 end
 
 function VolumetricMaxPooling:updateOutput(input)
+   self.indices = self.indices or input.new()
    input.THNN.VolumetricMaxPooling_updateOutput(
       input:cdata(),
       self.output:cdata(),

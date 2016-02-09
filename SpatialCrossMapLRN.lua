@@ -7,13 +7,13 @@ function SpatialCrossMapLRN:__init(size, alpha, beta, k)
   self.alpha = alpha or 0.0001
   self.beta = beta or 0.75
   self.k = k or 1
-
-  self.scale = torch.Tensor()
 end
 
 function SpatialCrossMapLRN:updateOutput(input)
   assert(input:dim() == 3 or input:dim() == 4,
          'Input must be 3D or 4D')
+
+  self.scale = self.scale or input.new()
 
   if torch.type(input) == 'torch.CudaTensor' then
      input.nn.SpatialCrossMapLRN_updateOutput(self, input)

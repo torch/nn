@@ -23,9 +23,6 @@ function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT,
    self.bias = torch.Tensor(nOutputPlane)
    self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane, kT, kH, kW)
    self.gradBias = torch.Tensor(nOutputPlane)
-   -- temporary buffers for unfolding (CUDA)
-   self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()
    self:reset()
 end
 
@@ -80,6 +77,8 @@ local function unviewWeight(self)
 end
 
 function VolumetricConvolution:updateOutput(input)
+   self.finput = self.finput or input.new()
+   self.fgradInput = self.fgradInput or input.new()
    if input:type() == 'torch.CudaTensor' then
       input.THNN.VolumetricConvolution_updateOutput(
         input:cdata(),
@@ -171,8 +170,8 @@ function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
 end
 
 function VolumetricConvolution:type(type, tensorCache)
-   self.finput:set()
-   self.fgradInput:set()
+   if self.finput then self.finput:set() end
+   if self.fgradInput then self.fgradInput:set() end
    return parent.type(self, type, tensorCache)
 end
 

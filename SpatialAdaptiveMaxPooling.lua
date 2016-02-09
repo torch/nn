@@ -5,11 +5,10 @@ function SpatialAdaptiveMaxPooling:__init(W, H)
    
    self.W = W
    self.H = H
-
-   self.indices = torch.Tensor()
 end
 
 function SpatialAdaptiveMaxPooling:updateOutput(input)
+   self.indices = self.indices or input.new()
    input.THNN.SpatialAdaptiveMaxPooling_updateOutput(
       input:cdata(),
       self.output:cdata(),

@@ -21,9 +21,6 @@ function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, 
    self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
    self.gradBias = torch.Tensor(nOutputPlane)
 
-   self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()
-
    self:reset()
 end
 
@@ -63,6 +60,8 @@ local function makeContiguous(self, input, gradOutput)
 end
 
 function SpatialConvolutionMM:updateOutput(input)
+   self.finput = self.finput or input.new()
+   self.fgradInput = self.fgradInput or input.new()
    -- backward compatibility
    if self.padding then
       self.padW = self.padding
@@ -121,8 +120,8 @@ function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
 end
 
 function SpatialConvolutionMM:type(type,tensorCache)
-   self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()
+   self.finput = self.finput and torch.Tensor()
+   self.fgradInput = self.fgradInput and torch.Tensor()
    return parent.type(self,type,tensorCache)
 end
 
