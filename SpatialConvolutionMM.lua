@@ -23,7 +23,7 @@ function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, 
 
    self.finput = torch.Tensor()
    self.fgradInput = torch.Tensor()
-   
+
    self:reset()
 end
 
@@ -137,3 +137,9 @@ function SpatialConvolutionMM:__tostring__()
    end
    return s .. ')'
 end
+
+function SpatialConvolutionMM:clearState()
+   nn.utils.clear(self, 'finput', 'fgradInput', '_input', '_gradOutput')
+   return parent.clearState(self)
+end
+

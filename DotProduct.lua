@@ -26,6 +26,11 @@ function DotProduct:updateGradInput(input, gradOutput)
    local v2 = input[2]
    local not_batch = false
 
+   if #self.gradInput ~= 2 then
+     self.gradInput[1] = self.gradInput[1] or input[1].new()
+     self.gradInput[2] = self.gradInput[2] or input[2].new()
+   end
+
    if v1:dim() == 1 then
       v1 = v1:view(1,-1)
       v2 = v2:view(1,-1)
@@ -48,4 +53,9 @@ function DotProduct:updateGradInput(input, gradOutput)
    end
 
    return self.gradInput
+end
+
+function DotProduct:clearState()
+   if self.buffer then self.buffer:set() end
+   return parent.clearState(self)
 end

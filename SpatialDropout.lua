@@ -45,3 +45,10 @@ end
 function SpatialDropout:__tostring__()
   return string.format('%s(%f)', torch.type(self), self.p)
 end
+
+function SpatialDropout:clearState()
+  if self.noise then
+    self.noise:set()
+  end
+  return Parent.clearState(self)
+end

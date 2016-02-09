@@ -364,3 +364,7 @@ function Module:listModules()
    end
    return modules
 end
+
+function Module:clearState()
+   return nn.utils.clear(self, 'output', 'gradInput')
+end

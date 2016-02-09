@@ -22,10 +22,10 @@ function TemporalMaxPooling:updateGradInput(input, gradOutput)
 end
 
 function TemporalMaxPooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
-   self.indices:resize()
-   self.indices:storage():resize(0)
+   self:clearState()
+end
+
+function TemporalMaxPooling:clearState()
+   if self.indices then self.indices:set() end
+   return parent.clearState(self)
 end

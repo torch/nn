@@ -76,3 +76,8 @@ function SparseLinear:zeroGradParameters()
       parent.zeroGradParameters(self)
    end
 end
+
+function SparseLinear:clearState()
+   if self.lastInput then self.lastInput:set() end
+   return parent.clearState(self)
+end

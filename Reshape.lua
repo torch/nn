@@ -67,3 +67,8 @@ function Reshape:__tostring__()
   return torch.type(self) .. '(' ..
       table.concat(self.size:totable(), 'x') .. ')'
 end
+
+function Reshape:clearState()
+   nn.utils.clear(self, '_input', '_gradOutput')
+   return parent.clearState(self)
+end

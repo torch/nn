@@ -1,4 +1,4 @@
-local SoftSign = torch.class('nn.SoftSign', 'nn.Module')
+local SoftSign, parent = torch.class('nn.SoftSign', 'nn.Module')
 
 function SoftSign:updateOutput(input)
    self.temp = self.temp or input.new()
@@ -12,4 +12,9 @@ function SoftSign:updateGradInput(input, gradOutput)
    self.tempgrad:resizeAs(self.output):copy(input):abs():add(1):cmul(self.tempgrad)
    self.gradInput:resizeAs(input):copy(gradOutput):cdiv(self.tempgrad)
    return self.gradInput
+end
+
+function SoftSign:clearState()
+   nn.utils.clear(self, 'temp', 'tempgrad')
+   return parent.clearState(self)
 end

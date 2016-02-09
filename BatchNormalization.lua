@@ -154,3 +154,14 @@ function BN:accGradParameters(input, gradOutput, scale)
       self.gradBias:add(scale, self.buffer)
    end
 end
+
+function BN:clearState()
+   nn.utils.clear(self, {
+      'buffer',
+      'buffer2',
+      'centered',
+      'std',
+      'normalized',
+   })
+   return parent.clearState(self)
+end

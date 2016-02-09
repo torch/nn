@@ -48,3 +48,8 @@ function CMulTable:updateGradInput(input, gradOutput)
 
    return self.gradInput
 end
+
+function CMulTable:clearState()
+   if self.tout then self.tout:set() end
+   return parent.clearState(self)
+end

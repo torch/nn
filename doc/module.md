@@ -117,8 +117,8 @@ situations.
 Keep in mind that, this function uses a simple trick to achieve its
 goal and it might not be valid for a custom module.
 
-Also note that compared to accGradParameters(), the gradients are not retained 
-for future use. 
+Also note that compared to accGradParameters(), the gradients are not retained
+for future use.
 
 ```lua
 function Module:accUpdateGradParameters(input, gradOutput, lr)
@@ -154,12 +154,12 @@ Example:
 ```lua
 
 -- make an mlp
-mlp1=nn.Sequential(); 
+mlp1=nn.Sequential();
 mlp1:add(nn.Linear(100,10));
 
 -- make a second mlp
-mlp2=nn.Sequential(); 
-mlp2:add(nn.Linear(100,10)); 
+mlp2=nn.Sequential();
+mlp2:add(nn.Linear(100,10));
 
 -- the second mlp shares the bias of the first
 mlp2:share(mlp1,'bias');
@@ -187,7 +187,7 @@ some shared parameters.
 Example:
 ```lua
 -- make an mlp
-mlp1=nn.Sequential(); 
+mlp1=nn.Sequential();
 mlp1:add(nn.Linear(100,10));
 
 -- make a copy that shares the weights and biases
@@ -208,7 +208,7 @@ This function converts all the parameters of a module to the given
 `type`. The `type` can be one of the types defined for
 [torch.Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
-If tensors (or their storages) are shared between multiple modules in a 
+If tensors (or their storages) are shared between multiple modules in a
 network, this sharing will be preserved after type is called.
 
 To preserve sharing between multiple modules and/or tensors, use
@@ -216,12 +216,12 @@ To preserve sharing between multiple modules and/or tensors, use
 
 ```lua
 -- make an mlp
-mlp1=nn.Sequential(); 
+mlp1=nn.Sequential();
 mlp1:add(nn.Linear(100,10));
 
 -- make a second mlp
-mlp2=nn.Sequential(); 
-mlp2:add(nn.Linear(100,10)); 
+mlp2=nn.Sequential();
+mlp2:add(nn.Linear(100,10));
 
 -- the second mlp shares the bias of the first
 mlp2:share(mlp1,'bias');
@@ -254,7 +254,7 @@ a `Module`. The object pointer is _never_ supposed to change. However, its
 contents (including its size if it is a Tensor) are supposed to change.
 
 In general state variables are
-[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md). 
+[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 However, some special sub-classes
 like [table layers](table.md#nn.TableLayers) contain something else. Please,
 refer to each module specification for further information.
@@ -269,7 +269,7 @@ This contains the output of the module, computed with the last call of
 #### gradInput ####
 
 This contains the gradients with respect to the inputs of the module, computed with the last call of
-[updateGradInput(input, gradOutput)](#nn.Module.updateGradInput). 
+[updateGradInput(input, gradOutput)](#nn.Module.updateGradInput).
 
 ### Parameters and gradients w.r.t parameters ###
 
@@ -353,9 +353,9 @@ end
 <a name="nn.Module.listModules"></a>
 ### listModules() ###
 
-List all Modules instances in a network. Returns a flattened list of modules, 
-including container modules (which will be listed first), self, and any other 
-component modules. 
+List all Modules instances in a network. Returns a flattened list of modules,
+including container modules (which will be listed first), self, and any other
+component modules.
 
 For example :
 ```lua
@@ -392,3 +392,9 @@ nn.Linear(10 -> 20)
 nn.Tanh
 nn.ReLU
 ```
+
+### clearState() ###
+
+Clears intermediate module states as `output`, `gradInput` and others.
+Useful when serializing networks and running low on memory. Internally calls `set()`
+on tensors so it does not break buffer sharing.

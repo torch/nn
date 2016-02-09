@@ -33,10 +33,7 @@ function SpatialMaxUnpooling:updateGradInput(input, gradOutput)
 end
 
 function SpatialMaxUnpooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
+   self:clearState()
 end
 
 function SpatialMaxUnpooling:__tostring__()

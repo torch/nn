@@ -1,4 +1,4 @@
-local SoftMin, _ = torch.class('nn.SoftMin', 'nn.Module')
+local SoftMin, parent = torch.class('nn.SoftMin', 'nn.Module')
 
 function SoftMin:updateOutput(input)
    self.mininput = self.mininput or input.new()
@@ -23,4 +23,9 @@ function SoftMin:updateGradInput(input, gradOutput)
 
    self.gradInput:mul(-1)
    return self.gradInput
+end
+
+function SoftMin:clearState()
+   if self.mininput then self.mininput:set() end
+   return parent.clearState(self)
 end

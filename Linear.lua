@@ -95,6 +95,10 @@ end
 -- we do not need to accumulate parameters when sharing
 Linear.sharedAccUpdateGradParameters = Linear.accUpdateGradParameters
 
+function Linear:clearState()
+   if self.addBuffer then self.addBuffer:set() end
+   return parent.clearState(self)
+end
 
 function Linear:__tostring__()
   return torch.type(self) ..

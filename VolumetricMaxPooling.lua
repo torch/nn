@@ -61,12 +61,12 @@ function VolumetricMaxPooling:updateGradInput(input, gradOutput)
 end
 
 function VolumetricMaxPooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
-   self.indices:resize()
-   self.indices:storage():resize(0)
+   self:clearState()
+end
+
+function VolumetricMaxPooling:clearState()
+   if self.indices then self.indices:set() end
+   return parent.clearState(self)
 end
 
 function VolumetricMaxPooling:read(file, version)

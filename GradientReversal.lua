@@ -1,7 +1,7 @@
 local GradientReversal = torch.class('nn.GradientReversal', 'nn.Module')
 
 function GradientReversal:updateOutput(input)
-   self.output = input
+   self.output:set(input)
    return self.output
 end
 

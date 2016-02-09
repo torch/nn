@@ -38,8 +38,5 @@ function VolumetricAveragePooling:updateGradInput(input, gradOutput)
 end
 
 function VolumetricAveragePooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
+   return parent.clearState(self)
 end

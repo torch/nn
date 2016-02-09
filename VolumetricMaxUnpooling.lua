@@ -56,10 +56,7 @@ function VolumetricMaxUnpooling:updateGradInput(input, gradOutput)
 end
 
 function VolumetricMaxUnpooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
+   self:clearState()
 end
 
 function VolumetricMaxUnpooling:__tostring__()

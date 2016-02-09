@@ -25,7 +25,7 @@ function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT,
    self.gradBias = torch.Tensor(nOutputPlane)
    -- temporary buffers for unfolding (CUDA)
    self.finput = torch.Tensor()
-   self.fgradInput = torch.Tensor()   
+   self.fgradInput = torch.Tensor()
    self:reset()
 end
 
@@ -174,4 +174,9 @@ function VolumetricConvolution:type(type, tensorCache)
    self.finput:set()
    self.fgradInput:set()
    return parent.type(self, type, tensorCache)
+end
+
+function VolumetricConvolution:clearState()
+   nn.utils.clear(self, 'finput', 'fgradInput', '_input', '_gradOutput')
+   return parent.clearState(self)
 end

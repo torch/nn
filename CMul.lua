@@ -116,13 +116,20 @@ end
 
 function CMul:type(type, tensorCache)
    if type then
-      self._input = nil
-      self._output = nil
-      self._weight = nil
-      self._gradWeight = nil
-      self._expand = nil
-      self._repeat = nil
-      self._sum = nil
+      self:clearState()
    end
    return parent.type(self, type, tensorCache)
+end
+
+function CMul:clearState()
+   nn.utils.clear(self, {
+      '_input',
+      '_output',
+      '_weight',
+      '_gradWeight',
+      '_expand',
+      '_repeat',
+      '_sum',
+   })
+   return parent.clearState(self)
 end

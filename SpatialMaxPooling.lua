@@ -59,13 +59,9 @@ function SpatialMaxPooling:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
+-- for backward compat
 function SpatialMaxPooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
-   self.indices:resize()
-   self.indices:storage():resize(0)
+   self:clearState()
 end
 
 function SpatialMaxPooling:__tostring__()
@@ -77,4 +73,11 @@ function SpatialMaxPooling:__tostring__()
    s = s .. ')'
 
    return s
+end
+
+function SpatialMaxPooling:clearState()
+   if self.indices then
+      self.indices:set()
+   end
+   return parent.clearState(self)
 end
