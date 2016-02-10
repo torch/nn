@@ -37,15 +37,28 @@ function TemporalSubSampling:reset(stdv)
 end
 
 function TemporalSubSampling:updateOutput(input)
-   return input.nn.TemporalSubSampling_updateOutput(self, input)
+    input.THNN.TemporalSubSampling_updateOutput(
+	input:cdata(), self.output:cdata(),
+	self.weight:cdata(), self.bias:cdata(),
+	self.kW, self.dW, self.inputFrameSize
+    )
+   return self.output
 end
 
 function TemporalSubSampling:updateGradInput(input, gradOutput)
-   if self.gradInput then
-      return input.nn.TemporalSubSampling_updateGradInput(self, input, gradOutput)
+    if self.gradInput then
+	input.THNN.TemporalSubSampling_updateGradInput(
+	    input:cdata(), gradOutput:cdata(), self.gradInput:cdata(),
+	    self.weight:cdata(), self.kW, self.dW
+	)
+	return self.gradInput
    end
 end
 
 function TemporalSubSampling:accGradParameters(input, gradOutput, scale)
-   return input.nn.TemporalSubSampling_accGradParameters(self, input, gradOutput, scale)
+    scale = scale or 1
+    input.THNN.TemporalSubSampling_accGradParameters(
+	input:cdata(), gradOutput:cdata(), self.gradWeight:cdata(),
+	self.gradBias:cdata(), self.kW, self.dW, scale
+    )
 end

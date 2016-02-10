@@ -4,20 +4,29 @@ function TemporalMaxPooling:__init(kW, dW)
    parent.__init(self)
 
    dW = dW or kW
-   
+
    self.kW = kW
    self.dW = dW
 end
 
 function TemporalMaxPooling:updateOutput(input)
    self.indices = self.indices or input.new()
-   input.nn.TemporalMaxPooling_updateOutput(self, input)
+   input.THNN.TemporalMaxPooling_updateOutput(
+       input:cdata(), self.output:cdata(),
+       self.indices:cdata(), self.kW, self.dW
+   )
    return self.output
 end
 
 function TemporalMaxPooling:updateGradInput(input, gradOutput)
-   input.nn.TemporalMaxPooling_updateGradInput(self, input, gradOutput)
-   return self.gradInput
+    if self.gradInput then
+	input.THNN.TemporalMaxPooling_updateGradInput(
+	    input:cdata(), gradOutput:cdata(),
+	    self.gradInput:cdata(), self.indices:cdata(),
+	    self.kW, self.dW
+	)
+	return self.gradInput
+    end
 end
 
 function TemporalMaxPooling:empty()
