@@ -2,18 +2,16 @@
 #define TH_GENERIC_FILE "generic/TemporalConvolution.c"
 #else
 
-static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
-{
-  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);  
-  int kW = luaT_getfieldcheckint(L, 1, "kW");
-  int dW = luaT_getfieldcheckint(L, 1, "dW");
-  int inputFrameSize = luaT_getfieldcheckint(L, 1, "inputFrameSize");
-  int outputFrameSize = luaT_getfieldcheckint(L, 1, "outputFrameSize");
-  
-  THTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
-  THTensor *bias = luaT_getfieldcheckudata(L, 1, "bias", torch_Tensor);
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
-
+void THNN_(TemporalConvolution_updateOutput)(THNNState *state,
+					     THTensor *input,
+					     THTensor *output,
+					     THTensor *weight,
+					     THTensor *bias,
+					     int kW, int dW,
+					     int inputFrameSize,
+					     int outputFrameSize
+					     )
+{  
   THTensor *outputWindow, *inputWindow;
   int nInputFrame, nOutputFrame;
   long k, i;
@@ -21,15 +19,15 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
   int dimS = 0; // sequence dimension
   int dimF = 1; // feature dimension
   
-  luaL_argcheck(L, input->nDimension == 2 || input->nDimension == 3, 2, "2D or 3D(batch mode) tensor expected");
+  THArgCheck(input->nDimension == 2 || input->nDimension == 3, 2, "2D or 3D(batch mode) tensor expected");
   
   if (input->nDimension == 3) 
   {
     dimS = 1;
     dimF = 2;
   }
-  luaL_argcheck(L, input->size[dimF] == inputFrameSize, 2, "invalid input frame size");
-  luaL_argcheck(L, input->size[dimS] >= kW, 2, "input sequence smaller than kernel size");
+  THArgCheck(input->size[dimF] == inputFrameSize, 2, "invalid input frame size");
+  THArgCheck(input->size[dimS] >= kW, 2, "input sequence smaller than kernel size");
 
   input = THTensor_(newContiguous)(input);
   outputWindow = THTensor_(new)();
@@ -129,20 +127,17 @@ static int nn_(TemporalConvolution_updateOutput)(lua_State *L)
   THTensor_(free)(inputWindow);
   THTensor_(free)(input);
 
-  return 1;
 }
 
-static int nn_(TemporalConvolution_updateGradInput)(lua_State *L)
+void THNN_(TemporalConvolution_updateGradInput)(THNNState* state,
+						THTensor *input,
+						THTensor *gradOutput,
+						THTensor *gradInput,
+						THTensor *weight,
+						int kW, int dW)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);  
-  THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);  
-  int kW = luaT_getfieldcheckint(L, 1, "kW");
-  int dW = luaT_getfieldcheckint(L, 1, "dW");
   long nInputFrame;
   long nOutputFrame;
-
-  THTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", torch_Tensor);
-  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
 
   THTensor *gradOutputWindow;
   THTensor *gradInputWindow;
@@ -229,21 +224,18 @@ static int nn_(TemporalConvolution_updateGradInput)(lua_State *L)
   THTensor_(free)(gradOutputWindow);
   THTensor_(free)(gradInputWindow);
 
-  return 1;
 }
 
-static int nn_(TemporalConvolution_accGradParameters)(lua_State *L)
+void THNN_(TemporalConvolution_accGradParameters)(THNNState *state,
+						  THTensor *input,
+						  THTensor *gradOutput,
+						  THTensor *gradWeight,
+						  THTensor *gradBias,
+						  int kW, int dW,
+						  real scale)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);  
-  THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);  
-  real scale = luaL_optnumber(L, 4, 1);
-  int kW = luaT_getfieldcheckint(L, 1, "kW");
-  int dW = luaT_getfieldcheckint(L, 1, "dW");
   long nInputFrame;
   long nOutputFrame;
-
-  THTensor *gradWeight = luaT_getfieldcheckudata(L, 1, "gradWeight", torch_Tensor);
-  THTensor *gradBias = luaT_getfieldcheckudata(L, 1, "gradBias", torch_Tensor);
 
   THTensor *gradOutputWindow;
   THTensor *inputWindow;
@@ -347,21 +339,6 @@ static int nn_(TemporalConvolution_accGradParameters)(lua_State *L)
   THTensor_(free)(inputWindow);
   THTensor_(free)(input);
 
-  return 0;
-}
-
-static const struct luaL_Reg nn_(TemporalConvolution__) [] = {
-  {"TemporalConvolution_updateOutput", nn_(TemporalConvolution_updateOutput)},
-  {"TemporalConvolution_updateGradInput", nn_(TemporalConvolution_updateGradInput)},
-  {"TemporalConvolution_accGradParameters", nn_(TemporalConvolution_accGradParameters)},
-  {NULL, NULL}
-};
-
-static void nn_(TemporalConvolution_init)(lua_State *L)
-{
-  luaT_pushmetatable(L, torch_Tensor);
-  luaT_registeratname(L, nn_(TemporalConvolution__), "nn");
-  lua_pop(L,1);
 }
 
 #endif

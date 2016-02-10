@@ -2,14 +2,12 @@
 #define TH_GENERIC_FILE "generic/TemporalMaxPooling.c"
 #else
 
-static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
+void THNN_(TemporalMaxPooling_updateOutput)(THNNState *state,
+					    THTensor *input,
+					    THTensor *output,
+					    THTensor *indices,
+					    int kW, int dW)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
-  int kW = luaT_getfieldcheckint(L, 1, "kW");
-  int dW = luaT_getfieldcheckint(L, 1, "dW");
-  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
-  THTensor *output = luaT_getfieldcheckudata(L, 1, "output", torch_Tensor);
-
   long niframe;
   long framesize;
   long noframe;
@@ -19,24 +17,24 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
   real *indices_data;
 
   long t, y;
-  
+
   int dimS = 0; // sequence dimension
   int dimF = 1; // feature dimension
 
-  luaL_argcheck(L, input->nDimension == 2 || input->nDimension == 3, 2, "2D or 3D(batch mode) tensor expected");
-  
-  if (input->nDimension == 3) 
+  THArgCheck(input->nDimension == 2 || input->nDimension == 3, 2, "2D or 3D(batch mode) tensor expected");
+
+  if (input->nDimension == 3)
   {
     dimS = 1;
     dimF = 2;
   }
-  luaL_argcheck(L, input->size[dimS] >= kW, 2, "input sequence smaller than kernel size");
-  
+  THArgCheck(input->size[dimS] >= kW, 2, "input sequence smaller than kernel size");
+
   /* sizes */
   niframe = input->size[dimS];
   framesize = input->size[dimF];
   noframe = (niframe - kW) / dW + 1;
-   
+
   /* get contiguous input */
   input = THTensor_(newContiguous)(input);
 
@@ -47,12 +45,12 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
 
     /* indices will contain index locations for each output point */
     THTensor_(resize2d)(indices, noframe, framesize);
-    
+
     /* get raw pointers */
     input_data = THTensor_(data)(input);
     output_data = THTensor_(data)(output);
     indices_data = THTensor_(data)(indices);
-    
+
     for(t = 0; t < noframe; t++)
     {
       real *ip = input_data + t*framesize*dW;
@@ -86,30 +84,30 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
     /* number of batch frames */
     long nbframe = input->size[0];
     long i;
-    
+
     /* resize output */
     THTensor_(resize3d)(output, nbframe, noframe, framesize);
 
     /* indices will contain index locations for each output point */
     THTensor_(resize3d)(indices, nbframe, noframe, framesize);
-    
+
     /* get raw pointers */
     input_data = THTensor_(data)(input);
     output_data = THTensor_(data)(output);
     indices_data = THTensor_(data)(indices);
-    
+
     for(i = 0; i < nbframe; i++)
     {
       real *inputSample_data = input_data + i*niframe*framesize;
       real *outputSample_data = output_data + i*noframe*framesize;
       real *indicesSample_data = indices_data + i*noframe*framesize;
-      
+
       for(t = 0; t < noframe; t++)
       {
         real *ip = inputSample_data + t*framesize*dW;
         real *op = outputSample_data + t*framesize;
         real *xp = indicesSample_data + t*framesize;
-        
+
 #pragma omp parallel for private(y)
         for(y = 0; y < framesize; y++)
         {
@@ -138,17 +136,15 @@ static int nn_(TemporalMaxPooling_updateOutput)(lua_State *L)
   /* cleanup */
   THTensor_(free)(input);
 
-  return 1;
 }
 
-static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
+void THNN_(TemporalMaxPooling_updateGradInput)(THNNState *state,
+					       THTensor *input,
+					       THTensor *gradOutput,
+					       THTensor *gradInput,
+					       THTensor *indices,
+					       int kW, int dW)
 {
-  THTensor *input = luaT_checkudata(L, 2, torch_Tensor);
-  THTensor *gradOutput = luaT_checkudata(L, 3, torch_Tensor);
-  int dW = luaT_getfieldcheckint(L, 1, "dW");
-  THTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", torch_Tensor);
-  THTensor *gradInput = luaT_getfieldcheckudata(L, 1, "gradInput", torch_Tensor);
-
   long niframe;
   int noframe;
   long framesize;
@@ -168,8 +164,8 @@ static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
 
   int dimS = 0; // sequence dimension
   int dimF = 1; // feature dimension
-  
-  if (input->nDimension == 3) 
+
+  if (input->nDimension == 3)
   {
     dimS = 1;
     dimF = 2;
@@ -205,13 +201,13 @@ static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
     /* number of batch frames */
     long nbframe = input->size[0];
     long i;
-      
+
     for(i = 0; i < nbframe; i++)
     {
       real *gradInputSample_data = gradInput_data + i*niframe*framesize;
       real *gradOutputSample_data = gradOutput_data + i*noframe*framesize;
       real *indicesSample_data = indices_data + i*noframe*framesize;
-      
+
       for(t = 0; t < noframe; t++)
       {
         real *gip = gradInputSample_data + t*framesize*dW;
@@ -230,21 +226,6 @@ static int nn_(TemporalMaxPooling_updateGradInput)(lua_State *L)
 
   /* cleanup */
   THTensor_(free)(gradOutput);
-
-  return 1;
-}
-
-static const struct luaL_Reg nn_(TemporalMaxPooling__) [] = {
-  {"TemporalMaxPooling_updateOutput", nn_(TemporalMaxPooling_updateOutput)},
-  {"TemporalMaxPooling_updateGradInput", nn_(TemporalMaxPooling_updateGradInput)},
-  {NULL, NULL}
-};
-
-static void nn_(TemporalMaxPooling_init)(lua_State *L)
-{
-  luaT_pushmetatable(L, torch_Tensor);
-  luaT_registeratname(L, nn_(TemporalMaxPooling__), "nn");
-  lua_pop(L,1);
 }
 
 #endif
