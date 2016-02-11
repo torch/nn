@@ -15,7 +15,7 @@ end
 
 function Dropout:updateOutput(input)
    if self.inplace then
-      self.output = input
+      self.output:set(input)
    else
       self.output:resizeAs(input):copy(input)
    end
@@ -35,21 +35,16 @@ function Dropout:updateOutput(input)
 end
 
 function Dropout:updateGradInput(input, gradOutput)
+   if self.inplace then
+      self.gradInput:set(gradOutput)
+   else
+      self.gradInput:resizeAs(gradOutput):copy(gradOutput)
+   end
    if self.train then
-      if self.inplace then
-         self.gradInput = gradOutput
-      else
-         self.gradInput:resizeAs(gradOutput):copy(gradOutput)
-      end
       if self.p > 0 then
          self.gradInput:cmul(self.noise) -- simply mask the gradients with the noise vector
       end
    else
-      if self.inplace then
-         self.gradInput = gradOutput
-      else
-         self.gradInput:resizeAs(gradOutput):copy(gradOutput)
-      end
       if not self.v2 and self.p > 0 then
          self.gradInput:cdiv(1-self.p)
       end

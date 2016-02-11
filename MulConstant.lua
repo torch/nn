@@ -15,7 +15,7 @@ end
 function MulConstant:updateOutput(input)
   if self.inplace then
     input:mul(self.constant_scalar)
-    self.output = input
+    self.output:set(input)
   else
     self.output:resizeAs(input)
     self.output:copy(input)
@@ -28,7 +28,7 @@ function MulConstant:updateGradInput(input, gradOutput)
   if self.gradInput then
     if self.inplace then
       gradOutput:mul(self.constant_scalar)
-      self.gradInput = gradOutput
+      self.gradInput:set(gradOutput)
       -- restore previous input value
       input:div(self.constant_scalar)
     else
