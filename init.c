@@ -5,9 +5,6 @@
 #define torch_Tensor TH_CONCAT_STRING_3(torch.,Real,Tensor)
 #define nn_(NAME) TH_CONCAT_3(nn_, Real, NAME)
 
-#include "generic/SparseLinear.c"
-#include "THGenerateFloatTypes.h"
-
 #include "generic/SpatialBatchNormalization.c"
 #include "THGenerateFloatTypes.h"
 
@@ -49,7 +46,6 @@ int luaopen_libnn(lua_State *L)
   lua_pushvalue(L, -1);
   lua_setglobal(L, "nn");
 
-  nn_FloatSparseLinear_init(L);
   nn_FloatSpatialBatchNormalization_init(L);
   nn_FloatSpatialConvolution_init(L);
   nn_FloatSpatialConvolutionLocal_init(L);
@@ -61,7 +57,6 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSpatialFractionalMaxPooling_init(L);
   nn_FloatSpatialUpSamplingNearest_init(L);
 
-  nn_DoubleSparseLinear_init(L);
   nn_DoubleSpatialBatchNormalization_init(L);
   nn_DoubleSpatialMaxUnpooling_init(L);
   nn_DoubleSpatialConvolution_init(L);

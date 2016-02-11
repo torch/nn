@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local SparseLinear, parent = torch.class('nn.SparseLinear', 'nn.Module')
 
 function SparseLinear:__init(inputSize, outputSize)
@@ -41,29 +42,57 @@ function SparseLinear:reset(stdv)
 end
 
 function SparseLinear:updateOutput(input)
-   return input.nn.SparseLinear_updateOutput(self, input)
+   input.THNN.SparseLinear_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      THNN.optionalTensor(self.shardBuffer)
+   )
+   return self.output
 end
 
 function SparseLinear:accGradParameters(input, gradOutput, scale)
    if not self.lastInput then
-     self.lastInput = input:clone()
+      self.lastInput = input:clone()
    else
-     self.lastInput:resizeAs(input):copy(input)
+      self.lastInput:resizeAs(input):copy(input)
    end
 
-   return input.nn.SparseLinear_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.SparseLinear_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      self.gradBias:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.weightDecay or 0,
+      scale or 1
+   )
 end
 
 function SparseLinear:updateGradInput(input, gradOutput)
    if self.gradInput then
-      input.nn.SparseLinear_updateGradInput(self, input, gradOutput)
-      return self.gradInput
+     input.THNN.SparseLinear_updateGradInput(
+        input:cdata(),
+        gradOutput:cdata(),
+        self.gradInput:cdata(),
+        self.weight:cdata()
+     )
+     return self.gradInput
    end
 end
 
 function SparseLinear:updateParameters(learningRate)
    if self.lastInput then
-      self.lastInput.nn.SparseLinear_updateParameters(self, learningRate)
+      self.lastInput.THNN.SparseLinear_updateParameters(
+         self.weight:cdata(),
+         self.bias:cdata(),
+         self.gradWeight:cdata(),
+         self.gradBias:cdata(),
+         self.lastInput:cdata(),
+         learningRate
+      )
    else
       parent.updateParameters(self, learningRate)
    end
@@ -71,7 +100,11 @@ end
 
 function SparseLinear:zeroGradParameters()
    if self.lastInput then
-      self.lastInput.nn.SparseLinear_zeroGradParameters(self)
+      self.lastInput.THNN.SparseLinear_zeroGradParameters(
+         self.gradWeight:cdata(),
+         self.gradBias:cdata(),
+         self.lastInput:cdata()
+      )
    else
       parent.zeroGradParameters(self)
    end
