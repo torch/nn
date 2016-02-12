@@ -75,8 +75,10 @@ function BN:updateOutput(input)
              .. input:dim() .. 'D tensor instead')
 
    self.output:resizeAs(input)
-   self.save_mean = self.save_mean or input.new():resizeAs(self.running_mean)
-   self.save_std = self.save_std or input.new():resizeAs(self.running_var)
+   self.save_mean = self.save_mean or input.new()
+   self.save_mean:resizeAs(self.running_mean)
+   self.save_std = self.save_std or input.new()
+   self.save_std:resizeAs(self.running_var)
 
    input.nn.SpatialBatchNormalization_updateOutput(
       input,
@@ -142,12 +144,16 @@ function BN:read(file, version)
 end
 
 function BN:clearState()
+   -- first 5 buffers are not present in the current implementation,
+   -- but we keep them for cleaning old saved models
    nn.utils.clear(self, {
       'buffer',
       'buffer2',
       'centered',
       'std',
       'normalized',
+      'save_mean',
+      'save_std',
    })
    return parent.clearState(self)
 end
