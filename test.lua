@@ -5882,6 +5882,23 @@ function nntest.Module_apply()
   mytester:asserteq(s2.modules[1].bias:size(1), 20)
 end
 
+function nntest.Module_replace()
+   -- test replace in container
+   local s = nn.Sequential()
+   s:add(nn.Linear(10,10))
+   s:add(nn.Sigmoid())
+   s:replace(function(module)
+      return torch.type(module) == 'nn.Sigmoid' and nn.Tanh() or module
+   end)
+   -- test replace of a single module
+   local single = nn.Tanh()
+   local replaced = single:replace(function(module)
+      return torch.type(module) == 'nn.Tanh' and nn.Sigmoid() or module
+   end)
+   mytester:asserteq(torch.type(s:get(2)), 'nn.Tanh', 'replace in container')
+   mytester:asserteq(torch.type(replaced), 'nn.Sigmoid', 'replace in single module')
+end
+
 function nntest.Cosine()
    local inputSize = 4
    local outputSize = 5

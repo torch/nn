@@ -398,3 +398,40 @@ nn.ReLU
 Clears intermediate module states as `output`, `gradInput` and others.
 Useful when serializing networks and running low on memory. Internally calls `set()`
 on tensors so it does not break buffer sharing.
+
+
+<a name="nn.Module.apply"></a>
+### apply(function)
+
+Calls provided function on itself and all child modules. This function takes
+module to operate on as a first argument:
+
+```lua
+model:apply(function(module)
+   module.train = true
+end)
+```
+
+In the example above `train` will be set to to `true` in all modules of `model`.
+This is how `training()` and `evaluate()` functions implemented.
+
+
+<a name="nn.Module.replace"></a>
+### replace(function)
+
+Similar to apply takes a function which applied to all modules of a model,
+but uses return value to replace the module. Can be used to replace all
+modules of one type to another or remove certain modules.
+
+For example, can be used to remove `nn.Dropout` layers by replacing them with
+`nn.Identity`:
+
+```lua
+model:replace(function(module)
+   if torch.typename(module) == 'nn.Dropout' then
+      return nn.Identity()
+   else
+      return module
+   end
+end)
+```
