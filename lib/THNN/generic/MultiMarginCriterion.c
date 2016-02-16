@@ -2,7 +2,7 @@
 #define TH_GENERIC_FILE "generic/MultiMarginCriterion.c"
 #else
 
-void THNN_(MultiMarginCriterion_updateOutput)(THNNState *state, THTensor *input, THTensor *target, THTensor *output, bool sizeAverage, int p)
+void THNN_(MultiMarginCriterion_updateOutput)(THNNState *state, THTensor *input, THTensor *target, THTensor *output, bool sizeAverage, int p, real margin)
 {
   real *input_data, *target_data;
   long nframe, dim;
@@ -41,7 +41,7 @@ void THNN_(MultiMarginCriterion_updateOutput)(THNNState *state, THTensor *input,
     real input_target = input_data[target_idx];
     for (d = 0; d < dim; d++)
     {
-      real z = 1 - input_target + input_data[d];
+      real z = margin - input_target + input_data[d];
       if (d == target_idx)
         continue;
     
@@ -60,7 +60,7 @@ void THNN_(MultiMarginCriterion_updateOutput)(THNNState *state, THTensor *input,
   THTensor_(free)(target);
 }
 
-void THNN_(MultiMarginCriterion_updateGradInput)(THNNState *state, THTensor *input, THTensor *target, THTensor *gradInput, bool sizeAverage, int p)
+void THNN_(MultiMarginCriterion_updateGradInput)(THNNState *state, THTensor *input, THTensor *target, THTensor *gradInput, bool sizeAverage, int p, real margin)
 {
   real *input_data;
   real *gradInput_data;
@@ -74,7 +74,7 @@ void THNN_(MultiMarginCriterion_updateGradInput)(THNNState *state, THTensor *inp
   if (input->nDimension == 1)
   {
     nframe = 1;
-    dim = input->size[0]; 
+    dim = input->size[0];
   }
   else
   {
@@ -101,7 +101,7 @@ void THNN_(MultiMarginCriterion_updateGradInput)(THNNState *state, THTensor *inp
     real gradInput_target = 0;
     for (d = 0; d < dim; d++)
     {
-      real z = 1 - input_target + input_data[d];
+      real z = margin - input_target + input_data[d];
       if (d == target_idx)
         continue;
     
@@ -120,7 +120,7 @@ void THNN_(MultiMarginCriterion_updateGradInput)(THNNState *state, THTensor *inp
     gradInput_data += dim;
   }
 
-  THTensor_(free)(input);  
+  THTensor_(free)(input);
   THTensor_(free)(target);
 }
 

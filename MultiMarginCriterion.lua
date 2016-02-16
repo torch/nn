@@ -1,8 +1,9 @@
 local MultiMarginCriterion, parent = torch.class('nn.MultiMarginCriterion', 'nn.Criterion')
 
-function MultiMarginCriterion:__init(p)
+function MultiMarginCriterion:__init(p,margin)
    assert(p == nil or p == 1 or p == 2, 'only p=1 and p=2 supported')
    self.p = p or 1
+   self.margin = margin or 1.0
    parent.__init(self)
    self.sizeAverage = true
 end
@@ -21,7 +22,8 @@ function MultiMarginCriterion:updateOutput(input, target)
       target:cdata(),
       self.output_tensor:cdata(),
       self.sizeAverage,
-      self.p
+      self.p,
+      self.margin
    )
    self.output = self.output_tensor[1]
    return self.output
@@ -38,7 +40,8 @@ function MultiMarginCriterion:updateGradInput(input, target)
       target:cdata(),
       self.gradInput:cdata(),
       self.sizeAverage,
-      self.p
+      self.p,
+      self.margin
    )
    return self.gradInput
 end
