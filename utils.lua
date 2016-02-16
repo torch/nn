@@ -116,7 +116,7 @@ function nn.utils.recursiveAdd(t1, val, t2)
       for key,_ in pairs(t2) do
          t1[key], t2[key] = nn.utils.recursiveAdd(t1[key], val, t2[key])
       end
-   elseif torch.isTensor(t2) and torch.isTensor(t2) then
+   elseif torch.isTensor(t1) and torch.isTensor(t2) then
       t1:add(val, t2)
    else
       error("expecting nested tensors or tables. Got "..
