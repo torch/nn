@@ -144,7 +144,8 @@ function SpatialFractionalMaxPooling:empty()
 end
 
 function SpatialFractionalMaxPooling:clearState()
-   nn.utils.clear(self, 'indices', 'randomSamples')
+   self.indices = nil
+   self.randomSamples = nil
    return parent.clearState(self)
 end
 
