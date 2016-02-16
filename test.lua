@@ -220,6 +220,37 @@ function nntest.SpatialDropoutBatch()
    mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
 end
 
+function nntest.VolumetricDropout()
+   local p = 0.2 --prob of dropiing out a neuron
+   local t = math.random(1,5)
+   local w = math.random(1,5)
+   local h = math.random(1,5)
+   local nfeats = 1000
+   local input = torch.Tensor(nfeats, t, w, h):fill(1)
+   local module = nn.VolumetricDropout(p)
+   module.train = true
+   local output = module:forward(input)
+   mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
+   local gradInput = module:backward(input, input)
+   mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
+end
+
+function nntest.VolumetricDropoutBatch()
+   local p = 0.2 --prob of dropiing out a neuron
+   local bsz = math.random(1,5)
+   local t = math.random(1,5)
+   local w = math.random(1,5)
+   local h = math.random(1,5)
+   local nfeats = 1000
+   local input = torch.Tensor(bsz, nfeats, t, w, h):fill(1)
+   local module = nn.VolumetricDropout(p)
+   module.train = true
+   local output = module:forward(input)
+   mytester:assert(math.abs(output:mean() - (1-p)) < 0.05, 'dropout output')
+   local gradInput = module:backward(input, input)
+   mytester:assert(math.abs(gradInput:mean() - (1-p)) < 0.05, 'dropout gradInput')
+end
+
 function nntest.ReLU()
    local input = torch.randn(3,4)
    local gradOutput = torch.randn(3,4)
