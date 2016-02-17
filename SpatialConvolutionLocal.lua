@@ -119,9 +119,21 @@ function SpatialConvolutionLocal:updateOutput(input)
    checkInputSize(self, input)
    viewWeight(self)
    input = makeContiguous(self, input)
-   local out = input.nn.SpatialConvolutionLocal_updateOutput(self, input)
+   input.THNN.SpatialConvolutionLocal_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.kW, self.kH,
+      self.dW, self.dH,
+      self.padW, self.padH,
+      self.iW, self.iH,
+      self.oW, self.oH
+   )
    unviewWeight(self)
-   return out
+   return self.output
 end
 
 function SpatialConvolutionLocal:updateGradInput(input, gradOutput)
@@ -130,20 +142,45 @@ function SpatialConvolutionLocal:updateGradInput(input, gradOutput)
    if self.gradInput then
       viewWeight(self)
       input, gradOutput = makeContiguous(self, input, gradOutput)
-      local out = input.nn.SpatialConvolutionLocal_updateGradInput(self, input, gradOutput)
+      input.THNN.SpatialConvolutionLocal_updateGradInput(
+         input:cdata(),
+         gradOutput:cdata(),
+         self.gradInput:cdata(),
+         self.weight:cdata(),
+         self.finput:cdata(),
+         self.fgradInput:cdata(),
+         self.kW, self.kH,
+         self.dW, self.dH,
+         self.padW, self.padH,
+         self.iW, self.iH,
+         self.oW, self.oH
+      )
       unviewWeight(self)
-      return out
+      return self.gradInput
    end
 end
 
 function SpatialConvolutionLocal:accGradParameters(input, gradOutput, scale)
+   scale = scale or 1
    checkInputSize(self, input)
    checkOutputSize(self, input, gradOutput)
    input, gradOutput = makeContiguous(self, input, gradOutput)
    viewWeight(self)
-   local out = input.nn.SpatialConvolutionLocal_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.SpatialConvolutionLocal_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      self.gradBias:cdata(),
+      self.finput:cdata(),
+      self.fgradInput:cdata(),
+      self.kW, self.kH,
+      self.dW, self.dH,
+      self.padW, self.padH,
+      self.iW, self.iH,
+      self.oW, self.oH,
+      scale
+   )
    unviewWeight(self)
-   return out
 end
 
 function SpatialConvolutionLocal:type(type,tensorCache)
