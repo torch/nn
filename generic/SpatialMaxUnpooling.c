@@ -66,7 +66,7 @@ static int nn_(SpatialMaxUnpooling_updateOutput)(lua_State *L)
   iheight = input->size[dimh];
   iwidth = input->size[dimw];
 
-  /* get contiguous input */
+  /* get contiguous input and indices */
   input = THTensor_(newContiguous)(input);
   indices = THTensor_(newContiguous)(indices);
 
@@ -110,6 +110,8 @@ static int nn_(SpatialMaxUnpooling_updateOutput)(lua_State *L)
 
   /* cleanup */
   THTensor_(free)(input);
+  THTensor_(free)(indices);
+
   return 1;
 }
 
@@ -164,7 +166,7 @@ static int nn_(SpatialMaxUnpooling_updateGradInput)(lua_State *L)
     THError("Invalid input size w.r.t current indices size");
   } 
 
-  /* get contiguous gradOutput */
+  /* get contiguous gradOutput and indices */
   gradOutput = THTensor_(newContiguous)(gradOutput);
   indices = THTensor_(newContiguous)(indices);
 
@@ -217,6 +219,7 @@ static int nn_(SpatialMaxUnpooling_updateGradInput)(lua_State *L)
 
   /* cleanup */
   THTensor_(free)(gradOutput);
+  THTensor_(free)(indices);
 
   return 1;
 }
