@@ -38,9 +38,6 @@
 #include "generic/SpatialUpSamplingNearest.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/VolumetricFullConvolution.c"
-#include "THGenerateFloatTypes.h"
-
 LUA_EXTERNC DLL_EXPORT int luaopen_libnn(lua_State *L);
 
 int luaopen_libnn(lua_State *L)
@@ -59,7 +56,6 @@ int luaopen_libnn(lua_State *L)
   nn_FloatSpatialMaxUnpooling_init(L);
   nn_FloatSpatialFractionalMaxPooling_init(L);
   nn_FloatSpatialUpSamplingNearest_init(L);
-  nn_FloatVolumetricFullConvolution_init(L);
 
   nn_DoubleSpatialBatchNormalization_init(L);
   nn_DoubleSpatialMaxUnpooling_init(L);
@@ -72,7 +68,6 @@ int luaopen_libnn(lua_State *L)
   nn_DoubleSpatialSubSampling_init(L);
   nn_DoubleSpatialFractionalMaxPooling_init(L);
   nn_DoubleSpatialUpSamplingNearest_init(L);
-  nn_DoubleVolumetricFullConvolution_init(L);
 
   return 1;
 }
