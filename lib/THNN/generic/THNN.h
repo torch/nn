@@ -747,6 +747,31 @@ TH_API void THNN_(unfolded_copy)(
           int inputWidth, int inputHeight,
           int outputWidth, int outputHeight);
 
+TH_API void THNN_(VolumetricBatchNormalization_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *weight,
+          THTensor *bias,
+          THTensor *running_mean,
+          THTensor *running_var,
+          THTensor *save_mean,
+          THTensor *save_std,
+          bool train,
+          double momentum,
+          double eps);
+TH_API void THNN_(VolumetricBatchNormalization_backward)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *gradWeight,
+          THTensor *gradBias,
+          THTensor *weight,
+          THTensor *save_mean,
+          THTensor *save_std,
+          double scale);
+
 TH_API void THNN_(VolumetricAveragePooling_updateOutput)(
           THNNState *state,
           THTensor *input,
