@@ -106,17 +106,46 @@ function SpatialConvolutionMap:reset(stdv)
 end
 
 function SpatialConvolutionMap:updateOutput(input)
-   input.nn.SpatialConvolutionMap_updateOutput(self, input)
+   input.THNN.SpatialConvolutionMap_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.connTable:cdata(),
+      self.nInputPlane,
+      self.nOutputPlane,
+      self.dW, self.dH
+   )
    return self.output
 end
 
 function SpatialConvolutionMap:updateGradInput(input, gradOutput)
-   input.nn.SpatialConvolutionMap_updateGradInput(self, input, gradOutput)
+   input.THNN.SpatialConvolutionMap_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.connTable:cdata(),
+      self.nInputPlane,
+      self.nOutputPlane,
+      self.dW, self.dH
+   )
    return self.gradInput
 end
 
 function SpatialConvolutionMap:accGradParameters(input, gradOutput, scale)
-   return input.nn.SpatialConvolutionMap_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.SpatialConvolutionMap_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      self.gradBias:cdata(),
+      self.connTable:cdata(),
+      self.nInputPlane,
+      self.nOutputPlane,
+      self.dW, self.dH,
+      scale or 1
+   )
 end
 
 function SpatialConvolutionMap:decayParameters(decay)
