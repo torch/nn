@@ -27,12 +27,12 @@ local function retable(t1, t2, f)
    return t1
 end
 
-function ConcatTable:updateGradInput(input, gradOutput)
+local function backward(self, method, input, gradOutput, scale)
    local isTable = torch.type(input) == 'table'
    local wasTable = torch.type(self.gradInput) == 'table'
    if isTable then
       for i,module in ipairs(self.modules) do
-         local currentGradInput = module:updateGradInput(input, gradOutput[i])
+         local currentGradInput = module[method](module, input, gradOutput[i], scale)
          if torch.type(currentGradInput) ~= 'table' then
             error"currentGradInput is not a table!"
          end
@@ -63,7 +63,7 @@ function ConcatTable:updateGradInput(input, gradOutput)
    else
       self.gradInput = (not wasTable) and self.gradInput or input:clone()
       for i,module in ipairs(self.modules) do
-         local currentGradInput = module:updateGradInput(input, gradOutput[i])
+         local currentGradInput = module[method](module, input, gradOutput[i], scale)
          if i == 1 then
             self.gradInput:resizeAs(currentGradInput):copy(currentGradInput)
          else
@@ -72,6 +72,14 @@ function ConcatTable:updateGradInput(input, gradOutput)
       end
    end
    return self.gradInput
+end
+
+function ConcatTable:updateGradInput(input, gradOutput)
+   return backward(self, 'updateGradInput', input, gradOutput)
+end
+
+function ConcatTable:backward(input, gradOutput, scale)
+   return backward(self, 'backward', input, gradOutput, scale)
 end
 
 function ConcatTable:accGradParameters(input, gradOutput, scale)
