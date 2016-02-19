@@ -31,7 +31,6 @@ end
 function Reshape:updateOutput(input)
    if not input:isContiguous() then
       self._input = self._input or input.new()
-      self._gradOutput = self._gradOutput or input.new()
       self._input:resizeAs(input)
       self._input:copy(input)
       input = self._input
@@ -51,6 +50,7 @@ end
 
 function Reshape:updateGradInput(input, gradOutput)
    if not gradOutput:isContiguous() then
+      self._gradOutput = self._gradOutput or gradOutput.new()
       self._gradOutput:resizeAs(gradOutput)
       self._gradOutput:copy(gradOutput)
       gradOutput = self._gradOutput
