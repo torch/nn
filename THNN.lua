@@ -151,6 +151,7 @@ TH_API void THNN_(LookupTable_accGradParameters)(
           THTensor *sorted,
           THTensor *indices,
           bool scaleGradByFreq,
+          int paddingValue,
           real scale);
 
 TH_API void THNN_(MarginCriterion_updateOutput)(
@@ -983,7 +984,7 @@ ffi.cdef(base_declarations)
 -- expand macros, allow to use original lines from lib/THNN/generic/THNN.h
 local preprocessed = string.gsub(generic_THNN_h, 'TH_API void THNN_%(([%a%d_]+)%)', 'void THNN_TYPE%1')
 
-local replacements = 
+local replacements =
 {
    {
       ['TYPE'] = 'Double',
