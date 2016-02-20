@@ -8,6 +8,7 @@ target, they compute a gradient according to a given loss function.
     * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy for [`Sigmoid`](transfer.md#nn.Sigmoid) (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
     * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
     * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
+    * [`ClassSimplexCriterion`](#nn.ClassSimplexCriterion): A simplex embedding criterion for classification.
     * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
     * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
     * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
@@ -162,6 +163,52 @@ loss(x, class) = weights[class] * (-x[class] + log(\sum_j exp(x[j])))
 
 The losses are averaged across observations for each minibatch.
 
+<a name="nn.ClassSimplexCriterion"/>
+## ClassSimplexCriterion ##
+
+```lua
+criterion = nn.ClassSimplexCriterion(nClasses)
+```
+
+ClassSimplexCriterion implements a criterion for classification.
+It learns an embedding per class, where each class' embedding is a point on an (N-1)-dimensional simplex,
+where N is the number of classes.
+
+The `input` given through a `forward()` is expected to be the output of a Normalized Linear layer with no bias:
+- `input` has to be a 1D `Tensor` of size `n` for a single sample
+- a 2D `Tensor` of size `batchSize x n` for a mini-batch of samples
+
+This Criterion is best used in combination with a neural network where the last layers are:
+- a weight-normalized bias-less Linear layer. [Example source code](https://gist.github.com/soumith/4d0273f592956199739b)
+- followed by an output normalization layer. [Example source code](https://gist.github.com/soumith/317f558ec5c0ca746875)
+
+The loss is described in detail in the paper [Scale-invariant learning and convolutional networks](http://arxiv.org/abs/1506.08230).
+
+
+The following is a code fragment showing how to make a gradient step given an input `x`, a desired output `y` (an integer `1` to `n`, in this case `n = 30` classes), a network `mlp` and a learning rate `learningRate`:
+
+```lua
+nInput = 10
+nClasses = 30
+nHidden = 100
+mlp = nn.Sequential()
+mlp:add(nn.Linear(nInput, nHidden)):add(nn.ReLU())
+mlp:add(nn.NormalizedLinearNoBias(nHidden, nClasses))
+mlp:add(nn.L2Normalize())
+
+criterion = nn.ClassSimplexCriterion(nClasses)
+
+function gradUpdate(mlp, x, y, learningRate)
+   pred = mlp:forward(x)
+   local err = criterion:forward(pred, y)
+   mlp:zeroGradParameters()
+   local t = criterion:backward(pred, y)
+   mlp:backward(x, t)
+   mlp:updateParameters(learningRate)
+end
+```
+
+This criterion also provides two helper functions `getPredictions(input)` and `getTopPrediction(input)` that return the raw predictions and the top prediction index respectively, given an input
 
 <a name="nn.DistKLDivCriterion"></a>
 ## DistKLDivCriterion ##
