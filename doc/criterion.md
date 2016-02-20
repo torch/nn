@@ -11,6 +11,7 @@ target, they compute a gradient according to a given loss function.
     * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
     * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
     * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
+    * [`MultiLabelSoftMarginCriterion`](#nn.MultiLabelSoftMarginCriterion): multi-class multi-classification loss based on binary cross-entropy;
   * Regression criterions:
     * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
     * [`SmoothL1Criterion`](#nn.SmoothL1Criterion): a smooth version of the AbsCriterion;
@@ -331,6 +332,23 @@ target = torch.Tensor{{1, 3, 0, 0}, {4, 0, 0, 0}} -- zero-values are ignored
 criterion:forward(input, target)
 ```
 
+<a name="nn.MultiLabelSoftMarginCriterion"/>
+## MultiLabelSoftMarginCriterion ##
+
+```lua
+criterion = nn.MultiLabelSoftMarginCriterion()
+```
+
+Creates a criterion that optimizes a multi-label one-versus-all loss based on max-entropy, between input `x`  (a 1D `Tensor`) and target `y` (a binary 1D `Tensor`):
+
+```lua
+loss(x, y) = - sum_i (y[i] log( exp(x[i]) / (1 + exp(x[i]))) + (1-y[i]) log(1/(1+exp(x[i])))) / x:nElement()
+```
+
+where `i == 1` to `x:nElement()`, `y[i]  in {0,1}`.
+Note that this criterion also works with 2D inputs and targets.
+
+`y` and `x` must have the same size.
 
 <a name="nn.MSECriterion"></a>
 ## MSECriterion ##
@@ -392,14 +410,14 @@ output = mc:forward(input, target)
 criterion = nn.ParallelCriterion([repeatTarget])
 ```
 
-This returns a Criterion which is a weighted sum of other Criterion. 
+This returns a Criterion which is a weighted sum of other Criterion.
 Criterions are added using the method:
 
 ```lua
 criterion:add(singleCriterion [, weight])
 ```
 
-where `weight` is a scalar (default 1). The criterion expects an `input` and `target` table. 
+where `weight` is a scalar (default 1). The criterion expects an `input` and `target` table.
 Each criterion is applied to the commensurate `input` and `target` element in the tables.
 However, if `repeatTarget=true`, the `target` is repeatedly presented to each criterion (with a different `input`).
 
