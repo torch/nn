@@ -1114,6 +1114,15 @@ function nntest.MSECriterion()
    criterionJacobianTest1D(cri, input, target)
 end
 
+function nntest.ClassSimplexCriterion()
+   local nClasses = torch.random(3,15)
+   local input = torch.rand(nClasses)
+   local target = torch.random(1,nClasses)
+   local cri = nn.ClassSimplexCriterion(nClasses)
+   criterionJacobianTest1D(cri, input, target)
+end
+
+
 function nntest.MarginCriterion()
    local input = torch.rand(100)
    local target = input:clone():add(torch.rand(100))
