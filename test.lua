@@ -146,7 +146,7 @@ function nntest.CMul()
    for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
       mytester:assertlt(err, precision, string.format('error on weight [%s]', t))
    end
-   
+
    -- Non-contiguous input or gradOutput
    local testModule = nn.CMul(4, 3, 5)
    local testInput = torch.rand(10, 3, 5):resize(10, 1, 3, 5):expand(10, 4, 3, 5)
@@ -159,7 +159,7 @@ function nntest.CMul()
    local testGradInput = testModule:backward(testOutput, testGradOutput)
 
    mytester:assert(testGradInput:isSameSizeAs(testGradOutput), 'CMul non-contiguous backward err')
-    
+
    -- IO
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
@@ -1313,6 +1313,26 @@ function nntest.ClassNLLCriterion()
    weights = weights / weights:sum()
    cri = nn.ClassNLLCriterion(weights)
    criterionJacobianTest1D(cri, input, target)
+end
+
+function nntest.MultiLabelSoftMarginCriterion()
+    local cri = nn.MultiLabelSoftMarginCriterion()
+
+    -- stochastic
+    local numLabels = math.random(5, 10)
+    local input = torch.randn(numLabels)
+    local target = torch.round(torch.rand(numLabels))
+
+    criterionJacobianTest1D(cri, input, target)
+
+    -- batch
+    local numLabels = math.random(5, 10)
+    local bsz = math.random(3, 7)
+    local input = torch.randn(bsz, numLabels)
+    local target = torch.round(torch.rand(bsz, numLabels))
+
+    criterionJacobianTest1D(cri, input, target)
+
 end
 
 function nntest.CrossEntropyCriterion()
