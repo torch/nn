@@ -180,7 +180,7 @@ The `input` given through a `forward()` is expected to be the output of a Normal
 
 This Criterion is best used in combination with a neural network where the last layers are:
 - a weight-normalized bias-less Linear layer. [Example source code](https://gist.github.com/soumith/4d0273f592956199739b)
-- followed by an output normalization layer. [Example source code](https://gist.github.com/soumith/317f558ec5c0ca746875)
+- followed by an output normalization layer (nn.Normalize).
 
 The loss is described in detail in the paper [Scale-invariant learning and convolutional networks](http://arxiv.org/abs/1506.08230).
 
@@ -194,7 +194,7 @@ nHidden = 100
 mlp = nn.Sequential()
 mlp:add(nn.Linear(nInput, nHidden)):add(nn.ReLU())
 mlp:add(nn.NormalizedLinearNoBias(nHidden, nClasses))
-mlp:add(nn.L2Normalize())
+mlp:add(nn.Normalize(2))
 
 criterion = nn.ClassSimplexCriterion(nClasses)
 
@@ -208,7 +208,7 @@ function gradUpdate(mlp, x, y, learningRate)
 end
 ```
 
-This criterion also provides two helper functions `getPredictions(input)` and `getTopPrediction(input)` that return the raw predictions and the top prediction index respectively, given an input
+This criterion also provides two helper functions `getPredictions(input)` and `getTopPrediction(input)` that return the raw predictions and the top prediction index respectively, given an input sample.
 
 <a name="nn.DistKLDivCriterion"></a>
 ## DistKLDivCriterion ##
