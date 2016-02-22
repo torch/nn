@@ -22,13 +22,24 @@ end
 
 function SpatialMaxUnpooling:updateOutput(input)
   self:setParams()
-  input.nn.SpatialMaxUnpooling_updateOutput(self, input)
+  input.THNN.SpatialMaxUnpooling_updateOutput(
+    input:cdata(),
+    self.output:cdata(),
+    self.indices:cdata(),
+    self.owidth, self.oheight
+  )
   return self.output
 end
 
 function SpatialMaxUnpooling:updateGradInput(input, gradOutput)
   self:setParams()
-  input.nn.SpatialMaxUnpooling_updateGradInput(self, input, gradOutput)
+  input.THNN.SpatialMaxUnpooling_updateGradInput(
+    input:cdata(),
+    gradOutput:cdata(),
+    self.gradInput:cdata(),
+    self.indices:cdata(),
+    self.owidth, self.oheight
+  )
   return self.gradInput
 end
 

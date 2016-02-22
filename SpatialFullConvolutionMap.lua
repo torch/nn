@@ -48,15 +48,44 @@ function SpatialFullConvolutionMap:reset(stdv)
 end
 
 function SpatialFullConvolutionMap:updateOutput(input)
-   input.nn.SpatialFullConvolutionMap_updateOutput(self, input)
+   input.THNN.SpatialFullConvolutionMap_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.connTable:cdata(),
+      self.nInputPlane,
+      self.nOutputPlane,
+      self.dW, self.dH
+   )
    return self.output
 end
 
 function SpatialFullConvolutionMap:updateGradInput(input, gradOutput)
-   input.nn.SpatialFullConvolutionMap_updateGradInput(self, input, gradOutput)
+   input.THNN.SpatialFullConvolutionMap_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.weight:cdata(),
+      self.bias:cdata(),
+      self.connTable:cdata(),
+      self.nInputPlane,
+      self.nOutputPlane,
+      self.dW, self.dH
+   )
    return self.gradInput
 end
 
 function SpatialFullConvolutionMap:accGradParameters(input, gradOutput, scale)
-   return input.nn.SpatialFullConvolutionMap_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.SpatialFullConvolutionMap_accGradParameters(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradWeight:cdata(),
+      self.gradBias:cdata(),
+      self.connTable:cdata(),
+      self.nInputPlane,
+      self.nOutputPlane,
+      self.dW, self.dH,
+      scale or 1
+   )
 end

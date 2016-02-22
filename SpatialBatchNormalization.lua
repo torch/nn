@@ -29,6 +29,7 @@
 
 ]]--
 local BN,parent = torch.class('nn.SpatialBatchNormalization', 'nn.Module')
+local THNN = require 'nn.THNN'
 
 BN.__version = 2
 
@@ -80,18 +81,18 @@ function BN:updateOutput(input)
    self.save_std = self.save_std or input.new()
    self.save_std:resizeAs(self.running_var)
 
-   input.nn.SpatialBatchNormalization_updateOutput(
-      input,
-      self.output,
-      self.weight,
-      self.bias,
+   input.THNN.SpatialBatchNormalization_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      THNN.optionalTensor(self.weight),
+      THNN.optionalTensor(self.bias),
+      self.running_mean:cdata(),
+      self.running_var:cdata(),
+      self.save_mean:cdata(),
+      self.save_std:cdata(),
       self.train,
-      self.eps,
       self.momentum,
-      self.running_mean,
-      self.running_var,
-      self.save_mean,
-      self.save_std)
+      self.eps)
 
    return self.output
 end
@@ -107,15 +108,15 @@ local function backward(self, input, gradOutput, scale, gradInput, gradWeight, g
       gradInput:resizeAs(gradOutput)
    end
 
-   input.nn.SpatialBatchNormalization_backward(
-      input,
-      gradOutput,
-      gradInput,
-      gradWeight,
-      gradBias,
-      self.weight,
-      self.save_mean,
-      self.save_std,
+   input.THNN.SpatialBatchNormalization_backward(
+      input:cdata(),
+      gradOutput:cdata(),
+      THNN.optionalTensor(gradInput),
+      THNN.optionalTensor(gradWeight),
+      THNN.optionalTensor(gradBias),
+      THNN.optionalTensor(self.weight),
+      self.save_mean:cdata(),
+      self.save_std:cdata(),
       scale)
 
    return self.gradInput

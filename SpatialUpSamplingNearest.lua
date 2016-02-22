@@ -47,12 +47,21 @@ function SpatialUpSamplingNearest:updateOutput(input)
    else
      self.output:resize(self.outputSize)
    end
-   input.nn.SpatialUpSamplingNearest_updateOutput(self, input)
+   input.THNN.SpatialUpSamplingNearest_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.scale_factor
+   )
    return self.output
 end
 
 function SpatialUpSamplingNearest:updateGradInput(input, gradOutput)
    self.gradInput:resizeAs(input)
-   input.nn.SpatialUpSamplingNearest_updateGradInput(self, input, gradOutput)
+   input.THNN.SpatialUpSamplingNearest_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.scale_factor
+   )
    return self.gradInput
 end

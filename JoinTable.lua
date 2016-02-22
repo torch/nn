@@ -8,11 +8,18 @@ function JoinTable:__init(dimension, nInputDims)
    self.nInputDims = nInputDims
 end
 
-function JoinTable:updateOutput(input)
+function JoinTable:_getPositiveDimension(input)
    local dimension = self.dimension
-   if self.nInputDims and input[1]:dim()==(self.nInputDims+1) then
-       dimension = dimension + 1
+   if dimension < 0 then
+      dimension = input:dim() + dimension + 1
+   elseif self.nInputDims and input[1]:dim()==(self.nInputDims+1) then
+      dimension = dimension + 1
    end
+   return dimension
+end
+
+function JoinTable:updateOutput(input)
+   local dimension = self:_getPositiveDimension(input)
 
    for i=1,#input do
       local currentOutput = input[i]
@@ -36,10 +43,7 @@ function JoinTable:updateOutput(input)
 end
 
 function JoinTable:updateGradInput(input, gradOutput)
-   local dimension = self.dimension
-   if self.nInputDims and input[1]:dim()==(self.nInputDims+1) then
-       dimension = dimension + 1
-   end
+   local dimension = self:_getPositiveDimension(input)
 
    for i=1,#input do
       if self.gradInput[i] == nil then

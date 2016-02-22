@@ -1,10 +1,15 @@
+local THNN = require 'nn.THNN'
 local MultiMarginCriterion, parent = torch.class('nn.MultiMarginCriterion', 'nn.Criterion')
 
-function MultiMarginCriterion:__init(p)
+function MultiMarginCriterion:__init(p, weights)
    assert(p == nil or p == 1 or p == 2, 'only p=1 and p=2 supported')
    self.p = p or 1
    parent.__init(self)
    self.sizeAverage = true
+   if weights then
+       assert(weights:dim() == 1, "weights input should be 1-D Tensor")
+       self.weights = weights
+   end
 end
 
 function MultiMarginCriterion:updateOutput(input, target)
@@ -21,7 +26,8 @@ function MultiMarginCriterion:updateOutput(input, target)
       target:cdata(),
       self.output_tensor:cdata(),
       self.sizeAverage,
-      self.p
+      self.p,
+      THNN.optionalTensor(self.weights)
    )
    self.output = self.output_tensor[1]
    return self.output
@@ -38,7 +44,8 @@ function MultiMarginCriterion:updateGradInput(input, target)
       target:cdata(),
       self.gradInput:cdata(),
       self.sizeAverage,
-      self.p
+      self.p,
+      THNN.optionalTensor(self.weights)
    )
    return self.gradInput
 end
