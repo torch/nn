@@ -12,7 +12,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
   * [Spatial Modules](#nn.SpatialModules) apply to inputs with two-dimensional relationships (e.g. images):
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
     * [SpatialFullConvolution](#nn.SpatialFullConvolution) : a 2D full convolution over an input image ;
-    * [SpatialConvolutionLocal](#nn.SpatialConvolutionLocal) : a 2D locally-connected layer over an input image ; 
+    * [SpatialConvolutionLocal](#nn.SpatialConvolutionLocal) : a 2D locally-connected layer over an input image ;
     * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
     * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
@@ -190,20 +190,18 @@ output[i][t] = bias[i] + weight[i] * sum_{k=1}^kW input[i][dW*(t-1)+k)]
 ## LookupTable ##
 
 ```lua
-module = nn.LookupTable(nIndex, sizes)
-```
-or
-```lua
-module = nn.LookupTable(nIndex, size1, [size2], [size3], ...)
+module = nn.LookupTable(nIndex, size, [paddingValue])
 ```
 
 This layer is a particular case of a convolution, where the width of the convolution would be `1`.
 When calling `forward(input)`, it assumes `input` is a 1D or 2D tensor filled with indices.
 If the input is a matrix, then each row is assumed to be an input sample of given batch. Indices start
 at `1` and can go up to `nIndex`. For each index, it outputs a corresponding `Tensor` of size
-specified by `sizes` (a `LongStorage`) or `size1 x size2 x...`.
+specified by `size`.
 
-Given a 1D input, the output tensors are concatenated,
+LookupTable can be very slow if a certain input occurs frequently compared to other inputs;
+this is often the case for input padding. During the backward step, there is a separate thread
+for each input symbol which results in a bottleneck for frequent inputs.
 generating a `n x size1 x size2 x ... x sizeN` tensor, where `n`
 is the size of a 1D `input` tensor.
 
@@ -212,7 +210,7 @@ performing the following matrix-matrix multiplication in an efficient manner:
 ```lua
 M P
 ```
-where `M` is a 2D matrix `size1 x nIndex` containing the parameters of the lookup-table and
+where `M` is a 2D matrix `size x nIndex` containing the parameters of the lookup-table and
 `P` is a 2D matrix, where each column vector `i` is a zero vector except at index `input[i]` where it is `1`.
 
 1D example:
@@ -234,7 +232,7 @@ Outputs something like:
 ```
 Note that the first row vector is the same as the 3rd one!
 
-Given a 2D input tensor of size `m x n`, the output is a `m x n x size1 x size2 x ... x sizeN`
+Given a 2D input tensor of size `m x n`, the output is a `m x n x size`
 tensor, where `m` is the number of samples in
 the batch and `n` is the number of indices per sample.
 
@@ -415,7 +413,7 @@ The parameters are the following:
   * `dH`: The step in the height dimension. Default is `1`.
   * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
   * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
- 
+
 If the input image is a 3D tensor `nInputPlane x iH x iW`, the output image size
 will be `nOutputPlane x oH x oW` where
 ```lua
@@ -769,7 +767,7 @@ The parameters are the following:
   * `padT`: The additional zeros added per time to the input planes. Default is `0`, a good number is `(kT-1)/2`.
   * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
   * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
- 
+
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to

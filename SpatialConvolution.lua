@@ -34,12 +34,16 @@ function SpatialConvolution:reset(stdv)
       self.weight:apply(function()
          return torch.uniform(-stdv, stdv)
       end)
-      self.bias:apply(function()
+      if self.bias then
+         self.bias:apply(function()
          return torch.uniform(-stdv, stdv)
-      end)
+         end)
+      end
    else
       self.weight:uniform(-stdv, stdv)
-      self.bias:uniform(-stdv, stdv)
+      if self.bias then
+         self.bias:uniform(-stdv, stdv)
+      end
    end
 end
 
@@ -81,14 +85,14 @@ end
 -- function to re-view the weight layout in a way that would make the MM ops happy
 local function viewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then 
+   if self.gradWeight and self.gradWeight:dim() > 0 then
       self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
    end
 end
 
 local function unviewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then 
+   if self.gradWeight and self.gradWeight:dim() > 0 then
       self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
    end
 end
@@ -176,4 +180,3 @@ function SpatialConvolution:clearState()
    nn.utils.clear(self, 'finput', 'fgradInput', '_input', '_gradOutput')
    return parent.clearState(self)
 end
-

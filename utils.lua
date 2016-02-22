@@ -64,8 +64,8 @@ function nn.utils.recursiveType(param, type, tensorCache)
                   param:size(),
                   param:stride()
                )
-               tensorCache[param] = newparam
             end
+            tensorCache[param] = newparam
          end
          assert(torch.type(newparam) == type)
          param = newparam

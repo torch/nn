@@ -3,11 +3,12 @@ local LookupTable, parent = torch.class('nn.LookupTable', 'nn.Module')
 
 LookupTable.__version = 4
 
-function LookupTable:__init(nIndex, nOutput)
+function LookupTable:__init(nIndex, nOutput, paddingValue)
    parent.__init(self)
 
    self.weight = torch.Tensor(nIndex, nOutput)
    self.gradWeight = torch.Tensor(nIndex, nOutput):zero()
+   self.paddingValue = paddingValue or 0
 
    self:reset()
 end
@@ -24,6 +25,11 @@ end
 function LookupTable:accUpdateOnly()
    self.gradWeight = nil
    return self
+end
+
+function LookupTable:setPadding(paddingValue)
+    self.paddingValue = paddingValue
+    return self
 end
 
 function LookupTable:scaleGradByFreq()
@@ -70,6 +76,12 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
       error("input must be a vector or matrix")
    end
 
+   if not gradOutput:isContiguous() then
+       self._gradOutput = self._gradOutput or gradOutput.new()
+       self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
+       gradOutput = self._gradOutput
+   end
+
    self.gradWeight.THNN.LookupTable_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),
@@ -78,6 +90,7 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
       THNN.optionalTensor(self._sorted),
       THNN.optionalTensor(self._indices),
       self.shouldScaleGradByFreq or false,
+      self.paddingValue or 0,
       scale or 1
    )
 end
@@ -101,6 +114,7 @@ function LookupTable:type(type, tensorCache)
 end
 
 function LookupTable:clearState()
+   self._gradOutput = nil
    return self
 end
 
