@@ -10,7 +10,6 @@ function SparseLinear:__init(inputSize, outputSize)
    self.gradWeight = torch.Tensor(outputSize, inputSize):zero()
    self.gradBias = torch.Tensor(outputSize):zero()
    self.lastInput = nil
-   self.cudaBuffer = torch.Tensor()
 
    if torch.getnumthreads() > 1 and outputSize >= 128 then
      self.shardBuffer = torch.Tensor(outputSize, torch.getnumthreads())
@@ -43,6 +42,8 @@ function SparseLinear:reset(stdv)
 end
 
 function SparseLinear:updateOutput(input)
+   self.cudaBuffer = self.cudaBuffer or input.new()
+
    input.THNN.SparseLinear_updateOutput(
       input:cdata(),
       self.output:cdata(),
@@ -114,5 +115,6 @@ end
 
 function SparseLinear:clearState()
    if self.lastInput then self.lastInput:set() end
+   if self.cudaBuffer then self.cudaBuffer:set() end
    return parent.clearState(self)
 end
