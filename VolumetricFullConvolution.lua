@@ -1,58 +1,97 @@
-local VolumetricFullConvolution, parent = torch.class('nn.VolumetricFullConvolution', 'nn.Module')
+local VolumetricFullConvolution, parent = torch.class('nn.VolumetricFullConvolution','nn.Module')
 
-function VolumetricFullConvolution:__init(nInputPlane, nOutputPlane, kT, kH, kW, dT, dH, dW, pT, pH, pW)
+function VolumetricFullConvolution:__init(nInputPlane, nOutputPlane,
+                                          kT, kW, kH,         -- kernel size
+                                          dT, dW, dH,         -- stride
+                                          padT, padW, padH,   -- padding
+                                          adjT, adjW, adjH)   -- extra output adjustment
    parent.__init(self)
 
-   dT = dT or 1
    dW = dW or 1
    dH = dH or 1
-
-   pT = pT or 0
-   pW = pW or 0
-   pH = pH or 0
+   dT = dT or 1
 
    self.nInputPlane = nInputPlane
    self.nOutputPlane = nOutputPlane
-   self.kT = kT
    self.kW = kW
    self.kH = kH
-   self.dT = dT
+   self.kT = kT
    self.dW = dW
    self.dH = dH
-   self.pT = pT
-   self.pW = pW
-   self.pH = pH
+   self.dT = dT
+   self.padW = padW or 0
+   self.padH = padH or 0
+   self.padT = padT or 0
+   self.adjW = adjW or 0
+   self.adjH = adjH or 0
+   self.adjT = adjT or 0
 
-   self.weight = torch.Tensor(nOutputPlane, nInputPlane, kT, kH, kW)
-   self.bias = torch.Tensor(nOutputPlane)
-   self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane, kT, kH, kW)
-   self.gradBias = torch.Tensor(nOutputPlane)
+   if self.adjW > self.dW - 1 or self.adjH > self.dH - 1 or self.adjT > self.dT - 1 then
+      error('adjW, adjH and adjT must be smaller than self.dW - 1,' ..
+            ' self.dH - 1 and self.dT - 1 respectively')
+   end
+
+   self.weight = torch.Tensor(nInputPlane, nOutputPlane, kT, kH, kW)
+   self.gradWeight = torch.Tensor(nInputPlane, nOutputPlane, kT, kH, kW)
+   self.bias = torch.Tensor(self.nOutputPlane)
+   self.gradBias = torch.Tensor(self.nOutputPlane)
+
+   self.finput = torch.Tensor()
+   self.fgradInput = torch.Tensor()
+
    self:reset()
 end
 
 function VolumetricFullConvolution:reset(stdv)
-  -- initialization of parameters
    if stdv then
       stdv = stdv * math.sqrt(3)
    else
-      stdv = 1/math.sqrt(self.kT*self.kW*self.kH*self.nInputPlane)
+      local nInputPlane = self.nInputPlane
+      local kT = self.kT
+      local kH = self.kH
+      local kW = self.kW
+      stdv = 1/math.sqrt(kW*kH*kT*nInputPlane)
    end
-   if nn.oldSeed then
-      self.weight:apply(function()
-         return torch.uniform(-stdv, stdv)
-      end)
-      self.bias:apply(function()
-         return torch.uniform(-stdv, stdv)
-      end)
-   else
-      self.weight:uniform(-stdv, stdv)
-      self.bias:uniform(-stdv, stdv)
+   self.weight:uniform(-stdv, stdv)
+   self.bias:uniform(-stdv, stdv)
+end
+
+local function makeContiguous(self, input, gradOutput)
+   if not input:isContiguous() then
+      self._input = self._input or input.new()
+      self._input:resizeAs(input):copy(input)
+      input = self._input
    end
+   if gradOutput then
+      if not gradOutput:isContiguous() then
+         self._gradOutput = self._gradOutput or gradOutput.new()
+         self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
+         gradOutput = self._gradOutput
+     end
+   end
+   return input, gradOutput
+end
+
+function VolumetricFullConvolution:backCompatibility()
+   -- Transpose the weight when loading from an old version
+   if not self.adjW then
+      self.weight = self.weight:transpose(1, 2):contiguous()
+   end
+
+   -- Rename the padding when loading from an old version
+   self.padW = self.padW or self.pW
+   self.padH = self.padH or self.pH
+   self.padT = self.padT or self.pT
+
+   self.adjW = self.adjW or 0
+   self.adjH = self.adjH or 0
+   self.adjT = self.adjT or 0
 end
 
 function VolumetricFullConvolution:updateOutput(input)
-   self.finput = self.finput or input.new()
-   self.fgradInput = self.fgradInput or input.new()
+   self:backCompatibility()
+
+   input = makeContiguous(self, input)
    input.THNN.VolumetricFullConvolution_updateOutput(
       input:cdata(),
       self.output:cdata(),
@@ -61,12 +100,17 @@ function VolumetricFullConvolution:updateOutput(input)
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
-      self.pT, self.pW, self.pH
+      self.padT, self.padW, self.padH,
+      self.adjT, self.adjW, self.adjH
    )
+
    return self.output
 end
 
 function VolumetricFullConvolution:updateGradInput(input, gradOutput)
+   self:backCompatibility()
+
+   input, gradOutput = makeContiguous(self, input, gradOutput)
    input.THNN.VolumetricFullConvolution_updateGradInput(
       input:cdata(),
       gradOutput:cdata(),
@@ -75,12 +119,16 @@ function VolumetricFullConvolution:updateGradInput(input, gradOutput)
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
-      self.pT, self.pW, self.pH
+      self.padT, self.padW, self.padH,
+      self.adjT, self.adjW, self.adjH
    )
    return self.gradInput
 end
 
 function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
+   self:backCompatibility()
+
+   input, gradOutput = makeContiguous(self, input, gradOutput)
    input.THNN.VolumetricFullConvolution_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),
@@ -89,7 +137,29 @@ function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
-      self.pT, self.pW, self.pH,
+      self.padT, self.padW, self.padH,
+      self.adjT, self.adjW, self.adjH,
       scale or 1
    )
+end
+
+function VolumetricFullConvolution:type(type, tensorCache)
+   self.finput = torch.Tensor()
+   self.fgradInput = torch.Tensor()
+   return parent.type(self, type, tensorCache)
+end
+
+function VolumetricFullConvolution:__tostring__()
+   local s = string.format('%s(%d -> %d, %dx%dx%d', torch.type(self),
+   self.nInputPlane, self.nOutputPlane, self.kW, self.kH, self.kT)
+   if self.dW ~= 1 or self.dH ~= 1 or self.dT ~= 1 or self.padW ~= 0 or self.padH ~= 0 or self.padT ~= 0 then
+      s = s .. string.format(', %d,%d,%d', self.dW, self.dH, self.dT)
+   end
+   if (self.padW or self.padH or self.padT) and (self.padW ~= 0 or self.padH ~= 0 or self.padT ~= 0) then
+      s = s .. ', ' .. self.padW .. ',' .. self.padH .. ',' .. self.padT
+   end
+   if (self.adjW or self.adjH or self.adjT) and (self.adjW ~= 0 or self.adjH ~= 0 or self.adjT ~= 0) then
+      s = s .. ', ' .. self.adjW .. ',' .. self.adjH .. ',' .. self.adjT
+   end
+   return s .. ')'
 end

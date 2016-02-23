@@ -3270,6 +3270,7 @@ function nntest.VolumetricFullConvolution_simple_test()
         end
     end
 
+    module:zeroGradParameters()
     local gradOut = torch.Tensor(1, 1, 6, 6, 6):fill(0.1);
     local gradIn = module:backward(input, gradOut)
     for t = 1,2 do
@@ -3287,7 +3288,7 @@ function nntest.VolumetricFullConvolution_simple_test()
         for t = 1,3 do
             for h = 1,3 do
                 for w = 1,3 do
-                    mytester:assertlt(module.gradWeight[1][c][t][h][w] - 0.1, precision,
+                    mytester:assertlt(module.gradWeight[c][1][t][h][w] - 0.1, precision,
                                       'error on backward weight gradients ')
                 end
             end
