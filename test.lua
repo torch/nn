@@ -833,45 +833,36 @@ function nntest.Bilinear()
    local input  = {torch.randn(N, D1), torch.randn(N, D2)}
    local target = torch.randn(N, K)
 
-   -- test forward-backward pass:
-   local network = nn.Sequential():add(nn.Bilinear(D1, D2, K))
-   local crit = nn.MSECriterion()
-   crit:forward(network:forward(input), target)
-   network:backward(input, crit:backward(network.output, target))
-
-   -- function for gradient checking (nn.Jacobian does not work with tables):
-   local function checkGradient(perturbation)
-
-      -- prepare some variables:
-      local perturbation = perturbation or 1e-6
-      network:zeroGradParameters()
-      local param, actual = network:getParameters()  -- flattened parameters
-
-      -- loop over all to numerically approximate true Jacobian:
-      local expected = param.new(param:nElement())
-      for i = 1,param:nElement() do
-         local orig = param[i]
-         param[i] = orig - perturbation
-         local outa = crit:forward(network:forward(input), target)
-         param[i] = orig + perturbation
-         local outb = crit:forward(network:forward(input), target)
-         param[i] = orig
-         expected[i] = (outb - outa) / (2 * perturbation)
-      end
-
-      -- compute Jacobian using the model:
-      network:zeroGradParameters()
-      crit:forward(network:forward(input), target)
-      network:backward(input, crit:backward(network.output, target))
-
-      -- compute error in Jacobian:
-      local error = (actual - expected):abs():max()
-      local expmax = expected:clone():abs():max()
-      return ((error ~= 0) and (error / expmax) or 0), actual, expected
+   -- test forward
+   local module = nn.Bilinear(D1, D2, K)
+   local expected = torch.zeros(N,K)
+   for k = 1, K do
+      local temp = torch.mm(module.weight[k], input[2]:t())
+      temp:cmul(input[1]:t())
+      temp = temp:sum(1)
+      temp:add(module.bias[k])
+      expected[{{},k}] = temp:view(-1)
    end
+   local output = module:forward(input)
+   mytester:assertTensorEq(expected, output, 0.000001, 'Bilinear forward 2D err')
+   
+   -- For testing grads we'll follow the nn.DotProduct strategy of using a SplitTable
+   local input2 = torch.randn(2, N, D1)
+   local module2 = nn.Sequential()
+   module2:add(nn.SplitTable(1))
+   module2:add(nn.ParallelTable():add(nn.Linear(D1,D1)):add(nn.Linear(D1,D2)))
+   module2:add(nn.Bilinear(D1, D2, K))
+   module2:add(nn.Linear(K,1))
+   
+   local err = jac.testJacobian(module2, input2)
+   mytester:assertlt(err, precision, 'error on state ')
 
-   -- perform gradient check:
-   mytester:assertlt(checkGradient(1e-9), 1e-4)
+   local err = jac.testJacobianParameters(module2, input2, module2:get(3).weight, module2:get(3).gradWeight)
+   mytester:assertlt(err, precision, 'error on weight ')
+
+   local err = jac.testJacobianParameters(module2, input2, module2:get(3).bias, module2:get(3).gradBias)
+   mytester:assertlt(err, precision, 'error on bias ')
+
 end
 
 function nntest.Euclidean()

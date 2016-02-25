@@ -62,15 +62,15 @@ function Bilinear:updateOutput(input)
    self:__assertInput(input)
 
    -- set up buffer:
-   self.buff = self.buff or input[1].new()
-   self.buff:resizeAs(input[2])
+   self.buff2 = self.buff2 or input[1].new()
+   self.buff2:resizeAs(input[2])
 
    -- compute output scores:
    self.output:resize(input[1]:size(1), self.weight:size(1))
    for k = 1,self.weight:size(1) do
-      torch.mm(self.buff, input[1], self.weight[k])
-      self.buff:cmul(input[2])
-      torch.sum(self.output:narrow(2, k, 1), self.buff, 2)
+      torch.mm(self.buff2, input[1], self.weight[k])
+      self.buff2:cmul(input[2])
+      torch.sum(self.output:narrow(2, k, 1), self.buff2, 2)
    end
    if self.bias then
        self.output:add(
@@ -84,27 +84,35 @@ function Bilinear:updateGradInput(input, gradOutput)
    assert(self)
    if self.gradInput then
       self:__assertInputGradOutput(input, gradOutput)
-
       -- compute d output / d input:
       self.gradInput[1]:resizeAs(input[1]):fill(0)
       self.gradInput[2]:resizeAs(input[2]):fill(0)
-      if torch.type(self.weight, 'torch.CudaTensor') then
-         for k = 1,self.weight:size(1) do
-            torch.addmm(self.gradInput[1], input[2], self.weight[k]:t())
-            torch.addmm(self.gradInput[2], input[1], self.weight[k])
-         end  -- TODO: Remove this once cutorch gets addbmm() function
-      else
-         self.gradInput[1]:addbmm(
-            input[2]:view(1, input[2]:size(1), input[2]:size(2)):expand(
-               self.weight:size(1), input[2]:size(1), input[2]:size(2)
-            ),
-            self.weight:transpose(2, 3)
-         )
-         self.gradInput[2]:addbmm(
-            input[1]:view(1, input[1]:size(1), input[1]:size(2)):expand(
-               self.weight:size(1), input[1]:size(1), input[1]:size(2)
-            ), self.weight
-         )
+
+
+       -- do first slice of weight tensor (k = 1)
+      self.gradInput[1]:mm(input[2], self.weight[1]:t())
+      self.gradInput[1]:cmul(gradOutput:narrow(2,1,1):expand(self.gradInput[1]:size(1),
+          self.gradInput[1]:size(2)))  
+      self.gradInput[2]:addmm(1, input[1], self.weight[1])
+      self.gradInput[2]:cmul(gradOutput:narrow(2,1,1):expand(self.gradInput[2]:size(1),
+          self.gradInput[2]:size(2)))
+      
+      -- do remaining slices of weight tensor
+      if self.weight:size(1) > 1 then
+         self.buff1 = self.buff1 or input[1].new()
+         self.buff1:resizeAs(input[1])
+            
+         for k = 2, self.weight:size(1) do
+            self.buff1:mm(input[2], self.weight[k]:t())
+            self.buff1:cmul(gradOutput:narrow(2,k,1):expand(self.gradInput[1]:size(1), 
+              self.gradInput[1]:size(2)))
+            self.gradInput[1]:add(self.buff1)
+
+            self.buff2:mm(input[1], self.weight[k])
+            self.buff2:cmul(gradOutput:narrow(2,k,1):expand(self.gradInput[2]:size(1),
+              self.gradInput[2]:size(2)))
+            self.gradInput[2]:add(self.buff2)
+         end
       end
       return self.gradInput
    end
@@ -116,15 +124,15 @@ function Bilinear:accGradParameters(input, gradOutput, scale)
    assert(scale and type(scale) == 'number' and scale >= 0)
 
    -- make sure we have buffer:
-   self.buff = self.buff or input[1].new()
-   self.buff:resizeAs(input[2])
+   self.buff1 = self.buff1 or input[1].new()
+   self.buff1:resizeAs(input[1])
 
    -- accumulate parameter gradients:
    for k = 1,self.weight:size(1) do
       torch.cmul(
-         self.buff, input[1], gradOutput:narrow(2, k, 1):expandAs(input[1])
+         self.buff1, input[1], gradOutput:narrow(2, k, 1):expandAs(input[1])
       )
-      self.gradWeight[k]:addmm(self.buff:t(), input[2])
+      self.gradWeight[k]:addmm(self.buff1:t(), input[2])
    end
    if self.bias then self.gradBias:add(scale, gradOutput:sum(1)) end
 end
@@ -142,6 +150,7 @@ function Bilinear:__tostring__()
 end
 
 function Bilinear:clearState()
-   if self.buff then self.buff:set() end
+   if self.buff2 then self.buff2:set() end
+   if self.buff1 then self.buff1:set() end
    return parent.clearState(self)
 end
