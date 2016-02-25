@@ -22,6 +22,8 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
     * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
     * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
+    * [SpatialReflectionPadding](#nn.SpatialReflectionPadding) : padds a feature map with the reflection of the input ;
+    * [SpatialReplicationPadding](#nn.SpatialReplicationPadding) : padds a feature map with the value at the edge of the input borders ;
     * [SpatialSubtractiveNormalization](#nn.SpatialSubtractiveNormalization) : a spatial subtraction operation on a series of 2D inputs using
     * [SpatialCrossMapLRN](#nn.SpatialCrossMapLRN) : a spatial local response normalization between feature maps ;
     * [SpatialBatchNormalization](#nn.SpatialBatchNormalization): mean/std normalization over the mini-batch inputs and pixels, with an optional affine transform that follows
@@ -636,6 +638,24 @@ module = nn.SpatialZeroPadding(padLeft, padRight, padTop, padBottom)
 
 Each feature map of a given input is padded with specified number of
 zeros. If padding values are negative, then input is cropped.
+
+<a name="nn.SpatialReflectionPadding"></a>
+### SpatialReflectionPadding ###
+
+```lua
+module = nn.SpatialReflectionPadding(padLeft, padRight, padTop, padBottom)
+```
+
+Each feature map of a given input is padded with the reflection of the input boundary
+
+<a name="nn.SpatialReplicationPadding"></a>
+### SpatialReplicationPadding ###
+
+```lua
+module = nn.SpatialReplicationPadding(padLeft, padRight, padTop, padBottom)
+```
+
+Each feature map of a given input is padded with the replication of the input boundary
 
 <a name="nn.SpatialSubtractiveNormalization"></a>
 ### SpatialSubtractiveNormalization ###

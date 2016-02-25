@@ -5259,6 +5259,38 @@ function nntest.addSingletonDimension()
                         "invalid dimension not detected")
 end
 
+function nntest.SpatialReflectionPadding()
+   local batch = math.random(1,3)
+   local plane = math.random(1,3)
+   local sizeY = math.random(6,16)
+   local sizeX = math.random(6,16)
+   local padL = math.random(-3,3)
+   local padR = math.random(-3,3)
+   local padT = math.random(-3,3)
+   local padB = math.random(-3,3)
+   local jac = nn.Jacobian
+   local layer = nn.SpatialReflectionPadding(padL, padR, padT, padB)
+   local input = torch.rand(batch, plane, sizeY, sizeX)
+   local err = jac.testJacobian(layer, input)
+   mytester:assertalmosteq(err, 0.0, 1e-7)
+end
+
+function nntest.SpatialReplicationPadding()
+   local batch = math.random(1,3)
+   local plane = math.random(1,3)
+   local sizeY = math.random(6,16)
+   local sizeX = math.random(6,16)
+   local padL = math.random(-3,3)
+   local padR = math.random(-3,3)
+   local padT = math.random(-3,3)
+   local padB = math.random(-3,3)
+   local jac = nn.Jacobian
+   local layer = nn.SpatialReplicationPadding(padL, padR, padT, padB)
+   local input = torch.rand(batch, plane, sizeY, sizeX)
+   local err = jac.testJacobian(layer, input)
+   mytester:assertalmosteq(err, 0.0, 1e-7)
+end
+
 function nntest.Typecast()
   local function make_network()
     local seq = nn.Sequential()

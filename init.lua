@@ -105,6 +105,8 @@ require('nn.SpatialDivisiveNormalization')
 require('nn.SpatialContrastiveNormalization')
 require('nn.SpatialCrossMapLRN')
 require('nn.SpatialZeroPadding')
+require('nn.SpatialReflectionPadding')
+require('nn.SpatialReplicationPadding')
 require('nn.SpatialUpSamplingNearest')
 require('nn.SpatialBatchNormalization')
 
