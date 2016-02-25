@@ -12,7 +12,7 @@ function SparseLinear:__init(inputSize, outputSize)
    self.lastInput = nil
 
    if torch.getnumthreads() > 1 and outputSize >= 128 then
-     self.shardBuffer = torch.Tensor(outputSize, torch.getnumthreads())
+      self.shardBuffer = torch.Tensor(outputSize, torch.getnumthreads())
    end
 
    -- state
@@ -28,21 +28,21 @@ function SparseLinear:reset(stdv)
    else
       stdv = 1./math.sqrt(self.weight:size(2))
    end
-   if nn.oldSeed then
-      for i=1,self.weight:size(1) do
-         self.weight:select(1, i):apply(function()
-            return torch.uniform(-stdv, stdv)
-         end)
-         self.bias[i] = torch.uniform(-stdv, stdv) * 0.000001
-      end
+   self.weight:uniform(-stdv, stdv)
+   self.bias:uniform(-stdv, stdv):mul(0.000001)
+end
+
+function SparseLinear:reshapeInput(input)
+   if input:dim() == 2 then
+      return input:view(1, input:size(1), input:size(2)), false
    else
-      self.weight:uniform(-stdv, stdv)
-      self.bias:uniform(-stdv, stdv):mul(0.000001)
+      return input, true
    end
 end
 
 function SparseLinear:updateOutput(input)
    self.cudaBuffer = self.cudaBuffer or input.new()
+   local input, batchMode = self:reshapeInput(input)
 
    input.THNN.SparseLinear_updateOutput(
       input:cdata(),
@@ -52,14 +52,22 @@ function SparseLinear:updateOutput(input)
       self.cudaBuffer:cdata(),
       THNN.optionalTensor(self.shardBuffer)
    )
+
+   -- fix output size for batchSize = 1
+   if not batchMode then
+      self.output:set(self.output:view(self.output:size(2)))
+   end
+
    return self.output
 end
 
 function SparseLinear:accGradParameters(input, gradOutput, scale)
-   if not self.lastInput then
-      self.lastInput = input:clone()
-   else
-      self.lastInput:resizeAs(input):copy(input)
+   local input, batchMode = self:reshapeInput(input)
+
+   self.lastInput = self.lastInput or input.new()
+   self.lastInput:resizeAs(input):copy(input)
+   if not batchMode then
+      gradOutput = gradOutput:view(1, gradOutput:size(1))
    end
 
    input.THNN.SparseLinear_accGradParameters(
@@ -76,13 +84,22 @@ end
 
 function SparseLinear:updateGradInput(input, gradOutput)
    if self.gradInput then
-     input.THNN.SparseLinear_updateGradInput(
-        input:cdata(),
-        gradOutput:cdata(),
-        self.gradInput:cdata(),
-        self.weight:cdata()
-     )
-     return self.gradInput
+      local input, batchMode = self:reshapeInput(input)
+      if not batchMode then
+         gradOutput = gradOutput:view(1, gradOutput:size(1))
+      end
+      input.THNN.SparseLinear_updateGradInput(
+         input:cdata(),
+         gradOutput:cdata(),
+         self.gradInput:cdata(),
+         self.weight:cdata()
+      )
+      -- fix gradInput size for batchSize = 1
+      if not batchMode then
+         self.gradInput:set(self.gradInput:view(self.gradInput:size(2), self.gradInput:size(3)))
+      end
+
+      return self.gradInput
    end
 end
 
