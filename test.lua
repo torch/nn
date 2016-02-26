@@ -845,7 +845,7 @@ function nntest.Bilinear()
    end
    local output = module:forward(input)
    mytester:assertTensorEq(expected, output, 0.000001, 'Bilinear forward 2D err')
-   
+
    -- For testing grads we'll follow the nn.DotProduct strategy of using a SplitTable
    local input2 = torch.randn(2, N, D1)
    local module2 = nn.Sequential()
@@ -853,7 +853,7 @@ function nntest.Bilinear()
    module2:add(nn.ParallelTable():add(nn.Linear(D1,D1)):add(nn.Linear(D1,D2)))
    module2:add(nn.Bilinear(D1, D2, K))
    module2:add(nn.Linear(K,1))
-   
+
    local err = jac.testJacobian(module2, input2)
    mytester:assertlt(err, precision, 'error on state ')
 

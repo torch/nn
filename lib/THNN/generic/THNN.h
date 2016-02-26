@@ -205,7 +205,6 @@ TH_API void THNN_(MultiMarginCriterion_updateOutput)(
           int p,
           real margin,
           THTensor* weights);
-
 TH_API void THNN_(MultiMarginCriterion_updateGradInput)(
           THNNState *state,
           THTensor *input,
