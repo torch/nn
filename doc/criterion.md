@@ -329,13 +329,13 @@ By default, the losses are averaged over observations for each minibatch. Howeve
 ## MultiMarginCriterion ##
 
 ```lua
-criterion = nn.MultiMarginCriterion(p, [weights])
+criterion = nn.MultiMarginCriterion(p, [weights], [margin])
 ```
 
 Creates a criterion that optimizes a multi-class classification hinge loss (margin-based loss) between input `x`  (a `Tensor` of dimension 1) and output `y` (which is a target class index, `1` <= `y` <= `x:size(1)`):
 
 ```lua
-loss(x, y) = sum_i(max(0, (1 - x[y] - x[i]))^p) / x:size(1)
+loss(x, y) = sum_i(max(0, (margin - x[y] - x[i]))^p) / x:size(1)
 ```
 
 where `i == 1` to `x:size(1)` and `i ~= y`.
@@ -345,7 +345,7 @@ Optionally, you can give non-equal weighting on the classes by passing a 1D `wei
 The loss function then becomes:
 
 ```lua
-loss(x, y) = sum_i(max(0, w[y] * (1 - x[y] - x[i]))^p) / x:size(1)
+loss(x, y) = sum_i(max(0, w[y] * (margin - x[y] - x[i]))^p) / x:size(1)
 ```
 
 This criterion is especially useful for classification when used in conjunction with a module ending in the following output layer:

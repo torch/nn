@@ -1124,7 +1124,7 @@ end
 function nntest.MultiMarginCriterion()
    local input = torch.rand(100)
    local target = math.random(1,100)
-   local cri = nn.MultiMarginCriterion(math.random(1,2))
+   local cri = nn.MultiMarginCriterion(math.random(1,2), nil, 0.1)
    criterionJacobianTest1D(cri, input, target)
 
    local cri = nn.MultiMarginCriterion()
