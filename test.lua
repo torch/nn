@@ -5188,6 +5188,61 @@ function nntest.SpatialBatchNormalization()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.VolumetricBatchNormalization()
+   local nframes = torch.random(1,10)
+   local indim = torch.random(1,4)
+   local inh = torch.random(1,5)
+   local ini = torch.random(1,5)
+   local inj = torch.random(1,5)
+   local input = torch.zeros(nframes, indim, inh, ini, inj):uniform()
+   local module = nn.VolumetricBatchNormalization(indim)
+
+   local err = jac.testJacobian(module, input, -2, 4)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   local err = jac.testJacobianParameters(module, input,
+                                      module.weight, module.gradWeight, -2, 4)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = jac.testJacobianParameters(module, input,
+                                      module.bias, module.gradBias, -2, 4)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.weight, -2, 4)
+   mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+   local err = jac.testJacobianUpdateParameters(module, input, module.bias, -2, 4)
+   mytester:assertlt(err,precision, 'error on bias [direct update] ')
+
+   for t,err in pairs(jac.testAllUpdate(module, input,
+                                        'weight', 'gradWeight')) do
+      mytester:assertlt(err, precision, string.format(
+                           'error on weight [%s]', t))
+   end
+
+   for t,err in pairs(jac.testAllUpdate(module, input,
+                                        'bias', 'gradBias')) do
+      mytester:assertlt(err, precision, string.format(
+                           'error on bias [%s]', t))
+   end
+
+   -- IO
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+
+   -- batch norm without affine transform
+   module = nn.VolumetricBatchNormalization(indim, 1e-5, 0.1, false)
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   -- IO
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
 function nntest.GradientReversal()
    local ini = math.random(3,5)
    local inj = math.random(3,5)

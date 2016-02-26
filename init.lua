@@ -115,6 +115,7 @@ require('nn.VolumetricFullConvolution')
 require('nn.VolumetricMaxPooling')
 require('nn.VolumetricMaxUnpooling')
 require('nn.VolumetricAveragePooling')
+require('nn.VolumetricBatchNormalization')
 
 require('nn.ParallelTable')
 require('nn.ConcatTable')

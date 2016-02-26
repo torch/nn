@@ -35,7 +35,8 @@ a kernel for computing the weighted average in a neighborhood ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
     * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation ;
-
+    * [VolumetricBatchNormalization](#nn.VolumetricBatchNormalization): mean/std normalization over the mini-batch inputs and voxels, with an optional affine transform that follows
+    
 
 <a name="nn.TemporalModules"></a>
 ## Temporal Modules ##
@@ -874,3 +875,46 @@ values (corresponding to their position within each map) are stored:
 If `C` is a tensor of same size as `B`, `module:updateOutput(C)` outputs a
 tensor `D` of same size as `A` such that:
 `D[{n,k,indices[{n,k,t}],indices[{n,k,i}],indices[{n,k,j}]}] = C[{n,k,t,i,j}]`.
+
+<a name="nn.VolumetricBatchNormalization"></a>
+## VolumetricBatchNormalization ##
+
+`module` = `nn.VolumetricBatchNormalization(N [,eps] [, momentum] [,affine])`
+ where N = number of input feature maps
+eps is a small value added to the standard-deviation to avoid divide-by-zero. Defaults to 1e-5
+`affine` is a boolean. When set to false, the learnable affine transform is disabled.  Defaults to true
+
+Implements Batch Normalization as described in the paper:
+   "Batch Normalization: Accelerating Deep Network Training
+                         by Reducing Internal Covariate Shift"
+                   by Sergey Ioffe, Christian Szegedy
+
+The operation implemented is:
+```
+   y =     ( x - mean(x) )
+        -------------------- * gamma + beta
+       standard-deviation(x)
+```
+where the mean and standard-deviation are calculated per feature-map over the mini-batches and voxels
+and where gamma and beta are learnable parameter vectors of size N (where N = number of feature maps).
+The learning of gamma and beta is optional.
+
+   In training time, this layer keeps a running estimate of it's computed mean and std.
+   The running sum is kept with a default momentup of 0.1 (unless over-ridden)
+   In test time, this running mean/std is used to normalize.
+
+
+
+The module only accepts 5D inputs.
+
+```lua
+-- with learnable parameters
+model = nn.VolumetricBatchNormalization(m)
+A = torch.randn(b, m, h, w)
+C = model:forward(A)  -- C will be of size `b x m x h x w`
+
+-- without learnable parameters
+model = nn.VolumetricBatchNormalization(m, nil, nil, false)
+A = torch.randn(b, m, h, w)
+C = model:forward(A)  -- C will be of size `b x m x h x w`
+```
