@@ -474,7 +474,7 @@ TH_API void THNN_(TemporalSubSampling_accGradParameters)(
           int kW, int dW,
           real scale);
 
-TH_API void THNN_(SpatialBatchNormalization_updateOutput)(
+TH_API void THNN_(BatchNormalization_updateOutput)(
           THNNState *state,
           THTensor *input,
           THTensor *output,
@@ -487,7 +487,7 @@ TH_API void THNN_(SpatialBatchNormalization_updateOutput)(
           bool train,
           double momentum,
           double eps);
-TH_API void THNN_(SpatialBatchNormalization_backward)(
+TH_API void THNN_(BatchNormalization_backward)(
           THNNState *state,
           THTensor *input,
           THTensor *gradOutput,
