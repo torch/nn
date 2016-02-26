@@ -80,6 +80,11 @@ function nn.utils.recursiveResizeAs(t1,t2)
       for key,_ in pairs(t2) do
          t1[key], t2[key] = nn.utils.recursiveResizeAs(t1[key], t2[key])
       end
+      for key,_ in pairs(t1) do
+         if not t2[key] then
+            t1[key] = nil
+         end
+      end
    elseif torch.isTensor(t2) then
       t1 = torch.isTensor(t1) and t1 or t2.new()
       t1:resizeAs(t2)
