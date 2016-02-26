@@ -1087,11 +1087,14 @@ C = model:forward(A)  -- C will be of size `b x m`
 <a name="nn.Padding"></a>
 ## Padding ##
 
-`module` = `nn.Padding(dim, pad [, nInputDim, value])`
+```lua
+module = nn.Padding(dim, pad [, nInputDim, value, index])
+```
 
 This module adds `pad` units of padding to dimension `dim` of the input.
 If `pad` is negative, padding is added to the left, otherwise, it is added to the right of the dimension. When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dim` to be padded will
-be dimension `dim + 1`. When `value` is provide, the padding will be filled with that `value`. The default `value` is zero.
+be dimension `dim + 1`. When `value` is provide, the padding will be filled with that `value`. The default `value` is zero. 
+When `index` is provided, padding will be added at that offset from the left or right, depending on the sign of `pad`.  
 
 Example 1:
 
@@ -1116,6 +1119,15 @@ module:forward(torch.randn(2, 3)) --batch input
 [torch.DoubleTensor of dimension 2x5]
 ```
 
+Example 3:
+
+```lua
+module = nn.Padding(1, -2, 1, -1, 2) --pad left x2, offset to index 2
+module:forward(torch.randn(2, 3)) --batch input
+ 1.0203 -1.0000 -1.0000  0.2704 -1.6164
+-0.6529 -1.0000 -1.0000 -0.2219 -1.9218
+[torch.DoubleTensor of dimension 2x5]
+```
 
 <a name="nn.L1Penalty"></a>
 ## L1Penalty ##
