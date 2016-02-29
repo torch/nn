@@ -16,6 +16,7 @@ require('nn.DepthConcat')
 
 require('nn.Linear')
 require('nn.Bilinear')
+require('nn.PartialLinear')
 require('nn.SparseLinear')
 require('nn.Reshape')
 require('nn.View')
