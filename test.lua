@@ -845,7 +845,7 @@ function nntest.Bilinear()
    end
    local output = module:forward(input)
    mytester:assertTensorEq(expected, output, 0.000001, 'Bilinear forward 2D err')
-   
+
    -- For testing grads we'll follow the nn.DotProduct strategy of using a SplitTable
    local input2 = torch.randn(2, N, D1)
    local module2 = nn.Sequential()
@@ -853,7 +853,7 @@ function nntest.Bilinear()
    module2:add(nn.ParallelTable():add(nn.Linear(D1,D1)):add(nn.Linear(D1,D2)))
    module2:add(nn.Bilinear(D1, D2, K))
    module2:add(nn.Linear(K,1))
-   
+
    local err = jac.testJacobian(module2, input2)
    mytester:assertlt(err, precision, 'error on state ')
 
@@ -3889,6 +3889,36 @@ function nntest.Index()
     local gradOutput = torch.Tensor{{1, 2}, {1, 2}}
     local gradInput = net:backward(input, gradOutput)
     equal(gradInput[1], torch.Tensor{{2, 4}, {0, 0}}, "error in 2D backward pass")
+end
+
+function nntest.Squeeze()
+   local input  = torch.Tensor(2,1,3):zero()
+   local module = nn.Squeeze()
+   equal(module:forward(input), input:squeeze(), "error in forward pass")
+   local output = input:squeeze()
+   equal(module:backward(input, output), input, "error in backward pass")
+
+   -- testing the dimension option:
+   local input  = torch.Tensor(2,1,1,3):zero()
+   local module = nn.Squeeze(2)
+   equal(module:forward(input), input:squeeze(2), "error in forward pass with dimension")
+   local output = input:squeeze(2)
+   equal(module:backward(input, output), input, "error in backward pass with dimension")
+
+   -- with batch
+   local input  = torch.Tensor(2,1,1,3):zero()
+   local module = nn.Squeeze(2, 3)
+   equal(module:forward(input), input:squeeze(3), "error in forward pass with dimension")
+   local output = input:squeeze(3)
+   equal(module:backward(input, output), input, "error in backward pass with dimension")
+
+
+   -- ... of size one
+   local input  = torch.Tensor(1,1,1,3):zero()
+   local module = nn.Squeeze(2, 3)
+   equal(module:forward(input), input:squeeze(3), "error in forward pass with dimension")
+   local output = input:squeeze(3)
+   equal(module:backward(input, output), input, "error in backward pass with dimension")
 end
 
 function nntest.LookupTable()

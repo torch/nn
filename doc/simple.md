@@ -21,6 +21,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Contiguous](#nn.Contiguous) : [contiguous](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-contiguous) of the inputs ;
     * [Select](#nn.Select) : a [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index) over a given dimension ;
     * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
+    * [Squeeze](#nn.Squeeze) : [squeezes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) the input;
   * Modules that adapt mathematical Tensor methods :
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
@@ -447,7 +448,7 @@ module = nn.Sum(dimension, nInputDim, sizeAverage)
 Applies a sum operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
 When `nInputDim` is provided , inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
-Negative indexing is allowed by providing a negative value to `nInputDim`. 
+Negative indexing is allowed by providing a negative value to `nInputDim`.
 When `sizeAverage` is provided, the sum is divided by the size of the input in this `dimension`. This is equivalent to the mean operation performed by the [nn.Mean](#nn.Mean) module.
 
 <a name="nn.Euclidean"></a>
@@ -880,6 +881,23 @@ gives the same output as
 t:index(dim, i)
 ```
 
+<a name="nn.Squeeze"></a>
+## Squeeze ##
+
+```lua
+module = nn.Squeeze([dim, numInputDims])
+```
+Applies the Tensor [squeeze](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) operation. So
+
+```lua
+nn.Squeeze():forward(t)
+```
+gives the same output as
+```lua
+t:squeeze()
+```
+Setting `numInputDims` allows to use this module on batches.
+
 <a name="nn.Exp"></a>
 ## Exp ##
 
@@ -1093,8 +1111,8 @@ module = nn.Padding(dim, pad [, nInputDim, value, index])
 
 This module adds `pad` units of padding to dimension `dim` of the input.
 If `pad` is negative, padding is added to the left, otherwise, it is added to the right of the dimension. When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dim` to be padded will
-be dimension `dim + 1`. When `value` is provide, the padding will be filled with that `value`. The default `value` is zero. 
-When `index` is provided, padding will be added at that offset from the left or right, depending on the sign of `pad`.  
+be dimension `dim + 1`. When `value` is provide, the padding will be filled with that `value`. The default `value` is zero.
+When `index` is provided, padding will be added at that offset from the left or right, depending on the sign of `pad`.
 
 Example 1:
 
