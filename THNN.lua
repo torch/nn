@@ -169,6 +169,20 @@ TH_API void THNN_(MarginCriterion_updateGradInput)(
           bool sizeAverage,
           real margin);
 
+TH_API void THNN_(SoftMarginCriterion_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *target,
+          THTensor *output,
+          bool sizeAverage);
+
+TH_API void THNN_(SoftMarginCriterion_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *target,
+          THTensor *gradInput,
+          bool sizeAverage);
+
 TH_API void THNN_(MSECriterion_updateOutput)(
           THNNState *state,
           THTensor *input,
