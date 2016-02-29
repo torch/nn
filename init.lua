@@ -1,5 +1,7 @@
 require('torch')
-require('libnn')
+
+nn = {} -- define the global nn table
+
 require('nn.THNN')
 
 require('nn.utils')
