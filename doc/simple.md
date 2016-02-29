@@ -6,6 +6,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Linear](#nn.Linear) : a linear transformation ;
     * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
     * [Bilinear](#nn.Bilinear) : a bilinear transformation with sparse inputs ;
+    * [PartialLinear](#nn.PartialLinear) : a linear transformation with sparse inputs with the option of only computing a subset ;
     * [Add](#nn.Add) : adds a bias term to the incoming data ;
     * [Mul](#nn.Mul) : multiply a single scalar factor to the incoming data ;
     * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
@@ -143,6 +144,43 @@ Input data for this layer would look as follows:
  input = {torch.randn(128, 10), torch.randn(128, 5)}  -- 128 input examples
  module:forward(input)
 ```
+
+<a name="nn.PartialLinear"></a>
+## PartialLinear ##
+
+```lua
+module = nn.PartialLinear(inputSize, outputSize, [bias = true])
+```
+
+PartialLinear is a Linear layer that allows the user to a set a collection of
+column indices. When the column indices are set, the layer will behave like a
+Linear layer that only has those columns. Meanwhile, all parameters are
+preserved, so resetting the PartialLinear layer will result in a module that
+behaves just like a regular Linear layer.
+
+This module is useful, for instance, when you want to do forward-backward on
+only a subset of a Linear layer during training but use the full Linear layer
+at test time.
+
+You can create a layer in the following way:
+
+```lua
+ module = nn.PartialLinear(5, 3)  -- 5 inputs, 3 outputs
+```
+
+Input data for this layer would look as follows:
+```lua
+ input = torch.randn(128, 5)  -- 128 input examples
+ module:forward(input)
+```
+
+One can set the partition of indices to compute using the function `setPartition(indices)` where `indices` is a tensor containing the indices to compute.
+```lua
+module = nn.PartialLinear(5, 3)  -- 5 inputs, 3 outputs
+module:setPartition(torch.Tensor({2,4})) -- only compute the 2nd and 4th indices out of a total of 5 indices
+```
+
+One can reset the partition via the `resetPartition()` function that resets the partition to compute all indices, making it's behaviour equivalent to `nn.Linear`
 
 <a name="nn.Dropout"></a>
 ## Dropout ##

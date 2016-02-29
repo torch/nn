@@ -865,6 +865,69 @@ function nntest.Bilinear()
 
 end
 
+function nntest.PartialLinear()
+
+   -- settings for experiment:
+   local N = 10
+   local D = 5
+   local K = 15
+
+   -- test forward-backward pass of module:
+   local module = nn.PartialLinear(D, K)
+   for sub_K = 1,K do
+
+      -- get random test case:
+      local input  = torch.randn(N, D)
+      local partition = torch.randperm(K):narrow(1, 1, sub_K)
+
+      -- do forward-backward pass:
+      module:setPartition(partition)
+      module:forward(input)
+      mytester:asserteq(module.output:size(1), N)
+      mytester:asserteq(module.output:size(2), sub_K)
+      module:backward(input, torch.ones(N, sub_K))
+      mytester:asserteq(module.gradInput:size(1), input:size(1))
+      mytester:asserteq(module.gradInput:size(2), input:size(2))
+
+      -- do parameter update:
+      local lr = .01
+      module:updateParameters(lr)
+   end
+   module:resetPartition()
+
+   -- compare output with linear layer:
+   local module2 = nn.Linear(D, K)
+   module2.weight:copy(module.network:get(1):get(2).weight)
+   module2.bias:fill(0)
+   if module.bias then module2.bias:copy(module.bias) end
+   local input = torch.randn(N, D)
+   local diff = (module:forward(input) - module2:forward(input)):abs():sum()
+   mytester:assertlt(diff, 1e-7)
+
+   -- gradient checks:
+   local sub_K = 5
+   local partition = torch.randperm(K):narrow(1, 1, sub_K)
+   module:setPartition(partition)
+   local err = sjac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+
+   local err = sjac.testJacobianParameters(module, input, module.network:get(1):get(2).weight, module.network:get(1):get(2).gradWeight)
+   mytester:assertlt(err,precision, 'error on weight ')
+
+   local err = sjac.testJacobianParameters(module, input, module.bias, module.gradBias)
+   mytester:assertlt(err,precision, 'error on bias ')
+
+   local err = sjac.testJacobianUpdateParameters(module, input, module.network:get(1):get(2).weight)
+   mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+   local err = sjac.testJacobianUpdateParameters(module, input, module.bias)
+   mytester:assertlt(err,precision, 'error on bias [direct update] ')
+
+   local ferr, berr = sjac.testIO(module, input)
+   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+end
+
 function nntest.Euclidean()
    local ini = math.random(5,7)
    local inj = math.random(5,7)
