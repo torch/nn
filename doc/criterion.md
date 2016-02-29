@@ -10,6 +10,7 @@ target, they compute a gradient according to a given loss function.
     * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
     * [`ClassSimplexCriterion`](#nn.ClassSimplexCriterion): A simplex embedding criterion for classification.
     * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
+    * [`SoftMarginCriterion`](#nn.SoftMarginCriterion): two class softmargin-based loss;
     * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
     * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
     * [`MultiLabelSoftMarginCriterion`](#nn.MultiLabelSoftMarginCriterion): multi-class multi-classification loss based on binary cross-entropy;
@@ -324,6 +325,73 @@ i.e. the mlp successfully separates the two data points such that they both have
 
 By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
+<a name="nn.SoftMarginCriterion"></a>
+## SoftMarginCriterion ##
+
+```lua
+criterion = nn.SoftMarginCriterion()
+```
+
+Creates a criterion that optimizes a two-class classification logisitic loss between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a tensor containing either `1`s or `-1`s).
+
+```lua
+loss(x, y) = sum_i (log(1 + exp(-y[i]*x[i]))) / x:nElement()
+```
+
+The normalization by the number of elements in the input can be disabled by
+setting `self.sizeAverage` to `false`.
+
+### Example
+
+```lua
+function gradUpdate(mlp, x, y, criterion, learningRate)
+   local pred = mlp:forward(x)
+   local err = criterion:forward(pred, y)
+   local gradCriterion = criterion:backward(pred, y)
+   mlp:zeroGradParameters()
+   mlp:backward(x, gradCriterion)
+   mlp:updateParameters(learningRate)
+end
+
+mlp = nn.Sequential()
+mlp:add(nn.Linear(5, 1))
+
+x1 = torch.rand(5)
+x1_target = torch.Tensor{1}
+x2 = torch.rand(5)
+x2_target = torch.Tensor{-1}
+criterion=nn.SoftMarginCriterion(1)
+
+for i = 1, 1000 do
+   gradUpdate(mlp, x1, x1_target, criterion, 0.01)
+   gradUpdate(mlp, x2, x2_target, criterion, 0.01)
+end
+
+print(mlp:forward(x1))
+print(mlp:forward(x2))
+
+print(criterion:forward(mlp:forward(x1), x1_target))
+print(criterion:forward(mlp:forward(x2), x2_target))
+```
+
+gives the output:
+
+```lua
+
+ 0.7471
+[torch.DoubleTensor of size 1]
+
+-0.9607
+[torch.DoubleTensor of size 1]
+
+0.38781049558836
+0.32399356957564
+
+```
+
+i.e. the mlp successfully separates the two data points.
+
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 <a name="nn.MultiMarginCriterion"></a>
 ## MultiMarginCriterion ##

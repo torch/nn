@@ -1121,6 +1121,13 @@ function nntest.MarginCriterion()
    criterionJacobianTest1D(cri, input, target)
 end
 
+function nntest.SoftMarginCriterion()
+   local input = torch.rand(100)
+   local target = input:clone():add(torch.rand(100))
+   local cri = nn.SoftMarginCriterion()
+   criterionJacobianTest1D(cri, input, target)
+end
+
 function nntest.MultiMarginCriterion()
    local input = torch.rand(100)
    local target = math.random(1,100)
