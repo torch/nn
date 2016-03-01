@@ -4119,11 +4119,11 @@ function nntest.Identity()
          mytester:assert(input == out, mname .. ' - elements differ')
       else
          for k, v in pairs(input) do
-            mytester:assert(out[k], mname .. ' - missing element in output')
+            mytester:assert(out[k] ~= nil, mname .. ' - missing element in output')
             testIdentity(out[k], v)
          end
          for k, v in pairs(out) do
-            mytester:assert(input[k], mname .. ' - extra element in output')
+            mytester:assert(input[k] ~= nil, mname .. ' - extra element in output')
             testIdentity(v, input[k])
          end
       end
@@ -4147,7 +4147,8 @@ function nntest.Identity()
    -- nested table with diverse elements inside
    input = { torch.rand(2), torch.rand(3),
              { torch.rand(4), 5, { 'hi', torch.rand(5) } },
-             function() return 'hi' end
+             function() return 'hi' end,
+             true, false
            }
    out = module:forward(input)
    testIdentity(out, input)

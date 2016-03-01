@@ -27,7 +27,7 @@ local function identity(out, input)
       -- clean up behind if the current input is
       -- smaller than the previous one
       for k in pairs(out) do
-         if not input[k] then
+         if input[k] == nil then
             out[k] = nil
          end
       end
