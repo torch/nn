@@ -2,7 +2,7 @@ local SpatialConvolutionMM, parent = torch.class('nn.SpatialConvolutionMM', 'nn.
 
 function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH)
    parent.__init(self)
-   
+
    dW = dW or 1
    dH = dH or 1
 
@@ -36,7 +36,7 @@ function SpatialConvolutionMM:reset(stdv)
       end)
       self.bias:apply(function()
          return torch.uniform(-stdv, stdv)
-      end)  
+      end)
    else
       self.weight:uniform(-stdv, stdv)
       self.bias:uniform(-stdv, stdv)
