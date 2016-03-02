@@ -2,7 +2,7 @@ local ELU, parent = torch.class('nn.ELU', 'nn.Module')
 
 --[[
    Djork-Arné Clevert, Thomas Unterthiner, Sepp Hochreiter
-   Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs) 
+   Fast and Accurate Deep Network Learning by Exponential Linear Units (ELUs)
    http://arxiv.org/pdf/1511.07289.pdf
 --]]
 

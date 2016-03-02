@@ -64,14 +64,14 @@ end
 -- function to re-view the weight layout in a way that would make the MM ops happy
 local function viewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kT * self.kH * self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then 
+   if self.gradWeight and self.gradWeight:dim() > 0 then
       self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kT * self.kH * self.kW)
    end
 end
 
 local function unviewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kT, self.kH, self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then 
+   if self.gradWeight and self.gradWeight:dim() > 0 then
       self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kT, self.kH, self.kW)
    end
 end

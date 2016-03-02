@@ -92,19 +92,19 @@ function Bilinear:updateGradInput(input, gradOutput)
        -- do first slice of weight tensor (k = 1)
       self.gradInput[1]:mm(input[2], self.weight[1]:t())
       self.gradInput[1]:cmul(gradOutput:narrow(2,1,1):expand(self.gradInput[1]:size(1),
-          self.gradInput[1]:size(2)))  
+          self.gradInput[1]:size(2)))
       self.gradInput[2]:addmm(1, input[1], self.weight[1])
       self.gradInput[2]:cmul(gradOutput:narrow(2,1,1):expand(self.gradInput[2]:size(1),
           self.gradInput[2]:size(2)))
-      
+
       -- do remaining slices of weight tensor
       if self.weight:size(1) > 1 then
          self.buff1 = self.buff1 or input[1].new()
          self.buff1:resizeAs(input[1])
-            
+
          for k = 2, self.weight:size(1) do
             self.buff1:mm(input[2], self.weight[k]:t())
-            self.buff1:cmul(gradOutput:narrow(2,k,1):expand(self.gradInput[1]:size(1), 
+            self.buff1:cmul(gradOutput:narrow(2,k,1):expand(self.gradInput[1]:size(1),
               self.gradInput[1]:size(2)))
             self.gradInput[1]:add(self.buff1)
 

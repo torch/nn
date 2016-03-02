@@ -35,9 +35,9 @@ function Reshape:updateOutput(input)
       self._input:copy(input)
       input = self._input
    end
-   
+
    if (self.batchMode == false) or (
-         (self.batchMode == nil) and 
+         (self.batchMode == nil) and
          (input:nElement() == self.nelement and input:size(1) ~= 1)
       ) then
       self.output:view(input, self.size)
@@ -55,7 +55,7 @@ function Reshape:updateGradInput(input, gradOutput)
       self._gradOutput:copy(gradOutput)
       gradOutput = self._gradOutput
    end
-   
+
    self.gradInput:viewAs(gradOutput, input)
    return self.gradInput
 end

@@ -83,11 +83,11 @@ function SpatialAveragePooling:updateGradInput(input, gradOutput)
 end
 
 function SpatialAveragePooling:__tostring__()
-   local s = string.format('%s(%d,%d,%d,%d', torch.type(self),
+   local s = string.format('%s(%dx%d, %d,%d', torch.type(self),
                             self.kW, self.kH, self.dW, self.dH)
    if (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
-      s = s .. ',' .. self.padW .. ','.. self.padH
+      s = s .. ', ' .. self.padW .. ','.. self.padH
    end
    s = s .. ')'
-   return s 
+   return s
 end
