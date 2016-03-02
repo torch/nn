@@ -4491,24 +4491,24 @@ function nntest.View()
 
    -- Minibatch
    local minibatch = torch.rand(5,10)
-   mytester:assertTableEq(module:forward(minibatch):size(1),
+   mytester:asserteq(module:forward(minibatch):size(1),
       minibatch:size(1),
       "Error in minibatch dimension")
-   mytester:assertTableEq(module:forward(minibatch):nElement(),
+   mytester:asserteq(module:forward(minibatch):nElement(),
       minibatch:nElement(),
       "Error in minibatch nElement")
    local module = nn.View(-1):setNumInputDims(1)
-   mytester:assertTableEq(module:forward(minibatch):size(1),
+   mytester:asserteq(module:forward(minibatch):size(1),
       minibatch:size(1),
       "Error in minibatch dimension with size -1")
-   mytester:assertTableEq(module:forward(minibatch):nElement(),
+   mytester:asserteq(module:forward(minibatch):nElement(),
       minibatch:nElement(),
       "Error in minibatch nElement with size -1")
 
    -- another setNumInputDims case
    local minibatch = torch.rand(5,4,10)
    local module = nn.View(-1):setNumInputDims(2)
-   mytester:assertTableEq(module:forward(minibatch):size(1),
+   mytester:asserteq(module:forward(minibatch):size(1),
       minibatch:size(1),
       "Error in minibatch dimension with size -1")
 
@@ -4516,21 +4516,21 @@ function nntest.View()
    local minibatch = torch.rand(2,5,4,10)
    local module = nn.View(4,-1):setNumInputDims(2)
    local out = module:forward(minibatch)
-   mytester:assertTableEq(out:size(1), minibatch:size(1)*minibatch:size(2),
+   mytester:asserteq(out:size(1), minibatch:size(1)*minibatch:size(2),
                           "Error in minibatch dimension with size -1")
-   mytester:assertTableEq(out:size(2), minibatch:size(3),
+   mytester:asserteq(out:size(2), minibatch:size(3),
                           "Error in minibatch dimension with size -1")
-   mytester:assertTableEq(out:size(3), minibatch:size(4),
+   mytester:asserteq(out:size(3), minibatch:size(4),
                           "Error in minibatch dimension with size -1")
 
    -- Minibatch Generalization
    local minibatch = torch.rand(5,2,6)
    local module = nn.View(6)
-   mytester:assertTableEq(
+   mytester:asserteq(
       module:forward(minibatch):size(1),
       minibatch:size(1)*minibatch:size(2),
       "Error in minibatch generalization dimension")
-   mytester:assertTableEq(
+   mytester:asserteq(
       module:forward(minibatch):nElement(),
       minibatch:nElement(),
       "Error in minibatch generalization nElement")
@@ -4547,10 +4547,10 @@ function nntest.Reshape()
 
    -- Minibatch
    local minibatch = torch.rand(5,10)
-   mytester:assertTableEq(module:forward(minibatch):size(1),
+   mytester:asserteq(module:forward(minibatch):size(1),
       minibatch:size(1),
       "Error in minibatch dimension")
-   mytester:assertTableEq(module:forward(minibatch):nElement(),
+   mytester:asserteq(module:forward(minibatch):nElement(),
       minibatch:nElement(),
       "Error in minibatch nElement")
 end
