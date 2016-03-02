@@ -41,7 +41,7 @@ end
 function Sequential:updateOutput(input)
    local currentOutput = input
    for i=1,#self.modules do
-      currentOutput = self.modules[i]:updateOutput(currentOutput)
+      currentOutput = self:rethrowErrors(self.modules[i], i, 'updateOutput', currentOutput)
    end
    self.output = currentOutput
    return currentOutput
@@ -52,10 +52,10 @@ function Sequential:updateGradInput(input, gradOutput)
    local currentModule = self.modules[#self.modules]
    for i=#self.modules-1,1,-1 do
       local previousModule = self.modules[i]
-      currentGradOutput = currentModule:updateGradInput(previousModule.output, currentGradOutput)
+      currentGradOutput = self:rethrowErrors(currentModule, i+1, 'updateGradInput', previousModule.output, currentGradOutput)
       currentModule = previousModule
    end
-   currentGradOutput = currentModule:updateGradInput(input, currentGradOutput)
+   currentGradOutput = self:rethrowErrors(currentModule, 1, 'updateGradInput', input, currentGradOutput)
    self.gradInput = currentGradOutput
    return currentGradOutput
 end
@@ -67,12 +67,12 @@ function Sequential:accGradParameters(input, gradOutput, scale)
    local currentModule = self.modules[#self.modules]
    for i=#self.modules-1,1,-1 do
       local previousModule = self.modules[i]
-      currentModule:accGradParameters(previousModule.output, currentGradOutput, scale)
+      self:rethrowErrors(currentModule, i+1, 'accGradParameters', previousModule.output, currentGradOutput, scale)
       currentGradOutput = currentModule.gradInput
       currentModule = previousModule
    end
 
-   currentModule:accGradParameters(input, currentGradOutput, scale)
+   self:rethrowErrors(currentModule, 1, 'accGradParameters', input, currentGradOutput, scale)
 end
 
 function Sequential:backward(input, gradOutput, scale)
@@ -81,11 +81,11 @@ function Sequential:backward(input, gradOutput, scale)
    local currentModule = self.modules[#self.modules]
    for i=#self.modules-1,1,-1 do
       local previousModule = self.modules[i]
-      currentGradOutput = currentModule:backward(previousModule.output, currentGradOutput, scale)
+      currentGradOutput = self:rethrowErrors(currentModule, i+1, 'backward', previousModule.output, currentGradOutput, scale)
       currentModule.gradInput = currentGradOutput
       currentModule = previousModule
    end
-   currentGradOutput = currentModule:backward(input, currentGradOutput, scale)
+   currentGradOutput = self:rethrowErrors(currentModule, 1, 'backward', input, currentGradOutput, scale)
    self.gradInput = currentGradOutput
    return currentGradOutput
 end
@@ -95,12 +95,12 @@ function Sequential:accUpdateGradParameters(input, gradOutput, lr)
    local currentModule = self.modules[#self.modules]
    for i=#self.modules-1,1,-1 do
       local previousModule = self.modules[i]
-      currentModule:accUpdateGradParameters(previousModule.output, currentGradOutput, lr)
+      self:rethrowErrors(currentModule, i+1, 'accUpdateGradParameters', previousModule.output, currentGradOutput, lr)
       currentGradOutput = currentModule.gradInput
       currentModule = previousModule
    end
 
-   currentModule:accUpdateGradParameters(input, currentGradOutput, lr)
+   self:rethrowErrors(currentModule, 1, 'accUpdateGradParameters', input, currentGradOutput, lr)
 end
 
 
