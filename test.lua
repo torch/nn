@@ -821,6 +821,40 @@ function nntest.SparseLinear()
    local ferr, berr = sjac.testIO(module, input)
    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+
+   -- batch mode
+   local batch = math.random(1,5)
+
+   local input = torch.Tensor(batch, numNonzero, 2):zero()
+   for k=1,batch do
+      local N = {}
+      for i = 1, ini do N[i] = i end
+      for i = 1, numNonzero do
+         local j = math.random(i,ini)
+         N[i], N[j] = N[j], N[i]
+      end
+      for i = 1, numNonzero do input[{k,i,1}] = N[i] end
+   end
+   local values = input:select(3,2)
+   values:copy(torch.rand(values:nElement())):mul(2):add(-1)
+   -- Check output
+   local actual = module:forward(input):clone()
+   local expected = torch.Tensor(batch, inj)
+   for k = 1, batch do
+      expected[k]:copy(module:forward(input[k]))
+   end
+   local err = (expected - actual):abs():max()
+   mytester:assertle(err, precision, 'error on batch result forward')
+   local gradOutput = actual:clone():normal()
+   module:forward(input)
+   local actualG = module:backward(input, gradOutput):clone()
+   local expectedG = actualG:clone():zero()
+   for k = 1, batch do
+      module:forward(input[k])
+      expectedG[k]:copy(module:backward(input[k], gradOutput[k]))
+   end
+   err = (expectedG - actualG):abs():max()
+   mytester:assertle(err, precision, 'error on batch result forward')
 end
 
 function nntest.Bilinear()
