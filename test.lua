@@ -5569,12 +5569,12 @@ if not nn then
 else
    jac = nn.Jacobian
    sjac = nn.SparseJacobian
-   function nn.test(tests)
+   function nn.test(tests, seed)
       -- randomize stuff
-       local seed = os.time()
-       print('Seed: ', seed)
-       math.randomseed(seed)
-       torch.manualSeed(seed)
+      local seed = seed or os.time()
+      print('Seed: ', seed)
+      math.randomseed(seed)
+      torch.manualSeed(seed)
       mytester:run(tests)
       return mytester
    end
