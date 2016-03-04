@@ -105,18 +105,22 @@ end
 
 
 function Sequential:__tostring__()
+   local b = function(s) -- BLUE
+      if nn.config.prettyPrint then return '\27[0;34m' .. s .. '\27[0m' end
+      return s
+   end
    local tab = '  '
    local line = '\n'
-   local next = ' -> '
-   local str = 'nn.Sequential'
-   str = str .. ' {' .. line .. tab .. '[input'
+   local next = b ' -> '
+   local str = b 'nn.Sequential'
+   str = str .. b ' {' .. line .. tab .. b '[input'
    for i=1,#self.modules do
-      str = str .. next .. '(' .. i .. ')'
+      str = str .. next .. b '(' .. i .. b ')'
    end
-   str = str .. next .. 'output]'
+   str = str .. next .. b 'output]'
    for i=1,#self.modules do
-      str = str .. line .. tab .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab)
+      str = str .. line .. tab .. b '(' .. i .. b '): ' .. tostring(self.modules[i]):gsub(line, line .. tab)
    end
-   str = str .. line .. '}'
+   str = str .. line .. b '}'
    return str
 end
