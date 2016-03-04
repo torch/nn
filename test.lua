@@ -2181,14 +2181,14 @@ function nntest.SpatialConvolutionMM()
 end
 
 function nntest.SpatialConvolutionLocal()
-   local from = math.random(1,5)
-   local to = math.random(1,5)
-   local ki = math.random(1,5)
-   local kj = math.random(1,5)
-   local si = math.random(1,4)
-   local sj = math.random(1,4)
-   local outi = math.random(5,7)
-   local outj = math.random(5,7)
+   local from = math.random(1,4)
+   local to = math.random(1,4)
+   local ki = math.random(1,3)
+   local kj = math.random(1,3)
+   local si = math.random(1,3)
+   local sj = math.random(1,3)
+   local outi = math.random(5,6)
+   local outj = math.random(5,6)
    local ini = (outi-1)*si+ki
    local inj = (outj-1)*sj+kj
    local module = nn.SpatialConvolutionLocal(from, to, ini, inj, ki, kj, si, sj)
@@ -2236,8 +2236,8 @@ function nntest.SpatialConvolutionLocal()
 
    --verbose = true
    local batch = math.random(2,5)
-   outi = math.random(4,8)
-   outj = math.random(4,8)
+   outi = math.random(4,6)
+   outj = math.random(4,6)
    ini = (outi-1)*si+ki
    inj = (outj-1)*sj+kj
    module = nn.SpatialConvolutionLocal(from, to, ini, inj, ki, kj, si, sj)
@@ -3425,20 +3425,20 @@ end
 
 
 function nntest.VolumetricConvolution()
-   local from = math.random(2,5)
-   local to = math.random(1,5)
-   local kt = math.random(1,5)
-   local ki = math.random(1,5)
-   local kj = math.random(1,5)
-   local st = math.random(1,4)
-   local si = math.random(1,4)
-   local sj = math.random(1,4)
+   local from = math.random(2,4)
+   local to = math.random(1,4)
+   local kt = math.random(1,4)
+   local ki = math.random(1,4)
+   local kj = math.random(1,4)
+   local st = math.random(1,3)
+   local si = math.random(1,3)
+   local sj = math.random(1,3)
    local padT = math.random(0,2)
    local padW = math.random(0,2)
    local padH = math.random(0,2)
-   local outt = math.random(5,9)
-   local outi = math.random(5,9)
-   local outj = math.random(5,9)
+   local outt = math.random(5,7)
+   local outi = math.random(5,7)
+   local outj = math.random(5,7)
    local int = (outt-1)*st+kt-padT*2
    local ini = (outi-1)*si+ki-padW*2
    local inj = (outj-1)*sj+kj-padH*2
