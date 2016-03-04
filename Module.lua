@@ -285,7 +285,14 @@ end
 function Module:getParameters()
    -- get parameters
    local parameters,gradParameters = self:parameters()
-   return Module.flatten(parameters), Module.flatten(gradParameters)
+   local p, g = Module.flatten(parameters), Module.flatten(gradParameters)
+   assert(p:nElement() == g:nElement(),
+      'check that you are sharing parameters and gradParameters')
+   for i=1,#parameters do
+      assert(parameters[i]:storageOffset() == gradParameters[i]:storageOffset(),
+         'misaligned parameter at ' .. tostring(i))
+   end
+   return p, g
 end
 
 function Module:__call__(input, gradOutput)
