@@ -3,6 +3,7 @@ local Module = torch.class('nn.Module')
 function Module:__init()
    self.gradInput = torch.Tensor()
    self.output = torch.Tensor()
+   self._type = self.output:type()
 end
 
 function Module:parameters()
@@ -114,7 +115,9 @@ function Module:clone(...)
 end
 
 function Module:type(type, tensorCache)
-   assert(type, 'Module: must provide a type to convert to')
+   if not type then
+      return self._type
+   end
 
    tensorCache = tensorCache or {}
 
@@ -123,6 +126,7 @@ function Module:type(type, tensorCache)
       self[key] = nn.utils.recursiveType(param, type, tensorCache)
    end
 
+   self._type = type
    return self
 end
 
