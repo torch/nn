@@ -4025,6 +4025,80 @@ function nntest.Squeeze()
    equal(module:backward(input, output), input, "error in backward pass with dimension")
 end
 
+function nntest.Unsqueeze()
+   local function assertInputOutputSize(inputSize, outputSize, tf)
+      local input = torch.Tensor(table.unpack(inputSize)):zero()
+      local output = torch.Tensor(table.unpack(outputSize)):zero()
+      local gradInput = input:clone()
+      local gradOutput = output:clone()
+      equal(tf:forward(input), output, "error in forward pass")
+      equal(tf:backward(input, gradOutput), gradInput, "error in backward pass")
+   end
+
+   local function test_normal()
+      -- insert dim 1 at head
+      local inputSize, outputSize = {2,3,4}, {1, 2,3,4}
+      local pos = 1
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos))
+
+      -- insert dim 1 at tail
+      local inputSize, outputSize = {2,3,4}, {2,3,4, 1}
+      local pos = 4
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos))
+
+      -- insert dim 1 in between
+      local inputSize, outputSize = {2,3,4}, {2, 1, 3,4}
+      local pos = 2
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos))
+   end
+
+   local function test_batchmode()
+      -- batch mode: insert dim 1 at head
+      local inputSize, outputSize = {5, 2,3,4}, {5, 1, 2,3,4}
+      local pos = 1
+      local numInputDims = 3
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos, numInputDims))
+
+      -- batch mode: insert dim 1 at tail
+      local inputSize, outputSize = {5, 2,3,4}, {5, 2,3,4, 1}
+      local pos = 4
+      local numInputDims = 3
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos, numInputDims))
+
+      -- batch mode: insert dim 1 in between
+      local inputSize, outputSize = {5, 2,3,4}, {5, 2,3, 1, 4}
+      local pos = 2
+      local numInputDims = 3
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos, numInputDims))
+   end
+
+   local function test_sizeone()
+      local inputSize, outputSize = {1,1,3,1}, {1,1, 1, 3,1}
+      local pos = 3
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos))
+
+      local inputSize, outputSize = {1,1,3,2}, {1,1,3,2, 1}
+      local pos = 3
+      local numInputDims = 2
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos, numInputDims))
+   end
+
+   local function test_sizestrange()
+      local inputSize, outputSize = {2}, {2,1}
+      local pos = 2
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos))
+
+      local inputSize, outputSize = {1}, {1, 1}
+      local pos = 1
+      assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos))
+   end
+
+   test_normal()
+   test_batchmode()
+   test_sizeone()
+   test_sizestrange()
+end
+
 function nntest.LookupTable()
    local totalIndex = math.random(6,9)
    local nIndex = math.random(3,5)
