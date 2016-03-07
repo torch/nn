@@ -762,68 +762,71 @@ function nntest.Linear()
 end
 
 function nntest.SparseLinear()
+   local inb = math.random(5,10)
    local ini = math.random(50,100)
    local inj = math.random(5,10)
    local numNonzero = math.random(3,5)
 
-   local module = nn.SparseLinear(ini,inj)
+   local module = nn.SparseLinear(ini,inj, true)
+   local linear = nn.Linear(ini, inj)
+   linear.weight = module.weight:clone()
+   linear.bias = module.bias:clone()
+   module:zeroGradParameters()
+   linear:zeroGradParameters()
 
    -- Create a random sparse vector
-   local N = {}
-   for i = 1, ini do N[i] = i end
-   for i = 1, numNonzero do
-      local j = math.random(i,ini)
-      N[i], N[j] = N[j], N[i]
+   local input = {}
+   local nonsparse = torch.zeros(inb, ini)
+   for i=1,inb do
+       local nnz = math.random(1, 3)
+       local inds = torch.randperm(ini)[{{1,nnz}}]
+       input[i] = torch.Tensor(nnz, 2)
+       input[i]:select(2,1):copy(inds)
+       input[i]:select(2,2):copy(torch.ones(nnz))
+       nonsparse[i]:scatter(1, input[i]:select(2,1):long(), input[i]:select(2,2))
    end
-   local input = torch.Tensor(numNonzero, 2):zero()
-   for i = 1, numNonzero do input[{i,1}] = N[i] end
-   local values = input:select(2,2)
-   values:copy(torch.rand(values:nElement())):mul(2):add(-1)
+   local gradOutput = torch.rand(inb, inj)
 
-   -- Check output
-   local actual = module:forward(input)
-   local expected = torch.Tensor(inj)
-   for j = 1, inj do
-      expected[j] = 0
-      for i = 1,numNonzero do
-         expected[j] = expected[j] + values[i] * module.weight[{j, N[i]}]
-      end
-   end
+   -- Check output wrt linear, non-batch
+   local actual = module:forward(input[1])
+   local expected = linear:forward(nonsparse[1])
+   local actualgi = module:backward(input[1], gradOutput[1])
+   local expectedgi = linear:backward(nonsparse[1], gradOutput[1])
+   module:updateParameters(1)
+   linear:updateParameters(1)
+   cmps = {'weight', 'bias', 'gradWeight', 'gradBias'}
    local err = (expected - actual):abs():max()
+   local gierr = (expectedgi - actualgi[1]:select(2,2)):abs():max()
    mytester:assertle(err, precision, 'error on result')
-
-   -- Jacobian 1D
-   local err = sjac.testJacobian(module,input)
-   mytester:assertlt(err,precision, 'error on state ')
-
-   local err = sjac.testJacobianParameters(module, input, module.weight, module.gradWeight)
-   mytester:assertlt(err,precision, 'error on weight ')
-
-   local err = sjac.testJacobianParameters(module, input, module.bias, module.gradBias)
-   mytester:assertlt(err,precision, 'error on bias ')
-
-   local err = sjac.testJacobianUpdateParameters(module, input, module.weight)
-   mytester:assertlt(err,precision, 'error on weight [direct update] ')
-
-   local err = sjac.testJacobianUpdateParameters(module, input, module.bias)
-   mytester:assertlt(err,precision, 'error on bias [direct update] ')
-
-   for t,err in pairs(sjac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
-      mytester:assertlt(err, precision, string.format(
-                         'error on weight [%s]', t))
+   mytester:assertle(gierr, precision, 'error on gradInput')
+   
+   for _,var in ipairs(cmps) do
+        local err = (module[var] - linear[var]):abs():max()
+        mytester:assertle(err, precision, 'error on '..var)
    end
 
-   for t,err in pairs(sjac.testAllUpdate(module, input, 'bias', 'gradBias')) do
-      mytester:assertlt(err, precision, string.format(
-                         'error on bias [%s]', t))
+   -- Check output wrt linear, batch
+   local actual = module:forward(input)
+   local expected = linear:forward(nonsparse)
+   local actualgi = module:backward(input, gradOutput)
+   local expectedgi = linear:backward(nonsparse, gradOutput)
+   module:updateParameters(1)
+   linear:updateParameters(1)
+   cmps = {'weight', 'bias', 'gradWeight', 'gradBias'}
+   local err = (expected - actual):abs():max()
+   local gicheck = torch.Tensor():resizeAs(expectedgi)
+   for i=1,#actualgi do gicheck[i]:copy(actualgi[i]:select(2,2)) end
+   local gierr = (expectedgi - gicheck):abs():max()
+   mytester:assertle(err, precision, 'error on result')
+   mytester:assertle(gierr, precision, 'error on gradInput')
+   
+   for _,var in ipairs(cmps) do
+        local err = (module[var] - linear[var]):abs():max()
+        mytester:assertle(err, precision, 'error on '..var)
    end
 
-   local ferr, berr = sjac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
-
-   -- batch mode
-   local batch = math.random(1,5)
+   -- legacy batch mode
+   local batch = math.random(2,5)
 
    local input = torch.Tensor(batch, numNonzero, 2):zero()
    for k=1,batch do
@@ -837,6 +840,7 @@ function nntest.SparseLinear()
    end
    local values = input:select(3,2)
    values:copy(torch.rand(values:nElement())):mul(2):add(-1)
+
    -- Check output
    local actual = module:forward(input):clone()
    local expected = torch.Tensor(batch, inj)
@@ -844,16 +848,6 @@ function nntest.SparseLinear()
       expected[k]:copy(module:forward(input[k]))
    end
    local err = (expected - actual):abs():max()
-   mytester:assertle(err, precision, 'error on batch result forward')
-   local gradOutput = actual:clone():normal()
-   module:forward(input)
-   local actualG = module:backward(input, gradOutput):clone()
-   local expectedG = actualG:clone():zero()
-   for k = 1, batch do
-      module:forward(input[k])
-      expectedG[k]:copy(module:backward(input[k], gradOutput[k]))
-   end
-   err = (expectedG - actualG):abs():max()
    mytester:assertle(err, precision, 'error on batch result forward')
 end
 
