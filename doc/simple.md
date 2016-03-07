@@ -23,6 +23,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Select](#nn.Select) : a [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index) over a given dimension ;
     * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
     * [Squeeze](#nn.Squeeze) : [squeezes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) the input;
+    * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;  
   * Modules that adapt mathematical Tensor methods :
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
@@ -935,6 +936,57 @@ gives the same output as
 t:squeeze()
 ```
 Setting `numInputDims` allows to use this module on batches.
+
+<a name="nn.Unsqueeze"></a>
+## Unsqueeze ##
+
+```lua
+module = nn.Unsqueeze(pos [, numInputDims])
+```
+Insert singleton dim (i.e., dimension 1) at position `pos`. 
+For an `input` with `dim = input:dim()`, there are `dim + 1` possible positions to insert the singleton dimension.
+For example, if `input` is `3` dimensional tensor in size `p x q x r`, then the singleton dim can be inserted at the following `4` positions
+```
+pos = 1: 1 x p x q x r
+pos = 2: p x 1 x q x r
+pos = 3: p x q x 1 x r
+pos = 4: p x q x r x 1
+```
+
+Example:
+```lua
+input = torch.Tensor(2, 4, 3) -- input: 2 x 4 x 3
+
+-- insert at head
+m = nn.Unsqueeze(1)
+m:forward(input) -- output: 1 x 2 x 4 x 3
+
+-- insert at tail
+m = nn.Unsqueeze(4)
+m:forward(input) -- output: 2 x 4 x 3 x 1
+
+-- insert in between
+m = nn.Unsqueeze(2)
+m:forward(input) -- output: 2 x 1 x 4 x 3
+
+-- the input size can vary across calls
+input2 = torch.Tensor(3, 5, 7) -- input2: 3 x 5 x 7
+m:forward(input2) -- output: 3 x 1 x 5 x 7
+```
+
+Indicate the expected input feature map dimension by specifying `numInputDims`. 
+This allows the module to work with mini-batch. Example:
+```lua
+b = 5 -- batch size 5
+input = torch.tensor(b, 2, 4, 3) -- input: b x 2 x 4 x 3
+numInputDims = 3 -- input feature map should be the last 3 dims
+
+m = nn.Unsqueeze(4)
+m:forward(input) -- output: b x 2 x 4 x 3 x 1
+
+m = nn.Unsqueeze(2)
+m:forward(input) -- output: b x 2 x 1 x 4 x 3
+```
 
 <a name="nn.Exp"></a>
 ## Exp ##
