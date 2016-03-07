@@ -155,6 +155,7 @@ require('nn.WeightedMSECriterion')
 require('nn.BCECriterion')
 require('nn.CrossEntropyCriterion')
 require('nn.ParallelCriterion')
+require('nn.SelectCriterion')
 
 require('nn.StochasticGradient')
 

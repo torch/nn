@@ -16,6 +16,8 @@ local function equal(t1, t2, msg)
       for k, v in pairs(t2) do
          equal(t1[k], t2[k], msg)
       end
+   elseif (torch.type(t1) == "number") then
+      return t1 == t2
    else
       mytester:assertTensorEq(t1, t2, 0.00001, msg)
    end
@@ -1471,6 +1473,56 @@ function nntest.CrossEntropyCriterion()
    weights = weights / weights:sum()
    cri = nn.CrossEntropyCriterion(weights)
    criterionJacobianTest1D(cri, input, target)
+end
+
+function nntest.SelectCriterion()
+   local criterions = {
+     nn.MSECriterion(), nn.BCECriterion(), 
+     nn.AbsCriterion(), nn.SmoothL1Criterion()
+   }
+   local preds = torch.rand(3,4,5)
+   local targets = torch.rand(3,4,5)
+   local input = { criterions, preds, targets }
+
+   local true_loss = {}
+   local true_gradient = {}
+   local zeros = {}
+
+   for idx=1,#criterions do
+     true_loss[idx] = criterions[idx]:forward(preds, targets)
+     true_gradient[idx] = criterions[idx]:backward(preds, targets)
+     zeros[idx] = true_gradient[idx]:clone():zero()
+   end
+
+   local nonIdx = {2,3,4,1}
+   local module
+   for idx = 1,#input do
+      module = nn.SelectCriterion(idx)
+      local output = module:forward(input)
+      equal(output, true_loss[idx], "output dimension " .. idx)
+      local gradInput = module:backward(input)
+      equal(gradInput[idx], true_gradient[idx], "gradInput[idx] dimension " .. idx)
+      equal(gradInput[nonIdx[idx]], zeros[nonIdx[idx]], "gradInput[nonIdx] dimension " .. idx)
+   end
+
+   -- test negative index
+   local idx = -2
+   module = nn.SelectCriterion(idx)
+   local output = module:forward(input)
+   equal(output, true_loss[#criterions+idx+1], "output dimension " .. idx)
+   local gradInput = module:backward(input)
+   equal(gradInput[#criterions+idx+1], true_gradient[#criterions+idx+1], "gradInput[idx] dimension " .. idx)
+   equal(gradInput[nonIdx[#criterions+idx+1]], zeros[nonIdx[#criterions+idx+1]], "gradInput[nonIdx] dimension " .. idx)
+
+   -- test typecast
+   local idx = #criterions
+   module = nn.SelectCriterion(idx)
+   module:float()
+   local output = module:forward(input)
+   equal(output, true_loss[idx], "type output")
+   local gradInput = module:backward(input)
+   equal(gradInput[idx], true_gradient[idx], "gradInput[idx] dimension " .. idx)
+   equal(gradInput[nonIdx[idx]], zeros[nonIdx[idx]], "gradInput[nonIdx] dimension " .. idx)
 end
 
 function nntest.LogSigmoid()

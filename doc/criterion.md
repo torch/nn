@@ -27,6 +27,7 @@ target, they compute a gradient according to a given loss function.
     * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
     * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
     * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
+    * [`SelectCriterion`](#nn.SelectCriterion): select one element from a `table` of criterions.
 
 <a name="nn.Criterion"></a>
 ## Criterion ##
@@ -786,4 +787,55 @@ for i = 1, 100 do
       print(o1, o2, o)
    end
 end
+```
+
+<a name="nn.SelectCriterion"></a>
+## SelectCriterion ##
+
+`module` = `SelectCriterion(index)`
+
+Creates a module that takes a `table` of `criterion`s as input and outputs the
+`criterion` at index `index` (positive or negative). Supports negative
+indexing.
+
+The gradients of the non-`index` elements are zeroed `Tensor`s of the same size.
+
+Example 1:
+```lua
+> criterions = { nn.MSECriterion(), nn.AbsCriterion() }
+
+> predictions = torch.randn(3,2)
+
+> targets = torch.randn(3,2)
+
+> input = { criterions, predictions, targets }
+
+> =nn.SelectCriterion(1):forward(input)
+2.2129725822133
+
+> =nn.SelectTable(-1):forward(input)
+1.2567454558604
+
+> =print(table.unpack(nn.SelectCriterion(1):backward(input)))
+-0.1329  0.5766
+ 0.8422 -0.2282
+-0.5844  0.1492
+[torch.DoubleTensor of size 3x2]
+
+ 0  0
+ 0  0
+ 0  0
+[torch.DoubleTensor of size 3x2]
+
+> =print(table.unpack(nn.SelectCriterion(-1):backward(input)))
+
+ 0  0
+ 0  0
+ 0  0
+[torch.DoubleTensor of size 3x2]
+
+-0.1667  0.1667
+ 0.1667 -0.1667
+-0.1667  0.1667
+[torch.DoubleTensor of size 3x2]
 ```
