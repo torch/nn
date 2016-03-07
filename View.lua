@@ -92,5 +92,5 @@ function View:updateGradInput(input, gradOutput)
 end
 
 function View:__tostring__()
-   return torch.type(self)..'('..table.concat(self.size:totable(),',')..')'
+   return torch.type(self)..'('..table.concat(self.size:totable(), ', ')..')'
 end
