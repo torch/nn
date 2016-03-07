@@ -4922,6 +4922,106 @@ function nntest.DepthConcat()
    mytester:assertTensorEq(gradInput, gradInputConcat, 0.000001, "Error in SpatialConcat:updateGradInput")
 end
 
+function nntest.MV()
+  local mv = nn.MV(false)
+  local outdim = torch.random(10,20)
+  local indim = torch.random(10,20)
+  local M = torch.randn(outdim, indim)
+  local V = torch.randn(indim)
+
+  -- Test forward pass.
+  local output = mv:forward({M, V})
+  mytester:assertTableEq(output:size():totable(), {outdim},
+  'Output has wrong dimensionality')
+  mytester:assertTensorEq(output, M * V, 1e-10,
+  'Wrong output')
+
+  -- Test backward pass.
+  local gradOutput = torch.randn(outdim)
+  local gradInput = mv:backward({M, V}, gradOutput)
+  mytester:assert(#gradInput == 2, 'gradInput must be table of size 2')
+  local gradM, gradV = table.unpack(gradInput)
+  mytester:assertTableEq(gradM:size():totable(), M:size():totable(),
+  'Gradient for input M has wrong size')
+  mytester:assertTableEq(gradV:size():totable(), V:size():totable(),
+  'Gradient for input V has wrong size')
+  mytester:assertTensorEq(gradM, torch.ger(gradOutput, V), 1e-10,
+  'Wrong gradient for input M')
+  -- d/dV(j) (A(i,j)V(j)) = (
+  mytester:assertTensorEq(gradV, M:t() * gradOutput, 1e-10,
+  'Wrong gradient for input V')
+end
+
+function nntest.BatchMVNoTranspose()
+  local mv = nn.MV()
+  local outdim = torch.random(10,20)
+  local indim = torch.random(10,20)
+  for bSize = 1, 11, 5 do
+    local M = torch.randn(bSize, outdim, indim)
+    local V = torch.randn(bSize, indim)
+
+    -- Test forward pass.
+    local output = mv:forward({M, V})
+    mytester:assertTableEq(output:size():totable(), {bSize, outdim},
+    'Output has wrong dimensionality')
+    for i = 1, bSize do
+      mytester:assertTensorEq(output[i], M[i] * V[i], 1e-10,
+      'Output wrong for bSize = ' .. bSize .. ' and i = ' .. i)
+    end
+
+    -- Test backward pass.
+    local gradOutput = torch.randn(bSize, outdim)
+    local gradInput = mv:backward({M, V}, gradOutput)
+    mytester:assert(#gradInput == 2, 'gradInput must be table of size 2')
+    local gradM, gradV = table.unpack(gradInput)
+    mytester:assertTableEq(gradM:size():totable(), M:size():totable(),
+    'Gradient for input M has wrong size')
+    mytester:assertTableEq(gradV:size():totable(), V:size():totable(),
+    'Gradient for input V has wrong size')
+    for i = 1, bSize do
+      mytester:assertTensorEq(gradM[i], torch.ger(gradOutput[i], V[i]), 1e-10,
+      'Gradient for input M wrong for bSize = ' .. bSize .. ' and i = ' .. i)
+      mytester:assertTensorEq(gradV[i], M[i]:t() * gradOutput[i], 1e-10,
+      'Gradient for input V wrong for bSize = ' .. bSize .. ' and i = ' .. i)
+    end
+  end
+end
+
+function nntest.BatchMVTranspose()
+  local mv = nn.MV(true)
+  local outdim = torch.random(10,20)
+  local indim = torch.random(10,20)
+  for bSize = 1, 11, 5 do
+    local M = torch.randn(bSize, indim, outdim)
+    local V = torch.randn(bSize, indim)
+
+    -- Test forward pass.
+    local output = mv:forward({M, V})
+    mytester:assertTableEq(output:size():totable(), {bSize, outdim},
+    'Output has wrong dimensionality')
+    for i = 1, bSize do
+      mytester:assertTensorEq(output[i], M[i]:t() * V[i], 1e-10,
+      'Output wrong for bSize = ' .. bSize .. ' and i = ' .. i)
+    end
+
+    -- Test backward pass.
+    local gradOutput = torch.randn(bSize, outdim)
+    local gradInput = mv:backward({M, V}, gradOutput)
+    mytester:assert(#gradInput == 2, 'gradInput must be table of size 2')
+    local gradM, gradV = table.unpack(gradInput)
+    mytester:assertTableEq(gradM:size():totable(), M:size():totable(),
+    'Gradient for input M has wrong size')
+    mytester:assertTableEq(gradV:size():totable(), V:size():totable(),
+    'Gradient for input V has wrong size')
+    for i = 1, bSize do
+      mytester:assertTensorEq(gradM[i], torch.ger(V[i], gradOutput[i]), 1e-10,
+      'Gradient for input M wrong for bSize = ' .. bSize .. ' and i = ' .. i)
+      mytester:assertTensorEq(gradV[i], M[i] * gradOutput[i], 1e-10,
+      'Gradient for input V wrong for bSize = ' .. bSize .. ' and i = ' .. i)
+    end
+  end
+end
+
 local function createMatrixInputSizes()
   local M = torch.random(10, 20)
   local N = torch.random(10, 20)
