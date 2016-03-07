@@ -93,22 +93,24 @@ function Concat:accUpdateGradParameters(input, gradOutput, lr)
 end
 
 function Concat:__tostring__()
+   local r = function(s) return s end
+   if nn.config.prettyPrint then r = require('trepl.colorize').red end
    local tab = '  '
    local line = '\n'
-   local next = '  |`-> '
-   local ext = '  |    '
+   local next = r '  |`-> '
+   local ext = r '  |    '
    local extlast = '       '
-   local last = '   ... -> '
-   local str = torch.type(self)
-   str = str .. ' {' .. line .. tab .. 'input'
+   local last = r '   ... -> '
+   local str = r(torch.type(self))
+   str = str .. r ' {' .. line .. tab .. r 'input'
    for i=1,#self.modules do
       if i == #self.modules then
-         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
+         str = str .. line .. tab .. next .. r '(' .. i .. r '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
       else
-         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. ext)
+         str = str .. line .. tab .. next .. r '(' .. i .. r '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. ext)
       end
    end
-   str = str .. line .. tab .. last .. 'output'
-   str = str .. line .. '}'
+   str = str .. line .. tab .. last .. r 'output'
+   str = str .. line .. r '}'
    return str
 end
