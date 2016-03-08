@@ -160,6 +160,7 @@ require('nn.ParallelCriterion')
 require('nn.StochasticGradient')
 
 require('nn.MM')
+require('nn.MV')
 
 require('nn.Jacobian')
 require('nn.SparseJacobian')
