@@ -49,6 +49,11 @@ LINK_DIRECTORIES("${Torch_INSTALL_LIB}")
 
 ADD_SUBDIRECTORY(lib)
 
+FILE(STRINGS lib/THNN/generic/THNN.h THNN_headers NEWLINE_CONSUME)
+FILE(WRITE THNN_h.lua "return [[")
+FILE(APPEND THNN_h.lua ${THNN_headers})
+FILE(APPEND THNN_h.lua "]]")
+
 FILE(GLOB luasrc *.lua)
 
 ADD_TORCH_PACKAGE(nn "" "${luasrc}")
