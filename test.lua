@@ -9,7 +9,7 @@ local sjac
 local precision = 1e-5
 local expprecision = 1e-4
 
-local nntest = {}
+local nntest = torch.TestSuite()
 
 local function equal(t1, t2, msg)
    if (torch.type(t1) == "table") then
@@ -17,7 +17,7 @@ local function equal(t1, t2, msg)
          equal(t1[k], t2[k], msg)
       end
    else
-      mytester:assertTensorEq(t1, t2, 0.00001, msg)
+      mytester:eq(t1, t2, 0.00001, msg)
    end
 end
 
@@ -30,8 +30,8 @@ local tostringTestModules = {
 for test_name, component in pairs(tostringTestModules) do
   nntest['tostring' .. test_name] =
     function ()
-      mytester:assert(tostring(component):find(torch.type(component) .. '(',
-                                                 1, true),
+      mytester:assert(tostring(component):find(
+                         torch.type(component) .. '(', 1, true) ~= nil,
                       'nn components should have a descriptive tostring' ..
                       ' beginning with the classname')
     end
@@ -4054,19 +4054,19 @@ function nntest.Unsqueeze()
 
    local function test_batchmode()
       -- batch mode: insert dim 1 at head
-      local inputSize, outputSize = {5, 2,3,4}, {5, 1, 2,3,4}
+      local inputSize, outputSize = {5, 2, 3, 4}, {5, 1, 2, 3, 4}
       local pos = 1
       local numInputDims = 3
       assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos, numInputDims))
 
       -- batch mode: insert dim 1 at tail
-      local inputSize, outputSize = {5, 2,3,4}, {5, 2,3,4, 1}
+      local inputSize, outputSize = {5, 2, 3, 4}, {5, 2, 3, 4, 1}
       local pos = 4
       local numInputDims = 3
       assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos, numInputDims))
 
       -- batch mode: insert dim 1 in between
-      local inputSize, outputSize = {5, 2,3,4}, {5, 2,3, 1, 4}
+      local inputSize, outputSize = {5, 2, 3, 4}, {5, 2, 1, 3, 4}
       local pos = 2
       local numInputDims = 3
       assertInputOutputSize(inputSize,outputSize, nn.Unsqueeze(pos, numInputDims))
@@ -4419,7 +4419,7 @@ function nntest.SelectTable()
 end
 
 function nntest.MixtureTable()
-   --[[ 2D ]]--
+   -- 2D
    -- expertInput is a Table:
    local expertInput = torch.randn(5,3,6)
    local gradOutput = torch.randn(5,6)
@@ -4429,7 +4429,7 @@ function nntest.MixtureTable()
    }
    local module = nn.MixtureTable()
    local output = module:forward(input)
-   local output2 = torch.cmul(input[1]:view(5,3,1):expand(5,3,6), expertInput):sum(2)
+   local output2 = torch.cmul(input[1]:view(5,3,1):expand(5,3,6), expertInput):sum(2):squeeze(2)
    mytester:assertTensorEq(output, output2, 0.000001, "mixture output")
    local gradInput = module:backward(input, gradOutput)
    local gradOutput2 = torch.view(gradOutput, 5, 1, 6):expandAs(expertInput)
@@ -4448,7 +4448,7 @@ function nntest.MixtureTable()
    mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture2 gater gradInput")
    mytester:assertTensorEq(gradInput[2], expertGradInput2, 0.000001, "mixture2 expert gradInput")
 
-   --[[ 3D ]]--
+   -- 3D
    local expertInput = torch.randn(5,6,3,2)
    local gradOutput = torch.randn(5,6,2)
    -- expertInput is a Table:
@@ -4458,7 +4458,7 @@ function nntest.MixtureTable()
    }
    local module = nn.MixtureTable()
    local output = module:forward(input)
-   local output2 = torch.cmul(input[1]:view(5,1,3,1):expand(5,6,3,2), expertInput):sum(3)
+   local output2 = torch.cmul(input[1]:view(5,1,3,1):expand(5,6,3,2), expertInput):sum(3):squeeze(3)
    mytester:assertTensorEq(output, output2, 0.000001, "mixture3 output")
    local gradInput = module:backward(input, gradOutput)
    local gradOutput2 = torch.view(gradOutput,5,6,1,2):expandAs(expertInput)
@@ -4477,7 +4477,7 @@ function nntest.MixtureTable()
    mytester:assertTensorEq(gradInput[1], gaterGradInput2, 0.000001, "mixture4 gater gradInput")
    mytester:assertTensorEq(gradInput[2], expertGradInput2, 0.000001, "mixture4 expert gradInput")
 
-   --[[ 1D ]]--
+   -- 1D
    -- expertInput is a Table:
    local expertInput = torch.randn(3,6)
    local gradOutput = torch.randn(6)
@@ -4487,7 +4487,7 @@ function nntest.MixtureTable()
    }
    local module = nn.MixtureTable()
    local output = module:forward(input)
-   local output2 = torch.cmul(input[1]:view(3,1):expand(3,6), expertInput):sum(1)
+   local output2 = torch.cmul(input[1]:view(3,1):expand(3,6), expertInput):sum(1):squeeze(1)
    mytester:assertTensorEq(output, output2, 0.000001, "mixture5 output")
    local gradInput = module:backward(input, gradOutput)
    local gradOutput2 = torch.view(gradOutput, 1, 6):expandAs(expertInput)
@@ -4527,7 +4527,7 @@ function nntest.MixtureTable()
    mytester:assertTensorEq(gradInput[1], gaterGradInput2:float(), 0.000001, "mixture6B gater gradInput")
    mytester:assertTensorEq(gradInput[2], expertGradInput2:float(), 0.000001, "mixture6B expert gradInput")
 
-   --[[ 2D gater, 1D expert]]--
+   --2D gater, 1D expert
    -- expertInput is a Table:
    local expertInput = torch.randn(5,3)
    local gradOutput = torch.randn(5)
@@ -4537,7 +4537,7 @@ function nntest.MixtureTable()
    }
    local module = nn.MixtureTable()
    local output = module:forward(input)
-   local output2 = torch.cmul(input[1], expertInput):sum(2)
+   local output2 = torch.cmul(input[1], expertInput):sum(2):squeeze(2)
    mytester:assertTensorEq(output, output2, 0.000001, "mixture7 output")
    local gradInput = module:backward(input, gradOutput)
    local gradOutput2 = torch.view(gradOutput, 5, 1):expandAs(expertInput)
@@ -4761,7 +4761,7 @@ function nntest.ConcatTable()
    local output2 = {input, input, input}
    equal(output2, output, "ConcatTable table output")
    local gradInput = module:backward(input, gradOutput)
-   local gradInput2 = {_gradOutput[1]:sum(1), _gradOutput[2]:sum(1), {_gradOutput[3]:sum(1)}}
+   local gradInput2 = {_gradOutput[1]:sum(1):squeeze(1), _gradOutput[2]:sum(1):squeeze(1), {_gradOutput[3]:sum(1):squeeze(1)}}
    equal(gradInput, gradInput2, "ConcatTable table gradInput")
 
    -- test outputs for variable length inputs
