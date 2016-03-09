@@ -375,6 +375,24 @@ function nntest.ELU()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.ELUIP()
+   local input = torch.randn(3,4)
+   local input2 = input:clone()
+   local gradOutput = torch.randn(3,4)
+   local gradOutput2 = gradOutput:clone()
+
+   -- Compare in-place to not in-place
+   local module = nn.ELU(0.3, true)
+   local module2 = nn.ELU(0.3, false)
+
+   local output = module:forward(input)
+   local output2 = module2:forward(input2)
+   mytester:assertTensorEq(output, output2, 0.000001, 'ELU output')
+   local gradInput = module:backward(input, gradOutput)
+   local gradInput2 = module2:backward(input2, gradOutput2)
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001, 'ELU gradInput')
+end
+
 function nntest.PReLU()
    local ini = math.random(3,5)
    local input = torch.Tensor(ini):zero()
