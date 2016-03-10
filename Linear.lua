@@ -36,6 +36,14 @@ function Linear:reset(stdv)
    return self
 end
 
+local function updateAddBuffer(self, input)
+   local nframe = input:size(1)
+   self.addBuffer = self.addBuffer or input.new()
+   if self.addBuffer:nElement() ~= nframe then
+      self.addBuffer:resize(nframe):fill(1)
+   end
+end
+
 function Linear:updateOutput(input)
    if input:dim() == 1 then
       self.output:resize(self.weight:size(1))
@@ -48,10 +56,7 @@ function Linear:updateOutput(input)
       if self.output:nElement() ~= nElement then
          self.output:zero()
       end
-      self.addBuffer = self.addBuffer or input.new()
-      if self.addBuffer:nElement() ~= nframe then
-         self.addBuffer:resize(nframe):fill(1)
-      end
+      updateAddBuffer(self, input)
       self.output:addmm(0, self.output, 1, input, self.weight:t())
       if self.bias then self.output:addr(1, self.addBuffer, self.bias) end
    else
@@ -87,6 +92,8 @@ function Linear:accGradParameters(input, gradOutput, scale)
    elseif input:dim() == 2 then
       self.gradWeight:addmm(scale, gradOutput:t(), input)
       if self.bias then
+         -- update the size of addBuffer if the input is not the same size as the one we had in last updateGradInput
+         updateAddBuffer(self, input)
          self.gradBias:addmv(scale, gradOutput:t(), self.addBuffer)
       end
    end
