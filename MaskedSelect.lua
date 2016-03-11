@@ -5,12 +5,8 @@ function MaskedSelect:__init(mask)
   -- mask must be a tensor, convert to byte tensor
   parent.__init(self)
   self.mask = mask
-  local nElements = 1
-  for i = 1, mask:nDimension() do
-    nElements = nElements * mask:size()[i]
-  end
   self.maskIndices =
-    torch.range(1, nElements):resizeAs(mask:double()):maskedSelect(mask)
+    torch.range(1, mask:nElement()):resizeAs(mask:double()):maskedSelect(mask)
 end
 
 --[[ Performs maskedSelect operation. ]]
@@ -21,11 +17,10 @@ end
 
 --[[ Reverse maps unmasked gradOutput back to gradInput. ]]
 function MaskedSelect:updateGradInput(input, gradOutput)
-  self.gradInput = torch.Tensor()
-  self.gradInput:resizeAs(self.mask:double())
+  self.gradInput = torch.Tensor(input:nElement())
   local i = 1
   local f = function(x)
-    self.gradInput[x] = self.gradOutput[i]
+    self.gradInput[x] = gradOutput[i]
     i = i + 1
   end
   self.maskIndices:apply(f)
