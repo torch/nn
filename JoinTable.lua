@@ -1,33 +1,3 @@
---[[ An nn.Module that joins a table of tensors along a specified dimension
-The forward method in this case will output a Tensor with input Tensors
-concatenated along `dimension`.
-
-This model is the inverse of SplitTable.
-
-Example:
-
-> require 'nn'
-> require 'torch'
-> require 'pprint'
-> t = {torch.rand(2,2), torch.rand(2,2)}
-> pprint(t)
-{ 0.7672  0.4249
-  0.6085  0.6451
-  [torch.DoubleTensor of size 2x2]
-  0.8282  0.9970
-  0.9887  0.7004
-  [torch.DoubleTensor of size 2x2]
-}
-> m = nn.JoinTable(1,2)
-> pprint(m:forward(t))
-  0.7672  0.4249
-  0.6085  0.6451
-  0.8282  0.9970
-  0.9887  0.7004
-  [torch.DoubleTensor of size 4x2]
-
-]]
-
 local JoinTable, parent = torch.class('nn.JoinTable', 'nn.Module')
 
 function JoinTable:__init(dimension, nInputDims)
