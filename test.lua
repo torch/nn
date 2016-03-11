@@ -1278,7 +1278,7 @@ end
 
 function nntest.MaskedSelect()
    local input = torch.randn(4, 5):type('torch.FloatTensor')
-   local mask = torch.ByteTensor(4, 5):bernoulli()
+   local mask = torch.ByteTensor(4, 5):lt(128)
    local module = nn.MaskedSelect(mask):type('torch.FloatTensor')
    local out = module:forward(input)
    local err = out:dist(input:maskedSelect(mask))
@@ -1289,7 +1289,7 @@ function nntest.MaskedSelect()
    local ink = math.random(3,5)
    local input = torch.Tensor(ink, inj, ini):zero()
 
-   local module = nn.MaskedSelect()
+   local module = nn.MaskedSelect(mask)
 
    local err = nn.Jacobian.testJacobian(module, input)
    mytester:assertlt(err, 1e-15, 'error on state ')
