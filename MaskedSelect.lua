@@ -1,4 +1,4 @@
-local MaskedSelect, parent = torch.class('nnd.MaskedSelect', 'nn.Module')
+local MaskedSelect, parent = torch.class('nn.MaskedSelect', 'nn.Module')
 
 --[[ Sets the provided mask value for the module. ]]
 function MaskedSelect:__init(mask)
@@ -52,5 +52,5 @@ function MaskedSelect:type(type)
 end
 
 function MaskedSelect:gc()
-  nnd.clearFields(self, 'output', 'gradInput')
+  nn.clearFields(self, 'output', 'gradInput')
 end
