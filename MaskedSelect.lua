@@ -6,7 +6,7 @@ function MaskedSelect:__init(mask)
   parent.__init(self)
   self.mask = mask
   local nElements = 1
-  for i = 1, mask:nDimension do
+  for i = 1, mask:nDimension() do
     nElements = nElements * mask:size()[i]
   end
   self.maskIndices =
