@@ -33,6 +33,7 @@ require('nn.Transpose')
 require('nn.BatchNormalization')
 require('nn.Padding')
 require('nn.GradientReversal')
+require('nn.MaskedSelect')
 
 require('nn.Copy')
 require('nn.Min')

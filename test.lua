@@ -1276,6 +1276,29 @@ function nntest.MarginRankingCriterion()
 
 end
 
+function nntest.MaskedSelect()
+   local input = torch.randn(4, 5):type('torch.FloatTensor')
+   local mask = torch.ByteTensor(4, 5):bernoulli()
+   local module = nn.MaskedSelect(mask):type('torch.FloatTensor')
+   local out = module:forward(input)
+   local err = out:dist(input:maskedSelect(mask))
+   mytester:assertlt(err, 1e-15, torch.typename(module) .. ' - forward err ')
+
+   local ini = math.random(3,5)
+   local inj = math.random(3,5)
+   local ink = math.random(3,5)
+   local input = torch.Tensor(ink, inj, ini):zero()
+
+   local module = nn.MaskedSelect()
+
+   local err = nn.Jacobian.testJacobian(module, input)
+   mytester:assertlt(err, 1e-15, 'error on state ')
+
+   local ferr, berr = nn.Jacobian.testIO(module, input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
 function nntest.ParallelCriterion()
    local input = {torch.rand(2,10), torch.randn(2,10)}
    local target = {torch.IntTensor{1,8}, torch.randn(2,10)}
