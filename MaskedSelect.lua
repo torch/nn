@@ -5,8 +5,12 @@ function MaskedSelect:__init(mask)
   -- mask must be a tensor, convert to byte tensor
   parent.__init(self)
   self.mask = mask
+  local nElements = 1
+  for i = 1, mask:nDimension do
+    nElements = nElements * mask:size()[i]
+  end
   self.maskIndices =
-    torch.range(1, mask:size():prod()):double():resize(mask):maskedSelect(mask)
+    torch.range(1, nElements):resize(mask:double()):maskedSelect(mask)
 end
 
 --[[ Performs maskedSelect operation. ]]

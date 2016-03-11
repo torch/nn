@@ -1278,7 +1278,7 @@ end
 
 function nntest.MaskedSelect()
    local input = torch.randn(4, 5):type('torch.FloatTensor')
-   local mask = torch.ByteTensor(4, 5):lt(128)
+   local mask = torch.ByteTensor(4, 5):bernoulli()
    local module = nn.MaskedSelect(mask):type('torch.FloatTensor')
    local out = module:forward(input)
    local err = out:dist(input:maskedSelect(mask))
