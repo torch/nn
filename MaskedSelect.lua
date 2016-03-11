@@ -10,7 +10,7 @@ function MaskedSelect:__init(mask)
     nElements = nElements * mask:size()[i]
   end
   self.maskIndices =
-    torch.range(1, nElements):resize(mask:double()):maskedSelect(mask)
+    torch.range(1, nElements):resizeAs(mask:double()):maskedSelect(mask)
 end
 
 --[[ Performs maskedSelect operation. ]]
