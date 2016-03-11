@@ -4,14 +4,15 @@ function PairwiseDistance:__init(p)
    parent.__init(self)
 
    -- state
-   self.gradInput = {torch.Tensor(), torch.Tensor()}
-   self.output = torch.Tensor(1)
+   self.gradInput = {}
    self.diff = torch.Tensor()
-   self.norm=p
+   self.norm = p
 end 
   
 function PairwiseDistance:updateOutput(input)
+   self.output:resize(1)
    if input[1]:dim() == 1 then
+      self.output:resize(1)
       self.output[1]=input[1]:dist(input[2],self.norm)
    elseif input[1]:dim() == 2 then
       self.diff = self.diff or input[1].new()
@@ -28,9 +29,6 @@ function PairwiseDistance:updateOutput(input)
    else
       error('input must be vector or matrix')
    end
-   if input[1]:dim() > 2 then
-      error('input must be vector or matrix')
-   end  
  
    return self.output
 end
@@ -45,8 +43,8 @@ function PairwiseDistance:updateGradInput(input, gradOutput)
       error('input must be vector or matrix')
    end
 
-   self.gradInput[1]:resize(input[1]:size()) 
-   self.gradInput[2]:resize(input[2]:size()) 
+   self.gradInput[1] = (self.gradInput[1] or input[1].new()):resize(input[1]:size()) 
+   self.gradInput[2] = (self.gradInput[2] or input[2].new()):resize(input[2]:size())
    self.gradInput[1]:copy(input[1])
    self.gradInput[1]:add(-1, input[2]) 
    
@@ -85,4 +83,9 @@ function PairwiseDistance:updateGradInput(input, gradOutput)
    end
    self.gradInput[2]:zero():add(-1, self.gradInput[1])
    return self.gradInput
+end
+
+function PairwiseDistance:clearState()
+   nn.utils.clear(self, 'diff', 'outExpand', 'grad', 'ones')
+   return parent.clearState(self)
 end

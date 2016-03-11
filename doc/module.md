@@ -1,4 +1,4 @@
-<a name="nn.Module"/>
+<a name="nn.Module"></a>
 ## Module ##
 
 `Module` is an abstract class which defines fundamental methods necessary
@@ -7,7 +7,7 @@ for a training a neural network. Modules are [serializable](https://github.com/t
 Modules contain two states variables: [output](#output) and
 [gradInput](#gradinput).
 
-<a name="nn.Module.forward"/>
+<a name="nn.Module.forward"></a>
 ### [output] forward(input) ###
 
 Takes an `input` object, and computes the corresponding `output` of the
@@ -16,7 +16,7 @@ module. In general `input` and `output` are
 like [table layers](table.md#nn.TableLayers) might expect something else. Please,
 refer to each module specification for further information.
 
-After a `forward()`, the [ouput](#output) state variable should
+After a `forward()`, the [output](#output) state variable should
 have been updated to the new value.
 
 It is not advised to override this function. Instead, one should
@@ -24,7 +24,7 @@ implement [updateOutput(input)](#nn.Module.updateOutput)
 function. The forward module in the abstract parent class
 [Module](#nn.Module) will call `updateOutput(input)`.
 
-<a name="nn.Module.backward"/>
+<a name="nn.Module.backward"></a>
 ### [gradInput] backward(input, gradOutput) ###
 
 Performs a _backpropagation step_ through the module, with respect to the
@@ -52,14 +52,14 @@ is better to override
 [accGradParameters(input, gradOutput,scale)](#nn.Module.accGradParameters)
 functions.
 
-<a name="nn.Module.updateOutput"/>
+<a name="nn.Module.updateOutput"></a>
 ### updateOutput(input) ###
 
 Computes the output using the current parameter set of the class and
 input. This function returns the result which is stored in the
 [output](#output) field.
 
-<a name="nn.Module.updateGradInput"/>
+<a name="nn.Module.updateGradInput"></a>
 ### updateGradInput(input, gradOutput) ###
 
 Computing the gradient of the module with respect to its own
@@ -67,11 +67,11 @@ input. This is returned in `gradInput`. Also, the
 [gradInput](#gradinput) state variable is updated
 accordingly.
 
-<a name="nn.Module.accGradParameters"/>
+<a name="nn.Module.accGradParameters"></a>
 ### accGradParameters(input, gradOutput, scale) ###
 
 Computing the gradient of the module with respect to its
-ownparameters. Many modules do not perform this step as they do not
+own parameters. Many modules do not perform this step as they do not
 have any parameters. The state variable name for the parameters is
 module dependent. The module is expected to _accumulate_ the
 gradients with respect to the parameters in some variable.
@@ -83,7 +83,7 @@ Zeroing this accumulation is achieved with
 the parameters according to this accumulation is done with
 [updateParameters()](#nn.Module.updateParameters).
 
-<a name="nn.Module.zeroGradParameters"/>
+<a name="nn.Module.zeroGradParameters"></a>
 ### zeroGradParameters() ###
 
 If the module has parameters, this will zero the accumulation of the
@@ -91,7 +91,7 @@ gradients with respect to these parameters, accumulated through
 [accGradParameters(input, gradOutput,scale)](#nn.Module.accGradParameters)
 calls. Otherwise, it does nothing.
 
-<a name="nn.Module.updateParameters"/>
+<a name="nn.Module.updateParameters"></a>
 ### updateParameters(learningRate) ###
 
 If the module has parameters, this will update these parameters, according
@@ -104,12 +104,12 @@ parameters = parameters - learningRate * gradients_wrt_parameters
 ```
 If the module does not have parameters, it does nothing.
 
-<a name="nn.Module.accUpdateGradParameters"/>
+<a name="nn.Module.accUpdateGradParameters"></a>
 ### accUpdateGradParameters(input, gradOutput, learningRate) ###
 
 This is a convenience module that performs two functions at
 once. Calculates and accumulates the gradients with respect to the
-weights after mutltiplying with negative of the learning rate
+weights after multiplying with negative of the learning rate
 `learningRate`. Performing these two operations at once is more
 performance efficient and it might be advantageous in certain
 situations.
@@ -117,8 +117,8 @@ situations.
 Keep in mind that, this function uses a simple trick to achieve its
 goal and it might not be valid for a custom module.
 
-Also note that compared to accGradParameters(), the gradients are not retained 
-for future use. 
+Also note that compared to accGradParameters(), the gradients are not retained
+for future use.
 
 ```lua
 function Module:accUpdateGradParameters(input, gradOutput, lr)
@@ -136,7 +136,7 @@ As it can be seen, the gradients are accumulated directly into
 weights. This assumption may not be true for a module that computes a
 nonlinear operation.
 
-<a name="nn.Module.share"/>
+<a name="nn.Module.share"></a>
 ### share(mlp,s1,s2,...,sn) ###
 
 This function modifies the parameters of the module named
@@ -150,18 +150,16 @@ Note that this function if called on a [Container](containers.md#nn.Containers)
 module will share the same parameters for all the contained modules as
 well.
 
-**NOTE: If you ever type-cast your network to another precision, i.e. net:cuda() for example, the sharing gets untied, and you have to reshare your modules again.**
-
 Example:
 ```lua
 
 -- make an mlp
-mlp1=nn.Sequential(); 
+mlp1=nn.Sequential();
 mlp1:add(nn.Linear(100,10));
 
 -- make a second mlp
-mlp2=nn.Sequential(); 
-mlp2:add(nn.Linear(100,10)); 
+mlp2=nn.Sequential();
+mlp2:add(nn.Linear(100,10));
 
 -- the second mlp shares the bias of the first
 mlp2:share(mlp1,'bias');
@@ -174,7 +172,7 @@ print(mlp2:get(1).bias[1])
 
 ```
 
-<a name="nn.Module.clone"/>
+<a name="nn.Module.clone"></a>
 ### clone(mlp,...) ###
 
 Creates a deep copy of (i.e. not just a pointer to) the module,
@@ -186,12 +184,10 @@ If arguments are provided to the `clone(...)` function it also calls
 module after creating it, hence making a deep copy of this module with
 some shared parameters.
 
-**NOTE: If you ever type-cast your network to another precision, i.e. net:cuda() for example, the sharing gets untied, and you have to reshare your modules again.**
-
 Example:
 ```lua
 -- make an mlp
-mlp1=nn.Sequential(); 
+mlp1=nn.Sequential();
 mlp1:add(nn.Linear(100,10));
 
 -- make a copy that shares the weights and biases
@@ -205,29 +201,52 @@ print(mlp2:get(1).bias[1])
 
 ```
 
-<a name="nn.Module.type"/>
-### type(type) ###
+<a name="nn.Module.type"></a>
+### type(type[, tensorCache]) ###
 
 This function converts all the parameters of a module to the given
 `type`. The `type` can be one of the types defined for
 [torch.Tensor](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
-<a name="nn.Module.float"/>
+If tensors (or their storages) are shared between multiple modules in a
+network, this sharing will be preserved after type is called.
+
+To preserve sharing between multiple modules and/or tensors, use
+`nn.utils.recursiveType`:
+
+```lua
+-- make an mlp
+mlp1=nn.Sequential();
+mlp1:add(nn.Linear(100,10));
+
+-- make a second mlp
+mlp2=nn.Sequential();
+mlp2:add(nn.Linear(100,10));
+
+-- the second mlp shares the bias of the first
+mlp2:share(mlp1,'bias');
+
+-- mlp1 and mlp2 will be converted to float, and will share bias
+-- note: tensors can be provided as inputs as well as modules
+nn.utils.recursiveType({mlp1, mlp2}, 'torch.FloatTensor')
+```
+
+<a name="nn.Module.float"></a>
 ### float() ###
 
 Convenience method for calling [module:type('torch.FloatTensor')](#nn.Module.type)
 
-<a name="nn.Module.double"/>
+<a name="nn.Module.double"></a>
 ### double() ###
 
 Convenience method for calling [module:type('torch.DoubleTensor')](#nn.Module.type)
 
-<a name="nn.Module.cuda"/>
+<a name="nn.Module.cuda"></a>
 ### cuda() ###
 
 Convenience method for calling [module:type('torch.CudaTensor')](#nn.Module.type)
 
-<a name="nn.statevars.dok"/>
+<a name="nn.statevars.dok"></a>
 ### State Variables ###
 
 These state variables are useful objects if one wants to check the guts of
@@ -235,22 +254,22 @@ a `Module`. The object pointer is _never_ supposed to change. However, its
 contents (including its size if it is a Tensor) are supposed to change.
 
 In general state variables are
-[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md). 
+[Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 However, some special sub-classes
 like [table layers](table.md#nn.TableLayers) contain something else. Please,
 refer to each module specification for further information.
 
-<a name="nn.Module.output"/>
+<a name="nn.Module.output"></a>
 #### output ####
 
 This contains the output of the module, computed with the last call of
 [forward(input)](#nn.Module.forward).
 
-<a name="nn.Module.gradInput"/>
+<a name="nn.Module.gradInput"></a>
 #### gradInput ####
 
 This contains the gradients with respect to the inputs of the module, computed with the last call of
-[updateGradInput(input, gradOutput)](#nn.Module.updateGradInput). 
+[updateGradInput(input, gradOutput)](#nn.Module.updateGradInput).
 
 ### Parameters and gradients w.r.t parameters ###
 
@@ -258,7 +277,7 @@ Some modules contain parameters (the ones that we actually want to
 train!). The name of these parameters, and gradients w.r.t these parameters
 are module dependent.
 
-<a name="nn.Module.parameters"/>
+<a name="nn.Module.parameters"></a>
 ### [{weights}, {gradWeights}] parameters() ###
 
 This function should returns two tables. One for the learnable
@@ -268,7 +287,7 @@ wrt to the learnable parameters `{gradWeights}`.
 Custom modules should override this function if they use learnable
 parameters that are stored in tensors.
 
-<a name="nn.Module.getParameters"/>
+<a name="nn.Module.getParameters"></a>
 ### [flatParameters, flatGradParameters] getParameters() ###
 
 This function returns two tensors. One for the flattened learnable
@@ -279,15 +298,15 @@ Custom modules should not override this function. They should instead override [
 
 This function will go over all the weights and gradWeights and make them view into a single tensor (one for weights and one for gradWeights). Since the storage of every weight and gradWeight is changed, this function should be called only once on a given network.
 
-<a name="nn.Module.training"/>
+<a name="nn.Module.training"></a>
 ### training() ###
 This sets the mode of the Module (or sub-modules) to `train=true`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
 
-<a name="nn.Module.evaluate"/>
+<a name="nn.Module.evaluate"></a>
 ### evaluate() ###
 This sets the mode of the Module (or sub-modules) to `train=false`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
 
-<a name="nn.Module.findModules"/>
+<a name="nn.Module.findModules"></a>
 ### findModules(typename) ###
 Find all instances of modules in the network of a certain `typename`.  It returns a flattened list of the matching nodes, as well as a flattened list of the container modules for each matching node.
 
@@ -331,12 +350,12 @@ for i = 1, #threshold_nodes do
 end
 ```
 
-<a name="nn.Module.listModules"/>
+<a name="nn.Module.listModules"></a>
 ### listModules() ###
 
-List all Modules instances in a network. Returns a flattened list of modules, 
-including container modules (which will be listed first), self, and any other 
-component modules. 
+List all Modules instances in a network. Returns a flattened list of modules,
+including container modules (which will be listed first), self, and any other
+component modules.
 
 For example :
 ```lua
@@ -373,3 +392,9 @@ nn.Linear(10 -> 20)
 nn.Tanh
 nn.ReLU
 ```
+
+### clearState() ###
+
+Clears intermediate module states as `output`, `gradInput` and others.
+Useful when serializing networks and running low on memory. Internally calls `set()`
+on tensors so it does not break buffer sharing.

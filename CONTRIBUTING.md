@@ -128,3 +128,9 @@ included in the project:
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owners to
 license your work under the terms of the BSD License.
+
+## Development workflow tips
+
+* While you are changing lua files, one can simply symlink the cloned nn directory to ~/torch/install/share/lua/5.1/nn so that any change is reflected in the current install, without constantly having to do luarocks make rocks/*
+* If you are changing C files, then, after every change, you run luarocks make rocks/*
+* To test, you can just use: th -lnn -e "nn.test()"

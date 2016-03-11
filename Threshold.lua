@@ -17,13 +17,25 @@ end
 
 function Threshold:updateOutput(input)
    self:validateParameters()
-   input.nn.Threshold_updateOutput(self, input)
+   input.THNN.Threshold_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.threshold,
+      self.val,
+      self.inplace
+   )
    return self.output
 end
 
 function Threshold:updateGradInput(input, gradOutput)
    self:validateParameters()
-   input.nn.Threshold_updateGradInput(self, input, gradOutput)
+   input.THNN.Threshold_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.threshold,
+      self.inplace
+   )
    return self.gradInput
 end
 

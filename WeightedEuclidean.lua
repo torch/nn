@@ -209,7 +209,7 @@ function WeightedEuclidean:accGradParameters(input, gradOutput, scale)
    end
 end
 
-function WeightedEuclidean:type(type)
+function WeightedEuclidean:type(type, tensorCache)
    if type then
       -- prevent premature memory allocations
       self._input = nil
@@ -226,7 +226,7 @@ function WeightedEuclidean:type(type)
       self._repeat2 = nil
       self._repeat3 = nil
    end
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
 end
 
 function WeightedEuclidean:parameters()

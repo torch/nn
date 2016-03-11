@@ -29,7 +29,7 @@ end
 function DepthConcat:updateOutput(input)
    local outs = {}
    for i=1,#self.modules do
-      local currentOutput = self.modules[i]:updateOutput(input)
+      local currentOutput = self:rethrowErrors(self.modules[i], i, 'updateOutput', input)
       outs[i] = currentOutput
       if i == 1 then
          self.size:resize(currentOutput:dim()):copy(currentOutput:size())
@@ -62,7 +62,7 @@ function DepthConcat:updateGradInput(input, gradOutput)
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
       local gradOutputWindow = self:windowNarrow(gradOutput, currentOutput, offset)
-      local currentGradInput = module:updateGradInput(input, gradOutputWindow)
+      local currentGradInput = self:rethrowErrors(module, i, 'updateGradInput', input, gradOutputWindow)
       if i==1 then
          self.gradInput:copy(currentGradInput)
       else
@@ -79,7 +79,7 @@ function DepthConcat:accGradParameters(input, gradOutput, scale)
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
       local gradOutputWindow = self:windowNarrow(gradOutput, currentOutput, offset)
-      module:accGradParameters(input, gradOutputWindow, scale)
+      self:rethrowErrors(module, i, 'accGradParameters', input, gradOutputWindow, scale)
       offset = offset + currentOutput:size(self.dimension)
    end
 end
@@ -92,7 +92,7 @@ function DepthConcat:backward(input, gradOutput, scale)
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
       local gradOutputWindow = self:windowNarrow(gradOutput, currentOutput, offset)
-      local currentGradInput = module:backward(input, gradOutputWindow)
+      local currentGradInput = self:rethrowErrors(module, i, 'backward', input, gradOutputWindow)
       if i==1 then
          self.gradInput:copy(currentGradInput)
       else
@@ -108,7 +108,7 @@ function DepthConcat:accUpdateGradParameters(input, gradOutput, lr)
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
       local gradOutputWindow = self:windowNarrow(gradOutput, currentOutput, offset)
-      module:accUpdateGradParameters(input, gradOutputWindow, lr)
+      self:rethrowErrors(module, i, 'accUpdateGradParameters', input, gradOutputWindow, lr)
       offset = offset + currentOutput:size(self.dimension)
    end
 end

@@ -106,3 +106,10 @@ function SpatialSubtractiveNormalization:updateGradInput(input, gradOutput)
    -- done
    return self.gradInput
 end
+
+function SpatialSubtractiveNormalization:clearState()
+   if self.ones then self.ones:set() end
+   if self._coef then self._coef:set() end
+   self.meanestimator:clearState()
+   return parent.clearState(self)
+end

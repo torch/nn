@@ -13,12 +13,12 @@ function Copy:__init(intype, outtype, forceCopy, dontCast)
    if (not forceCopy) and intype == outtype then
 
       self.updateOutput = function(self, input)
-                        self.output = input
+                        self.output:set(input)
                         return input
                      end
 
       self.updateGradInput = function(self, input, gradOutput)
-                         self.gradInput = gradOutput
+                         self.gradInput:set(gradOutput)
                          return gradOutput
                       end
    end
@@ -34,9 +34,9 @@ function Copy:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
-function Copy:type(type)
+function Copy:type(type, tensorCache)
    if type and self.dontCast then
       return self
    end
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
 end

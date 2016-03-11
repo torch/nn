@@ -7,6 +7,7 @@ function MultiCriterion:__init()
 end
 
 function MultiCriterion:add(criterion, weight)
+   assert(criterion, 'no criterion provided')
    weight = weight or 1
    table.insert(self.criterions, criterion)
    self.weights:resize(#self.criterions, true)
@@ -23,10 +24,10 @@ function MultiCriterion:updateOutput(input, target)
 end
 
 function MultiCriterion:updateGradInput(input, target)
-   self.gradInput:resizeAs(input)
-   self.gradInput:zero()
+   self.gradInput = nn.utils.recursiveResizeAs(self.gradInput, input)
+   nn.utils.recursiveFill(self.gradInput, 0)
    for i=1,#self.criterions do
-      self.gradInput:add(self.weights[i], self.criterions[i]:updateGradInput(input, target))
+      nn.utils.recursiveAdd(self.gradInput, self.weights[i], self.criterions[i]:updateGradInput(input, target))
    end
    return self.gradInput
 end

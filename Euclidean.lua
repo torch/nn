@@ -171,20 +171,27 @@ function Euclidean:accGradParameters(input, gradOutput, scale)
    end
 end
 
-function Euclidean:type(type)
+function Euclidean:type(type, tensorCache)
    if type then
       -- prevent premature memory allocations
-      self._input = nil
-      self._output = nil
-      self._gradOutput = nil
-      self._weight = nil
-      self._div = nil
-      self._sum = nil
-      self._expand = nil
-      self._expand2 = nil
-      self._expand3 = nil
-      self._repeat = nil
-      self._repeat2 = nil
+      self:clearState()
    end
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
+end
+
+function Euclidean:clearState()
+   nn.utils.clear(self, {
+      '_input',
+      '_output',
+      '_gradOutput',
+      '_weight',
+      '_div',
+      '_sum',
+      '_expand',
+      '_expand2',
+      '_expand3',
+      '_repeat',
+      '_repeat2',
+   })
+   return parent.clearState(self)
 end

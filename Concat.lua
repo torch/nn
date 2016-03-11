@@ -9,7 +9,7 @@ end
 function Concat:updateOutput(input)
    local outs = {}
    for i=1,#self.modules do
-      local currentOutput = self.modules[i]:updateOutput(input)
+      local currentOutput = self:rethrowErrors(self.modules[i], i, 'updateOutput', input)
       outs[i] = currentOutput
       if i == 1 then
          self.size:resize(currentOutput:dim()):copy(currentOutput:size())
@@ -34,7 +34,7 @@ function Concat:updateGradInput(input, gradOutput)
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
-      local currentGradInput = module:updateGradInput(input, gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)))
+      local currentGradInput = self:rethrowErrors(module, i, 'updateGradInput', gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)))
 
       if currentGradInput then -- if the module does not produce a gradInput (for example first layer), then ignore it and move on.
          if i==1 then
@@ -53,7 +53,7 @@ function Concat:accGradParameters(input, gradOutput, scale)
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
-      module:accGradParameters(
+      self:rethrowErrors(module, i, 'accGradParameters',
           input,
           gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)),
           scale)
@@ -67,7 +67,7 @@ function Concat:backward(input, gradOutput, scale)
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
-      local currentGradInput = module:backward(input, gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)), scale)
+      local currentGradInput = self:rethrowErrors(module, i, 'backward', input, gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)), scale)
       if currentGradInput then -- if the module does not produce a gradInput (for example first layer), then ignore it and move on.
          if i==1 then
             self.gradInput:copy(currentGradInput)
@@ -84,7 +84,7 @@ function Concat:accUpdateGradParameters(input, gradOutput, lr)
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
-      module:accUpdateGradParameters(
+      self:rethrowErrors(module, i, 'accUpdateGradParameters',
           input,
           gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)),
           lr)
@@ -102,7 +102,7 @@ function Concat:__tostring__()
    local str = torch.type(self)
    str = str .. ' {' .. line .. tab .. 'input'
    for i=1,#self.modules do
-      if i == self.modules then
+      if i == #self.modules then
          str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
       else
          str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. ext)

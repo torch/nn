@@ -5,11 +5,18 @@ function Abs:__init()
 end
 
 function Abs:updateOutput(input)
-   input.nn.Abs_updateOutput(self, input)
+   input.THNN.Abs_updateOutput(
+      input:cdata(),
+      self.output:cdata()
+   )
    return self.output
 end
 
 function Abs:updateGradInput(input, gradOutput)
-   input.nn.Abs_updateGradInput(self, input, gradOutput)
+   input.THNN.Abs_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata()
+   )
    return self.gradInput
 end

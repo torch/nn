@@ -5,29 +5,28 @@ function MarginRankingCriterion:__init(margin)
    margin=margin or 1
    self.margin = margin 
    self.gradInput = {torch.Tensor(1), torch.Tensor(1)}
+   self.sizeAverage = true
 end 
  
 function MarginRankingCriterion:updateOutput(input,y)
    if input[1]:size(1) == 1 then
       self.output=math.max(0, -y*(input[1][1]-input[2][1]) + self.margin  ) 
    else
-      if type(self.output) == "number" then
-         self.output = input[1]:clone()
+      self._output = self._output or input[1]:clone()
+      self._output:resizeAs(input[1])
+      self._output:copy(input[1])
+
+      self._output:add(-1, input[2])
+      self._output:mul(-1):cmul(y)
+      self._output:add(self.margin)
+
+      self._output:cmax(0)
+
+      self.output = self._output:sum()
+
+      if self.sizeAverage then
+         self.output = self.output/y:size(1)
       end
-      self.output = self.output or input[1]:clone()
-      self.output:resizeAs(input[1])
-      self.output:copy(input[1])
-
-      self.output:add(-1, input[2])
-      self.output:mul(-y)
-      self.output:add(self.margin)
-
-      self.mask = self.mask or self.output:clone()
-      self.mask:resizeAs(self.output)
-      self.mask:copy(self.output)
-
-      self.mask:ge(self.output, 0.0)
-      self.output:cmul(self.mask)
    end
 
    return self.output
@@ -49,7 +48,7 @@ function MarginRankingCriterion:updateGradInput(input, y)
       local dist = self.dist
 
       dist:add(-1, input[2])
-      dist:mul(-y)
+      dist:mul(-1):cmul(y)
       dist:add(self.margin)
 
       self.mask = self.mask or input[1].new()
@@ -62,9 +61,14 @@ function MarginRankingCriterion:updateGradInput(input, y)
       self.gradInput[2]:resize(dist:size())
 
       self.gradInput[1]:copy(mask)
-      self.gradInput[1]:mul(-y)
+      self.gradInput[1]:mul(-1):cmul(y)
       self.gradInput[2]:copy(mask)
-      self.gradInput[2]:mul(y)
+      self.gradInput[2]:cmul(y)
+
+      if self.sizeAverage then
+         self.gradInput[1]:div(y:size(1))
+         self.gradInput[2]:div(y:size(1))
+      end
 
    end
    return self.gradInput 

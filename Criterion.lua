@@ -28,11 +28,11 @@ function Criterion:clone()
    return clone
 end
 
-function Criterion:type(type)
+function Criterion:type(type, tensorCache)
    assert(type, 'Criterion: must provide a type to convert to')
    -- find all tensors and convert them
    for key,param in pairs(self) do
-      self[key] = nn.utils.recursiveType(param, type)
+      self[key] = nn.utils.recursiveType(param, type, tensorCache)
    end
    return self
 end

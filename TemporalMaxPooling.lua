@@ -4,28 +4,36 @@ function TemporalMaxPooling:__init(kW, dW)
    parent.__init(self)
 
    dW = dW or kW
-   
+
    self.kW = kW
    self.dW = dW
-
-   self.indices = torch.Tensor()
 end
 
 function TemporalMaxPooling:updateOutput(input)
-   input.nn.TemporalMaxPooling_updateOutput(self, input)
+   self.indices = self.indices or input.new()
+   input.THNN.TemporalMaxPooling_updateOutput(
+       input:cdata(), self.output:cdata(),
+       self.indices:cdata(), self.kW, self.dW
+   )
    return self.output
 end
 
 function TemporalMaxPooling:updateGradInput(input, gradOutput)
-   input.nn.TemporalMaxPooling_updateGradInput(self, input, gradOutput)
-   return self.gradInput
+    if self.gradInput then
+	input.THNN.TemporalMaxPooling_updateGradInput(
+	    input:cdata(), gradOutput:cdata(),
+	    self.gradInput:cdata(), self.indices:cdata(),
+	    self.kW, self.dW
+	)
+	return self.gradInput
+    end
 end
 
 function TemporalMaxPooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
-   self.indices:resize()
-   self.indices:storage():resize(0)
+   self:clearState()
+end
+
+function TemporalMaxPooling:clearState()
+   if self.indices then self.indices:set() end
+   return parent.clearState(self)
 end

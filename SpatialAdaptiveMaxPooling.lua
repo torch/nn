@@ -5,25 +5,37 @@ function SpatialAdaptiveMaxPooling:__init(W, H)
    
    self.W = W
    self.H = H
-
-   self.indices = torch.Tensor()
 end
 
 function SpatialAdaptiveMaxPooling:updateOutput(input)
-   input.nn.SpatialAdaptiveMaxPooling_updateOutput(self, input)
+   self.indices = self.indices or input.new()
+   input.THNN.SpatialAdaptiveMaxPooling_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      self.indices:cdata(),
+      self.W, self.H
+   )
    return self.output
 end
 
 function SpatialAdaptiveMaxPooling:updateGradInput(input, gradOutput)
-   input.nn.SpatialAdaptiveMaxPooling_updateGradInput(self, input, gradOutput)
+   input.THNN.SpatialAdaptiveMaxPooling_updateGradInput(
+      input:cdata(),
+      gradOutput:cdata(),
+      self.gradInput:cdata(),
+      self.indices:cdata()
+   )
    return self.gradInput
 end
 
+-- for backward compat
 function SpatialAdaptiveMaxPooling:empty()
-   self.gradInput:resize()
-   self.gradInput:storage():resize(0)
-   self.output:resize()
-   self.output:storage():resize(0)
-   self.indices:resize()
-   self.indices:storage():resize(0)
+   self:clearState()
+end
+
+function SpatialAdaptiveMaxPooling:clearState()
+   if self.indices then
+      self.indices:set()
+   end
+   return parent.clearState(self)
 end

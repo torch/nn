@@ -77,8 +77,8 @@ function CMul:updateGradInput(input, gradOutput)
       self.gradInput:addcmul(1, self.weight, gradOutput)
    else
       local batchSize = input:size(1)
-      self._gradOutput:view(gradOutput, batchSize, -1)
-      self._gradInput:view(self.gradInput, batchSize, -1)
+      nn.utils.contiguousView(self._gradOutput, gradOutput, batchSize, -1)
+      nn.utils.contiguousView(self._gradInput, self.gradInput, batchSize, -1)
       self._weight:view(self.weight, 1, -1)
       self._expand:expandAs(self._weight, self._gradOutput)
       
@@ -104,8 +104,8 @@ function CMul:accGradParameters(input, gradOutput, scale)
       self.gradWeight:addcmul(scale, input, gradOutput)
    else
       local batchSize = input:size(1)
-      self._input:view(input, batchSize, -1)
-      self._gradOutput:view(gradOutput, batchSize, -1)
+      nn.utils.contiguousView(self._input, input, batchSize, -1)
+      nn.utils.contiguousView(self._gradOutput, gradOutput, batchSize, -1)
       self._gradWeight:view(self.gradWeight, 1, -1)
       
       self._repeat:cmul(self._input, self._gradOutput)
@@ -114,15 +114,22 @@ function CMul:accGradParameters(input, gradOutput, scale)
    end
 end
 
-function CMul:type(type)
+function CMul:type(type, tensorCache)
    if type then
-      self._input = nil
-      self._output = nil
-      self._weight = nil
-      self._gradWeight = nil
-      self._expand = nil
-      self._repeat = nil
-      self._sum = nil
+      self:clearState()
    end
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
+end
+
+function CMul:clearState()
+   nn.utils.clear(self, {
+      '_input',
+      '_output',
+      '_weight',
+      '_gradWeight',
+      '_expand',
+      '_repeat',
+      '_sum',
+   })
+   return parent.clearState(self)
 end

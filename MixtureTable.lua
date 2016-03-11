@@ -14,7 +14,7 @@ function MixtureTable:updateOutput(input)
    local gaterInput, expertInputs = table.unpack(input)
    
    -- buffers 
-   self._gaterView = self.gaterView or input[1].new()
+   self._gaterView = self._gaterView or input[1].new()
    self._expert = self._expert or input[1].new()
    self._expertView = self._expertView or input[1].new()
    
@@ -60,7 +60,6 @@ function MixtureTable:updateOutput(input)
          end
          self.size[self.dim] = gaterInput:size(self.dimG)
          self.output:resizeAs(expertInputs:select(self.dim, 1))
-         self.gradInput[2] = self._gradInput
          self.batchSize = batchSize
          self.backwardSetup = false
       end
@@ -80,7 +79,6 @@ function MixtureTable:updateGradInput(input, gradOutput)
    
    -- buffers
    self._sum = self._sum or input[1].new()
-   self._gradInput = self._gradInput or {input[1].new(), {}}
    self._expertView2 = self._expertView2 or input[1].new()
    self._expert2 = self._expert2 or input[1].new()
       
@@ -149,13 +147,24 @@ function MixtureTable:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
-function MixtureTable:type(type)
+function MixtureTable:type(type, tensorCache)
    self._gaterView = nil
    self._expert = nil
    self._expertView = nil
    self._sum = nil
-   self._gradInput = nil
    self._expert2 = nil
    self._expertView2 = nil
-   return parent.type(self, type)
+   return parent.type(self, type, tensorCache)
+end
+
+function MixtureTable:clearState()
+   nn.utils.clear(self, {
+     '_gaterView',
+     '_expert',
+     '_expertView',
+     '_sum',
+     '_expert2',
+     '_expertView2',
+   })
+   return parent.clearState(self)
 end

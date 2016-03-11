@@ -1,36 +1,40 @@
-<a name="nn.Criterions"/>
+<a name="nn.Criterions"></a>
 # Criterions #
 
 [`Criterions`](#nn.Criterion) are helpful to train a neural network. Given an input and a
 target, they compute a gradient according to a given loss function.
 
- * Classification criterions:
-  * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
-  * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
-  * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
-  * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
-  * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
-  * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
- * Regression criterions:
-  * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
-  * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
-  * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
- * Embedding criterions (measuring whether two inputs are similar or dissimilar):
-  * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
-  * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
-  * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
- * Miscelaneus criterions:
-  * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
-  * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
-  * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
+  * Classification criterions:
+    * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy for [`Sigmoid`](transfer.md#nn.Sigmoid) (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
+    * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
+    * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
+    * [`ClassSimplexCriterion`](#nn.ClassSimplexCriterion): A simplex embedding criterion for classification.
+    * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
+    * [`SoftMarginCriterion`](#nn.SoftMarginCriterion): two class softmargin-based loss;
+    * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
+    * [`MultiLabelMarginCriterion`](#nn.MultiLabelMarginCriterion): multi-class multi-classification margin-based loss;
+    * [`MultiLabelSoftMarginCriterion`](#nn.MultiLabelSoftMarginCriterion): multi-class multi-classification loss based on binary cross-entropy;
+  * Regression criterions:
+    * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
+    * [`SmoothL1Criterion`](#nn.SmoothL1Criterion): a smooth version of the AbsCriterion;
+    * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
+    * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
+  * Embedding criterions (measuring whether two inputs are similar or dissimilar):
+    * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
+    * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
+    * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
+  * Miscelaneus criterions:
+    * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
+    * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
+    * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
 
-<a name="nn.Criterion"/>
+<a name="nn.Criterion"></a>
 ## Criterion ##
 
 This is an abstract class which declares methods defined in all criterions.
 This class is [serializable](https://github.com/torch/torch7/blob/master/doc/file.md#serialization-methods).
 
-<a name="nn.Criterion.forward"/>
+<a name="nn.Criterion.forward"></a>
 ### [output] forward(input, target) ###
 
 Given an `input` and a `target`, compute the loss function associated to the criterion and return the result.
@@ -41,7 +45,7 @@ The `output` returned should be a scalar in general.
 The state variable [`self.output`](#nn.Criterion.output) should be updated after a call to `forward()`.
 
 
-<a name="nn.Criterion.backward"/>
+<a name="nn.Criterion.backward"></a>
 ### [gradInput] backward(input, target) ###
 
 Given an `input` and a `target`, compute the gradients of the loss function associated to the criterion and return the result.
@@ -50,19 +54,19 @@ In general `input`, `target` and `gradInput` are [`Tensor`s](..:torch:tensor), b
 The state variable [`self.gradInput`](#nn.Criterion.gradInput) should be updated after a call to `backward()`.
 
 
-<a name="nn.Criterion.output"/>
+<a name="nn.Criterion.output"></a>
 ### State variable: output ###
 
 State variable which contains the result of the last [`forward(input, target)`](#nn.Criterion.forward) call.
 
 
-<a name="nn.Criterion.gradInput"/>
+<a name="nn.Criterion.gradInput"></a>
 ### State variable: gradInput ###
 
 State variable which contains the result of the last [`backward(input, target)`](#nn.Criterion.backward) call.
 
 
-<a name="nn.AbsCriterion"/>
+<a name="nn.AbsCriterion"></a>
 ## AbsCriterion ##
 
 ```lua
@@ -85,7 +89,7 @@ criterion.sizeAverage = false
 ```
 
 
-<a name="nn.ClassNLLCriterion"/>
+<a name="nn.ClassNLLCriterion"></a>
 ## ClassNLLCriterion ##
 
 ```lua
@@ -97,9 +101,9 @@ If provided, the optional argument `weights` should be a 1D `Tensor` assigning w
 This is particularly useful when you have an unbalanced training set.
 
 The `input` given through a `forward()` is expected to contain _log-probabilities_ of each class: `input` has to be a 1D `Tensor` of size `n`.
-Obtaining log-probabilities in a neural network is easily achieved by adding a [`LogSoftMax`](#nn.LogSoftMax) layer in the last layer of your neural network.
+Obtaining log-probabilities in a neural network is easily achieved by adding a [`LogSoftMax`](transfer.md#nn.LogSoftMax) layer in the last layer of your neural network.
 You may use [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion) instead, if you prefer not to add an extra layer to your network.
-This criterion expect a class index (1 to the number of class) as `target` when calling [`forward(input, target`)](#nn.CriterionForward) and [`backward(input, target)`](#nn.CriterionBackward).
+This criterion expects a class index (1 to the number of class) as `target` when calling [`forward(input, target`)](#nn.CriterionForward) and [`backward(input, target)`](#nn.CriterionBackward).
 
 The loss can be described as:
 
@@ -107,7 +111,7 @@ The loss can be described as:
 loss(x, class) = -x[class]
 ```
 
-or in the case of the `weights` argument being specified:
+or in the case of the `weights` argument it is specified as follows:
 
 ```lua
 loss(x, class) = -weights[class] * x[class]
@@ -118,7 +122,7 @@ The following is a code fragment showing how to make a gradient step given an in
 ```lua
 function gradUpdate(mlp, x, y, learningRate)
    local criterion = nn.ClassNLLCriterion()
-   pred = mlp:forward(x)
+   local pred = mlp:forward(x)
    local err = criterion:forward(pred, y)
    mlp:zeroGradParameters()
    local t = criterion:backward(pred, y)
@@ -127,8 +131,10 @@ function gradUpdate(mlp, x, y, learningRate)
 end
 ```
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed for each minibatch.
 
-<a name="nn.CrossEntropyCriterion"/>
+
+<a name="nn.CrossEntropyCriterion"></a>
 ## CrossEntropyCriterion ##
 
 ```lua
@@ -156,8 +162,56 @@ or in the case of the `weights` argument being specified:
 loss(x, class) = weights[class] * (-x[class] + log(\sum_j exp(x[j])))
 ```
 
+The losses are averaged across observations for each minibatch.
 
-<a name="nn.DistKLDivCriterion"/>
+<a name="nn.ClassSimplexCriterion"/>
+## ClassSimplexCriterion ##
+
+```lua
+criterion = nn.ClassSimplexCriterion(nClasses)
+```
+
+ClassSimplexCriterion implements a criterion for classification.
+It learns an embedding per class, where each class' embedding is a point on an (N-1)-dimensional simplex,
+where N is the number of classes.
+
+The `input` given through a `forward()` is expected to be the output of a Normalized Linear layer with no bias:
+- `input` has to be a 1D `Tensor` of size `n` for a single sample
+- a 2D `Tensor` of size `batchSize x n` for a mini-batch of samples
+
+This Criterion is best used in combination with a neural network where the last layers are:
+- a weight-normalized bias-less Linear layer. [Example source code](https://gist.github.com/soumith/4d0273f592956199739b)
+- followed by an output normalization layer (nn.Normalize).
+
+The loss is described in detail in the paper [Scale-invariant learning and convolutional networks](http://arxiv.org/abs/1506.08230).
+
+
+The following is a code fragment showing how to make a gradient step given an input `x`, a desired output `y` (an integer `1` to `n`, in this case `n = 30` classes), a network `mlp` and a learning rate `learningRate`:
+
+```lua
+nInput = 10
+nClasses = 30
+nHidden = 100
+mlp = nn.Sequential()
+mlp:add(nn.Linear(nInput, nHidden)):add(nn.ReLU())
+mlp:add(nn.NormalizedLinearNoBias(nHidden, nClasses))
+mlp:add(nn.Normalize(2))
+
+criterion = nn.ClassSimplexCriterion(nClasses)
+
+function gradUpdate(mlp, x, y, learningRate)
+   pred = mlp:forward(x)
+   local err = criterion:forward(pred, y)
+   mlp:zeroGradParameters()
+   local t = criterion:backward(pred, y)
+   mlp:backward(x, t)
+   mlp:updateParameters(learningRate)
+end
+```
+
+This criterion also provides two helper functions `getPredictions(input)` and `getTopPrediction(input)` that return the raw predictions and the top prediction index respectively, given an input sample.
+
+<a name="nn.DistKLDivCriterion"></a>
 ## DistKLDivCriterion ##
 
 ```lua
@@ -173,40 +227,52 @@ This criterion expect a `target` `Tensor` of the same size as the `input` `Tenso
 The loss can be described as:
 
 ```lua
-loss(x, target) = \sum(target_i * (log(target_i) - x_i))
+loss(x, target) = 1/n \sum(target_i * (log(target_i) - x_i))
 ```
 
+By default, the losses are averaged for each minibatch over observations *as well as* over dimensions. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
-<a name="nn.BCECriterion"/>
+
+<a name="nn.BCECriterion"></a>
 ## BCECriterion
 
 ```lua
-criterion = nn.BCECriterion()
+criterion = nn.BCECriterion([weights])
 ```
 
 Creates a criterion that measures the Binary Cross Entropy between the target and the output:
 
 ```lua
-loss(t, o) = -(t * log(o) + (1 - t) * log(1 - o))
+loss(o, t) = - 1/n sum_i (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
 ```
 
-This is used for measuring the error of a reconstruction in for example an auto-encoder.
+or in the case of the weights argument being specified:
+
+```lua
+loss(o, t) = - 1/n sum_i weights[i] * (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
+```
+
+This is used for measuring the error of a reconstruction in for example an auto-encoder. Note that the targets `t[i]` should be numbers between 0 and 1, for instance, the output of an [`nn.Sigmoid`](transfer.md#nn.Sigmoid) layer.
+
+By default, the losses are averaged for each minibatch over observations *as well as* over dimensions. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 
-<a name="nn.MarginCriterion"/>
+<a name="nn.MarginCriterion"></a>
 ## MarginCriterion ##
 
 ```lua
 criterion = nn.MarginCriterion([margin])
 ```
 
-Creates a criterion that optimizes a two-class classification hinge loss (margin-based loss) between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a scalar, either `1` or `-1`):
+Creates a criterion that optimizes a two-class classification hinge loss (margin-based loss) between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a tensor containing either `1`s or `-1`s).
+`margin`, if unspecified, is by default `1`.
 
 ```lua
-loss(x, y) = max(0, margin - y*x).
+loss(x, y) = sum_i (max(0, margin - y[i]*x[i])) / x:nElement()
 ```
 
-`margin`, if unspecified, is by default `1`.
+The normalization by the number of elements in the input can be disabled by
+setting `self.sizeAverage` to `false`.
 
 ### Example
 
@@ -224,19 +290,21 @@ mlp = nn.Sequential()
 mlp:add(nn.Linear(5, 1))
 
 x1 = torch.rand(5)
+x1_target = torch.Tensor{1}
 x2 = torch.rand(5)
+x2_target = torch.Tensor{-1}
 criterion=nn.MarginCriterion(1)
 
 for i = 1, 1000 do
-   gradUpdate(mlp, x1, 1, criterion, 0.01)
-   gradUpdate(mlp, x2, -1, criterion, 0.01)
+   gradUpdate(mlp, x1, x1_target, criterion, 0.01)
+   gradUpdate(mlp, x2, x2_target, criterion, 0.01)
 end
 
 print(mlp:forward(x1))
 print(mlp:forward(x2))
 
-print(criterion:forward(mlp:forward(x1), 1))
-print(criterion:forward(mlp:forward(x2), -1))
+print(criterion:forward(mlp:forward(x1), x1_target))
+print(criterion:forward(mlp:forward(x2), x2_target))
 ```
 
 gives the output:
@@ -255,22 +323,98 @@ gives the output:
 
 i.e. the mlp successfully separates the two data points such that they both have a `margin` of `1`, and hence a loss of `0`.
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
-<a name="nn.MultiMarginCriterion"/>
+<a name="nn.SoftMarginCriterion"></a>
+## SoftMarginCriterion ##
+
+```lua
+criterion = nn.SoftMarginCriterion()
+```
+
+Creates a criterion that optimizes a two-class classification logisitic loss between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a tensor containing either `1`s or `-1`s).
+
+```lua
+loss(x, y) = sum_i (log(1 + exp(-y[i]*x[i]))) / x:nElement()
+```
+
+The normalization by the number of elements in the input can be disabled by
+setting `self.sizeAverage` to `false`.
+
+### Example
+
+```lua
+function gradUpdate(mlp, x, y, criterion, learningRate)
+   local pred = mlp:forward(x)
+   local err = criterion:forward(pred, y)
+   local gradCriterion = criterion:backward(pred, y)
+   mlp:zeroGradParameters()
+   mlp:backward(x, gradCriterion)
+   mlp:updateParameters(learningRate)
+end
+
+mlp = nn.Sequential()
+mlp:add(nn.Linear(5, 1))
+
+x1 = torch.rand(5)
+x1_target = torch.Tensor{1}
+x2 = torch.rand(5)
+x2_target = torch.Tensor{-1}
+criterion=nn.SoftMarginCriterion(1)
+
+for i = 1, 1000 do
+   gradUpdate(mlp, x1, x1_target, criterion, 0.01)
+   gradUpdate(mlp, x2, x2_target, criterion, 0.01)
+end
+
+print(mlp:forward(x1))
+print(mlp:forward(x2))
+
+print(criterion:forward(mlp:forward(x1), x1_target))
+print(criterion:forward(mlp:forward(x2), x2_target))
+```
+
+gives the output:
+
+```lua
+
+ 0.7471
+[torch.DoubleTensor of size 1]
+
+-0.9607
+[torch.DoubleTensor of size 1]
+
+0.38781049558836
+0.32399356957564
+
+```
+
+i.e. the mlp successfully separates the two data points.
+
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
+
+<a name="nn.MultiMarginCriterion"></a>
 ## MultiMarginCriterion ##
 
 ```lua
-criterion = nn.MultiMarginCriterion(p)
+criterion = nn.MultiMarginCriterion(p, [weights], [margin])
 ```
 
 Creates a criterion that optimizes a multi-class classification hinge loss (margin-based loss) between input `x`  (a `Tensor` of dimension 1) and output `y` (which is a target class index, `1` <= `y` <= `x:size(1)`):
 
 ```lua
-loss(x, y) = sum_i(max(0, 1 - (x[y] - x[i]))^p) / x:size(1)
+loss(x, y) = sum_i(max(0, (margin - x[y] - x[i]))^p) / x:size(1)
 ```
 
 where `i == 1` to `x:size(1)` and `i ~= y`.
 Note that this criterion also works with 2D inputs and 1D targets.
+
+Optionally, you can give non-equal weighting on the classes by passing a 1D `weights` tensor into the constructor.
+The loss function then becomes:
+
+```lua
+loss(x, y) = sum_i(max(0, w[y] * (margin - x[y] - x[i]))^p) / x:size(1)
+```
 
 This criterion is especially useful for classification when used in conjunction with a module ending in the following output layer:
 
@@ -280,8 +424,10 @@ mlp:add(nn.Euclidean(n, m)) -- outputs a vector of distances
 mlp:add(nn.MulConstant(-1)) -- distance to similarity
 ```
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
-<a name="nn.MultiLabelMarginCriterion"/>
+
+<a name="nn.MultiLabelMarginCriterion"></a>
 ## MultiLabelMarginCriterion ##
 
 ```lua
@@ -308,8 +454,25 @@ target = torch.Tensor{{1, 3, 0, 0}, {4, 0, 0, 0}} -- zero-values are ignored
 criterion:forward(input, target)
 ```
 
+<a name="nn.MultiLabelSoftMarginCriterion"/>
+## MultiLabelSoftMarginCriterion ##
 
-<a name="nn.MSECriterion"/>
+```lua
+criterion = nn.MultiLabelSoftMarginCriterion()
+```
+
+Creates a criterion that optimizes a multi-label one-versus-all loss based on max-entropy, between input `x`  (a 1D `Tensor`) and target `y` (a binary 1D `Tensor`):
+
+```lua
+loss(x, y) = - sum_i (y[i] log( exp(x[i]) / (1 + exp(x[i]))) + (1-y[i]) log(1/(1+exp(x[i])))) / x:nElement()
+```
+
+where `i == 1` to `x:nElement()`, `y[i]  in {0,1}`.
+Note that this criterion also works with 2D inputs and targets.
+
+`y` and `x` must have the same size.
+
+<a name="nn.MSECriterion"></a>
 ## MSECriterion ##
 
 ```lua
@@ -332,8 +495,10 @@ criterion = nn.MSECriterion()
 criterion.sizeAverage = false
 ```
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
-<a name="nn.MultiCriterion"/>
+
+<a name="nn.MultiCriterion"></a>
 ## MultiCriterion ##
 
 ```lua
@@ -360,21 +525,21 @@ mc = nn.MultiCriterion():add(nll, 0.5):add(nll2)
 output = mc:forward(input, target)
 ```
 
-<a name="nn.ParallelCriterion"/>
+<a name="nn.ParallelCriterion"></a>
 ## ParallelCriterion ##
 
 ```lua
 criterion = nn.ParallelCriterion([repeatTarget])
 ```
 
-This returns a Criterion which is a weighted sum of other Criterion. 
+This returns a Criterion which is a weighted sum of other Criterion.
 Criterions are added using the method:
 
 ```lua
 criterion:add(singleCriterion [, weight])
 ```
 
-where `weight` is a scalar (default 1). The criterion expects an `input` and `target` table. 
+where `weight` is a scalar (default 1). The criterion expects an `input` and `target` table.
 Each criterion is applied to the commensurate `input` and `target` element in the tables.
 However, if `repeatTarget=true`, the `target` is repeatedly presented to each criterion (with a different `input`).
 
@@ -390,23 +555,50 @@ output = pc:forward(input, target)
 ```
 
 
-<a name="nn.HingeEmbeddingCriterion"/>
+<a name="nn.SmoothL1Criterion"></a>
+## SmoothL1Criterion ##
+
+```lua
+criterion = nn.SmoothL1Criterion()
+```
+
+Creates a criterion that can be thought of as a smooth version of the [`AbsCriterion`](#nn.AbsCriterion). It uses a squared term if the absolute element-wise error falls below 1. It is less sensitive to outliers than the [`MSECriterion`](#nn.MSECriterion) and in some cases prevents exploding gradients (e.g. see "Fast R-CNN" paper by Ross Girshick).
+
+```lua
+                      ⎧ 0.5 * (x_i - y_i)^2, if |x_i - y_i| < 1
+loss(x, y) = 1/n \sum ⎨
+                      ⎩ |x_i - y_i| - 0.5,   otherwise
+```
+
+If `x` and `y` are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation still operates over all the elements, and divides by `n`.
+
+The division by `n` can be avoided if one sets the internal variable `sizeAverage` to `false`:
+
+```lua
+criterion = nn.SmoothL1Criterion()
+criterion.sizeAverage = false
+```
+
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
+
+
+<a name="nn.HingeEmbeddingCriterion"></a>
 ## HingeEmbeddingCriterion ##
 
 ```lua
 criterion = nn.HingeEmbeddingCriterion([margin])
 ```
 
-Creates a criterion that measures the loss given  an input `x` which is a 1-dimensional vector and a label `y` (`1` or `-1`).
+Creates a criterion that measures the loss given an input `x` which is a 1-dimensional vector and a label `y` (`1` or `-1`).
 This is usually used for measuring whether two inputs are similar or dissimilar, e.g. using the L1 pairwise distance, and is typically used for learning nonlinear embeddings or semi-supervised learning.
 
 ```lua
-             ⎧ x,                  if y ==  1
-loss(x, y) = ⎨
-             ⎩ max(0, margin - x), if y == -1
+                 ⎧ x_i,                  if y_i ==  1
+loss(x, y) = 1/n ⎨
+                 ⎩ max(0, margin - x_i), if y_i == -1
 ```
 
-The `margin` has a default value of `1`, or can be set in the constructor.
+If `x` and `y` are `n`-dimensional `Tensor`s, the sum operation still operates over all the elements, and divides by `n` (this can be avoided if one sets the internal variable `sizeAverage` to `false`). The `margin` has a default value of `1`, or can be set in the constructor.
 
 ### Example
 
@@ -468,8 +660,10 @@ for i = 1, 10 do
 end
 ```
 
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
-<a name="nn.L1HingeEmbeddingCriterion"/>
+
+<a name="nn.L1HingeEmbeddingCriterion"></a>
 ## L1HingeEmbeddingCriterion ##
 
 ```lua
@@ -486,20 +680,20 @@ loss(x, y) = ⎨
 
 The `margin` has a default value of `1`, or can be set in the constructor.
 
-<a name="nn.CosineEmbeddingCriterion"/>
+<a name="nn.CosineEmbeddingCriterion"></a>
 ## CosineEmbeddingCriterion ##
 
 ```lua
 criterion = nn.CosineEmbeddingCriterion([margin])
 ```
 
-Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s, and a label `y` (1 or -1).
+Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s, and a `Tensor` label `y`  with values 1 or -1.
 This is used for measuring whether two inputs are similar or dissimilar, using the cosine distance, and is typically used for learning nonlinear embeddings or semi-supervised learning.
 
 `margin` should be a number from `-1` to `1`, `0` to `0.5` is suggested.
 `Forward` and `Backward` have to be used alternately. If `margin` is missing, the default value is `0`.
 
-The loss function is:
+The loss function for each sample is:
 
 ```lua
              ⎧ 1 - cos(x1, x2),              if y ==  1
@@ -507,8 +701,12 @@ loss(x, y) = ⎨
              ⎩ max(0, cos(x1, x2) - margin), if y == -1
 ```
 
+For batched inputs, if the internal variable `sizeAverage` is equal to `true`, the loss function averages the loss over the batch samples; if `sizeAverage` is `false`, then the loss function sums over the batch samples. By default, `sizeAverage` equals to `true`.
 
-<a name="nn.MarginRankingCriterion"/>
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
+
+
+<a name="nn.MarginRankingCriterion"></a>
 ## MarginRankingCriterion ##
 
 ```lua
@@ -516,6 +714,7 @@ criterion = nn.MarginRankingCriterion(margin)
 ```
 
 Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s of size 1 (they contain only scalars), and a label `y` (`1` or `-1`).
+In batch mode, `x` is a table of two `Tensor`s of size `batchsize`, and `y` is a `Tensor` of size `batchsize` containing `1` or `-1` for each corresponding pair of elements in the input `Tensor`.
 
 If `y == 1` then it assumed the first input should be ranked higher (have a larger value) than the second input, and vice-versa for `y == -1`.
 
@@ -524,6 +723,9 @@ The loss function is:
 ```lua
 loss(x, y) = max(0, -y * (x[1] - x[2]) + margin)
 ```
+
+For batched inputs, if the internal variable `sizeAverage` is equal to `true`, the loss function averages the loss over the batch samples; if `sizeAverage` is `false`, then the loss function sums over the batch samples. By default, `sizeAverage` equals to `true`.
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
 ### Example
 

@@ -15,7 +15,7 @@ function SpatialDropout:updateOutput(input)
       elseif input:dim() == 3 then
         self.noise:resize(input:size(1), 1, 1)
       else
-        error('Input must be 4D (nbatch, nfeat, h, w) or 2D (nfeat, h, w)')
+        error('Input must be 4D (nbatch, nfeat, h, w) or 3D (nfeat, h, w)')
       end
       self.noise:bernoulli(1-self.p)
       -- We expand the random dropouts to the entire feature map because the
@@ -44,4 +44,11 @@ end
 
 function SpatialDropout:__tostring__()
   return string.format('%s(%f)', torch.type(self), self.p)
+end
+
+function SpatialDropout:clearState()
+  if self.noise then
+    self.noise:set()
+  end
+  return Parent.clearState(self)
 end

@@ -38,18 +38,33 @@ function TemporalConvolution:reset(stdv)
 end
 
 function TemporalConvolution:updateOutput(input)
-   return input.nn.TemporalConvolution_updateOutput(self, input)
+    input.THNN.TemporalConvolution_updateOutput(
+	input:cdata(), self.output:cdata(),
+	self.weight:cdata(), self.bias:cdata(),
+	self.kW, self.dW,
+	self.inputFrameSize, self.outputFrameSize
+    )
+   return self.output
 end
 
 function TemporalConvolution:updateGradInput(input, gradOutput)
    if self.gradInput then
-      return input.nn.TemporalConvolution_updateGradInput(self, input, gradOutput)
+      input.THNN.TemporalConvolution_updateGradInput(
+	  input:cdata(), gradOutput:cdata(),
+	  self.gradInput:cdata(), self.weight:cdata(),
+	  self.kW, self.dW
+       )
+      return self.gradInput
    end
 end
 
 function TemporalConvolution:accGradParameters(input, gradOutput, scale)
    scale = scale or 1
-   input.nn.TemporalConvolution_accGradParameters(self, input, gradOutput, scale)
+   input.THNN.TemporalConvolution_accGradParameters(
+       input:cdata(), gradOutput:cdata(),
+       self.gradWeight:cdata(), self.gradBias:cdata(),
+       self.kW, self.dW, scale
+   )
 end
 
 -- we do not need to accumulate parameters when sharing

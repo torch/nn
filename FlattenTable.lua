@@ -94,9 +94,13 @@ function FlattenTable:updateGradInput(input, gradOutput)
   return self.gradInput
 end
 
-function FlattenTable:type(type)
+function FlattenTable:type(type, tensorCache)
   -- This function just stores references so we don't need to do any type
   -- conversions.  Just force the tables to be empty.
-  self.output = {}
+  self:clearState()
+end
+
+function FlattenTable:clearState()
   self.input_map = {}
+  return parent.clearState(self)
 end

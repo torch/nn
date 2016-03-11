@@ -1,4 +1,4 @@
-<a name="nn.traningneuralnet.dok"/>
+<a name="nn.traningneuralnet.dok"></a>
 # Training a neural network #
 
 Training a neural network is easy with a [simple `for` loop](#nn.DoItYourself).
@@ -7,19 +7,19 @@ want sometimes a quick way of training neural
 networks. [StochasticGradient](#nn.StochasticGradient), a simple class
 which does the job for you is provided as standard.
 
-<a name="nn.StochasticGradient.dok"/>
+<a name="nn.StochasticGradient.dok"></a>
 ## StochasticGradient ##
 
 `StochasticGradient` is a high-level class for training [neural networks](#nn.Module), using a stochastic gradient
 algorithm. This class is [serializable](https://github.com/torch/torch7/blob/master/doc/serialization.md#serialization).
 
-<a name="nn.StochasticGradient"/>
+<a name="nn.StochasticGradient"></a>
 ### StochasticGradient(module, criterion) ###
 
 Create a `StochasticGradient` class, using the given [Module](module.md#nn.Module) and [Criterion](criterion.md#nn.Criterion).
 The class contains [several parameters](#nn.StochasticGradientParameters) you might want to set after initialization.
 
-<a name="nn.StochasticGradientTrain"/>
+<a name="nn.StochasticGradientTrain"></a>
 ### train(dataset) ###
 
 Train the module and criterion given in the
@@ -42,7 +42,7 @@ Such a dataset is easily constructed by using Lua tables, but it could any `C` o
 for example, as long as required operators/methods are implemented. 
 [See an example](#nn.DoItStochasticGradient).
 
-<a name="nn.StochasticGradientParameters"/>
+<a name="nn.StochasticGradientParameters"></a>
 ### Parameters ###
 
 `StochasticGradient` has several field which have an impact on a call to [train()](#nn.StochasticGradientTrain).
@@ -52,9 +52,9 @@ for example, as long as required operators/methods are implemented.
   * `maxIteration`: The maximum number of iteration (passes over the dataset). Default is `25`.
   * `shuffleIndices`: Boolean which says if the examples will be randomly sampled or not. Default is `true`. If `false`, the examples will be taken in the order of the dataset.
   * `hookExample`: A possible hook function which will be called (if non-nil) during training after each example forwarded and backwarded through the network. The function takes `(self, example)` as parameters. Default is `nil`.
-  * `hookIteration`: A possible hook function which will be called (if non-nil) during training after a complete pass over the dataset. The function takes `(self, iteration)` as parameters. Default is `nil`.
+  * `hookIteration`: A possible hook function which will be called (if non-nil) during training after a complete pass over the dataset. The function takes `(self, iteration, currentError)` as parameters. Default is `nil`.
 
-<a name="nn.DoItStochasticGradient"/>
+<a name="nn.DoItStochasticGradient"></a>
 ## Example of training using StochasticGradient ##
 
 We show an example here on a classical XOR problem.
@@ -92,7 +92,7 @@ mlp:add(nn.Linear(HUs, outputs))
 
 __Training__
 
-We choose the Mean Squared Error criterion and train the beast.
+We choose the Mean Squared Error criterion and train the dataset.
 ```lua
 criterion = nn.MSECriterion()  
 trainer = nn.StochasticGradient(mlp, criterion)
@@ -134,7 +134,7 @@ You should see something like:
 [torch.Tensor of dimension 1]
 ```
 
-<a name="nn.DoItYourself"/>
+<a name="nn.DoItYourself"></a>
 ## Example of manual training of a neural network ##
 
 We show an example here on a classical XOR problem.
