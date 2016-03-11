@@ -24,7 +24,7 @@ function MaskedSelect:updateGradInput(input, gradOutput)
     i = i + 1
   end
   self.maskIndices:apply(f)
-  self.gradInput:resizeAs(input)
+  self.gradInput:resizeAs(input:double())
   return self.gradInput
 end
 
