@@ -284,7 +284,7 @@ module:backward(input, gradOutput)
 
 -- after
 print(gradWeight[paddingValue]) -- unchanged 
-print(gradWeight[1]) -- changed, as input[1] = 1 and input [3] = 1 
+print(gradWeight[1]) -- changed, as input[1] = 1 and input[3] = 1 
 ```
 The default `paddingValue` is `0`, allowing the whole `gradWeight` always gets updated during `backward()` call.
 
