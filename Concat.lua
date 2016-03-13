@@ -34,7 +34,7 @@ function Concat:updateGradInput(input, gradOutput)
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
-      local currentGradInput = self:rethrowErrors(module, i, 'updateGradInput', gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)))
+      local currentGradInput = self:rethrowErrors(module, i, 'updateGradInput', input, gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)))
 
       if currentGradInput then -- if the module does not produce a gradInput (for example first layer), then ignore it and move on.
          if i==1 then
