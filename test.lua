@@ -4689,6 +4689,36 @@ function nntest.SpatialUpSamplingNearest()
   end
 end
 
+function nntest.Concat()
+   local input = torch.randn(4, 2)
+   local num_modules = math.random(2, 5)
+   local linears = {}
+   for i = 1,num_modules do
+       linears[i] = nn.Linear(2,5)
+   end
+
+   local m = nn.Concat(1)
+   for _,module in ipairs(linears) do
+      m:add(module)
+      module:zeroGradParameters()
+      module.weight:fill(1)
+      module.bias:fill(0)
+   end
+
+   local output = m:forward(input)
+   local output2 = input:sum(2):expand(4, 5):repeatTensor(num_modules, 1)
+   mytester:assertTensorEq(output2, output, 0.000001, 'Concat forward err')
+
+   local gradInput = m:backward(input, torch.ones(output2:size()))
+   local gradInput2 = torch.ones(4, 2):fill(num_modules * 5)
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001, 'Concat backward err (gradInput)')
+
+   local gradWeight = input:sum(1):expand(5, 2)
+   for _,module in ipairs(linears) do
+      mytester:assertTensorEq(gradWeight, module.gradWeight, 0.000001, 'Concat backward err (gradWeight)')
+   end
+end
+
 function nntest.Parallel()
    local input = torch.randn(3, 4, 5)
    local m = nn.Parallel(1,3)
@@ -5538,8 +5568,8 @@ end
 function nntest.SpatialReplicationPadding()
    local batch = math.random(1,3)
    local plane = math.random(1,3)
-   local sizeY = math.random(6,16)
-   local sizeX = math.random(6,16)
+   local sizeY = math.random(7,16)
+   local sizeX = math.random(7,16)
    local padL = math.random(-3,3)
    local padR = math.random(-3,3)
    local padT = math.random(-3,3)
