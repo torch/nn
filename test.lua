@@ -4179,6 +4179,23 @@ function nntest.LookupTable()
    end
    local err = padw_sum - padw:sum()
    mytester:assertlt(err,precision, 'padding update error ')
+   -- test whether padding weights are set to zeros
+   local paddingValue = math.random(totalIndex)
+   local module = nn.LookupTable(totalIndex, entry_size, paddingValue):zeroPaddingWeight()
+   local padw = module.weight:select(1,paddingValue)
+   local input = torch.IntTensor(nIndex)
+   for i = 1, 100 do
+      input:apply(
+         function() -- set randomly half of the input as padding
+         if torch.random(2) == 1 then return paddingValue end
+         return torch.random(totalIndex)
+         end)
+      local y = module:updateOutput(input)
+      module:updateGradInput(input, y)
+      module:accUpdateGradParameters(input, y, 0.1)
+   end
+   local err = padw:sum()
+   mytester:assertlt(err,precision, 'padding update error ')
 end
 
 function nntest.AddConstant()
