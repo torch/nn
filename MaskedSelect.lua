@@ -17,13 +17,8 @@ end
 
 --[[ Reverse maps unmasked gradOutput back to gradInput. ]]
 function MaskedSelect:updateGradInput(input, gradOutput)
-  self.gradInput = torch.Tensor(input:nElement())
-  local i = 1
-  local f = function(x)
-    self.gradInput[x] = gradOutput[i]
-    i = i + 1
-  end
-  self.maskIndices:apply(f)
+  self.gradInput = torch.Tensor(input:nElement()):zero()
+  self.gradInput:scatter(1, self.maskedIndices:long(), gradOutput)
   self.gradInput:resizeAs(input:double())
   return self.gradInput
 end
@@ -51,6 +46,6 @@ function MaskedSelect:type(type)
   return self
 end
 
-function MaskedSelect:gc()
-  nn.clearFields(self, 'output', 'gradInput')
+function MaskedSelect:ckearStates()
+  nn.utils.clear(self, {'output', 'gradInput'})
 end
