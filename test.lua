@@ -1285,7 +1285,7 @@ function nntest.MaskedSelect()
    mytester:assertlt(err, 1e-15, torch.typename(module) .. ' - forward err ')
 
    input:zero()
-   -- local module = nn.MaskedSelect(mask)
+   local module = nn.MaskedSelect(mask)
    local err = nn.Jacobian.testJacobian(module, input)
    mytester:assertlt(err, 1e-15, 'error on state ')
 
