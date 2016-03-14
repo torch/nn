@@ -1283,15 +1283,6 @@ function nntest.MaskedSelect()
    local out = module:forward(input)
    local err = out:dist(input:maskedSelect(mask))
    mytester:assertlt(err, 1e-15, torch.typename(module) .. ' - forward err ')
-
-   input:zero()
-   local module = nn.MaskedSelect(mask)
-   local err = nn.Jacobian.testJacobian(module, input)
-   mytester:assertlt(err, 1e-15, 'error on state ')
-
-   local ferr, berr = nn.Jacobian.testIO(module, input)
-   mytester:assertlt(ferr, 1e-15, torch.typename(module) .. ' - i/o forward err ')
-   mytester:assertlt(berr, 1e-15, torch.typename(module) .. ' - i/o backward err ')
 end
 
 function nntest.ParallelCriterion()
