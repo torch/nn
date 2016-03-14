@@ -26,8 +26,6 @@ end
 function View:__init(...)
    parent.__init(self)
    self:resetSize(...)
-   self.output = nil
-   self.gradInput = nil
    self.numInputDims = nil
 end
 
@@ -79,15 +77,15 @@ end
 function View:updateOutput(input)
    local bsz = batchsize(input, self.size, self.numInputDims, self.numElements)
    if bsz then
-      self.output = input:view(bsz, table.unpack(self.size:totable()))
+      self.output:view(input, bsz, table.unpack(self.size:totable()))
    else
-      self.output = input:view(self.size)
+      self.output:view(input, self.size)
    end
    return self.output
 end
 
 function View:updateGradInput(input, gradOutput)
-   self.gradInput = gradOutput:view(input:size())
+   self.gradInput:view(gradOutput, input:size())
    return self.gradInput
 end
 
