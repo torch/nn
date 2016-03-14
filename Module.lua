@@ -3,6 +3,7 @@ local Module = torch.class('nn.Module')
 function Module:__init()
    self.gradInput = torch.Tensor()
    self.output = torch.Tensor()
+   self._type = self.output:type()
 end
 
 function Module:parameters()
@@ -114,7 +115,9 @@ function Module:clone(...)
 end
 
 function Module:type(type, tensorCache)
-   assert(type, 'Module: must provide a type to convert to')
+   if not type then
+      return self._type
+   end
 
    tensorCache = tensorCache or {}
 
@@ -123,6 +126,7 @@ function Module:type(type, tensorCache)
       self[key] = nn.utils.recursiveType(param, type, tensorCache)
    end
 
+   self._type = type
    return self
 end
 
@@ -285,7 +289,14 @@ end
 function Module:getParameters()
    -- get parameters
    local parameters,gradParameters = self:parameters()
-   return Module.flatten(parameters), Module.flatten(gradParameters)
+   local p, g = Module.flatten(parameters), Module.flatten(gradParameters)
+   assert(p:nElement() == g:nElement(),
+      'check that you are sharing parameters and gradParameters')
+   for i=1,#parameters do
+      assert(parameters[i]:storageOffset() == gradParameters[i]:storageOffset(),
+         'misaligned parameter at ' .. tostring(i))
+   end
+   return p, g
 end
 
 function Module:__call__(input, gradOutput)
