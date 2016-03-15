@@ -46,6 +46,6 @@ function MaskedSelect:type(type)
   return self
 end
 
-function MaskedSelect:ckearStates()
+function MaskedSelect:clearStates()
   nn.utils.clear(self, {'output', 'gradInput'})
 end
