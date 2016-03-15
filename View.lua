@@ -75,6 +75,7 @@ local function batchsize(input, size, numInputDims, numElements)
 end
 
 function View:updateOutput(input)
+   self.output = self.output or input.new()
    local bsz = batchsize(input, self.size, self.numInputDims, self.numElements)
    if bsz then
       self.output:view(input, bsz, table.unpack(self.size:totable()))
@@ -85,6 +86,7 @@ function View:updateOutput(input)
 end
 
 function View:updateGradInput(input, gradOutput)
+   self.gradInput = self.gradInput or gradOutput.new()
    self.gradInput:view(gradOutput, input:size())
    return self.gradInput
 end
