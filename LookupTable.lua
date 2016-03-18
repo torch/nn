@@ -14,8 +14,8 @@ function LookupTable:__init(nIndex, nOutput, paddingValue)
 end
 
 function LookupTable:backCompatibility()
-   self._count = self._count or torch.IntTensor()
-   self._input = self._input or torch.LongTensor()
+   self._count = self._count:int() or torch.IntTensor()
+   self._input = self._input:long() or torch.LongTensor()
 
    if not self.shouldScaleGradByFreq then
       self.shouldScaleGradByFreq = false
