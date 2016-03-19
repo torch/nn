@@ -344,24 +344,16 @@ TH_API void THNN_(SparseLinear_updateOutput)(
           THTensor *input,
           THTensor *output,
           THTensor *weight,
-          THTensor *bias);
-TH_API void THNN_(SparseLinear_accGradParameters)(
+          THTensor *bias,
+          THTensor *cudaBuffer,
+          THTensor *shardBuffer);
+TH_API void THNN_(SparseLinear_updateGradInput)(
           THNNState *state,
           THTensor *input,
           THTensor *gradOutput,
-          THTensor *gradWeight,
-          THTensor *gradBias,
-          THTensor *weight,
-          THTensor *bias,
-          real weightDecay,
-          real scale);
-TH_API void THNN_(SparseLinear_legacyUpdateOutput)(
-          THNNState *state,
-          THTensor *input,
-          THTensor *output,
-          THTensor *weight,
-          THTensor *bias);
-TH_API void THNN_(SparseLinear_legacyAccGradParameters)(
+          THTensor *gradInput,
+          THTensor *weight);
+TH_API void THNN_(SparseLinear_accGradParameters)(
           THNNState *state,
           THTensor *input,
           THTensor *gradOutput,
@@ -384,7 +376,6 @@ TH_API void THNN_(SparseLinear_updateParameters)(
           THTensor *gradBias,
           THTensor *lastInput,
           real learningRate);
-TH_API void THNN_(SparseLinear_cudaClearState)(THNNState *state);
 
 TH_API void THNN_(Sqrt_updateOutput)(
           THNNState *state,
