@@ -805,6 +805,8 @@ function nntest.SparseLinear()
    end
    local gradOutput = torch.rand(inb, inj)
 
+   local cmps = {'weight', 'bias', 'gradWeight', 'gradBias'}
+
    -- Check output wrt linear, non-batch
    local actual = module:forward(input[1])
    local expected = linear:forward(nonsparse[1])
@@ -812,36 +814,50 @@ function nntest.SparseLinear()
    local expectedgi = linear:backward(nonsparse[1], gradOutput[1])
    module:updateParameters(1)
    linear:updateParameters(1)
-   cmps = {'weight', 'bias', 'gradWeight', 'gradBias'}
    local err = (expected - actual):abs():max()
    local gierr = (expectedgi - actualgi[1]:select(2,2)):abs():max()
    mytester:assertle(err, precision, 'error on result')
    mytester:assertle(gierr, precision, 'error on gradInput')
-   
+
    for _,var in ipairs(cmps) do
         local err = (module[var] - linear[var]):abs():max()
         mytester:assertle(err, precision, 'error on '..var)
    end
 
    -- Check output wrt linear, batch
-   local actual = module:forward(input)
-   local expected = linear:forward(nonsparse)
-   local actualgi = module:backward(input, gradOutput)
-   local expectedgi = linear:backward(nonsparse, gradOutput)
-   module:updateParameters(1)
-   linear:updateParameters(1)
-   cmps = {'weight', 'bias', 'gradWeight', 'gradBias'}
-   local err = (expected - actual):abs():max()
-   local gicheck = torch.Tensor():resizeAs(expectedgi)
-   for i=1,#actualgi do gicheck[i]:copy(actualgi[i]:select(2,2)) end
-   local gierr = (expectedgi - gicheck):abs():max()
-   mytester:assertle(err, precision, 'error on result')
-   mytester:assertle(gierr, precision, 'error on gradInput')
-   
-   for _,var in ipairs(cmps) do
-        local err = (module[var] - linear[var]):abs():max()
-        mytester:assertle(err, precision, 'error on '..var)
+   -- doing this n times checks for fast last input param updates
+   local test_n_times = function(ntimes)
+      local actual, expected, actualgi, expectedgi
+      for i=1, ntimes do
+         actual = module:forward(input)
+         expected = linear:forward(nonsparse)
+         actualgi = module:backward(input, gradOutput)
+         expectedgi = linear:backward(nonsparse, gradOutput)
+      end
+      module:updateParameters(1)
+      linear:updateParameters(1)
+      local err = (expected - actual):abs():max()
+      local gicheck = torch.Tensor():resizeAs(expectedgi)
+      for i=1,#actualgi do gicheck[i]:copy(actualgi[i]:select(2,2)) end
+      local gierr = (expectedgi - gicheck):abs():max()
+      mytester:assertle(err, precision, 'error on result with ntimes = '..ntimes)
+      mytester:assertle(gierr, precision, 'error on gradInput with ntimes = '..ntimes)
+
+      for _,var in ipairs(cmps) do
+           local err = (module[var] - linear[var]):abs():max()
+           mytester:assertle(err, precision, 'error on '..var..' with ntimes='..ntimes)
+      end
+
+      module:zeroGradParameters()
+      linear:zeroGradParameters()
+      mytester:assertle(module.gradWeight:sum(), precision, 'error zeroing gradweight')
+      mytester:assertle(module.gradBias:sum(), precision, 'error zeroing gradweight')
+
    end
+
+   test_n_times(1)
+   test_n_times(2)
+   test_n_times(3)
 
    -- legacy batch mode
    local batch = math.random(2,5)
