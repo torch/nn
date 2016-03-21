@@ -74,10 +74,7 @@ criterion = nn.AbsCriterion()
 ```
 
 Creates a criterion that measures the mean absolute value of the element-wise difference between input `x` and target `y`:
-
-```lua
-loss(x, y)  = 1/n \sum |x_i - y_i|
-```
+![loss(x, y)  = 1/n \sum |x_i - y_i|](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%201/n%20%5Csum%20%7Cx_i%20-%20y_i%7C)
 
 If `x` and `y` are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation still operates over all the elements, and divides by `n`.
 
@@ -151,16 +148,11 @@ This criterion expect a class index (1 to the number of class) as `target` when 
 
 The loss can be described as:
 
-```lua
-loss(x, class) = -log(exp(x[class]) / (\sum_j exp(x[j])))
-               = -x[class] + log(\sum_j exp(x[j]))
-```
+![loss(x, target) = 1/n \sum(target_i * (log(target_i) - x_i))](https://latex.codecogs.com/gif.latex?loss%28x%2C%20class%29%20%3D%20-%5Clog%5Cfrac%7Be%5E%7Bx_%7Bclass%7D%7D%7D%7B%5Csum_j%20e%5E%7Bx_j%7D%7D%5C%5C%20%3D%20-x_%7Bclass%7D%20&plus;%20%5Clog%5Csum_j%20e%5E%7Bx_j%7D)
 
 or in the case of the `weights` argument being specified:
 
-```lua
-loss(x, class) = weights[class] * (-x[class] + log(\sum_j exp(x[j])))
-```
+![loss(o, t) = - 1/n sum_i weights[i] * (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))](https://latex.codecogs.com/gif.latex?loss%28x%2C%20class%29%20%3D%20weights_%7Bclass%7D%20*%20%28-x_%7Bclass%7D%20&plus;%20%5Clog%28%5Csum_j%20e%5E%7Bx_j%7D%29%29)
 
 The losses are averaged across observations for each minibatch.
 
@@ -226,9 +218,8 @@ This criterion expect a `target` `Tensor` of the same size as the `input` `Tenso
 
 The loss can be described as:
 
-```lua
-loss(x, target) = 1/n \sum(target_i * (log(target_i) - x_i))
-```
+![loss(x, target) = 1/n \sum(target_i * (log(target_i) - x_i))](https://latex.codecogs.com/gif.latex?loss%28x%2C%20target%29%20%3D%201/n%20%5Csum%28target_i%20*%20%28%5Clog%28target_i%29%20-%20x_i%29%29)
+
 
 By default, the losses are averaged for each minibatch over observations *as well as* over dimensions. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
@@ -242,15 +233,11 @@ criterion = nn.BCECriterion([weights])
 
 Creates a criterion that measures the Binary Cross Entropy between the target and the output:
 
-```lua
-loss(o, t) = - 1/n sum_i (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
-```
+![loss(o, t) = - 1/n sum_i (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20-%201/n%20%5Csum_i%20%28y_i%20*%20%5Clog%20%28x_i%29%20&plus;%20%281%20-%20y_i%29%20*%20%5Clog%281%20-%20x_i%29%29)
 
 or in the case of the weights argument being specified:
 
-```lua
-loss(o, t) = - 1/n sum_i weights[i] * (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))
-```
+![loss(o, t) = - 1/n sum_i weights[i] * (t[i] * log(o[i]) + (1 - t[i]) * log(1 - o[i]))](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20-%201/n%20%5Csum_i%20weights_i%20*%20%28y_i%20*%20%5Clog%28x_i%29%20&plus;%20%281%20-%20y_i%29%20*%20log%281%20-%20x_i%29%29)
 
 This is used for measuring the error of a reconstruction in for example an auto-encoder. Note that the targets `t[i]` should be numbers between 0 and 1, for instance, the output of an [`nn.Sigmoid`](transfer.md#nn.Sigmoid) layer.
 
@@ -267,9 +254,7 @@ criterion = nn.MarginCriterion([margin])
 Creates a criterion that optimizes a two-class classification hinge loss (margin-based loss) between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a tensor containing either `1`s or `-1`s).
 `margin`, if unspecified, is by default `1`.
 
-```lua
-loss(x, y) = sum_i (max(0, margin - y[i]*x[i])) / x:nElement()
-```
+![loss(x, y) = sum_i (max(0, margin - y[i]*x[i])) / x:nElement()](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20%5Cfrac%7B1%7D%7BnElements%7D%5Csum_i%20%5Cmax%280%2C%20margin%20-%20y_i*x_i%29)
 
 The normalization by the number of elements in the input can be disabled by
 setting `self.sizeAverage` to `false`.
@@ -334,9 +319,7 @@ criterion = nn.SoftMarginCriterion()
 
 Creates a criterion that optimizes a two-class classification logisitic loss between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a tensor containing either `1`s or `-1`s).
 
-```lua
-loss(x, y) = sum_i (log(1 + exp(-y[i]*x[i]))) / x:nElement()
-```
+![loss(x, y) = sum_i (log(1 + exp(-y[i]*x[i]))) / x:nElement()](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20%5Cfrac%7B1%7D%7Bx%3AnElement%28%29%7D%5Csum_i%20%5Clog%281%20&plus;%20e%5E%7B-y_i*x_i%7D%29)
 
 The normalization by the number of elements in the input can be disabled by
 setting `self.sizeAverage` to `false`.
@@ -402,9 +385,8 @@ criterion = nn.MultiMarginCriterion(p, [weights], [margin])
 
 Creates a criterion that optimizes a multi-class classification hinge loss (margin-based loss) between input `x`  (a `Tensor` of dimension 1) and output `y` (which is a target class index, `1` <= `y` <= `x:size(1)`):
 
-```lua
-loss(x, y) = sum_i(max(0, (margin - x[y] - x[i]))^p) / x:size(1)
-```
+![loss(x, y) = sum_i(max(0, (margin - x[y] - x[i]))^p) / x:size(1)](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20%5Cfrac%7B1%7D%7Bx%3Asize%281%29%7D%5Csum_i%28%5Cmax%280%2C%20%28margin%20-%20x_y%20-%20x_i%29%29%5Ep)
+
 
 where `i == 1` to `x:size(1)` and `i ~= y`.
 Note that this criterion also works with 2D inputs and 1D targets.
@@ -412,9 +394,8 @@ Note that this criterion also works with 2D inputs and 1D targets.
 Optionally, you can give non-equal weighting on the classes by passing a 1D `weights` tensor into the constructor.
 The loss function then becomes:
 
-```lua
-loss(x, y) = sum_i(max(0, w[y] * (margin - x[y] - x[i]))^p) / x:size(1)
-```
+![loss(x, y) = sum_i(max(0, w[y] * (margin - x[y] - x[i]))^p) / x:size(1)
+](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20%5Cfrac%7B1%7D%7Bx%3Asize%281%29%7D%5Csum_i%28%5Cmax%280%2C%20w_y%20*%20%28margin%20-%20x_y%20-%20x_i%29%29%5Ep)
 
 This criterion is especially useful for classification when used in conjunction with a module ending in the following output layer:
 
@@ -436,9 +417,7 @@ criterion = nn.MultiLabelMarginCriterion()
 
 Creates a criterion that optimizes a multi-class multi-classification hinge loss (margin-based loss) between input `x`  (a 1D `Tensor`) and output `y` (which is a 1D `Tensor` of target class indices):
 
-```lua
-loss(x, y) = sum_ij(max(0, 1 - (x[y[j]] - x[i]))) / x:size(1)
-```
+![loss(x, y) = sum_ij(max(0, 1 - (x[y[j]] - x[i]))) / x:size(1)](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20%5Cfrac%7B1%7D%7Bx%3Asize%281%29%7D%5Csum_%7Bij%7D%5Cmax%280%2C%201%20-%20%28x_%7By_j%7D%20-%20x_i%29%29)
 
 where `i == 1` to `x:size(1)`, `j == 1` to `y:size(1)`, `y[j] ~= 0`, and `i ~= y[j]` for all `i` and `j`.
 Note that this criterion also works with 2D inputs and targets.
@@ -463,9 +442,9 @@ criterion = nn.MultiLabelSoftMarginCriterion()
 
 Creates a criterion that optimizes a multi-label one-versus-all loss based on max-entropy, between input `x`  (a 1D `Tensor`) and target `y` (a binary 1D `Tensor`):
 
-```lua
-loss(x, y) = - sum_i (y[i] log( exp(x[i]) / (1 + exp(x[i]))) + (1-y[i]) log(1/(1+exp(x[i])))) / x:nElement()
-```
+![loss(x, y) = - sum_i (y[i] log( exp(x[i]) / (1 + exp(x[i]))) + (1-y[i]) log(1/(1+exp(x[i])))) / x:nElement()
+](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20%5Cfrac%7B-1%7D%7Bx%3AnElement%28%29%7D%5Csum_i%20%5Cleft%5B%28y_i%20*%20%5Clog%5Cfrac%20%7Be%5E%7Bx_i%7D%7D%7B1%20&plus;%20e%5E%7Bx_i%7D%7D%29%20&plus;%20%28%281-y_i%29%20*%20%5Clog%5Cfrac%7B1%7D%7B1&plus;e%5E%7Bx_i%7D%7D%29%5Cright%5D)
+
 
 where `i == 1` to `x:nElement()`, `y[i]  in {0,1}`.
 Note that this criterion also works with 2D inputs and targets.
@@ -481,9 +460,7 @@ criterion = nn.MSECriterion()
 
 Creates a criterion that measures the mean squared error between `n` elements in the input `x` and output `y`:
 
-```lua
-loss(x, y) = 1/n \sum |x_i - y_i|^2 .
-```
+![loss(x, y) = 1/n \sum |x_i - y_i|^2 ](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%201/n%20%5Csum%20%7Cx_i%20-%20y_i%7C%5E2)
 
 If `x` and `y` are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation still operates over all the elements, and divides by `n`.
 The two `Tensor`s must have the same number of elements (but their sizes might be different).
@@ -564,11 +541,10 @@ criterion = nn.SmoothL1Criterion()
 
 Creates a criterion that can be thought of as a smooth version of the [`AbsCriterion`](#nn.AbsCriterion). It uses a squared term if the absolute element-wise error falls below 1. It is less sensitive to outliers than the [`MSECriterion`](#nn.MSECriterion) and in some cases prevents exploding gradients (e.g. see "Fast R-CNN" paper by Ross Girshick).
 
-```lua
-                      ⎧ 0.5 * (x_i - y_i)^2, if |x_i - y_i| < 1
+![                      ⎧ 0.5 * (x_i - y_i)^2, if |x_i - y_i| < 1
 loss(x, y) = 1/n \sum ⎨
-                      ⎩ |x_i - y_i| - 0.5,   otherwise
-```
+                      ⎩ |x_i - y_i| - 0.5,   otherwise](http://www.sciweavers.org/tex2img.php?eq=loss%28x%2Cy%29%3D1%2Fn%5Csum%5Cleft%5C%7B%5Cbegin%7Barray%7D%7Blll%7D0.5%2A%28x_i-y_i%29%5E2%2C%26if%7Cx_i-y_i%7C%3C1%5C%5C%7Cx_i-y_i%7C-0.5%2C%26otherwise%5Cend%7Barray%7D%5Cright&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+
 
 If `x` and `y` are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation still operates over all the elements, and divides by `n`.
 
@@ -592,11 +568,9 @@ criterion = nn.HingeEmbeddingCriterion([margin])
 Creates a criterion that measures the loss given an input `x` which is a 1-dimensional vector and a label `y` (`1` or `-1`).
 This is usually used for measuring whether two inputs are similar or dissimilar, e.g. using the L1 pairwise distance, and is typically used for learning nonlinear embeddings or semi-supervised learning.
 
-```lua
-                 ⎧ x_i,                  if y_i ==  1
-loss(x, y) = 1/n ⎨
-                 ⎩ max(0, margin - x_i), if y_i == -1
-```
+![             ⎧ ||x1 - x2||_1,                  if y ==  1
+loss(x, y) = ⎨
+             ⎩ max(0, margin - ||x1 - x2||_1), if y == -1](http://www.sciweavers.org/tex2img.php?eq=loss%28x%2C%20y%29%20%3D%201%2Fn%20%5Cleft%5C%7B%5Cbegin%7Barray%7D%7Blll%7Dx_i%2C%26ify_i%3D%3D1%5C%5C%5Cmax%280%2C%20margin-x_i%29%2C%26ify_i%3D%3D-1%5Cend%7Barray%7D%5Cright&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
 
 If `x` and `y` are `n`-dimensional `Tensor`s, the sum operation still operates over all the elements, and divides by `n` (this can be avoided if one sets the internal variable `sizeAverage` to `false`). The `margin` has a default value of `1`, or can be set in the constructor.
 
@@ -672,11 +646,9 @@ criterion = nn.L1HingeEmbeddingCriterion([margin])
 
 Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s, and a label `y` (`1` or `-1`): this is used for measuring whether two inputs are similar or dissimilar, using the L1 distance, and is typically used for learning nonlinear embeddings or semi-supervised learning.
 
-```lua
-             ⎧ ||x1 - x2||_1,                  if y ==  1
+![             ⎧ ||x1 - x2||_1,                  if y ==  1
 loss(x, y) = ⎨
-             ⎩ max(0, margin - ||x1 - x2||_1), if y == -1
-```
+             ⎩ max(0, margin - ||x1 - x2||_1), if y == -1](http://www.sciweavers.org/tex2img.php?eq=loss%28x%2Cy%29%3D%5Cleft%5C%7B%5Cbegin%7Barray%7D%7Blll%7D%7C%7Cx1%20-%20x2%7C%7C_1%2C%26ify%3D%3D1%5C%5C%5Cmax%280%2C%20margin-%7C%7Cx1-x2%7C%7C_1%29%2C%26ify%3D%3D-1%5Cend%7Barray%7D%5Cright&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
 
 The `margin` has a default value of `1`, or can be set in the constructor.
 
@@ -695,11 +667,9 @@ This is used for measuring whether two inputs are similar or dissimilar, using t
 
 The loss function for each sample is:
 
-```lua
-             ⎧ 1 - cos(x1, x2),              if y ==  1
+![             ⎧ 1 - cos(x1, x2),              if y ==  1
 loss(x, y) = ⎨
-             ⎩ max(0, cos(x1, x2) - margin), if y == -1
-```
+             ⎩ max(0, cos(x1, x2) - margin), if y == -1](http://www.sciweavers.org/tex2img.php?eq=loss%28x%2Cy%29%20%3D%20%5Cleft%5C%7B%5Cbegin%7Barray%7D%7Blll%7D1-%5Ccos%28x1%2Cx2%29%2C%26ify%3D%3D1%5C%5C%5Cmax%280%2C%20%5Ccos%28x1%2Cx2%29-margin%29%2C%26ify%3D%3D-1%5Cend%7Barray%7D%5Cright&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
 
 For batched inputs, if the internal variable `sizeAverage` is equal to `true`, the loss function averages the loss over the batch samples; if `sizeAverage` is `false`, then the loss function sums over the batch samples. By default, `sizeAverage` equals to `true`.
 
@@ -720,9 +690,7 @@ If `y == 1` then it assumed the first input should be ranked higher (have a larg
 
 The loss function is:
 
-```lua
-loss(x, y) = max(0, -y * (x[1] - x[2]) + margin)
-```
+![loss(x, y) = max(0, -y * (x[1] - x[2]) + margin)](https://latex.codecogs.com/gif.latex?loss%28x%2C%20y%29%20%3D%20%5Cmax%280%2C%20margin%20-%28y%20*%20%28x_1%20-%20x_2%29%29%29)
 
 For batched inputs, if the internal variable `sizeAverage` is equal to `true`, the loss function averages the loss over the batch samples; if `sizeAverage` is `false`, then the loss function sums over the batch samples. By default, `sizeAverage` equals to `true`.
 By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
