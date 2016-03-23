@@ -1,4 +1,4 @@
-local MaskedSelect, parent = torch.class('nnd.MaskedSelect', 'nn.Module')
+local MaskedSelect, parent = torch.class('nn.MaskedSelect', 'nn.Module')
 
 --[[ Sets the provided mask value for the module. ]]
 function MaskedSelect:__init()
