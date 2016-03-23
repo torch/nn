@@ -168,7 +168,7 @@ function SparseLinear:updateGradInput(input, gradOutput)
          self.gradInput:select(3,1):copy(torch.repeatTensor(torch.range(1, ini), batches, 1))
          self.gradInput:select(3,2):copy(gi)
       else
-         indicies = torch.range(1, ini)
+         local indicies = torch.range(1, ini)
          if not batchMode then gi:resize(1, ini) end
          for i = 1,gi:size(1) do
             self.gradInput[i] = gradOutput.new(ini, 2)
