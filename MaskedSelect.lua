@@ -24,7 +24,8 @@ function MaskedSelect:updateGradInput(input, gradOutput)
   self._gradBuffer:resize(input:nElement()):zero()
   self._gradBuffer:scatter(1, self._maskIndices:long(), gradOutput)
   self._gradBuffer:resize(input:size())
-  self.gradInput = {self._gradBuffer, self._gradMask:resize(mask:size()):fill(0)}
+  self.gradInput = {self._gradBuffer,
+                    self._gradMask:resize(mask:size()):fill(0)}
   return self.gradInput
 end
 
