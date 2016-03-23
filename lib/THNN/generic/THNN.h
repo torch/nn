@@ -46,14 +46,16 @@ TH_API void THNN_(ELU_updateOutput)(
           THNNState *state,            // library's state
           THTensor *input,             // input tensor
           THTensor *output,            // [OUT] ELU output
-          real alpha);                 // an ELU parameter (as in paper)
+          real alpha,                  // an ELU parameter (as in paper)
+          bool inplace);               // if true, modifies gradOutput and sets gradInput onto it (no additional memory is allocated)
 TH_API void THNN_(ELU_updateGradInput)(
           THNNState *state,            // library's state
           THTensor *input,             // input tensor
           THTensor *gradOutput,        // gradient w.r.t. output
           THTensor *gradInput,         // [OUT] gradient w.r.t. input
           THTensor *output,            // output from a forward pass
-          real alpha);                 // an ELU parameter (as in paper)
+          real alpha,                  // an ELU parameter (as in paper)
+          bool inplace);               // if true, modifies gradOutput and sets gradInput onto it (no additional memory is allocated)
 
 TH_API void THNN_(DistKLDivCriterion_updateOutput)(
           THNNState *state,            // library's state
@@ -342,15 +344,7 @@ TH_API void THNN_(SparseLinear_updateOutput)(
           THTensor *input,
           THTensor *output,
           THTensor *weight,
-          THTensor *bias,
-          THTensor *cudaBuffer,
-          THTensor *shardBuffer);
-TH_API void THNN_(SparseLinear_updateGradInput)(
-          THNNState *state,
-          THTensor *input,
-          THTensor *gradOutput,
-          THTensor *gradInput,
-          THTensor *weight);
+          THTensor *bias);
 TH_API void THNN_(SparseLinear_accGradParameters)(
           THNNState *state,
           THTensor *input,
@@ -367,6 +361,35 @@ TH_API void THNN_(SparseLinear_zeroGradParameters)(
           THTensor *gradBias,
           THTensor *lastInput);
 TH_API void THNN_(SparseLinear_updateParameters)(
+          THNNState *state,
+          THTensor *weight,
+          THTensor *bias,
+          THTensor *gradWeight,
+          THTensor *gradBias,
+          THTensor *lastInput,
+          real learningRate);
+TH_API void THNN_(SparseLinear_legacyUpdateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *weight,
+          THTensor *bias);
+TH_API void THNN_(SparseLinear_legacyAccGradParameters)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradWeight,
+          THTensor *gradBias,
+          THTensor *weight,
+          THTensor *bias,
+          real weightDecay,
+          real scale);
+TH_API void THNN_(SparseLinear_legacyZeroGradParameters)(
+          THNNState *state,
+          THTensor *gradWeight,
+          THTensor *gradBias,
+          THTensor *lastInput);
+TH_API void THNN_(SparseLinear_legacyUpdateParameters)(
           THNNState *state,
           THTensor *weight,
           THTensor *bias,
