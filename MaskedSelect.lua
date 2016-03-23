@@ -9,19 +9,19 @@ end
 --[[ Performs maskedSelect operation. ]]
 function MaskedSelect:updateOutput(input)
   local input, mask = unpack(input)
-  self.output = input:maskedSelect(mask)
+  self.output:maskedSelect(input, mask)
+  self._maskIndices =
+    torch.range(1, mask:nElement()):resize(mask:size()):maskedSelect(mask)
   return self.output
 end
 
 --[[ Reverse maps unmasked gradOutput back to gradInput. ]]
 function MaskedSelect:updateGradInput(input, gradOutput)
   local input, mask = unpack(input)
-  local maskIndices =
-    torch.range(1, mask:nElement()):resizeAs(mask:double()):maskedSelect(mask)
   local gradInput = torch.Tensor(input:nElement()):zero()
-  gradInput:scatter(1, maskIndices:long(), gradOutput)
-  gradInput:resizeAs(input:double())
-  self.gradInput = {gradInput, torch.Tensor():resizeAs(input):fill(0):byte()}
+  gradInput:scatter(1, self._maskIndices:long(), gradOutput)
+  gradInput:resize(input:size())
+  self.gradInput = {gradInput, torch.Tensor():resize(mask:size()):fill(0):byte()}
   return self.gradInput
 end
 
@@ -33,9 +33,18 @@ function MaskedSelect:parameters()
 end
 
 function MaskedSelect:type(type)
+  local maskIndices = self.maskIndices
+  if type ~= 'torch.CudaTensor' then
+    -- ByteTensors must remain ByteTensors
+    self._maskIndices = nil
+  end
+  parent.type(self, type)
+  if type ~= 'torch.CudaTensor' then
+    self._maskIndices = maskIndices:byte()
+  end
   return self
 end
 
 function MaskedSelect:clearStates()
-  nn.utils.clear(self, {'output', 'gradInput'})
+  nn.utils.clear(self, {'output', 'gradInput', '_maskIndices'})
 end
