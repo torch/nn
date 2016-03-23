@@ -21,7 +21,7 @@ function MaskedSelect:updateGradInput(input, gradOutput)
   local gradInput = torch.Tensor(input:nElement()):zero()
   gradInput:scatter(1, self._maskIndices:long(), gradOutput)
   gradInput:resize(input:size())
-  self.gradInput = {gradInput, torch.Tensor():resize(mask:size()):fill(0):byte()}
+  self.gradInput = {gradInput, torch.Tensor():resize(mask:size()):fill(0)}
   return self.gradInput
 end
 
@@ -33,7 +33,7 @@ function MaskedSelect:parameters()
 end
 
 function MaskedSelect:type(type)
-  local maskIndices = self.maskIndices
+  local maskIndices = self._maskIndices
   if type ~= 'torch.CudaTensor' then
     -- ByteTensors must remain ByteTensors
     self._maskIndices = nil
