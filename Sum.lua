@@ -29,7 +29,7 @@ function Sum:updateOutput(input)
         self.output:div(input:size(dimension))
     end
     if self.output:nDimension() > 1 then
-        self.output = self.output:select(dimension, 1)
+        self.output:set(self.output:select(dimension, 1))
     end
     return self.output
 end
