@@ -48,8 +48,8 @@ function DotProduct:updateGradInput(input, gradOutput)
 
    if not_batch then
       -- unbatch gradInput
-      self.gradInput[1] = gw1:select(1,1)
-      self.gradInput[2] = gw2:select(1,1)
+      self.gradInput[1]:set(gw1:select(1,1))
+      self.gradInput[2]:set(gw2:select(1,1))
    end
 
    return self.gradInput
