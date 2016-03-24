@@ -823,6 +823,8 @@ function nntest.SparseLinear()
         local err = (module[var] - linear[var]):abs():max()
         mytester:assertle(err, precision, 'error on '..var)
    end
+   module:zeroGradParameters()
+   linear:zeroGradParameters()
 
    -- Check output wrt linear, batch
    -- doing this n times checks for fast last input param updates
