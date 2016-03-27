@@ -76,8 +76,7 @@ mlp:add( nn.Linear(25, 1) ) -- 1 output
 
 Of course, `Sequential` and `Concat` can contains other
 `Sequential` or `Concat`, allowing you to try the craziest neural
-networks you ever dreamt of! See the [[#nn.Modules|complete list of
-available modules]].
+networks you ever dreamt of!
 
 <a name="nn.overview.training"></a>
 ### Training a neural network ###
