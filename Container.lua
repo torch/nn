@@ -29,9 +29,8 @@ function Container:rethrowErrors(module, moduleIndex, funcName, ...)
    assert(module == self.modules[moduleIndex],
           "mismatch between moduleIndex and self.modules in rethrowErrors")
    local function handleError(err)
-      local err_lines = err:split('\n')
       -- This will be executed only in the first container that handles the error.
-      if err_lines[#err_lines] ~= TRACEBACK_WARNING then
+      if not err:find(TRACEBACK_WARNING) then
          local traceback = debug.traceback()
          -- Remove this handler from the stack
          local _, first_line_end = traceback:find('^.-\n')
@@ -39,9 +38,8 @@ function Container:rethrowErrors(module, moduleIndex, funcName, ...)
          traceback = traceback:sub(1, first_line_end) .. traceback:sub(second_line_end+1)
          err = err .. '\n' .. traceback .. '\n\n' .. TRACEBACK_WARNING
       else
-         -- Remove file path. +1 for newline character.
-         local first_line_end = #err_lines[1] + 1
-         err = err:sub(first_line_end+1)
+         -- Remove file path
+         err = err:sub(err:find('\n')+1)
       end
       local msg = string.format('In %d module of %s:',
                               moduleIndex, torch.type(self))
