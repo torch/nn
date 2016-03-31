@@ -1307,8 +1307,8 @@ end
 function nntest.MaskedSelect()
    local input = torch.randn(4, 5):type('torch.FloatTensor')
    local mask = torch.ByteTensor(4, 5):bernoulli()
-   local module = nn.MaskedSelect(mask):type('torch.FloatTensor')
-   local out = module:forward(input)
+   local module = nn.MaskedSelect():type('torch.FloatTensor')
+   local out = module:forward({input, mask})
    local err = out:dist(input:maskedSelect(mask))
    mytester:assertlt(err, 1e-15, torch.typename(module) .. ' - forward err ')
 end

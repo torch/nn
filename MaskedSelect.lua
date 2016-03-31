@@ -3,10 +3,12 @@ local MaskedSelect, parent = torch.class('nn.MaskedSelect', 'nn.Module')
 --[[ Sets the provided mask value for the module. ]]
 function MaskedSelect:__init()
   parent.__init(self)
-  self._maskIndices = torch.Tensor()
-  self._maskIndexBuffer = torch.Tensor()
+  self._maskIndices = torch.LongTensor()
+  self._maskIndexBuffer = torch.LongTensor()
+  self._maskIndexBufferCPU = torch.FloatTensor()
   self._gradBuffer = torch.Tensor()
-  self._gradMask = torch.Tensor()
+  self._gradMask = torch.ByteTensor()
+  self._lastTypeCuda = false
 end
 
 --[[ Performs maskedSelect operation. ]]
@@ -19,51 +21,46 @@ end
 --[[ Reverse maps unmasked gradOutput back to gradInput. ]]
 function MaskedSelect:updateGradInput(input, gradOutput)
   local input, mask = unpack(input)
-  self._maskIndexBuffer:range(1, mask:nElement()):resize(mask:size())
+  if type == 'torch.CudaTensor' then
+    self._maskIndexBufferCPU:range(1, mask:nElement()):resize(mask:size())
+    self._maskIndexBuffer:resize(
+      self._maskIndexBufferCPU:size()):copy(self._maskIndexBufferCPU)
+  else
+    self._maskIndexBuffer:range(1, mask:nElement()):resize(mask:size())
+  end
   self._maskIndices:maskedSelect(self._maskIndexBuffer, mask)
   self._gradBuffer:resize(input:nElement()):zero()
-  self._gradBuffer:scatter(1, self._maskIndices:long(), gradOutput)
+  self._gradBuffer:scatter(1, self._maskIndices, gradOutput)
   self._gradBuffer:resize(input:size())
   self.gradInput = {self._gradBuffer,
                     self._gradMask:resize(mask:size()):fill(0)}
   return self.gradInput
 end
 
-function MaskedSelect:accGradParameters(input, gradOutput, scale)
-end
+function MaskedSelect:type(type, tensorCache)
+  self._gradBuffer:type()
+  self.gradInput:type()
+  self.output:type()
 
-function MaskedSelect:parameters()
-  return nil
-end
-
-function MaskedSelect:type(type)
-  local maskIndices = self._maskIndices
-  local gradMask = self._gradMask
-  local gradBuffer = self._gradBuffer
-  local maskIndexBuffer = self._maskIndexBuffer
-  if type ~= 'torch.CudaTensor' then
-    self._maskIndices = nil
-    self._gradBuffer = nil
-    self._maskBuffer = nil
-    self._gradMask = nil
-  end
-
-  parent.type(self, type)
-
-  if type ~= 'torch.CudaTensor' then
-    self._maskIndices = maskIndices:long()
-    self._gradBuffer = gradBuffer:double()
-    self._maskIndexBuffer = maskIndexBuffer:double()
-    self._gradMask = gradMask:byte()
+  -- These casts apply when switching bewtween cuda/non-cuda types
+  if type ~= 'torch.CudaTensor' and self.lastTypeCuda then
+    self._maskIndexBuffer:long()
+    self._maskIndices:long()
+    self._lastTypeCuda = false
+  elseif  type == 'torch.CudaTensor' and not self.lastTypeCuda then
+    self._maskIndexBuffer:cuda()
+    self._maskIndices:cuda()
+    self._lastTypeCuda = true
   end
   return self
 end
 
-function MaskedSelect:clearStates()
-  nn.utils.clear(self, {'output',
-                        'gradInput',
-                        '_maskIndices',
-                        '_gradBuffer',
-                        '_maskBuffer',
-                        '_gradMask'})
+function MaskedSelect:clearState()
+  return nn.utils.clear(self, {'output',
+                               'gradInput',
+                               '_maskIndexBuffer',
+                               '_maskIndexBufferCPU',
+                               '_maskIndices',
+                               '_gradBuffer',
+                               '_gradMask'})
 end
