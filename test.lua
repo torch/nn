@@ -823,6 +823,8 @@ function nntest.SparseLinear()
         local err = (module[var] - linear[var]):abs():max()
         mytester:assertle(err, precision, 'error on '..var)
    end
+   module:zeroGradParameters()
+   linear:zeroGradParameters()
 
    -- Check output wrt linear, batch
    -- doing this n times checks for fast last input param updates
@@ -5584,6 +5586,18 @@ function nntest.addSingletonDimension()
 
    mytester:assertError(function() nn.utils.addSingletonDimension(tensor, dims + 2) end,
                         "invalid dimension not detected")
+
+   -- passing output tensor as argument
+   local resultArg = torch.Tensor()
+   local resultR = nn.utils.addSingletonDimension(resultArg, tensor, dim)
+   mytester:eq(resultArg:size():totable(), resultSize,
+               'wrong content for random singleton dimention '..
+               'when the result is passed as argument')
+   mytester:eq(resultArg, result, 'wrong content for random singleton dimention '..
+               'when the result is passed as argument')
+
+   mytester:eq(resultR == resultArg, true,
+               'new tensor is created when it should use the provided tensor')
 end
 
 function nntest.SpatialReflectionPadding()

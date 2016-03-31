@@ -18,7 +18,7 @@ end
 function Unsqueeze:updateOutput(input)
    _assertTensor(input)
    local actualPos = self:_getActualPosition(input)
-   self.output = nn.utils.addSingletonDimension(input, actualPos)
+   nn.utils.addSingletonDimension(self.output, input, actualPos)
    return self.output
 end
 
@@ -27,7 +27,7 @@ function Unsqueeze:updateGradInput(input, gradOutput)
    _assertTensor(gradOutput)
    assert(input:nElement() == gradOutput:nElement())
 
-   self.gradInput = gradOutput:view(input:size())
+   self.gradInput:view(gradOutput, input:size())
    return self.gradInput
 end
 
