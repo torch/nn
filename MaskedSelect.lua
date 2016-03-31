@@ -8,7 +8,6 @@ function MaskedSelect:__init()
   self._maskIndexBufferCPU = torch.FloatTensor()
   self._gradBuffer = torch.Tensor()
   self._gradMask = torch.ByteTensor()
-  self._lastTypeCuda = false
 end
 
 --[[ Performs maskedSelect operation. ]]
@@ -38,19 +37,19 @@ function MaskedSelect:updateGradInput(input, gradOutput)
 end
 
 function MaskedSelect:type(type, tensorCache)
-  self._gradBuffer:type()
-  self.gradInput:type()
-  self.output:type()
+  self._gradBuffer = self._gradBuffer:type(type)
+  self.gradInput = self.gradInput:type(type)
+  self.output = self.output:type(type)
 
-  -- These casts apply when switching bewtween cuda/non-cuda types
-  if type ~= 'torch.CudaTensor' and self.lastTypeCuda then
-    self._maskIndexBuffer:long()
-    self._maskIndices:long()
-    self._lastTypeCuda = false
-  elseif  type == 'torch.CudaTensor' and not self.lastTypeCuda then
-    self._maskIndexBuffer:cuda()
-    self._maskIndices:cuda()
-    self._lastTypeCuda = true
+  -- These casts apply when switching between cuda/non-cuda types
+  if type ~= 'torch.CudaTensor' then
+    self._maskIndexBuffer = self._maskIndexBuffer:long()
+    self._maskIndices = self._maskIndices:long()
+    self._gradMask = self._gradMask:byte()
+  elseif  type == 'torch.CudaTensor' then
+    self._maskIndexBuffer = self._maskIndexBuffer:cuda()
+    self._maskIndices = self._maskIndices:cuda()
+    self._gradMask = self._gradMask:cuda()
   end
   return self
 end
