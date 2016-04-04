@@ -1313,6 +1313,13 @@ function nntest.MaskedSelect()
    local out = module:forward({input, mask})
    local err = out:dist(input:maskedSelect(mask))
    mytester:assertlt(err, 1e-15, torch.typename(module) .. ' - forward err ')
+
+   local gradOut = torch.randn({10, 40}):type('torch.DoubleTensor')
+   local inTarget = torch.randn({{10, 0}, {0, 40}}):type('torch.DoubleTensor')
+   local mask = torch.ByteTensor({{1, 0}, {0, 1}})
+   local module = nn.MaskedSelect():type('torch.DoubleTensor')
+   local gradIn = module:backward({input, mask}, gradOut)
+   mytester:assertTensorEq(inTarget, gradIn, 1e-15, torch.typename(module) .. ' - backward err ')
 end
 
 function nntest.ParallelCriterion()

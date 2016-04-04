@@ -1,3 +1,5 @@
+local unpack = unpack or table.unpack
+
 local MaskedSelect, parent = torch.class('nn.MaskedSelect', 'nn.Module')
 
 --[[ Sets the provided mask value for the module. ]]
@@ -12,15 +14,15 @@ end
 
 --[[ Performs maskedSelect operation. ]]
 function MaskedSelect:updateOutput(input)
-  local input, mask = table.unpack(input)
+  local input, mask = unpack(input)
   self.output:maskedSelect(input, mask)
   return self.output
 end
 
 --[[ Reverse maps unmasked gradOutput back to gradInput. ]]
 function MaskedSelect:updateGradInput(input, gradOutput)
-  local input, mask = table.unpack(input)
-  if type == 'torch.CudaTensor' then
+  local input, mask = unpack(input)
+  if input:type() == 'torch.CudaTensor' then
     self._maskIndexBufferCPU:range(1, mask:nElement()):resize(mask:size())
     self._maskIndexBuffer:resize(
       self._maskIndexBufferCPU:size()):copy(self._maskIndexBufferCPU)
