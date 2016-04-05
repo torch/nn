@@ -5807,6 +5807,26 @@ function nntest.Cosine()
    mytester:assertTensorEq(cosine.gradWeight, cosine2.gradWeight, 0.000001, "Cosine gradWeight 2D err")
 end
 
+function nntest.ErrorHandling()
+   local l = nn.Linear(1, 1)
+   local p = nn.Parallel(1, 1):add(l)
+   local c = nn.Concat(1):add(p)
+   local model = nn.Sequential():add(nn.Identity()):add(c):add(nn.Identity())
+   local function errmsg(module, i)
+       return 'In ' .. i .. ' module of ' .. torch.type(module) .. ':\n'
+   end
+   local expected_err = errmsg(model, 2) .. errmsg(c, 1) .. errmsg(p, 1)
+   mytester:assertErrorObj(
+       function()
+           model:forward(torch.randn(1,2,2))
+       end,
+       function(err)
+           return err:find(expected_err) and err:find('size mismatch')
+       end,
+       "Failure expected or bad error message (missing information or reason)"
+   )
+end
+
 mytester:add(nntest)
 
 if not nn then
