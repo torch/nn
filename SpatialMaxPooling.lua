@@ -30,6 +30,11 @@ end
 
 function SpatialMaxPooling:updateOutput(input)
    self.indices = self.indices or input.new()
+
+   local dims = input:dim()
+   self.iheight = input:size(dims-1)
+   self.iwidth = input:size(dims)
+
    -- backward compatibility
    self.ceil_mode = self.ceil_mode or false
    self.padW = self.padW or 0

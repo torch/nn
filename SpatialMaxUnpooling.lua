@@ -2,16 +2,9 @@ local SpatialMaxUnpooling, parent = torch.class('nn.SpatialMaxUnpooling', 'nn.Mo
 
 function SpatialMaxUnpooling:__init(poolingModule)
    parent.__init(self)
-   assert(torch.type(poolingModule)=='nn.SpatialMaxPooling', 'Argument must be a nn.SPatialMaxPooling module')
+   assert(torch.type(poolingModule)=='nn.SpatialMaxPooling', 'Argument must be a nn.SpatialMaxPooling module')
    assert(poolingModule.kH==poolingModule.dH and poolingModule.kW==poolingModule.dW, "The size of pooling module's kernel must be equal to its stride")
    self.pooling = poolingModule
-
-   poolingModule.updateOutput = function(pool, input)
-      local dims = input:dim()
-      pool.iheight = input:size(dims-1)
-      pool.iwidth = input:size(dims)
-      return nn.SpatialMaxPooling.updateOutput(pool, input)
-   end
 end
 
 function SpatialMaxUnpooling:setParams()

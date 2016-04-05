@@ -36,6 +36,11 @@ function VolumetricMaxPooling:floor()
 end
 
 function VolumetricMaxPooling:updateOutput(input)
+   local dims = input:dim()
+   self.itime = input:size(dims-2)
+   self.iheight = input:size(dims-1)
+   self.iwidth = input:size(dims)
+
    self.indices = self.indices or input.new()
    input.THNN.VolumetricMaxPooling_updateOutput(
       input:cdata(),
