@@ -5819,7 +5819,7 @@ else
    sjac = nn.SparseJacobian
    function nn.test(tests, seed)
       -- randomize stuff
-      local seed = seed or os.time()
+      local seed = seed or (1e5 * torch.tic())
       print('Seed: ', seed)
       math.randomseed(seed)
       torch.manualSeed(seed)
