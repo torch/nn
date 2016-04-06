@@ -21,6 +21,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [View](#nn.View) : a [view](https://github.com/torch/torch7/blob/master/doc/tensor.md#result-viewresult-tensor-sizes) of the inputs ;
     * [Contiguous](#nn.Contiguous) : [contiguous](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-contiguous) of the inputs ;
     * [Select](#nn.Select) : a [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index) over a given dimension ;
+    * [MaskedSelect](#nn.MaskedSelect) : a [masked select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselect-index) module performs the torch.maskedSelect operation ;
     * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
     * [Squeeze](#nn.Squeeze) : [squeezes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) the input;
     * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;  
@@ -901,6 +902,49 @@ for i = 1, 10000 do     -- Train for a few iterations
    mlp:updateParameters(0.01)
    print(err)
 end
+```
+
+<a name="nn.MaskedSelect"></a>
+## MaskedSelect ##
+
+```lua
+module = nn.MaskedSelect()
+```
+
+Performs a [torch.MaskedSelect](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselectmask) on a Tensor.  The mask is supplied as a tabular argument with the input on the forward and backward passes.
+
+Example:
+
+```lua
+ms = nn.MaskedSelect()
+mask = torch.ByteTensor({{1, 0}, {0, 1}})
+input = torch.DoubleTensor({{10, 20}, {30, 40}})
+print(input)
+print(mask)
+out = ms:forward({input, mask})
+print(out)
+gradIn = ms:backward({input, mask}, out)
+print(gradIn[1])
+```
+
+Gives the output:
+
+```lua
+10  20
+30  40
+[torch.DoubleTensor of size 2x2]
+
+1  0
+0  1
+[torch.ByteTensor of size 2x2]
+
+10
+40
+[torch.DoubleTensor of size 2]
+
+10  0
+0  40
+[torch.DoubleTensor of size 2x2]
 ```
 
 <a name="nn.Index"></a>
