@@ -1320,7 +1320,7 @@ function nntest.MaskedSelect()
    local mask = torch.ByteTensor({{1, 0}, {0, 1}})
    local module = nn.MaskedSelect()
    module:forward({input, mask})
-   local gradIn = module:backward({inTarget, mask}, gradOut)
+   local gradIn = module:backward({input, mask}, gradOut)
    mytester:assertTensorEq(inTarget, gradIn[1], 1e-15, torch.typename(module) .. ' - backward err ')
 end
 
