@@ -130,16 +130,16 @@ function Module:type(type, tensorCache)
    return self
 end
 
-function Module:float()
-   return self:type('torch.FloatTensor')
+function Module:float(...)
+   return self:type('torch.FloatTensor',...)
 end
 
-function Module:double()
-   return self:type('torch.DoubleTensor')
+function Module:double(...)
+   return self:type('torch.DoubleTensor',...)
 end
 
-function Module:cuda()
-   return self:type('torch.CudaTensor')
+function Module:cuda(...)
+   return self:type('torch.CudaTensor',...)
 end
 
 function Module:reset()
