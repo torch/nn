@@ -292,9 +292,11 @@ function Module:getParameters()
    local p, g = Module.flatten(parameters), Module.flatten(gradParameters)
    assert(p:nElement() == g:nElement(),
       'check that you are sharing parameters and gradParameters')
-   for i=1,#parameters do
-      assert(parameters[i]:storageOffset() == gradParameters[i]:storageOffset(),
-         'misaligned parameter at ' .. tostring(i))
+   if parameters then
+      for i=1,#parameters do
+         assert(parameters[i]:storageOffset() == gradParameters[i]:storageOffset(),
+            'misaligned parameter at ' .. tostring(i))
+      end
    end
    return p, g
 end
