@@ -263,6 +263,46 @@ Outputs something like:
 [torch.DoubleTensor of dimension 2x4x3]
 ```
 
+`LookupTable` internally maintains a `weight` tensor and a `gradWeight` tensor in the same size.
+To let sub tensor `gradWeight[n]` unchanged during `backward()` call, pass index `n` as `paddingValue`.
+Example:
+```lua
+-- a lookup table containing 10 tensors of size 3
+-- index 2 interpreted as padding value
+paddingValue = 2
+module = nn.LookupTable(10, 3, paddingValue)
+gradWeight = module.gradWeight
+input = torch.LongTensor{1,2,1,10} -- input size is 4
+
+-- before
+print(gradWeight[paddingValue])
+print(gradWeight[1])
+
+-- back propagation
+gradOutput = torch.ones(4, 10, 3)
+module:backward(input, gradOutput)
+
+-- after
+print(gradWeight[paddingValue]) -- unchanged 
+print(gradWeight[1]) -- changed, as input[1] = 1 and input[3] = 1 
+```
+The default `paddingValue` is `0`, allowing the whole `gradWeight` always gets updated during `backward()` call.
+
+Method `zeroPaddingWeight()` enforces the sub tensor `weight[n]` be all zeros for index `n = paddingValue`, which also affects the `forward()` call.
+Example:
+```lua
+paddingValue = 2
+module = nn.LookupTable(10, 3, paddingValue):zeroPaddingWeight()
+weight = module.weight
+print(weight[paddingValue]) -- all zeros
+
+input = torch.LongTensor{1,1,2,10} -- input[3] = 2, the paddingValue
+output = module:forward(input)
+print(output) -- output[3] are all zeros
+```
+
+Remark: `paddingValue` and `zeroPaddingWeight()` are useful for NLP task where the user wants a "placeholder" for the token indicating "unknown" (a.k.a. out-of-vocabulary token).
+
 <a name="nn.SpatialModules"></a>
 ## Spatial Modules ##
 Excluding an optional batch dimension, spatial layers expect a 3D Tensor as input. The

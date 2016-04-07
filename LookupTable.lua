@@ -32,6 +32,13 @@ function LookupTable:setPadding(paddingValue)
     return self
 end
 
+function LookupTable:zeroPaddingWeight()
+   if self.paddingValue > 0 then
+      self.weight:select(1, self.paddingValue):fill(0)
+   end
+   return self
+end
+
 function LookupTable:scaleGradByFreq()
    self.shouldScaleGradByFreq = true
    return self
