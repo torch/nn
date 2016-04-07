@@ -232,19 +232,19 @@ nn.utils.recursiveType({mlp1, mlp2}, 'torch.FloatTensor')
 ```
 
 <a name="nn.Module.float"></a>
-### float() ###
+### float([tensorCache]) ###
 
-Convenience method for calling [module:type('torch.FloatTensor')](#nn.Module.type)
+Convenience method for calling [module:type('torch.FloatTensor'[, tensorCache])](#nn.Module.type)
 
 <a name="nn.Module.double"></a>
-### double() ###
+### double([tensorCache]) ###
 
-Convenience method for calling [module:type('torch.DoubleTensor')](#nn.Module.type)
+Convenience method for calling [module:type('torch.DoubleTensor'[, tensorCache])](#nn.Module.type)
 
 <a name="nn.Module.cuda"></a>
-### cuda() ###
+### cuda([tensorCache]) ###
 
-Convenience method for calling [module:type('torch.CudaTensor')](#nn.Module.type)
+Convenience method for calling [module:type('torch.CudaTensor'[, tensorCache])](#nn.Module.type)
 
 <a name="nn.statevars.dok"></a>
 ### State Variables ###
