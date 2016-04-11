@@ -4514,8 +4514,9 @@ function nntest.SelectTable()
    local module1 = nn.SelectTable(-1)
    local output1 = module1:forward(input1):clone()
    local output2 = module1:forward(input2)
-   local gradInput1 = module1:backward(input1, gradOutput1)
-   for k,v in ipairs(gradInput1) do gradInput1[k] = v:clone() end
+   local gradInput_ = module1:backward(input1, gradOutput1)
+   local gradInput1 = {}
+   for k,v in ipairs(gradInput_) do gradInput1[k] = v:clone() end
    local gradInput2 = module1:backward(input2, gradOutput2)
    
    local module3 = nn.SelectTable(-1)
