@@ -25,7 +25,6 @@ local function zeroTableCopy(t1, t2)
          if not t1[k] then
             t1[k] = v:clone():zero()
          else
-            local tensor = t1[k]
             t1[k]:resizeAs(v)
             t1[k]:zero()
          end
@@ -40,16 +39,13 @@ local function zeroTableCopy(t1, t2)
 end
 
 function SelectTable:updateGradInput(input, gradOutput)
-   if self.index < 0 then
-      self.gradInput[#input + self.index + 1] = gradOutput
-   else
-      self.gradInput[self.index] = gradOutput
-   end
+   -- make gradInput a zeroed copy of input
    zeroTableCopy(self.gradInput, input)
-
-   for i=#input+1, #self.gradInput do
-       self.gradInput[i] = nil
-   end
+   -- handle negative indices
+   local index = self.index < 0 and #input + self.index + 1 or self.index
+   -- copy into gradInput[index] (necessary for variable sized inputs)
+   assert(self.gradInput[index])
+   nn.utils.recursiveCopy(self.gradInput[index], gradOutput)
 
    return self.gradInput
 end
