@@ -4227,6 +4227,43 @@ function nntest.LookupTable()
    end
    local err = padw_sum - padw:sum()
    mytester:assertlt(err,precision, 'padding update error ')
+   -- test whether the weights changes accordingly when maxNorm is not nil
+   local all_index = torch.randperm(totalIndex):int()
+   -- input can have duplicates
+   local input = torch.repeatTensor(all_index:narrow(1,1,nIndex), 2)
+   local maxNorm = math.random()
+   for _, normType in ipairs{1, 2, math.random()} do
+      local module = nn.LookupTable(totalIndex, entry_size, 0, maxNorm, normType)
+      local oriW = module.weight:clone()
+      output = module:updateOutput(input)
+      -- check output is of small norm
+      for j = 1,output:size(1) do
+         local norm = torch.norm(output:select(1, j), normType)
+         if norm > maxNorm then
+            local err = norm - maxNorm;
+            mytester:assertlt(math.abs(err), precision, string.format(
+               'output after renorm exceeds maxNorm=[%f] with normType=[%f]', maxNorm, normType))
+         end
+      end
+      -- check the update of the module.weight
+      for j = 1,totalIndex do
+         local k = all_index[j]
+         if j <= nIndex then -- k is an index in "input"
+            local norm = torch.norm(module.weight:select(1, k), normType)
+            local oriNorm = torch.norm(oriW:select(1, k), normType)
+            if oriNorm > maxNorm then
+               local err = norm - maxNorm
+               mytester:assertlt(math.abs(err), precision, 'unexpected norm after renorm')
+            else
+               local err = norm - oriNorm
+               mytester:assertlt(math.abs(err), precision, 'unpexpected norm after renorm')
+            end
+         else -- k is not an index in "input"
+            local err = module.weight:select(1,k):sum() - oriW:select(1,k):sum()
+            mytester:assertlt(math.abs(err), precision, 'unexpected changes in weight after renorm')
+         end
+      end
+   end
 end
 
 function nntest.AddConstant()
