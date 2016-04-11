@@ -4455,6 +4455,7 @@ function nntest.SelectTable()
       torch.rand(3,4,5),
       {torch.rand(3,4,5), torch.rand(3,4,5)}
    }
+   
    module = nn.SelectTable(1)
    local output = module:forward(input1)
    equal(output, input1[1], "output dimension 1")
@@ -4466,6 +4467,31 @@ function nntest.SelectTable()
    gradInput = module:backward(input2, output)
    mytester:assert(#gradInput == #input2, "Table lengths")
    mytester:assert(#gradInput[2] == #input2[2], "Sub-Table lengths")
+   
+   -- test on tables of increasing size
+   local input1 = {torch.rand(3,4,5), torch.rand(3,4,5)}
+   local input2 = {torch.rand(3,4,5), torch.rand(3,4,5), torch.rand(3,4,5)}
+   local gradOutput1 = torch.randn(3,4,5)
+   local gradOutput2 = torch.randn(3,4,5)
+   
+   local module1 = nn.SelectTable(-1)
+   local output1 = module1:forward(input1):clone()
+   local output2 = module1:forward(input2)
+   local gradInput1 = module1:backward(input1, gradOutput1)
+   for k,v in ipairs(gradInput1) do gradInput1[k] = v:clone() end
+   local gradInput2 = module1:backward(input2, gradOutput2)
+   
+   local module3 = nn.SelectTable(-1)
+   local module4 = nn.SelectTable(-1)
+   local output3 = module3:forward(input1)
+   local output4 = module4:forward(input2)
+   local gradInput3 = module3:backward(input1, gradOutput1)
+   local gradInput4 = module4:backward(input2, gradOutput2)
+   
+   equal(output1, output3, "output 1 and 3")
+   equal(output2, output4, "output 2 and 4")
+   equal(gradInput1, gradInput3, "gradInput 1 and 3")
+   equal(gradInput2, gradInput4, "gradInput 2 and 4")
 end
 
 function nntest.MixtureTable()

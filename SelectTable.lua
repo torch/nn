@@ -26,10 +26,8 @@ local function zeroTableCopy(t1, t2)
             t1[k] = v:clone():zero()
          else
             local tensor = t1[k]
-            if not tensor:isSameSizeAs(v) then
-               t1[k]:resizeAs(v)
-               t1[k]:zero()
-            end
+            t1[k]:resizeAs(v)
+            t1[k]:zero()
          end
       end
    end
