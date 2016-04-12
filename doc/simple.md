@@ -1022,13 +1022,13 @@ Indicate the expected input feature map dimension by specifying `numInputDims`.
 This allows the module to work with mini-batch. Example:
 ```lua
 b = 5 -- batch size 5
-input = torch.tensor(b, 2, 4, 3) -- input: b x 2 x 4 x 3
+input = torch.Tensor(b, 2, 4, 3) -- input: b x 2 x 4 x 3
 numInputDims = 3 -- input feature map should be the last 3 dims
 
-m = nn.Unsqueeze(4)
+m = nn.Unsqueeze(4, numInputDims)
 m:forward(input) -- output: b x 2 x 4 x 3 x 1
 
-m = nn.Unsqueeze(2)
+m = nn.Unsqueeze(2):setNumInputDims(numInputDims)
 m:forward(input) -- output: b x 2 x 1 x 4 x 3
 ```
 
