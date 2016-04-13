@@ -5,14 +5,6 @@ function VolumetricMaxUnpooling:__init(poolingModule)
   assert(torch.type(poolingModule)=='nn.VolumetricMaxPooling', 'Argument must be a nn.VolumetricMaxPooling module')
   assert(poolingModule.kT==poolingModule.dT and poolingModule.kH==poolingModule.dH and poolingModule.kW==poolingModule.dW, "The size of pooling module's kernel must be equal to its stride")
   self.pooling = poolingModule
-
-  poolingModule.updateOutput = function(pool, input)
-    local dims = input:dim()
-    pool.itime = input:size(dims-2)
-    pool.iheight = input:size(dims-1)
-    pool.iwidth = input:size(dims)
-    return nn.VolumetricMaxPooling.updateOutput(pool, input)
-  end
 end
 
 function VolumetricMaxUnpooling:setParams()
