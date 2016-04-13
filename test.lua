@@ -624,6 +624,21 @@ function nntest.Normalize()
       mytester:assertlt(err, precision, 'error norm '..p..' on state ')
    end
 
+   -- test on different dimensions
+   for _,p in pairs({1,2,3,4,torch.uniform()*math.random(1,10),math.huge}) do
+      local ini = math.random(3,5)
+      local inj = math.random(3,5)
+      local ink = math.random(3,5)
+      local inl = math.random(3,5)
+      local dim = math.random(1,4)
+      local input = torch.Tensor(inl, ink, inj, ini):zero()
+
+      local module = nn.Normalize(p, dim)
+
+      local err = jac.testJacobian(module, input, -2, 2)
+      mytester:assertlt(err, precision, 'error norm '..p..' on state ')
+   end
+
    -- test IO correctness
    local ini = math.random(3,5)
    local inj = math.random(3,5)

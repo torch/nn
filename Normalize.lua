@@ -1,25 +1,26 @@
 local Normalize, parent = torch.class('nn.Normalize', 'nn.Module')
 
-function Normalize:__init(p,eps)
+function Normalize:__init(p, dim, eps)
   parent.__init(self)
   assert(p,'p-norm not provided')
   assert(p > 0, p..'-norm not supported')
   self.p = p
+  self.dim = dim or -1
   self.eps = eps or 1e-10
 end
 
 function Normalize:updateOutput(input)
-  assert(input:dim() <= 2, 'only 1d layer supported')
-  local input_size = input:size()
-  if input:dim() == 1 then
-    input = input:view(1,-1)
+  self.dim = self.dim or -1
+  assert(math.abs(self.dim) <= input:dim(), 
+    'input has less dimensions than the normalization dimension')
+  assert(self.dim % 1 == 0, 'dimension should be an integer')
+  local dim = self.dim
+  if dim < 0 then
+    dim = input:dim() + dim + 1
   end
 
-  self._output = self._output or input.new()
   self.norm = self.norm or input.new()
   self.buffer = self.buffer or input.new()
-
-  self._output:resizeAs(input)
 
   if self.p == math.huge then
     -- specialization for the infinity norm
@@ -28,7 +29,7 @@ function Normalize:updateOutput(input)
        torch.CudaTensor() or torch.LongTensor())
 
     self.buffer:abs(input)
-    torch.max(self.norm, self._indices, self.buffer, 2)
+    torch.max(self.norm, self._indices, self.buffer, dim)
     self.norm:add(self.eps)
   else
     self.normp = self.normp or input.new()
@@ -37,41 +38,37 @@ function Normalize:updateOutput(input)
     else
       self.buffer:pow(input,self.p)
     end
-    self.normp:sum(self.buffer,2):add(self.eps)
+    self.normp:sum(self.buffer, dim):add(self.eps)
     self.norm:pow(self.normp,1/self.p)
   end
-  self._output:cdiv(input, self.norm:view(-1,1):expandAs(input))
+  self.output:cdiv(input, self.norm:expandAs(input))
 
-  self.output:view(self._output, input_size)
   return self.output
 end
 
 function Normalize:updateGradInput(input, gradOutput)
-  assert(input:dim() <= 2, 'only 1d layer supported')
-  assert(gradOutput:dim() <= 2, 'only 1d layer supported')
-
-  local input_size = input:size()
-  if input:dim() == 1 then
-    input = input:view(1,-1)
+  self.dim = self.dim or -1
+  assert(math.abs(self.dim) <= input:dim(), 
+    'input has less dimensions than the normalization dimension')
+  assert(self.dim % 1 == 0, 'dimension should be an integer')
+  local dim = self.dim
+  if dim < 0 then
+    dim = input:dim() + dim + 1
   end
 
-  local n = input:size(1) -- batch size
-  local d = input:size(2) -- dimensionality of vectors
-
-  self._gradInput = self._gradInput or input.new()
   self.cross = self.cross or input.new()
   -- compute diagonal term with gradOutput
-  self._gradInput:resize(n,d)
+  self.gradInput:resizeAs(input)
   if self.p == math.huge then
     -- specialization for the inf case
-    self._gradInput:cmul(self.norm:view(n,1,1):expand(n,d,1),gradOutput)
+    self.gradInput:cmul(self.norm:expandAs(gradOutput),gradOutput)
     self.buffer:resizeAs(input):zero()
-    self.cross:resize(n,1)
-    self.cross:gather(input,2,self._indices)
+    self.cross:resizeAs(self.norm)
+    self.cross:gather(input,dim,self._indices)
     self.cross:cdiv(self.norm)
-    self.buffer:scatter(2,self._indices,self.cross)
+    self.buffer:scatter(dim,self._indices,self.cross)
   else
-    self._gradInput:cmul(self.normp:view(n,1):expand(n,d), gradOutput)
+    self.gradInput:cmul(self.normp:expandAs(gradOutput), gradOutput)
     -- small optimizations for different p
     -- buffer = input*|input|^(p-2)
     if self.p % 2 ~= 0 then
@@ -91,17 +88,17 @@ function Normalize:updateGradInput(input, gradOutput)
     end
   end
   -- compute cross term in two steps
-  self.cross:resize(n,1)
+  self.cross:resizeAs(self.norm)
 
   -- instead of having a huge temporary matrix (b1*b2),
   -- do the computations as b1*(b2*gradOutput). This avoids redundant
   -- computation and also a huge buffer of size n*d^2
   self.buffer2 = self.buffer2 or input.new() -- nxd
   self.buffer2:cmul(input, gradOutput)
-  self.cross:sum(self.buffer2, 2)
+  self.cross:sum(self.buffer2, dim)
 
   self.buffer:cmul(self.cross:expandAs(self.buffer))
-  self._gradInput:add(-1, self.buffer)
+  self.gradInput:add(-1, self.buffer)
 
   -- reuse cross buffer for normalization
   if self.p == math.huge then
@@ -109,9 +106,8 @@ function Normalize:updateGradInput(input, gradOutput)
   else
     self.cross:cmul(self.normp,self.norm)
   end
-  self._gradInput:cdiv(self.cross:expand(n,d))
+  self.gradInput:cdiv(self.cross:expandAs(gradOutput))
 
-  self.gradInput:view(self._gradInput, input_size)
   return self.gradInput
 end
 
@@ -119,11 +115,12 @@ function Normalize:__tostring__()
   local s
   -- different prints if the norm is integer
   if self.p % 1 == 0 then
-    s = '%s(%d)'
+    s = '%s(%d,%d)'
   else
-    s = '%s(%f)'
+    s = '%s(%f,%d)'
   end
-  return string.format(s,torch.type(self),self.p)
+  local dim = self.dim or -1
+  return string.format(s,torch.type(self),self.p, dim)
 end
 
 function Normalize:type(type, tensorCache)
