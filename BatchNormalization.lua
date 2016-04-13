@@ -125,7 +125,6 @@ end
 local function backward(self, input, gradOutput, scale, gradInput, gradWeight, gradBias)
    self:checkInputDim(input)
    self:checkInputDim(gradOutput)
-   assert(self.train == true, 'should be in training mode when self.train is true')
    assert(self.save_mean and self.save_std, 'must call :updateOutput() first')
 
    input, gradOutput = makeContiguous(self, input, gradOutput)
