@@ -19,26 +19,26 @@ void THNN_(BatchNormalization_updateOutput)(
 
     real mean, invstd;
 
+    // compute mean per input
+    accreal sum = 0;
+    TH_TENSOR_APPLY(real, in, sum += *in_data;);
+
+    mean = (real) sum / n;
+    THTensor_(set1d)(save_mean, f, (real) mean);
+
+    // compute variance per input
+    sum = 0;
+    TH_TENSOR_APPLY(real, in,
+    sum += (*in_data - mean) * (*in_data - mean););
+
+    if (sum == 0 && eps == 0.0) {
+      invstd = 0;
+    } else {
+      invstd = (real) (1 / sqrt(sum/n + eps));
+    }
+    THTensor_(set1d)(save_std, f, (real) invstd);
+    
     if (train) {
-      // compute mean per input
-      accreal sum = 0;
-      TH_TENSOR_APPLY(real, in, sum += *in_data;);
-
-      mean = (real) sum / n;
-      THTensor_(set1d)(save_mean, f, (real) mean);
-
-      // compute variance per input
-      sum = 0;
-      TH_TENSOR_APPLY(real, in,
-        sum += (*in_data - mean) * (*in_data - mean););
-
-      if (sum == 0 && eps == 0.0) {
-        invstd = 0;
-      } else {
-        invstd = (real) (1 / sqrt(sum/n + eps));
-      }
-      THTensor_(set1d)(save_std, f, (real) invstd);
-
       // update running averages
       THTensor_(set1d)(running_mean, f,
         (real) (momentum * mean + (1 - momentum) * THTensor_(get1d)(running_mean, f)));
