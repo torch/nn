@@ -1153,7 +1153,7 @@ module = nn.Normalize(p, [dim], [eps])
 ```
 Normalizes the input Tensor to have unit `L_p` norm over dimension `dim` (by default -1, i.e., the last dimension). The smoothing parameter `eps` prevents division by zero when the input contains all zero elements (default = `1e-10`).
 
-The `dim` parameter can take both positivs and negative values (in which case it is counted from the end). Negative dimensions are specially useful if one wants to be invariant to batch-mode.
+The `dim` parameter can take both positive and negative values (in which case it is counted from the end). Negative dimensions are specially useful if one wants to be invariant to batch-mode.
 
 ```lua
 A = torch.randn(3, 5)
