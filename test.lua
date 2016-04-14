@@ -5541,49 +5541,54 @@ local function testBatchNormalization(moduleName, dim, k)
       table.insert(size, torch.random(1,k))
    end
    local input = torch.zeros(table.unpack(size)):uniform()
+
+   local function jacTests(module, input, affine)
+      local err = jac.testJacobian(module,input)
+      mytester:assertlt(err,precision, 'error on state ')
+
+      if affine then
+         local err = jac.testJacobianParameters(module, input,
+                                            module.weight, module.gradWeight)
+         mytester:assertlt(err,precision, 'error on weight ')
+
+         local err = jac.testJacobianParameters(module, input,
+                                            module.bias, module.gradBias)
+         mytester:assertlt(err,precision, 'error on weight ')
+
+         local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+         mytester:assertlt(err,precision, 'error on weight [direct update] ')
+
+         local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+         mytester:assertlt(err,precision, 'error on bias [direct update] ')
+
+         for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+            mytester:assertlt(err, precision, string.format(
+               'error on weight [%s]', t))
+         end
+
+         for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+            mytester:assertlt(err, precision, string.format('error on bias [%s]', t))
+         end
+      end
+      
+      -- IO
+      local ferr,berr = jac.testIO(module,input)
+      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   end
+      
    local module = nn[moduleName](planes)
-
-   local err = jac.testJacobian(module,input)
-   mytester:assertlt(err,precision, 'error on state ')
-
-   local err = jac.testJacobianParameters(module, input,
-                                      module.weight, module.gradWeight)
-   mytester:assertlt(err,precision, 'error on weight ')
-
-   local err = jac.testJacobianParameters(module, input,
-                                      module.bias, module.gradBias)
-   mytester:assertlt(err,precision, 'error on weight ')
-
-   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
-   mytester:assertlt(err,precision, 'error on weight [direct update] ')
-
-   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
-   mytester:assertlt(err,precision, 'error on bias [direct update] ')
-
-   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
-      mytester:assertlt(err, precision, string.format(
-         'error on weight [%s]', t))
-   end
-
-   for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
-      mytester:assertlt(err, precision, string.format('error on bias [%s]', t))
-   end
-
-   -- IO
-   local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
-
+   module:training()
+   jacTests(module, input, true)
+   module:evaluate()
+   jacTests(module, input, true)
+   
    -- batch norm without affine transform
    module = nn[moduleName](planes, 1e-5, 0.1, false)
-
-   local err = jac.testJacobian(module, input)
-   mytester:assertlt(err,precision, 'error on state ')
-
-   -- IO
-   local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   module:training()
+   jacTests(module, input, false)
+   module:evaluate()
+   jacTests(module, input, false)
 end
 
 function nntest.BatchNormalization()
