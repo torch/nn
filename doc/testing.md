@@ -62,7 +62,7 @@ Returns the jacobian computed by finite difference.
 
 Compute the jacobian by backpropagation.
 
-`module` has parameters `param` and input `input`.
+`module` has parameters `param` and input `input`.  
 If provided, `param` is regarded as independent variables, otherwise `input` is the independent variables.  
 `dparam` is the gradient w.r.t. parameters, it must present as long as `param` is present.  
 
