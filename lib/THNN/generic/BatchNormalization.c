@@ -73,14 +73,11 @@ void THNN_(BatchNormalization_backward)(
   long nInput = THTensor_(size)(input, 1);
   long n = THTensor_(nElement)(input) / nInput;
 
-  // Q(X) = X - E[x] ; i.e. input centered to zero mean
-  // Y = Q(X) / σ    ; i.e. BN output before weight and bias
-  // dL/dX = (Q(dL/dY) - dot(Y, dL/dY) * Y) / σ * w
-
   #pragma omp parallel for
   for (long f = 0; f < nInput; ++f) {
     THTensor *in = THTensor_(newSelect)(input, 1, f);
     THTensor *gradOut = THTensor_(newSelect)(gradOutput, 1, f);
+    real w = weight ? THTensor_(get1d)(weight, f) : 1;
     real mean, invstd;
     if (train) {
       mean = THTensor_(get1d)(save_mean, f);
@@ -89,8 +86,7 @@ void THNN_(BatchNormalization_backward)(
       mean = THTensor_(get1d)(running_mean, f);
       invstd = 1 / sqrt(THTensor_(get1d)(running_var, f) + eps);
     }
-    real w = weight ? THTensor_(get1d)(weight, f) : 1;
-
+    
     // sum over all gradOutput in feature plane
     accreal sum = 0;
     TH_TENSOR_APPLY(real, gradOut, sum += *gradOut_data;);
@@ -102,19 +98,34 @@ void THNN_(BatchNormalization_backward)(
 
     if (gradInput) {
       THTensor *gradIn = THTensor_(newSelect)(gradInput, 1, f);
+      
+      if (train) {
+        // when in training mode
+        // Q(X) = X - E[x] ; i.e. input centered to zero mean
+        // Y = Q(X) / σ    ; i.e. BN output before weight and bias
+        // dL/dX = (Q(dL/dY) - dot(Y, dL/dY) * Y) / σ * w
+  
+        // projection of gradOutput on to output scaled by std
+        real k = (real) dotp * invstd * invstd / n;
+        TH_TENSOR_APPLY2(real, gradIn, real, in,
+          *gradIn_data = (*in_data - mean) * k;);
 
-      // projection of gradOutput on to output scaled by std
-      real k = (real) dotp * invstd * invstd / n;
-      TH_TENSOR_APPLY2(real, gradIn, real, in,
-        *gradIn_data = (*in_data - mean) * k;);
-
-      accreal gradMean = sum / n;
-      TH_TENSOR_APPLY2(real, gradIn, real, gradOut,
-        *gradIn_data = (*gradOut_data - gradMean - *gradIn_data) * invstd * w;);
-
+        accreal gradMean = sum / n;
+        TH_TENSOR_APPLY2(real, gradIn, real, gradOut,
+          *gradIn_data = (*gradOut_data - gradMean - *gradIn_data) * invstd * w;);
+      
+      } else {
+        // when in evaluation mode
+        // Q(X) = X - running_mean  ; i.e. input centered to zero mean
+        // Y = Q(X) / running_std    ; i.e. BN output before weight and bias
+        // dL/dX = w / running_std
+        TH_TENSOR_APPLY2(real, gradIn, real, gradOut,
+          *gradIn_data = *gradOut_data * invstd * w;);
+      }
+      
       THTensor_(free)(gradIn);
     }
-
+    
     if (gradWeight) {
       real val = THTensor_(get1d)(gradWeight, f);
       THTensor_(set1d)(gradWeight, f, val + scale * dotp * invstd);
