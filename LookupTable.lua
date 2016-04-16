@@ -80,6 +80,19 @@ function LookupTable:updateOutput(input)
    return self.output
 end
 
+function LookupTable:updateGradInput(input, gradOutput)
+   -- the input can be of any type (as in the forward it's 
+   -- converted anyway to LongTensor) thus, need to allocate
+   -- new memory each time the user changes the input type
+   if torch.type(self.gradInput) ~= torch.type(input) then
+      self.gradInput = input.new()
+   end
+   if not self.gradInput:isSameSizeAs(input) then
+      self.gradInput:resizeAs(input):zero()
+   end
+   return self.gradInput
+end
+
 function LookupTable:accGradParameters(input, gradOutput, scale)
    self:backCompatibility()
    input = self.copiedInput and self._input or input
@@ -149,8 +162,8 @@ function LookupTable:type(type, tensorCache)
 end
 
 function LookupTable:clearState()
-   self._gradOutput = nil
-   return self
+   nn.utils.clear(self, '_count', '_input', '_gradOutput')
+   return parent.clearState(self)
 end
 
 -- we do not need to accumulate parameters when sharing
