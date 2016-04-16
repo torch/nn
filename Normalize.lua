@@ -1,4 +1,5 @@
 local Normalize, parent = torch.class('nn.Normalize', 'nn.Module')
+Normalize.__version = 2
 
 function Normalize:__init(p, dim, eps)
   parent.__init(self)
@@ -7,13 +8,13 @@ function Normalize:__init(p, dim, eps)
   self.p = p
   self.dim = dim or -1
   self.eps = eps or 1e-10
+  assert(self.dim % 1 == 0, 'dimension should be an integer')
+  assert(self.dim ~= 0, "dimension can't be 0")
 end
 
 function Normalize:updateOutput(input)
-  self.dim = self.dim or -1
   assert(math.abs(self.dim) <= input:dim(), 
     'input has less dimensions than the normalization dimension')
-  assert(self.dim % 1 == 0, 'dimension should be an integer')
   local dim = self.dim
   if dim < 0 then
     dim = input:dim() + dim + 1
@@ -47,10 +48,8 @@ function Normalize:updateOutput(input)
 end
 
 function Normalize:updateGradInput(input, gradOutput)
-  self.dim = self.dim or -1
   assert(math.abs(self.dim) <= input:dim(), 
     'input has less dimensions than the normalization dimension')
-  assert(self.dim % 1 == 0, 'dimension should be an integer')
   local dim = self.dim
   if dim < 0 then
     dim = input:dim() + dim + 1
@@ -119,8 +118,7 @@ function Normalize:__tostring__()
   else
     s = '%s(%f,%d)'
   end
-  local dim = self.dim or -1
-  return string.format(s,torch.type(self),self.p, dim)
+  return string.format(s,torch.type(self),self.p, self.dim)
 end
 
 function Normalize:type(type, tensorCache)
@@ -149,4 +147,12 @@ function Normalize:clearState()
       'cross',
    })
    return parent.clearState(self)
+end
+
+function Normalize:read(file, version)
+   parent.read(self, file)
+   if version < 2 then
+      -- version 1 only supported 1D tensors
+      self.dim = -1
+   end
 end
