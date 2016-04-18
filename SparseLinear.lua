@@ -22,7 +22,7 @@ function SparseLinear:__init(inputSize, outputSize, doGradInput)
    self.formatted_input = nil
 
    -- state
-   self.gradInput:resize(inputSize)
+   self.gradInput = {}
    self.output:resize(outputSize)
 
    self:reset()
