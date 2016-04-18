@@ -75,8 +75,11 @@ end
 
 function BN:checkInputDim(input)
    assert(input:dim() == self.nDim, string.format(
-     'only mini-batch supported (%dD tensor), got %dD tensor instead',
-     self.nDim, input:dim()))
+      'only mini-batch supported (%dD tensor), got %dD tensor instead',
+      self.nDim, input:dim()))
+   assert(input:size(2) == self.running_mean:nElement(), string.format(
+      'got %d-feature tensor, expected %d',
+      input:size(2), self.running_mean:nElement()))
 end
 
 local function makeContiguous(self, input, gradOutput)
