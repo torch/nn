@@ -187,7 +187,9 @@ function nn.Jacobian.linearModuleDiagHessian(module, input, gradParamName)
       gradOutput1D:zero()
       gradOutput1D[i] = 1
       module.gradWeight:zero()
-      module.gradBias:zero()
+      if module.bias then
+         module.gradBias:zero()
+      end
       module:updateGradInput(input, gradOutput)
       module:accGradParameters(input, gradOutput)
       diagHessian:addcmul(gradParam, gradParam)
