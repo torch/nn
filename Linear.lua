@@ -12,6 +12,12 @@ function Linear:__init(inputSize, outputSize, bias)
    self:reset()
 end
 
+function Linear:noBias()
+   self.bias = nil
+   self.gradBias = nil
+   return self
+end
+
 function Linear:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
