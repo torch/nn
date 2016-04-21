@@ -46,6 +46,9 @@ function MM:updateOutput(input)
 end
 
 function MM:updateGradInput(input, gradOutput)
+  self.gradInput[1] = self.gradInput[1] or input[1].new()
+  self.gradInput[2] = self.gradInput[2] or input[2].new()
+
   assert(#input == 2, 'input must be a pair of tensors')
   local a, b = table.unpack(input)
   self.gradInput[1]:resizeAs(a)
