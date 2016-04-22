@@ -1,5 +1,7 @@
 local GradientReversal, parent = torch.class('nn.GradientReversal', 'nn.Module')
 
+GradientReversal.__version = 2
+
 function GradientReversal:__init(lambda)
    lambda = lambda or 1
    parent.__init(self)
@@ -20,4 +22,11 @@ function GradientReversal:updateGradInput(input, gradOutput)
    self.gradInput:copy(gradOutput)
    self.gradInput:mul(-self.lambda)
    return self.gradInput
+end
+
+function GradientReversal:read(file, version)
+   parent.read(self, file)
+   if version < 2 then
+      self.lambda = 1
+   end
 end
