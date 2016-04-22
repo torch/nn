@@ -1313,6 +1313,13 @@ criterion = nn.MSECriterion()  -- To measure reconstruction error
 <a name="nn.GradientReversal"></a>
 ## GradientReversal ##
 
-`module` = `nn.GradientReversal()`
+```lua
+module = nn.GradientReversal([lambda = 1])
+```
+This module preserves the input, but takes the gradient from the subsequent layer, multiplies it by `-lambda` and passes it to the preceding layer. This can be used to maximise an objective function whilst using gradient descent, as described in "Domain-Adversarial Training of Neural Networks" (http://arxiv.org/abs/1505.07818).
 
-This module preserves the input, but reverses the gradient. This can be used to maximise an objective function whilst using gradient descent, as in "Domain-Adversarial Training of Neural Networks" (http://arxiv.org/abs/1505.07818).
+One can also call:
+```lua
+module:setLambda(lambda)
+```
+to set the hyper-parameter `lambda` dynamically during training.
