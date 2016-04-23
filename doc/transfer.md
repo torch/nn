@@ -218,6 +218,19 @@ gnuplot.grid(true)
 ```
 ![](image/sigmoid.png)
 
+<a name="nn.PSigmoid"></a>
+## PSigmoid ##
+
+Applies a parametric `Sigmoid`, where the parameter `k` defines
+the steepness of the sigmoid curve.
+
+`PSigmoid` is defined as `f(x)` = `1/(1+exp(-kx))`.
+
+When called without an input as ```nn.PSigmoid()```, `k = 1` by default, corresponding
+to the normal `Sigmoid`. Otherwise when called as ```nn.PReLU(k)```, the steepness of the
+curve increases with `|k| > 1` and decreases with `|k| < 1`. With `k < 0` the curve
+is flipped across the y-axis.
+
 <a name="nn.Tanh"></a>
 ## Tanh ##
 
