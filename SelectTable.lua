@@ -55,3 +55,7 @@ function SelectTable:type(type, tensorCache)
    self.output = {}
    return parent.type(self, type, tensorCache)
 end
+
+function SelectTable:__tostring__()
+  return torch.type(self) .. '(' .. self.index .. ')'
+end

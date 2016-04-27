@@ -3,6 +3,7 @@ local MultiLabelMarginCriterion, parent = torch.class('nn.MultiLabelMarginCriter
 function MultiLabelMarginCriterion:__init()
    parent.__init(self)
    self.sizeAverage = true
+   self.isTarget = torch.Tensor()
 end
 
 function MultiLabelMarginCriterion:updateOutput(input, target)
@@ -11,6 +12,7 @@ function MultiLabelMarginCriterion:updateOutput(input, target)
       input:cdata(),
       target:cdata(),
       self.output_tensor:cdata(),
+      self.isTarget:cdata(),
       self.sizeAverage
    )
    self.output = self.output_tensor[1]
@@ -22,6 +24,7 @@ function MultiLabelMarginCriterion:updateGradInput(input, target)
       input:cdata(),
       target:cdata(),
       self.gradInput:cdata(),
+      self.isTarget:cdata(),
       self.sizeAverage
    )
    return self.gradInput
