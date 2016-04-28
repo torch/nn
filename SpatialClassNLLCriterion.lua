@@ -1,7 +1,7 @@
 local THNN = require 'nn.THNN'
-local ClassNLLCriterion, parent = torch.class('nn.ClassNLLCriterion', 'nn.Criterion')
+local SpatialClassNLLCriterion, parent = torch.class('nn.SpatialClassNLLCriterion', 'nn.Criterion')
 
-function ClassNLLCriterion:__init(weights, sizeAverage)
+function SpatialClassNLLCriterion:__init(weights, sizeAverage)
     parent.__init(self)
     if sizeAverage ~= nil then
        self.sizeAverage = sizeAverage
@@ -18,7 +18,7 @@ function ClassNLLCriterion:__init(weights, sizeAverage)
     self.target = torch.zeros(1):long()
 end
 
-function ClassNLLCriterion:__len()
+function SpatialClassNLLCriterion:__len()
    if (self.weights) then
       return #self.weights
    else
@@ -26,7 +26,7 @@ function ClassNLLCriterion:__len()
    end
 end
 
-function ClassNLLCriterion:updateOutput(input, target)
+function SpatialClassNLLCriterion:updateOutput(input, target)
    if type(target) == 'number' then
       if input:type() ~= 'torch.CudaTensor' then
          self.target = self.target:long()
@@ -38,7 +38,7 @@ function ClassNLLCriterion:updateOutput(input, target)
       self.target = target:long()
    end
 
-   input.THNN.ClassNLLCriterion_updateOutput(
+   input.THNN.SpatialClassNLLCriterion_updateOutput(
       input:cdata(),
       self.target:cdata(),
       self.output_tensor:cdata(),
@@ -50,7 +50,7 @@ function ClassNLLCriterion:updateOutput(input, target)
    return self.output, self.total_weight_tensor[1]
 end
 
-function ClassNLLCriterion:updateGradInput(input, target)
+function SpatialClassNLLCriterion:updateGradInput(input, target)
    if type(target) == 'number' then
       self.target[1] = target
    elseif target:type() == 'torch.CudaTensor' then
@@ -61,7 +61,7 @@ function ClassNLLCriterion:updateGradInput(input, target)
 
    self.gradInput:resizeAs(input):zero()
 
-   input.THNN.ClassNLLCriterion_updateGradInput(
+   input.THNN.SpatialClassNLLCriterion_updateGradInput(
       input:cdata(),
       self.target:cdata(),
       self.gradInput:cdata(),
