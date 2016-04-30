@@ -4616,6 +4616,14 @@ function nntest.SplitTable()
    mytester:asserteq(#module:forward(input), 3, "negative index (minibatch)")
 end
 
+function nntest.Select()
+  -- Test negative Select
+  local input = torch.Tensor{{4,6,7}, {8,0,1}}
+  mytester:asserteq(nn.Select(1,-1):forward(input)[1], 8, "negative index")
+  mytester:asserteq(nn.Select(1,-1):forward(input)[2], 0, "negative index")
+  mytester:asserteq(nn.Select(1,-2):forward(input)[2], 6, "negative index")
+end
+
 function nntest.SelectTable()
    local input = {
       torch.rand(3,4,5), torch.rand(3,4,5),
