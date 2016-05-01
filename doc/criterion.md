@@ -403,7 +403,7 @@ criterion = nn.MultiMarginCriterion(p, [weights], [margin])
 Creates a criterion that optimizes a multi-class classification hinge loss (margin-based loss) between input `x`  (a `Tensor` of dimension 1) and output `y` (which is a target class index, `1` <= `y` <= `x:size(1)`):
 
 ```lua
-loss(x, y) = sum_i(max(0, (margin - x[y] - x[i]))^p) / x:size(1)
+loss(x, y) = sum_i(max(0, (margin - x[y] + x[i]))^p) / x:size(1)
 ```
 
 where `i == 1` to `x:size(1)` and `i ~= y`.
