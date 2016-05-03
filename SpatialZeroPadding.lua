@@ -58,7 +58,7 @@ function SpatialZeroPadding:updateOutput(input)
 end
 
 function SpatialZeroPadding:updateGradInput(input, gradOutput)
-   if input:dim() == 3 then 
+   if input:dim() == 3 then
       self.gradInput:resizeAs(input):zero()
       -- crop gradInput if necessary
       local cg_input = self.gradInput
@@ -98,7 +98,7 @@ end
 
 
 function SpatialZeroPadding:__tostring__()
-  return torch.type(self) ..
-      string.format('(l=%d,r=%d,t=%d,b=%d)', self.pad_l, self.pad_r,
-                    self.pad_t, self.pad_b)
+   return torch.type(self) ..
+   string.format('(l=%d, r=%d, t=%d, b=%d)', self.pad_l, self.pad_r,
+   self.pad_t, self.pad_b)
 end

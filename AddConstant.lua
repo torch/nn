@@ -15,7 +15,7 @@ end
 function AddConstant:updateOutput(input)
   if self.inplace then
     input:add(self.constant_scalar)
-    self.output = input
+    self.output:set(input)
   else
     self.output:resizeAs(input)
     self.output:copy(input)
@@ -26,7 +26,7 @@ end
 
 function AddConstant:updateGradInput(input, gradOutput)
   if self.inplace then
-    self.gradInput = gradOutput
+    self.gradInput:set(gradOutput)
     -- restore previous input value
     input:add(-self.constant_scalar)
   else

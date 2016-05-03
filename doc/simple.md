@@ -6,6 +6,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Linear](#nn.Linear) : a linear transformation ;
     * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
     * [Bilinear](#nn.Bilinear) : a bilinear transformation with sparse inputs ;
+    * [PartialLinear](#nn.PartialLinear) : a linear transformation with sparse inputs with the option of only computing a subset ;
     * [Add](#nn.Add) : adds a bias term to the incoming data ;
     * [Mul](#nn.Mul) : multiply a single scalar factor to the incoming data ;
     * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
@@ -20,7 +21,10 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [View](#nn.View) : a [view](https://github.com/torch/torch7/blob/master/doc/tensor.md#result-viewresult-tensor-sizes) of the inputs ;
     * [Contiguous](#nn.Contiguous) : [contiguous](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-contiguous) of the inputs ;
     * [Select](#nn.Select) : a [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index) over a given dimension ;
+    * [MaskedSelect](#nn.MaskedSelect) : a [masked select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselect-index) module performs the torch.maskedSelect operation ;
     * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
+    * [Squeeze](#nn.Squeeze) : [squeezes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) the input;
+    * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;  
   * Modules that adapt mathematical Tensor methods :
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
@@ -142,6 +146,43 @@ Input data for this layer would look as follows:
  input = {torch.randn(128, 10), torch.randn(128, 5)}  -- 128 input examples
  module:forward(input)
 ```
+
+<a name="nn.PartialLinear"></a>
+## PartialLinear ##
+
+```lua
+module = nn.PartialLinear(inputSize, outputSize, [bias = true])
+```
+
+PartialLinear is a Linear layer that allows the user to a set a collection of
+column indices. When the column indices are set, the layer will behave like a
+Linear layer that only has those columns. Meanwhile, all parameters are
+preserved, so resetting the PartialLinear layer will result in a module that
+behaves just like a regular Linear layer.
+
+This module is useful, for instance, when you want to do forward-backward on
+only a subset of a Linear layer during training but use the full Linear layer
+at test time.
+
+You can create a layer in the following way:
+
+```lua
+ module = nn.PartialLinear(5, 3)  -- 5 inputs, 3 outputs
+```
+
+Input data for this layer would look as follows:
+```lua
+ input = torch.randn(128, 5)  -- 128 input examples
+ module:forward(input)
+```
+
+One can set the partition of indices to compute using the function `setPartition(indices)` where `indices` is a tensor containing the indices to compute.
+```lua
+module = nn.PartialLinear(5, 3)  -- 5 inputs, 3 outputs
+module:setPartition(torch.Tensor({2,4})) -- only compute the 2nd and 4th indices out of a total of 5 indices
+```
+
+One can reset the partition via the `resetPartition()` function that resets the partition to compute all indices, making it's behaviour equivalent to `nn.Linear`
 
 <a name="nn.Dropout"></a>
 ## Dropout ##
@@ -447,7 +488,7 @@ module = nn.Sum(dimension, nInputDim, sizeAverage)
 Applies a sum operation over dimension `dimension`.
 Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
 When `nInputDim` is provided , inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
-Negative indexing is allowed by providing a negative value to `nInputDim`. 
+Negative indexing is allowed by providing a negative value to `nInputDim`.
 When `sizeAverage` is provided, the sum is divided by the size of the input in this `dimension`. This is equivalent to the mean operation performed by the [nn.Mean](#nn.Mean) module.
 
 <a name="nn.Euclidean"></a>
@@ -863,6 +904,49 @@ for i = 1, 10000 do     -- Train for a few iterations
 end
 ```
 
+<a name="nn.MaskedSelect"></a>
+## MaskedSelect ##
+
+```lua
+module = nn.MaskedSelect()
+```
+
+Performs a [torch.MaskedSelect](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselectmask) on a Tensor.  The mask is supplied as a tabular argument with the input on the forward and backward passes.
+
+Example:
+
+```lua
+ms = nn.MaskedSelect()
+mask = torch.ByteTensor({{1, 0}, {0, 1}})
+input = torch.DoubleTensor({{10, 20}, {30, 40}})
+print(input)
+print(mask)
+out = ms:forward({input, mask})
+print(out)
+gradIn = ms:backward({input, mask}, out)
+print(gradIn[1])
+```
+
+Gives the output:
+
+```lua
+10  20
+30  40
+[torch.DoubleTensor of size 2x2]
+
+1  0
+0  1
+[torch.ByteTensor of size 2x2]
+
+10
+40
+[torch.DoubleTensor of size 2]
+
+10  0
+0  40
+[torch.DoubleTensor of size 2x2]
+```
+
 <a name="nn.Index"></a>
 ## Index ##
 
@@ -878,6 +962,74 @@ nn.Index(dim):forward{t,i}
 gives the same output as
 ```lua
 t:index(dim, i)
+```
+
+<a name="nn.Squeeze"></a>
+## Squeeze ##
+
+```lua
+module = nn.Squeeze([dim, numInputDims])
+```
+Applies the Tensor [squeeze](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) operation. So
+
+```lua
+nn.Squeeze():forward(t)
+```
+gives the same output as
+```lua
+t:squeeze()
+```
+Setting `numInputDims` allows to use this module on batches.
+
+<a name="nn.Unsqueeze"></a>
+## Unsqueeze ##
+
+```lua
+module = nn.Unsqueeze(pos [, numInputDims])
+```
+Insert singleton dim (i.e., dimension 1) at position `pos`. 
+For an `input` with `dim = input:dim()`, there are `dim + 1` possible positions to insert the singleton dimension.
+For example, if `input` is `3` dimensional tensor in size `p x q x r`, then the singleton dim can be inserted at the following `4` positions
+```
+pos = 1: 1 x p x q x r
+pos = 2: p x 1 x q x r
+pos = 3: p x q x 1 x r
+pos = 4: p x q x r x 1
+```
+
+Example:
+```lua
+input = torch.Tensor(2, 4, 3) -- input: 2 x 4 x 3
+
+-- insert at head
+m = nn.Unsqueeze(1)
+m:forward(input) -- output: 1 x 2 x 4 x 3
+
+-- insert at tail
+m = nn.Unsqueeze(4)
+m:forward(input) -- output: 2 x 4 x 3 x 1
+
+-- insert in between
+m = nn.Unsqueeze(2)
+m:forward(input) -- output: 2 x 1 x 4 x 3
+
+-- the input size can vary across calls
+input2 = torch.Tensor(3, 5, 7) -- input2: 3 x 5 x 7
+m:forward(input2) -- output: 3 x 1 x 5 x 7
+```
+
+Indicate the expected input feature map dimension by specifying `numInputDims`. 
+This allows the module to work with mini-batch. Example:
+```lua
+b = 5 -- batch size 5
+input = torch.Tensor(b, 2, 4, 3) -- input: b x 2 x 4 x 3
+numInputDims = 3 -- input feature map should be the last 3 dims
+
+m = nn.Unsqueeze(4, numInputDims)
+m:forward(input) -- output: b x 2 x 4 x 3 x 1
+
+m = nn.Unsqueeze(2):setNumInputDims(numInputDims)
+m:forward(input) -- output: b x 2 x 1 x 4 x 3
 ```
 
 <a name="nn.Exp"></a>
@@ -1087,11 +1239,14 @@ C = model:forward(A)  -- C will be of size `b x m`
 <a name="nn.Padding"></a>
 ## Padding ##
 
-`module` = `nn.Padding(dim, pad [, nInputDim, value])`
+```lua
+module = nn.Padding(dim, pad [, nInputDim, value, index])
+```
 
 This module adds `pad` units of padding to dimension `dim` of the input.
 If `pad` is negative, padding is added to the left, otherwise, it is added to the right of the dimension. When `nInputDim` is provided, inputs larger than that value will be considered batches where the actual `dim` to be padded will
 be dimension `dim + 1`. When `value` is provide, the padding will be filled with that `value`. The default `value` is zero.
+When `index` is provided, padding will be added at that offset from the left or right, depending on the sign of `pad`.
 
 Example 1:
 
@@ -1116,6 +1271,15 @@ module:forward(torch.randn(2, 3)) --batch input
 [torch.DoubleTensor of dimension 2x5]
 ```
 
+Example 3:
+
+```lua
+module = nn.Padding(1, -2, 1, -1, 2) --pad left x2, offset to index 2
+module:forward(torch.randn(2, 3)) --batch input
+ 1.0203 -1.0000 -1.0000  0.2704 -1.6164
+-0.6529 -1.0000 -1.0000 -0.2219 -1.9218
+[torch.DoubleTensor of dimension 2x5]
+```
 
 <a name="nn.L1Penalty"></a>
 ## L1Penalty ##
@@ -1149,6 +1313,13 @@ criterion = nn.MSECriterion()  -- To measure reconstruction error
 <a name="nn.GradientReversal"></a>
 ## GradientReversal ##
 
-`module` = `nn.GradientReversal()`
+```lua
+module = nn.GradientReversal([lambda = 1])
+```
+This module preserves the input, but takes the gradient from the subsequent layer, multiplies it by `-lambda` and passes it to the preceding layer. This can be used to maximise an objective function whilst using gradient descent, as described in "Domain-Adversarial Training of Neural Networks" (http://arxiv.org/abs/1505.07818).
 
-This module preserves the input, but reverses the gradient. This can be used to maximise an objective function whilst using gradient descent, as in "Domain-Adversarial Training of Neural Networks" (http://arxiv.org/abs/1505.07818).
+One can also call:
+```lua
+module:setLambda(lambda)
+```
+to set the hyper-parameter `lambda` dynamically during training.

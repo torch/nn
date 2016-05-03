@@ -9,14 +9,14 @@ end
 
 function ParallelTable:updateOutput(input)
    for i=1,#self.modules do
-      self.output[i] = self.modules[i]:updateOutput(input[i])
+      self.output[i] = self:rethrowErrors(self.modules[i], i, 'updateOutput', input[i])
    end
    return self.output
 end
 
 function ParallelTable:updateGradInput(input, gradOutput)
    for i,module in ipairs(self.modules) do
-      self.gradInput[i]= module:updateGradInput(input[i], gradOutput[i])
+      self.gradInput[i] = self:rethrowErrors(module, i, 'updateGradInput', input[i], gradOutput[i])
    end
    return self.gradInput
 end
@@ -24,14 +24,14 @@ end
 function ParallelTable:accGradParameters(input, gradOutput, scale)
    scale = scale or 1
    for i,module in ipairs(self.modules) do
-      module:accGradParameters(input[i], gradOutput[i], scale)
+      self:rethrowErrors(module, i, 'accGradParameters', input[i], gradOutput[i], scale)
    end
 end
 
 function ParallelTable:accUpdateGradParameters(input, gradOutput, lr)
    lr = lr or 1
    for i,module in ipairs(self.modules) do
-      module:accUpdateGradParameters(input[i], gradOutput[i], lr)
+      self:rethrowErrors(module, i, 'accUpdateGradParameters', input[i], gradOutput[i], lr)
    end
 end
 

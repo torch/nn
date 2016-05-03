@@ -13,6 +13,9 @@
 #include "generic/ClassNLLCriterion.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/SpatialClassNLLCriterion.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/DistKLDivCriterion.c"
 #include "THGenerateFloatTypes.h"
 
@@ -44,6 +47,9 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/MarginCriterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SoftMarginCriterion.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/MultiLabelMarginCriterion.c"
@@ -97,7 +103,7 @@
 #include "generic/TemporalMaxPooling.c"
 #include "THGenerateFloatTypes.h"
 
-#include "generic/SpatialBatchNormalization.c"
+#include "generic/BatchNormalization.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/unfold.c"
@@ -116,6 +122,9 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SpatialFullConvolutionMap.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SpatialDilatedConvolution.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SpatialAdaptiveMaxPooling.c"
@@ -155,4 +164,10 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/VolumetricMaxUnpooling.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SpatialReflectionPadding.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SpatialReplicationPadding.c"
 #include "THGenerateFloatTypes.h"

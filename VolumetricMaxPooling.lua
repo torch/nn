@@ -36,6 +36,11 @@ function VolumetricMaxPooling:floor()
 end
 
 function VolumetricMaxPooling:updateOutput(input)
+   local dims = input:dim()
+   self.itime = input:size(dims-2)
+   self.iheight = input:size(dims-1)
+   self.iwidth = input:size(dims)
+
    self.indices = self.indices or input.new()
    input.THNN.VolumetricMaxPooling_updateOutput(
       input:cdata(),
@@ -75,4 +80,16 @@ function VolumetricMaxPooling:read(file, version)
    if version < 2 then
       self.ceil_mode = false
    end
+end
+
+function VolumetricMaxPooling:__tostring__()
+   local s =  string.format('%s(%dx%dx%d, %d,%d,%d', torch.type(self),
+                            self.kT, self.kW, self.kH, self.dT, self.dW, self.dH)
+   if (self.padT or self.padW or self.padH) and
+      (self.padT ~= 0 or self.padW ~= 0 or self.padH ~= 0) then
+      s = s .. ', ' .. self.padT.. ',' .. self.padW .. ','.. self.padH
+   end
+   s = s .. ')'
+
+   return s
 end

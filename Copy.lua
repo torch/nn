@@ -13,12 +13,12 @@ function Copy:__init(intype, outtype, forceCopy, dontCast)
    if (not forceCopy) and intype == outtype then
 
       self.updateOutput = function(self, input)
-                        self.output = input
+                        self.output:set(input)
                         return input
                      end
 
       self.updateGradInput = function(self, input, gradOutput)
-                         self.gradInput = gradOutput
+                         self.gradInput:set(gradOutput)
                          return gradOutput
                       end
    end

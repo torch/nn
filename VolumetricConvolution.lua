@@ -64,14 +64,14 @@ end
 -- function to re-view the weight layout in a way that would make the MM ops happy
 local function viewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kT * self.kH * self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then 
+   if self.gradWeight and self.gradWeight:dim() > 0 then
       self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kT * self.kH * self.kW)
    end
 end
 
 local function unviewWeight(self)
    self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kT, self.kH, self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then 
+   if self.gradWeight and self.gradWeight:dim() > 0 then
       self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kT, self.kH, self.kW)
    end
 end
@@ -178,4 +178,18 @@ end
 function VolumetricConvolution:clearState()
    nn.utils.clear(self, 'finput', 'fgradInput', '_input', '_gradOutput')
    return parent.clearState(self)
+end
+
+function VolumetricConvolution:__tostring__()
+   local s = string.format('%s(%d -> %d, %dx%dx%d', torch.type(self),
+         self.nInputPlane, self.nOutputPlane, self.kT, self.kW, self.kH)
+   if self.dT ~= 1 or self.dW ~= 1 or self.dH ~= 1 or
+      self.padT ~= 0 or self.padW ~= 0 or self.padH ~= 0 then
+     s = s .. string.format(', %d,%d,%d', self.dT, self.dW, self.dH)
+   end
+   if (self.padT or self.padW or self.padH) and
+      (self.padT ~=0 or self.padW ~= 0 or self.padH ~= 0) then
+     s = s .. ', ' .. self.padT .. ',' .. self.padW .. ',' .. self.padH
+   end
+   return s .. ')'
 end

@@ -5,7 +5,7 @@ function SpatialMaxPooling:__init(kW, kH, dW, dH, padW, padH)
 
    dW = dW or kW
    dH = dH or kH
-   
+
    self.kW = kW
    self.kH = kH
    self.dW = dW
@@ -30,6 +30,11 @@ end
 
 function SpatialMaxPooling:updateOutput(input)
    self.indices = self.indices or input.new()
+
+   local dims = input:dim()
+   self.iheight = input:size(dims-1)
+   self.iwidth = input:size(dims)
+
    -- backward compatibility
    self.ceil_mode = self.ceil_mode or false
    self.padW = self.padW or 0
@@ -66,10 +71,10 @@ function SpatialMaxPooling:empty()
 end
 
 function SpatialMaxPooling:__tostring__()
-   local s =  string.format('%s(%d,%d,%d,%d', torch.type(self),
+   local s =  string.format('%s(%dx%d, %d,%d', torch.type(self),
                             self.kW, self.kH, self.dW, self.dH)
    if (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
-      s = s .. ',' .. self.padW .. ','.. self.padH
+      s = s .. ', ' .. self.padW .. ','.. self.padH
    end
    s = s .. ')'
 

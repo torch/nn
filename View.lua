@@ -26,8 +26,6 @@ end
 function View:__init(...)
    parent.__init(self)
    self:resetSize(...)
-   self.output = nil
-   self.gradInput = nil
    self.numInputDims = nil
 end
 
@@ -77,20 +75,22 @@ local function batchsize(input, size, numInputDims, numElements)
 end
 
 function View:updateOutput(input)
+   self.output = self.output or input.new()
    local bsz = batchsize(input, self.size, self.numInputDims, self.numElements)
    if bsz then
-      self.output = input:view(bsz, table.unpack(self.size:totable()))
+      self.output:view(input, bsz, table.unpack(self.size:totable()))
    else
-      self.output = input:view(self.size)
+      self.output:view(input, self.size)
    end
    return self.output
 end
 
 function View:updateGradInput(input, gradOutput)
-   self.gradInput = gradOutput:view(input:size())
+   self.gradInput = self.gradInput or gradOutput.new()
+   self.gradInput:view(gradOutput, input:size())
    return self.gradInput
 end
 
 function View:__tostring__()
-   return torch.type(self)..'('..table.concat(self.size:totable(),',')..')'
+   return torch.type(self)..'('..table.concat(self.size:totable(), ', ')..')'
 end

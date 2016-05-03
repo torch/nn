@@ -153,7 +153,7 @@ function SpatialFractionalMaxPooling:clearState()
 end
 
 function SpatialFractionalMaxPooling:__tostring__()
-   return string.format('%s(%d,%d,%d,%d)', torch.type(self),
+   return string.format('%s(%dx%d, %d,%d)', torch.type(self),
                         self.outW and self.outW or self.ratioW,
                         self.outH and self.outH or self.ratioH,
                         self.poolSizeW, self.poolSizeH)

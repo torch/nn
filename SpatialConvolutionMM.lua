@@ -1,8 +1,9 @@
+local THNN = require 'nn.THNN'
 local SpatialConvolutionMM, parent = torch.class('nn.SpatialConvolutionMM', 'nn.Module')
 
 function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH)
    parent.__init(self)
-   
+
    dW = dW or 1
    dH = dH or 1
 
@@ -24,6 +25,12 @@ function SpatialConvolutionMM:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, 
    self:reset()
 end
 
+function SpatialConvolutionMM:noBias()
+   self.bias = nil
+   self.gradBias = nil
+   return self
+end
+
 function SpatialConvolutionMM:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
@@ -36,7 +43,7 @@ function SpatialConvolutionMM:reset(stdv)
       end)
       self.bias:apply(function()
          return torch.uniform(-stdv, stdv)
-      end)  
+      end)
    else
       self.weight:uniform(-stdv, stdv)
       self.bias:uniform(-stdv, stdv)
@@ -73,7 +80,7 @@ function SpatialConvolutionMM:updateOutput(input)
       input:cdata(),
       self.output:cdata(),
       self.weight:cdata(),
-      self.bias:cdata(),
+      THNN.optionalTensor(self.bias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.kW, self.kH,
@@ -91,7 +98,6 @@ function SpatialConvolutionMM:updateGradInput(input, gradOutput)
          gradOutput:cdata(),
          self.gradInput:cdata(),
          self.weight:cdata(),
-         self.bias:cdata(),
          self.finput:cdata(),
          self.fgradInput:cdata(),
          self.kW, self.kH,
@@ -105,11 +111,12 @@ end
 function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
    scale = scale or 1
    input, gradOutput = makeContiguous(self, input, gradOutput)
+   assert((self.bias and self.gradBias) or (self.bias == nil and self.gradBias == nil))
    input.THNN.SpatialConvolutionMM_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),
       self.gradWeight:cdata(),
-      self.gradBias:cdata(),
+      THNN.optionalTensor(self.gradBias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.kW, self.kH,
@@ -134,7 +141,11 @@ function SpatialConvolutionMM:__tostring__()
    if (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
      s = s .. ', ' .. self.padW .. ',' .. self.padH
    end
-   return s .. ')'
+   if self.bias then
+      return s .. ')'
+   else
+      return s .. ') without bias'
+   end
 end
 
 function SpatialConvolutionMM:clearState()

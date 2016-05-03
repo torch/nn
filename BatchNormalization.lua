@@ -5,20 +5,20 @@
                    by Sergey Ioffe, Christian Szegedy
 
    This implementation is useful for inputs NOT coming from convolution layers.
-   For Convolution layers, see SpatialBatchNormalization.lua
+   For convolution layers, use nn.SpatialBatchNormalization.
 
    The operation implemented is:
    y =     ( x - mean(x) )
         -------------------- * gamma + beta
-       standard-deviation(x)
+        standard-deviation(x)
    where gamma and beta are learnable parameters.
 
    The learning of gamma and beta is optional.
 
    Usage:
-   with    learnable parameters: nn.BatchNormalization(N [, eps] [,momentum])
+   with    learnable parameters: nn.BatchNormalization(N [,eps] [,momentum])
                                  where N = dimensionality of input
-   without learnable parameters: nn.BatchNormalization(0 [, eps] [,momentum])
+   without learnable parameters: nn.BatchNormalization(N [,eps] [,momentum], false)
 
    eps is a small value added to the standard-deviation to avoid divide-by-zero.
        Defaults to 1e-5
@@ -28,6 +28,12 @@
    In test time, this running mean/std is used to normalize.
 ]]--
 local BN,parent = torch.class('nn.BatchNormalization', 'nn.Module')
+local THNN = require 'nn.THNN'
+
+BN.__version = 2
+
+-- expected dimension of input
+BN.nDim = 2
 
 function BN:__init(nOutput, eps, momentum, affine)
    parent.__init(self)
@@ -45,7 +51,7 @@ function BN:__init(nOutput, eps, momentum, affine)
    self.train = true
    self.momentum = momentum or 0.1
    self.running_mean = torch.zeros(nOutput)
-   self.running_std = torch.ones(nOutput)
+   self.running_var = torch.ones(nOutput)
 
    if self.affine then
       self.weight = torch.Tensor(nOutput)
@@ -57,111 +63,133 @@ function BN:__init(nOutput, eps, momentum, affine)
 end
 
 function BN:reset()
-   self.weight:uniform()
-   self.bias:zero()
+   if self.weight then
+      self.weight:uniform()
+   end
+   if self.bias then
+      self.bias:zero()
+   end
    self.running_mean:zero()
-   self.running_std:fill(1)
+   self.running_var:fill(1)
+end
+
+function BN:checkInputDim(input)
+   assert(input:dim() == self.nDim, string.format(
+      'only mini-batch supported (%dD tensor), got %dD tensor instead',
+      self.nDim, input:dim()))
+   assert(input:size(2) == self.running_mean:nElement(), string.format(
+      'got %d-feature tensor, expected %d',
+      input:size(2), self.running_mean:nElement()))
+end
+
+local function makeContiguous(self, input, gradOutput)
+   if not input:isContiguous() then
+      self._input = self._input or input.new()
+      self._input:resizeAs(input):copy(input)
+      input = self._input
+   end
+   if gradOutput then
+      if not gradOutput:isContiguous() then
+         self._gradOutput = self._gradOutput or gradOutput.new()
+         self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
+         gradOutput = self._gradOutput
+      end
+   end
+   return input, gradOutput
 end
 
 function BN:updateOutput(input)
-   assert(input:dim() == 2, 'only mini-batch supported (2D tensor), got '
-             .. input:dim() .. 'D tensor instead')
-   local nBatch = input:size(1)
+   self:checkInputDim(input)
 
-   -- buffers that are reused
-   self.buffer = self.buffer or input.new()
-   self.buffer2 = self.buffer2 or input.new()
-   self.centered = self.centered or input.new()
-   self.centered:resizeAs(input)
-   self.std = self.std or input.new()
-   self.normalized = self.normalized or input.new()
-   self.normalized:resizeAs(input)
+   input = makeContiguous(self, input)
+
    self.output:resizeAs(input)
-   self.gradInput:resizeAs(input)
-   if self.train == false then
-      self.output:copy(input)
-      self.buffer:repeatTensor(self.running_mean, nBatch, 1)
-      self.output:add(-1, self.buffer)
-      self.buffer:repeatTensor(self.running_std, nBatch, 1)
-      self.output:cmul(self.buffer)
-   else -- training mode
-      -- calculate mean over mini-batch
-      self.buffer:mean(input, 1)                        -- E(x) = expectation of x.
-      self.running_mean:mul(1 - self.momentum):add(self.momentum, self.buffer) -- add to running mean
-      self.buffer:repeatTensor(self.buffer, nBatch, 1)
+   self.save_mean = self.save_mean or input.new()
+   self.save_mean:resizeAs(self.running_mean)
+   self.save_std = self.save_std or input.new()
+   self.save_std:resizeAs(self.running_var)
 
-      -- subtract mean
-      self.centered:add(input, -1, self.buffer)         -- x - E(x)
+   input.THNN.BatchNormalization_updateOutput(
+      input:cdata(),
+      self.output:cdata(),
+      THNN.optionalTensor(self.weight),
+      THNN.optionalTensor(self.bias),
+      self.running_mean:cdata(),
+      self.running_var:cdata(),
+      self.save_mean:cdata(),
+      self.save_std:cdata(),
+      self.train,
+      self.momentum,
+      self.eps)
 
-      -- calculate standard deviation over mini-batch
-      self.buffer:copy(self.centered):cmul(self.buffer) -- [x - E(x)]^2
-
-      -- 1 / E([x - E(x)]^2)
-      self.std:mean(self.buffer, 1):add(self.eps):sqrt():pow(-1)
-      self.running_std:mul(1 - self.momentum):add(self.momentum, self.std) -- add to running stdv
-      self.buffer:repeatTensor(self.std, nBatch, 1)
-
-      -- divide standard-deviation + eps
-      self.output:cmul(self.centered, self.buffer)
-      self.normalized:copy(self.output)
-   end
-
-   if self.affine then
-      -- multiply with gamma and add beta
-      self.buffer:repeatTensor(self.weight, nBatch, 1)
-      self.output:cmul(self.buffer)
-      self.buffer:repeatTensor(self.bias, nBatch, 1)
-      self.output:add(self.buffer)
-   end
    return self.output
 end
 
-function BN:updateGradInput(input, gradOutput)
-   assert(input:dim() == 2, 'only mini-batch supported')
-   assert(gradOutput:dim() == 2, 'only mini-batch supported')
-   assert(self.train == true, 'should be in training mode when self.train is true')
-   local nBatch = input:size(1)
+local function backward(self, input, gradOutput, scale, gradInput, gradWeight, gradBias)
+   self:checkInputDim(input)
+   self:checkInputDim(gradOutput)
+   assert(self.save_mean and self.save_std, 'must call :updateOutput() first')
 
-   self.gradInput:cmul(self.centered, gradOutput)
-   self.buffer:mean(self.gradInput, 1)
-   self.gradInput:repeatTensor(self.buffer, nBatch, 1)
-   self.gradInput:cmul(self.centered):mul(-1)
-   self.buffer:repeatTensor(self.std, nBatch, 1)
-   self.gradInput:cmul(self.buffer):cmul(self.buffer)
+   input, gradOutput = makeContiguous(self, input, gradOutput)
 
-   self.buffer:mean(gradOutput, 1)
-   self.buffer:repeatTensor(self.buffer, nBatch, 1)
-   self.gradInput:add(gradOutput):add(-1, self.buffer)
-   self.buffer:repeatTensor(self.std, nBatch, 1)
-   self.gradInput:cmul(self.buffer)
-
-   if self.affine then
-      self.buffer:repeatTensor(self.weight, nBatch, 1)
-      self.gradInput:cmul(self.buffer)
+   scale = scale or 1
+   if gradInput then
+      gradInput:resizeAs(gradOutput)
    end
+
+   input.THNN.BatchNormalization_backward(
+      input:cdata(),
+      gradOutput:cdata(),
+      THNN.optionalTensor(gradInput),
+      THNN.optionalTensor(gradWeight),
+      THNN.optionalTensor(gradBias),
+      THNN.optionalTensor(self.weight),
+      self.running_mean:cdata(),
+      self.running_var:cdata(),
+      self.save_mean:cdata(),
+      self.save_std:cdata(),
+      self.train,
+      scale,
+      self.eps)
 
    return self.gradInput
 end
 
+function BN:backward(input, gradOutput, scale)
+   return backward(self, input, gradOutput, scale, self.gradInput, self.gradWeight, self.gradBias)
+end
+
+function BN:updateGradInput(input, gradOutput)
+   return backward(self, input, gradOutput, 1, self.gradInput)
+end
+
 function BN:accGradParameters(input, gradOutput, scale)
-   if self.affine then
-      scale = scale or 1.0
-      self.buffer2:resizeAs(self.normalized):copy(self.normalized)
-      self.buffer2:cmul(gradOutput)
-      self.buffer:sum(self.buffer2, 1) -- sum over mini-batch
-      self.gradWeight:add(scale, self.buffer)
-      self.buffer:sum(gradOutput, 1) -- sum over mini-batch
-      self.gradBias:add(scale, self.buffer)
+   return backward(self, input, gradOutput, scale, nil, self.gradWeight, self.gradBias)
+end
+
+function BN:read(file, version)
+   parent.read(self, file)
+   if version < 2 then
+      if self.running_std then
+         self.running_var = self.running_std:pow(-2):add(-self.eps)
+         self.running_std = nil
+      end
    end
 end
 
 function BN:clearState()
+   -- first 5 buffers are not present in the current implementation,
+   -- but we keep them for cleaning old saved models
    nn.utils.clear(self, {
       'buffer',
       'buffer2',
       'centered',
       'std',
       'normalized',
+      '_input',
+      '_gradOutput',
+      'save_mean',
+      'save_std',
    })
    return parent.clearState(self)
 end
