@@ -7,12 +7,11 @@ function SelectTable:__init(index)
 end
 
 function SelectTable:updateOutput(input)
-   assert(math.abs(self.index) <= #input, "arg 1 table idx out of range")
-   if self.index < 0 then
-      self.output = input[#input + self.index + 1]
-   else
-      self.output = input[self.index]
-   end
+   -- handle negative indices
+   local index = self.index < 0 and #input + self.index + 1 or self.index
+
+   assert(input[index], "index does not exist in the input table")
+   self.output = input[index]
 
    return self.output
 end
