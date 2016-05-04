@@ -6120,21 +6120,18 @@ end
 
 mytester:add(nntest)
 
-if not nn then
-   require 'nn'
-   jac = nn.Jacobian
-   sjac = nn.SparseJacobian
-   mytester:run()
-else
-   jac = nn.Jacobian
-   sjac = nn.SparseJacobian
-   function nn.test(tests, seed)
-      -- randomize stuff
-      local seed = seed or (1e5 * torch.tic())
-      print('Seed: ', seed)
-      math.randomseed(seed)
-      torch.manualSeed(seed)
-      mytester:run(tests)
-      return mytester
-   end
+jac = nn.Jacobian
+sjac = nn.SparseJacobian
+function nn.test(tests, seed)
+   -- Limit number of threads since everything is small
+   local nThreads = torch.getnumthreads()
+   torch.setnumthreads(1)
+   -- randomize stuff
+   local seed = seed or (1e5 * torch.tic())
+   print('Seed: ', seed)
+   math.randomseed(seed)
+   torch.manualSeed(seed)
+   mytester:run(tests)
+   torch.setnumthreads(nThreads)
+   return mytester
 end
