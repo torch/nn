@@ -420,7 +420,9 @@ module = nn.SpatialFullConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH]
 ```
 
 Applies a 2D full convolution over an input image composed of several input planes. The `input` tensor in
-`forward(input)` is expected to be a 3D or 4D tensor.
+`forward(input)` is expected to be a 3D or 4D tensor. Note that instead of setting `adjW` and `adjH`, SpatialFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution
+is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
+will ignore the `adjW` and `adjH` values used to construct the module.
 
 Other frameworks call this operation "In-network Upsampling", "Fractionally-strided convolution", "Backwards Convolution," "Deconvolution", or "Upconvolution."
 
@@ -898,7 +900,8 @@ module = nn.VolumetricFullConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT
 ```
 
 Applies a 3D full convolution over an input image composed of several input planes. The `input` tensor in
-`forward(input)` is expected to be a 4D or 5D tensor.
+`forward(input)` is expected to be a 4D or 5D tensor. Note that instead of setting `adjT`, `adjW` and `adjH`, VolumetricFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
+will ignore the `adjT`, `adjW` and `adjH` values used to construct the module.
 
 The parameters are the following:
 * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
