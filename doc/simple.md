@@ -25,6 +25,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
     * [Squeeze](#nn.Squeeze) : [squeezes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) the input;
     * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;  
+    * [Transpose](#nn.Transpose) : [transposes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-transposedim1-dim2) the input ;
   * Modules that adapt mathematical Tensor methods :
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
@@ -1030,6 +1031,26 @@ m:forward(input) -- output: b x 2 x 4 x 3 x 1
 
 m = nn.Unsqueeze(2):setNumInputDims(numInputDims)
 m:forward(input) -- output: b x 2 x 1 x 4 x 3
+```
+
+<a name="nn.Transpose"></a>
+## Transpose ##
+
+```lua
+module = nn.Transpose({dim1, dim2} [, {dim3, dim4}, ...])
+```
+
+Swaps dimension `dim1` with `dim2`, then `dim3` with `dim4`, and so on. So
+
+```lua
+nn.Transpose({dim1, dim2}, {dim3, dim4}):forward(t)
+```
+
+gives the same output as
+
+```lua
+t:transpose(dim1, dim2)
+t:transpose(dim3, dim4)
 ```
 
 <a name="nn.Exp"></a>
