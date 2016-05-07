@@ -26,11 +26,14 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Squeeze](#nn.Squeeze) : [squeezes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) the input;
     * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;  
   * Modules that adapt mathematical Tensor methods :
+    * [AddConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#nn.AddConstant) : adding a constant ;
+    * [MulConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#nn.MulConstant) : multiplying a constant ;
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
     * [Mean](#nn.Mean) : a [mean](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchmeanres-x-dim) operation over a given dimension ;
     * [Sum](#nn.Sum) : a [sum](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchsumres-x) operation over a given dimension ;
     * [Exp](#nn.Exp) : an element-wise [exp](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchexpres-x) operation ;
+    * [Log](#nn.Log) : an element-wise [log](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchlogres-x) operation ;
     * [Abs](#nn.Abs) : an element-wise [abs](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchabsres-x) operation ;
     * [Power](#nn.Power) : an element-wise [pow](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchpowres-x) operation ;
     * [Square](#nn.Square) : an element-wise square operation ;
@@ -1052,6 +1055,16 @@ gnuplot.grid(true)
 ```
 
 ![](image/exp.png)
+
+
+<a name="nn.Log"></a>
+## Log ##
+
+```lua
+module = nn.Log()
+```
+
+Applies the `log` function element-wise to the input Tensor, thus outputting a Tensor of the same dimension.
 
 
 <a name="nn.Square"></a>
