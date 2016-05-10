@@ -2523,6 +2523,48 @@ function nntest.SpatialFullConvolution()
    mytester:asserteq(0, (gradInput-gradInputc):abs():max(), torch.typename(module) .. ' - contiguous err ')
 end
 
+function nntest.SpatialFullConvolutionDualInput()
+   local from = math.random(2,5)
+   local to = math.random(1,5)
+   local ki = math.random(1,5)
+   local kj = math.random(1,5)
+   local di =  math.random(1,4)
+   local dj =  math.random(1,4)
+   local padW = math.random(0,2)
+   local padH = math.random(0,2)
+   local outi = math.random(5,9)
+   local outj = math.random(5,9)
+   local ini = math.floor((outi + padW*2 - ki)/di + 1)
+   local inj = math.floor((outj + padH*2 - kj)/dj + 1)
+   local adjW = (outi + 2 * padW - ki) % di
+   local adjH = (outj + 2 * padH - kj) % dj
+   local targetTensor = torch.Tensor(outj, outi):zero()
+   local input = torch.Tensor(from, inj, ini):zero()
+
+   local module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH)
+   local moduleRef = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH, adjW, adjH)
+   moduleRef.weight:copy(module.weight)
+   moduleRef.bias:copy(module.bias)
+
+   -- Check that the required output size matches the actual output size
+   -- when using the dual input mode
+   local output = module:forward({input, targetTensor})
+   mytester:asserteq(output:size(2), outj, 'output height error')
+   mytester:asserteq(output:size(3), outi, 'output width error')
+
+   -- Check that backward and forward match the reference module
+   local outputRef = moduleRef:forward(input)
+   mytester:asserteq(0, (output-outputRef):abs():max(), torch.typename(module) .. ' - output err ')
+   local gradOutput = outputRef:clone():uniform()
+   local gradInputRef = moduleRef:backward(input, gradOutput)
+   local gradInput = module:backward({input, targetTensor}, gradOutput)
+   mytester:asserteq(0, (gradInput[1]-gradInputRef):abs():max(), torch.typename(module) .. ' - gradInput[1] err ')
+
+   -- Check that gradInput[2] is the singleton tensor {0}
+   mytester:asserteq(gradInput[2]:storage():size(), 1, torch.typename(module) .. ' - gradInput[2] size err ')
+   mytester:asserteq(gradInput[2]:storage()[1], 0, torch.typename(module) .. ' - gradInput[2] value err ')
+end
+
 function nntest.SpatialDilatedConvolution()
    local from = math.random(1,5)
    local to = math.random(1,5)
@@ -3649,7 +3691,54 @@ function nntest.VolumetricFullConvolution()
     mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.VolumetricFullConvolutionDualInput()
+   local from = math.random(2,3)
+   local to = math.random(2,3)
+   local kt = math.random(3,4)
+   local ki = math.random(3,4)
+   local kj = math.random(3,4)
+   local dt =  math.random(1,3)
+   local di =  math.random(1,3)
+   local dj =  math.random(1,3)
+   local padT = math.random(0,2)
+   local padW = math.random(0,2)
+   local padH = math.random(0,2)
+   local outt = math.random(5,9)
+   local outi = math.random(5,9)
+   local outj = math.random(5,9)
+   local int = math.floor((outt + padT*2 - kt)/dt + 1)
+   local ini = math.floor((outi + padW*2 - ki)/di + 1)
+   local inj = math.floor((outj + padH*2 - kj)/dj + 1)
+   local adjT = (outt + 2 * padT - kt) % dt
+   local adjW = (outi + 2 * padW - ki) % di
+   local adjH = (outj + 2 * padH - kj) % dj
+   local targetTensor = torch.Tensor(outt, outj, outi):zero()
+   local input = torch.Tensor(from, int, inj, ini):zero()
 
+   local module = nn.VolumetricFullConvolution(from, to, kt, ki, kj, dt, di, dj, padT, padW, padH)
+   local moduleRef = nn.VolumetricFullConvolution(from, to, kt, ki, kj, dt, di, dj, padT, padW, padH, adjT, adjW, adjH)
+   moduleRef.weight:copy(module.weight)
+   moduleRef.bias:copy(module.bias)
+
+   -- Check that the required output size matches the actual output size
+   -- when using the dual input mode
+   local output = module:forward({input, targetTensor})
+   mytester:asserteq(output:size(2), outt, 'output depth error')
+   mytester:asserteq(output:size(3), outj, 'output height error')
+   mytester:asserteq(output:size(4), outi, 'output width error')
+
+   -- Check that backward and forward match the reference module
+   local outputRef = moduleRef:forward(input)
+   mytester:asserteq(0, (output-outputRef):abs():max(), torch.typename(module) .. ' - output err ')
+   local gradOutput = outputRef:clone():uniform()
+   local gradInputRef = moduleRef:backward(input, gradOutput)
+   local gradInput = module:backward({input, targetTensor}, gradOutput)
+   mytester:asserteq(0, (gradInput[1]-gradInputRef):abs():max(), torch.typename(module) .. ' - gradInput[1] err ')
+
+   -- Check that gradInput[2] is the singleton tensor {0}
+   mytester:asserteq(gradInput[2]:storage():size(), 1, torch.typename(module) .. ' - gradInput[2] size err ')
+   mytester:asserteq(gradInput[2]:storage()[1], 0, torch.typename(module) .. ' - gradInput[2] value err ')
+end
 
 function nntest.VolumetricConvolution()
    local from = math.random(2,4)
