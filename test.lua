@@ -805,12 +805,7 @@ function nntest.Linear()
    end  -- for ind, inj in pairs(inj_vals) do
 end
 
-function nntest.SparseLinear()
-   local inb = math.random(5,10)
-   local ini = math.random(50,100)
-   local inj = math.random(5,10)
-   local numNonzero = math.random(3,5)
-
+local function test_sparse_linear(inb, ini, inj, numNonzero)
    local module = nn.SparseLinear(ini,inj, true)
    local linear = nn.Linear(ini, inj)
    linear.weight = module.weight:clone()
@@ -822,11 +817,11 @@ function nntest.SparseLinear()
    local input = {}
    local nonsparse = torch.zeros(inb, ini)
    for i=1,inb do
-       local nnz = math.random(1, 3)
+       local nnz = math.random(1, 3) + numNonzero
        local inds = torch.randperm(ini)[{{1,nnz}}]
        input[i] = torch.Tensor(nnz, 2)
        input[i]:select(2,1):copy(inds)
-       input[i]:select(2,2):copy(torch.ones(nnz))
+       input[i]:select(2,2):copy(torch.rand(nnz))
        nonsparse[i]:scatter(1, input[i]:select(2,1):long(), input[i]:select(2,2))
    end
    local gradOutput = torch.rand(inb, inj)
@@ -872,8 +867,8 @@ function nntest.SparseLinear()
       mytester:assertle(gierr, precision, 'error on gradInput with ntimes = '..ntimes)
 
       for _,var in ipairs(cmps) do
-           local err = (module[var] - linear[var]):abs():max()
-           mytester:assertle(err, precision, 'error on '..var..' with ntimes='..ntimes)
+          local err = (module[var] - linear[var]):abs():max()
+          mytester:assertle(err, precision, 'error on '..var..' with ntimes = '..ntimes)
       end
 
       module:zeroGradParameters()
@@ -911,6 +906,18 @@ function nntest.SparseLinear()
    end
    local err = (expected - actual):abs():max()
    mytester:assertle(err, precision, 'error on batch result forward')
+end
+
+function nntest.SparseLinear()
+   local inb = math.random(5,10)
+   local ini = math.random(50,100)
+   local inj = math.random(5,10)
+   local numNonzero = math.random(3,5)
+
+   test_sparse_linear(inb, ini, inj, numNonzero)
+   -- Tests OMP parallelism
+   test_sparse_linear(1, 50000, 10, 20000)
+   test_sparse_linear(1000, 1000, 10, 100)
 end
 
 function nntest.Bilinear()
