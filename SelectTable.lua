@@ -11,7 +11,7 @@ function SelectTable:updateOutput(input)
    local index = self.index < 0 and #input + self.index + 1 or self.index
 
    assert(input[index], "index does not exist in the input table")
-   self.output = input[index]
+   self.output:set(input[index])
 
    return self.output
 end
