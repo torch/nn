@@ -58,3 +58,5 @@ end
 function SelectTable:__tostring__()
   return torch.type(self) .. '(' .. self.index .. ')'
 end
+
+SelectTable.clearState = nn.Identity.clearState

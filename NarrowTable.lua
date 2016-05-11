@@ -39,3 +39,5 @@ function NarrowTable:type(type, tensorCache)
    self.gradInput = {}
    return parent.type(self, type, tensorCache)
 end
+
+NarrowTable.clearState = nn.Identity.clearState
