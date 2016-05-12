@@ -73,6 +73,9 @@
 #include "generic/SmoothL1Criterion.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/WeightedSmoothL1Criterion.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/SoftMax.c"
 #include "THGenerateFloatTypes.h"
 

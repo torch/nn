@@ -344,6 +344,23 @@ TH_API void THNN_(SmoothL1Criterion_updateGradInput)(
           THTensor *gradInput,
           bool sizeAverage);
 
+TH_API void THNN_(WeightedSmoothL1Criterion_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *target,
+          THTensor *output,
+          bool sizeAverage, 
+          THTensor *weights,           // [OPTIONAL] class weights
+          THTensor *total_weight);     // [BUFFER] 
+TH_API void THNN_(WeightedSmoothL1Criterion_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *target,
+          THTensor *gradInput,
+          bool sizeAverage, 
+          THTensor *weights,           // [OPTIONAL] class weights
+          THTensor *total_weight);     // [BUFFER] 
+
 TH_API void THNN_(SoftMax_updateOutput)(
           THNNState *state,
           THTensor *input,

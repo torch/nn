@@ -1251,6 +1251,20 @@ function nntest.SmoothL1Criterion()
    criterionJacobianTest(cri, input, target)
 end
 
+function nntest.WeightedSmoothL1Criterion()
+   local input = torch.rand(10)
+   local target = input:clone():add(torch.rand(10))
+   local cri = nn.WeightedSmoothL1Criterion()
+   criterionJacobianTest(cri, input, target)
+
+   -- default ClassNLLCriterion
+   criterionJacobianTest(cri, input, target)
+
+   -- ClassNLLCriterion with weights
+   local weights = torch.rand(10)
+   criterionJacobianTest(cri, input, {target, weights})
+end
+
 function nntest.MSECriterion()
    local input = torch.rand(10)
    local target = input:clone():add(torch.rand(10))
