@@ -1530,6 +1530,25 @@ function nntest.SpatialClassNLLCriterion()
          "spatial and regular criterions give different results")
 end
 
+function nntest.SpatialWeightedClassNLLCriterion()
+   local numLabels = math.random(5,10)
+   local h = math.random(5, 20)
+   local w = math.random(5, 20)
+   local batchSize = math.random(1, 4)
+   local input = torch.rand(batchSize, numLabels, h, w)
+   local target = torch.Tensor(batchSize, h, w)
+   target:apply(function() return math.random(1, numLabels) end)
+
+   -- default ClassNLLCriterion
+   local cri = nn.SpatialWeightedClassNLLCriterion()
+   criterionJacobianTest(cri, input, target)
+
+   -- ClassNLLCriterion with weights
+   local weights = torch.rand(batchSize, h, w)
+   cri = nn.SpatialWeightedClassNLLCriterion()
+   criterionJacobianTest(cri, input, {target, weights})
+end
+
 function nntest.MultiLabelSoftMarginCriterion()
     local cri = nn.MultiLabelSoftMarginCriterion()
 

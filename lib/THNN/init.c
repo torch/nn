@@ -16,6 +16,9 @@
 #include "generic/SpatialClassNLLCriterion.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/SpatialWeightedClassNLLCriterion.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/DistKLDivCriterion.c"
 #include "THGenerateFloatTypes.h"
 

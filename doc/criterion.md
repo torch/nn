@@ -787,3 +787,49 @@ for i = 1, 100 do
    end
 end
 ```
+
+<a name="nn.SpatialWeightedClassNLLCriterion"></a>
+## SpatialWeightedClassNLLCriterion ##
+
+ 
+```lua
+criterion = nn.SpatialWeightedClassNLLCriterion()
+```
+
+This module is adopted from `nn.SpatialClassNLLCriterion`, and creates a criterion that estimates ClassNLLCriterion over spatial dimension. Unlike other module, it can get additional `target`, which is `weights`, as well as conventional `target`. This module is designed to be used in faster-rcnn (http://arxiv.org/abs/1506.01497) or instance-aware semantic segmentation (http://arxiv.org/abs/1512.04412).
+
+The usage without `weights` can be described as follow: 
+
+```lua
+  local criterion = nn.SpatialWeightedClassNLLCriterion()
+  local loss = criterion:foward(input, target)
+  local grad = criterion:backward(input, target)
+```
+
+The usage with `weights` can be described as follow: 
+
+```lua
+  local criterion = nn.SpatialWeightedClassNLLCriterion()
+  local loss = criterion:foward(input, {target, weights})
+  local grad = criterion:backward(input, {target, weights})
+```
+
+Unlike class-wise `weights` for other modules, the usage of `weights` is specified as follows: 
+
+```lua
+ loss(x[{b, {}, h, w}]; weights) = weights[{b, h, w}] * loss(x[{b, {}, h, w}])
+```
+
+The `input` and `weights` given through a `forward()` and `backward()` are expected to satisfy follows:
+- `input` has to be 4D `Tensor` of size `batchSize, channels, height, width`
+- `target` has to be 3D `Tensor` of size `batchSize, height, width`
+- `weights` has to be 3D `Tensor`, having the same size with `target`
+
+If `x` and `y` are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation still operates over all the elements, and divides by `n`.
+
+The division by `n` can be avoided if one sets the internal variable `sizeAverage` to `false`:
+
+```lua
+criterion = nn.SpatialWeightedClassNLLCriterion()
+criterion.sizeAverage = false
+```
