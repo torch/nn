@@ -9,10 +9,6 @@ function SpatialWeightedClassNLLCriterion:__init(sizeAverage)
     else
        self.sizeAverage = true
     end
-    --if weights then
-    --   assert(weights:dim() == 1, "weights input should be 1-D Tensor")
-    --   self.weights = weights
-    --end
 
     self.output_tensor = torch.zeros(1)
     self.total_weight_tensor = torch.ones(1)
