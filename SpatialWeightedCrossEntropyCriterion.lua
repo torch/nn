@@ -11,6 +11,9 @@ function SpatialWeightedCrossEntropyCriterion:updateOutput(input, target)
    self.nclass = input:size(2)
    self.prep = nn.Sequential():add(nn.Transpose({3,4},{2,4}))
                               :add(nn.View(-1, self.nclass):setNumInputDims(4))
+   if input:type() == 'torch.CudaTensor' then
+     self.prep:cuda()
+   end 
 
    self.input = self.prep:forward(input)
 
@@ -33,6 +36,9 @@ function SpatialWeightedCrossEntropyCriterion:updateGradInput(input, target)
    self.nclass = input:size(2)
    self.prep = nn.Sequential():add(nn.Transpose({3,4},{2,4}))
                               :add(nn.View(-1, self.nclass):setNumInputDims(4))
+   if input:type() == 'torch.CudaTensor' then
+     self.prep:cuda()
+   end
 
    local size = input:size()
    --input = input:squeeze()
