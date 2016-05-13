@@ -13,6 +13,9 @@
 #include "generic/ClassNLLCriterion.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/WeightedClassNLLCriterion.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/SpatialClassNLLCriterion.c"
 #include "THGenerateFloatTypes.h"
 

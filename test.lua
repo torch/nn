@@ -1516,6 +1516,27 @@ function nntest.ClassNLLCriterion()
    criterionJacobianTest(cri, input, target)
 end
 
+function nntest.WeightedClassNLLCriterion()
+   local cri = nn.WeightedClassNLLCriterion()
+
+   -- default ClassNLLCriterion
+   local numLabels = math.random(5,10)
+   local input = torch.rand(numLabels)
+   local target = math.random(1,numLabels)
+   criterionJacobianTest(cri, input, target)
+
+   -- batch
+   local numLabels = math.random(5,10)
+   local bsz = math.random(3, 7)
+   local input = torch.zeros(bsz, numLabels)
+   local target = torch.Tensor(bsz):random(1, numLabels)
+   criterionJacobianTest(cri, input, target)
+
+   -- with weights
+   local weights = torch.rand(bsz)
+   criterionJacobianTest(cri, input, {target, weights})
+end
+
 function nntest.SpatialClassNLLCriterion()
    local numLabels = math.random(5,10)
    local h = math.random(5, 20)
@@ -1606,6 +1627,27 @@ function nntest.CrossEntropyCriterion()
    weights = weights / weights:sum()
    cri = nn.CrossEntropyCriterion(weights)
    criterionJacobianTest(cri, input, target)
+end
+
+function nntest.WeightedCrossEntropyCriterion()
+   local cri = nn.WeightedCrossEntropyCriterion()
+
+   -- stochastic
+   local numLabels = math.random(5, 10)
+   local input = torch.zeros(numLabels)
+   local target = torch.random(1, numLabels)
+   criterionJacobianTest(cri, input, target)
+
+   -- batch
+   local numLabels = math.random(5,10)
+   local bsz = math.random(3, 7)
+   local input = torch.zeros(bsz, numLabels)
+   local target = torch.Tensor(bsz):random(1, numLabels)
+   criterionJacobianTest(cri, input, target)
+
+   -- with weights
+   local weights = torch.rand(bsz)
+   criterionJacobianTest(cri, input, {target, weights})
 end
 
 function nntest.LogSigmoid()
