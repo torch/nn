@@ -31,11 +31,13 @@ end
 function SplitTable:updateGradInput(input, gradOutput)
    local dimension = self:_getPositiveDimension(input)
    local slices = input:size(dimension)
-   self.gradInput:resizeAs(input)
+   if self.gradInput then
+      self.gradInput:resizeAs(input)
 
-   for i=1,slices do 
-      local currentGradInput = gradOutput[i];        
-      self.gradInput:select(dimension,i):copy(currentGradInput)
+      for i=1,slices do 
+         local currentGradInput = gradOutput[i];        
+         self.gradInput:select(dimension,i):copy(currentGradInput)
+      end
    end
    return self.gradInput
 end
