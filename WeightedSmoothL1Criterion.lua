@@ -35,6 +35,16 @@ function WeightedSmoothL1Criterion:updateOutput(input, target)
 end
 
 function WeightedSmoothL1Criterion:updateGradInput(input, target)
+   if type(target) == 'table' then -- has weights
+      self.target  = target[1]
+      self.weights = target[2]
+   else -- w/o weights
+      self.target = target
+      self.weights = nil
+   end
+
+   self.gradInput:resizeAs(input):zero()
+
    input.THNN.WeightedSmoothL1Criterion_updateGradInput(
       input:cdata(),
       self.target:cdata(),
