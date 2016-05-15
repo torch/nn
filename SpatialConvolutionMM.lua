@@ -67,6 +67,7 @@ local function makeContiguous(self, input, gradOutput)
 end
 
 function SpatialConvolutionMM:updateOutput(input)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    self.finput = self.finput or input.new()
    self.fgradInput = self.fgradInput or input.new()
    -- backward compatibility
@@ -91,6 +92,7 @@ function SpatialConvolutionMM:updateOutput(input)
 end
 
 function SpatialConvolutionMM:updateGradInput(input, gradOutput)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    if self.gradInput then
       input, gradOutput = makeContiguous(self, input, gradOutput)
       input.THNN.SpatialConvolutionMM_updateGradInput(
@@ -109,6 +111,7 @@ function SpatialConvolutionMM:updateGradInput(input, gradOutput)
 end
 
 function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    scale = scale or 1
    input, gradOutput = makeContiguous(self, input, gradOutput)
    assert((self.bias and self.gradBias) or (self.bias == nil and self.gradBias == nil))
