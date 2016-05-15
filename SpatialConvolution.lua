@@ -105,6 +105,7 @@ local function unviewWeight(self)
 end
 
 function SpatialConvolution:updateOutput(input)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    backCompatibility(self)
    viewWeight(self)
    input = makeContiguous(self, input)
@@ -124,6 +125,7 @@ function SpatialConvolution:updateOutput(input)
 end
 
 function SpatialConvolution:updateGradInput(input, gradOutput)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    if self.gradInput then
       backCompatibility(self)
       viewWeight(self)
@@ -145,6 +147,7 @@ function SpatialConvolution:updateGradInput(input, gradOutput)
 end
 
 function SpatialConvolution:accGradParameters(input, gradOutput, scale)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    scale = scale or 1
    backCompatibility(self)
    input, gradOutput = makeContiguous(self, input, gradOutput)
