@@ -1857,6 +1857,21 @@ function nntest.Softmax()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.SoftmaxAtTest()
+   local ini = math.random(3,5)
+   local ink = math.random(3,5)
+   local input = torch.Tensor(ink, ini):zero()
+   local module = nn.SoftMaxAtTest()
+   module:training() -- set to training
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,expprecision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
 function nntest.SpatialSoftMax()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
@@ -1864,6 +1879,23 @@ function nntest.SpatialSoftMax()
    local inl = math.random(3,5)
    local input = torch.Tensor(inl, ink, inj, ini):zero()
    local module = nn.SpatialSoftMax()
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,expprecision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
+function nntest.SpatialSoftMaxAtTest()
+   local ini = math.random(3,5)
+   local inj = math.random(3,5)
+   local ink = math.random(3,5)
+   local inl = math.random(3,5)
+   local input = torch.Tensor(inl, ink, inj, ini):zero()
+   local module = nn.SpatialSoftMaxAtTest()
+   module:training() -- set to training
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,expprecision, 'error on state ')
