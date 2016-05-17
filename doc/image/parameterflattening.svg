@@ -9,13 +9,16 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="400mm"
-   height="600mm"
-   viewBox="0 0 1417.3228 2125.9842"
+   width="275.54715mm"
+   height="214.99242mm"
+   viewBox="0 0 976.34814 761.78413"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="parameterflattening.svg">
+   sodipodi:docname="parameterflattening.svg"
+   inkscape:export-filename="/home/ubuntu/git/nn/doc/image/parameterflattening.svg.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -26,8 +29,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="343.74474"
-     inkscape:cy="509.6602"
+     inkscape:cx="165.78568"
+     inkscape:cy="360.0347"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -35,7 +38,11 @@
      inkscape:window-height="1024"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -52,7 +59,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,1073.622)">
+     transform="translate(-145.10191,-140.95261)">
     <rect
        id="rect3336"
        width="264.20071"
@@ -163,7 +170,7 @@
          y="190.93362"></tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:none;stroke:#000000;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;stroke:#000000;stroke-opacity:1;fill-opacity:1;"
        x="635.71429"
        y="768.07654"
        id="text4290"><tspan
@@ -173,7 +180,7 @@
          y="768.07654">conv1</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:none;stroke:#000000;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;stroke:#000000;stroke-opacity:1;fill-opacity:1;"
        x="627.14288"
        y="613.79077"
        id="text4294"><tspan
@@ -183,7 +190,7 @@
          y="613.79077">conv2</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:none;stroke:#000000;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;stroke:#000000;stroke-opacity:1;fill-opacity:1;"
        x="632.85718"
        y="443.79074"
        id="text4298"><tspan
@@ -193,7 +200,7 @@
          y="443.79074">conv3</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:none;stroke:#000000;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;stroke:#000000;stroke-opacity:1;fill-opacity:1;"
        x="631.42865"
        y="259.50507"
        id="text4302"><tspan
@@ -203,7 +210,7 @@
          y="259.50507">conv4</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:none;stroke:#000000;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;stroke:#000000;stroke-opacity:1;fill-opacity:1;"
        x="528.57141"
        y="156.64792"
        id="text4306"><tspan
@@ -213,7 +220,7 @@
          y="156.64792">Network layers:</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:none;stroke:#000000;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;stroke:#000000;stroke-opacity:1;fill-opacity:1;"
        x="145.14287"
        y="159.79077"
        id="text4310"><tspan
@@ -223,7 +230,7 @@
          id="tspan4314">flattened tensors:</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:#fcf2cd;fill-opacity:1;stroke:#000000;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-opacity:1;"
        x="175.71434"
        y="898.0766"
        id="text4337"><tspan
@@ -233,7 +240,7 @@
          y="898.0766">params tensor</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:#fcf2cd;fill-opacity:1;stroke:#000000;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-opacity:1;"
        x="288.57147"
        y="815.21936"
        id="text4341"><tspan
@@ -243,7 +250,7 @@
          y="815.21936">gradParams</tspan><tspan
          sodipodi:role="line"
          x="288.57147"
-         y="840.2193"
+         y="840.21936"
          id="tspan4345">tensor</tspan></text>
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -287,7 +294,7 @@
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:#fcf2cd;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;"
        x="801.42853"
        y="649.50513"
        id="text4363"><tspan
@@ -306,7 +313,7 @@
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-size:20px;fill:#fcf2cd;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="font-size:20px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;"
        x="791.42853"
        y="400.93353"
        id="text4377"><tspan
