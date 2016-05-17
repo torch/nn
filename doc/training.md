@@ -4,102 +4,101 @@
 Training a neural network is easy with a [simple `for` loop](#nn.DoItYourself).
 While doing your own loop provides great flexibility, you might
 want sometimes a quick way of training neural
-networks. [StochasticGradient](#nn.StochasticGradient), a simple class
-which does the job for you is provided as standard.
+networks. [optim](https://github.com/torch/optim) is the standard way of training Torch7 neural networks.
 
-<a name="nn.StochasticGradient.dok"></a>
-## StochasticGradient ##
+`optim` is a quite general optimizer, for minimizing any function that outputs a loss.  In our case, our
+function will be the loss of our network, given an input, and a set of weights.  The goal of training 
+a neural net is to
+optimize the weights to give the lowest loss over our training set of input data.  So, we are going to use optim
+to minimize the loss with respect to the weights, over our training set.  We will feed the data to 
+`optim` in minibatches.  For this particular example, we will use just one minibatch, but in your own training
+you will almost certainly want to break your training set into minibatches, and feed each minibatch to `optim`,
+one by one.
 
-`StochasticGradient` is a high-level class for training [neural networks](#nn.Module), using a stochastic gradient
-algorithm. This class is [serializable](https://github.com/torch/torch7/blob/master/doc/serialization.md#serialization).
+We need to give `optim` a function that will output the loss and the derivative of the loss with respect to the
+weights, given a set of input weights.  The function will have access to our training minibatch, and use this
+to calculate the loss, for this minibatch.  Typically, the function would be defined inside our loop over
+batches, and therefore have access to the current minibatch data.
 
-<a name="nn.StochasticGradient"></a>
-### StochasticGradient(module, criterion) ###
-
-Create a `StochasticGradient` class, using the given [Module](module.md#nn.Module) and [Criterion](criterion.md#nn.Criterion).
-The class contains [several parameters](#nn.StochasticGradientParameters) you might want to set after initialization.
-
-<a name="nn.StochasticGradientTrain"></a>
-### train(dataset) ###
-
-Train the module and criterion given in the
-[constructor](#nn.StochasticGradient) over `dataset`, using the
-internal [parameters](#nn.StochasticGradientParameters).
-
-StochasticGradient expect as a `dataset` an object which implements the operator
-`dataset[index]` and implements the method `dataset:size()`. The `size()` methods
-returns the number of examples and `dataset[i]` has to return the i-th example.
-
-An `example` has to be an object which implements the operator
-`example[field]`, where `field` might take the value `1` (input features)
-or `2` (corresponding label which will be given to the criterion). 
-The input is usually a Tensor (except if you use special kind of gradient modules,
-like [table layers](table.md#nn.TableLayers)). The label type depends of the criterion.
-For example, the [MSECriterion](criterion.md#nn.MSECriterion) expects a Tensor, but the
-[ClassNLLCriterion](criterion.md#nn.ClassNLLCriterion) except a integer number (the class).
-
-Such a dataset is easily constructed by using Lua tables, but it could any `C` object
-for example, as long as required operators/methods are implemented. 
-[See an example](#nn.DoItStochasticGradient).
-
-<a name="nn.StochasticGradientParameters"></a>
-### Parameters ###
-
-`StochasticGradient` has several field which have an impact on a call to [train()](#nn.StochasticGradientTrain).
-
-  * `learningRate`: This is the learning rate used during training. The update of the parameters will be `parameters = parameters - learningRate * parameters_gradient`. Default value is `0.01`.
-  * `learningRateDecay`: The learning rate decay. If non-zero, the learning rate (note: the field learningRate will not change value) will be computed after each iteration (pass over the dataset) with: `current_learning_rate =learningRate / (1 + iteration * learningRateDecay)`
-  * `maxIteration`: The maximum number of iteration (passes over the dataset). Default is `25`.
-  * `shuffleIndices`: Boolean which says if the examples will be randomly sampled or not. Default is `true`. If `false`, the examples will be taken in the order of the dataset.
-  * `hookExample`: A possible hook function which will be called (if non-nil) during training after each example forwarded and backwarded through the network. The function takes `(self, example)` as parameters. Default is `nil`.
-  * `hookIteration`: A possible hook function which will be called (if non-nil) during training after a complete pass over the dataset. The function takes `(self, iteration, currentError)` as parameters. Default is `nil`.
-
-<a name="nn.DoItStochasticGradient"></a>
-## Example of training using StochasticGradient ##
-
-We show an example here on a classical XOR problem.
-
-__Dataset__
-
-We first need to create a dataset, following the conventions described in
-[StochasticGradient](#nn.StochasticGradientTrain).
-```lua
-dataset={};
-function dataset:size() return 100 end -- 100 examples
-for i=1,dataset:size() do 
-  local input = torch.randn(2);     -- normally distributed example in 2d
-  local output = torch.Tensor(1);
-  if input[1]*input[2]>0 then     -- calculate label for XOR function
-    output[1] = -1;
-  else
-    output[1] = 1
-  end
-  dataset[i] = {input, output}
-end
-```
+Here's how this looks:
 
 __Neural Network__
 
 We create a simple neural network with one hidden layer.
 ```lua
-require "nn"
-mlp = nn.Sequential();  -- make a multi-layer perceptron
-inputs = 2; outputs = 1; HUs = 20; -- parameters
-mlp:add(nn.Linear(inputs, HUs))
-mlp:add(nn.Tanh())
-mlp:add(nn.Linear(HUs, outputs))
+require 'nn'
+
+local model = nn.Sequential();  -- make a multi-layer perceptron
+local inputs = 2; outputs = 1; HUs = 20; -- parameters
+model:add(nn.Linear(inputs, HUs))
+model:add(nn.Tanh())
+model:add(nn.Linear(HUs, outputs))
+```
+
+__Criterion__
+
+We choose the Mean Squared Error criterion and train the dataset.
+```lua
+local criterion = nn.MSECriterion()
+```
+
+__Dataset__
+
+We will just create one minibatch of 128 examples.  In your own networks, you'd want to break down your
+rather larger dataset into multiple minibatches, of around 32-512 examples each.
+
+```
+local batchSize = 128
+local batchInputs = torch.Tensor(batchSize, inputs)
+local batchLabels = torch.ByteTensor(batchSize)
+
+for i=1,batchSize do
+  local input = torch.randn(2)     -- normally distributed example in 2d
+  local label = 1
+  if input[1]*input[2]>0 then     -- calculate label for XOR function
+    label = -1;
+  end
+  batchInputs[i]:copy(input)
+  batchLabels[i] = label
+end
 ```
 
 __Training__
 
-We choose the Mean Squared Error criterion and train the dataset.
-```lua
-criterion = nn.MSECriterion()  
-trainer = nn.StochasticGradient(mlp, criterion)
-trainer.learningRate = 0.01
-trainer:train(dataset)
-```
+`optim` provides []various training algorithms](https://github.com/torch/optim/blob/master/doc/index.md).  We
+will use [Stochastic Gradient Descent](https://github.com/torch/optim/blob/master/doc/index.md#x-sgdopfunc-x-state).  We
+need to provide the learning rate, via an optimization state table:
 
+```
+require 'optim'
+
+local optimState = {learningRate=0.01}
+
+-- retrieve the weights and biases from the model, as 1-dimensional flattened tensors
+-- these are views onto the underlying weights and biases, and we will give them to optim
+-- When optim updates these params, it is implicitly updating the weights and biases of our
+-- models
+local params, gradParams = model:getParameters()
+for epoch=1,50 do
+  -- local function we give to optim
+  -- it takes current weights as input, and outputs the loss
+  -- and the gradient of the loss with respect to the weights
+  -- gradParams is calculated implicitly by calling 'backward'
+  -- because gradParams is a view onto the model's weight and bias
+  -- gradients tensor
+  local function feval(params)
+    gradParams:zero()
+
+    local outputs = model:forward(batchInputs)
+    local loss = criterion:forward(outputs, batchLabels)
+    local dloss_doutput = criterion:backward(outputs, batchLabels)
+    model:backward(batchInputs, dloss_doutput)
+
+    return loss,gradParams
+  end
+  optim.sgd(feval, params, optimState)
+end
+```
 __Test the network__
 
 ```lua
