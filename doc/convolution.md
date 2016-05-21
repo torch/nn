@@ -210,10 +210,10 @@ is the size of a 1D `input` tensor.
 Again with a 1D input, when only `size1` is provided, the `forward(input)` is equivalent to
 performing the following matrix-matrix multiplication in an efficient manner:
 ```lua
-M P
+P M
 ```
-where `M` is a 2D matrix `size x nIndex` containing the parameters of the lookup-table and
-`P` is a 2D matrix, where each column vector `i` is a zero vector except at index `input[i]` where it is `1`.
+where `M` is a 2D matrix of size `nIndex x size1` containing the parameters of the lookup-table and
+`P` is a 2D matrix of size `n x nIndex`, where for each `i`th row vector, every element is zero except the one at index `input[i]` where it is `1`.
 
 1D example:
 ```lua
