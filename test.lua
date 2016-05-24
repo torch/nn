@@ -1602,6 +1602,27 @@ function nntest.LogSoftmax()
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   
+   -- test logsoftmax when gradOutput is non-contiguous
+   local layer = nn.LogSoftMax()
+   layer:zeroGradParameters()
+   local input = torch.randn(4, 10)
+   local data = torch.randn(4, 20)
+   local gradOutput = data:narrow(2, 1, 10):fill(0)
+   local output = layer:forward(input)
+   local gradInput1 = layer:backward(input, gradOutput):clone()
+   local output = layer:forward(input)
+   gradOutput = gradOutput:clone()
+   local gradInput2 = layer:backward(input, gradOutput):clone()
+
+   mytester:assertlt(gradInput1:add(-1, gradInput2):abs():max(), 
+		     1e-10, 
+		     torch.typename(layer) 
+			.. ' non-contiguous gradOutput check')
+   
+   
+   
+
 end
 
 -- function nntest.TemporalLogSoftmax()
