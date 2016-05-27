@@ -124,6 +124,8 @@ require('nn.VolumetricMaxUnpooling')
 require('nn.VolumetricAveragePooling')
 require('nn.VolumetricBatchNormalization')
 
+require('nn.GPU')
+
 require('nn.ParallelTable')
 require('nn.Identity')
 require('nn.ConcatTable')
