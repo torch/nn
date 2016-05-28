@@ -149,7 +149,7 @@ rather larger dataset into multiple minibatches, of around 32-512 examples each.
 ```lua
 local batchSize = 128
 local batchInputs = torch.Tensor(batchSize, inputs)
-local batchLabels = torch.ByteTensor(batchSize)
+local batchLabels = torch.DoubleTensor(batchSize)
 
 for i=1,batchSize do
   local input = torch.randn(2)     -- normally distributed example in 2d
