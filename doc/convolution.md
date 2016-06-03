@@ -1,7 +1,7 @@
 <a name="nn.convlayers.dok"></a>
 # Convolutional layers #
 
-A convolution is an integral that expresses the amount of overlap of one function `g` as it is shifted over another function `f`. It therefore "blends" one function with another. The neural network package supports convolution, pooling, subsampling and other relevant facilities. These are divided base on the dimensionality of the input and output [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor):
+A convolution is an integral that expresses the amount of overlap of one function `g` as it is shifted over another function `f`. It therefore "blends" one function with another. The neural network package supports convolution, pooling, subsampling and other relevant facilities. These are divided based on the dimensionality of the input and output [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor):
 
   * [Temporal Modules](#nn.TemporalModules) apply to sequences with a one-dimensional relationship
 (e.g. sequences of words, phonemes and letters. Strings of some kind).
