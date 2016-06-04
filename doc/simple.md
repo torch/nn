@@ -607,7 +607,54 @@ When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module
 module = nn.Narrow(dimension, offset, length)
 ```
 
-Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module.
+Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module. The module further supports a negative `length` in order to handle inputs with an unknown size.
+
+```lua
+> x = torch.rand(4, 5)
+
+> x
+ 0.3695  0.2017  0.4485  0.4638  0.0513
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 4x5]
+
+> nn.Narrow(1, 2, 3):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 3x5]
+
+> nn.Narrow(1, 2, -1):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 3x5]
+
+> nn.Narrow(1, 2, 2):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+[torch.DoubleTensor of size 2x5]
+
+> nn.Narrow(1, 2, -2):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+[torch.DoubleTensor of size 2x5]
+
+> nn.Narrow(2, 2, 3):forward(x)
+ 0.2017  0.4485  0.4638
+ 0.1877  0.3388  0.6265
+ 0.7394  0.8265  0.9212
+ 0.7971  0.2113  0.1097
+[torch.DoubleTensor of size 4x3]
+
+> nn.Narrow(2, 2, -2):forward(x)
+ 0.2017  0.4485  0.4638
+ 0.1877  0.3388  0.6265
+ 0.7394  0.8265  0.9212
+ 0.7971  0.2113  0.1097
+[torch.DoubleTensor of size 4x3]
+```
 
 <a name="nn.Replicate"></a>
 ## Replicate ##
