@@ -906,6 +906,33 @@ local function test_sparse_linear(inb, ini, inj, numNonzero)
    end
    local err = (expected - actual):abs():max()
    mytester:assertle(err, precision, 'error on batch result forward')
+
+   -- Test multithreaded updates
+   local isize = 10000
+   local osize = 2
+   local sl = nn.SparseLinear(isize, osize)
+   local batch = {}
+   local idx = 100
+   local nnz = 10000
+   local bsize = 16
+
+   for i=1,bsize do
+      batch[i] = torch.DoubleTensor(nnz, 2)
+      batch[i][{{}, {1,1}}]:fill(idx)
+      batch[i][{{}, {2,2}}]:fill(1)
+   end
+
+   local totalSize = bsize*nnz
+   local lr = 0.01
+
+   -- Update the same index all over
+   local out = sl:updateOutput(batch)
+   out:fill(1)
+   sl:backwardUpdate(batch, out, lr)
+
+   for i=1,osize do
+      mytester:assertlt(math.abs(sl.weight[i][idx] - totalSize * lr), 1, 'parameters update was wrong.')
+   end
 end
 
 function nntest.SparseLinear()
