@@ -261,6 +261,29 @@ gnuplot.grid(true)
 ```
 ![](image/relu.png)
 
+<a name="nn.ReLU6"></a>
+## ReLU6 ##
+
+Same as `ReLU` except that the rectifying function `f(x)` saturates at `x = 6`. This layer is useful for training networks that do not loose precision (due to FP saturation) when implemented as FP16.
+
+`ReLU6` is defined as `f(x)` = `min(max(0, x), 6)`
+
+Can optionally do its operation in-place without using extra state memory:
+```lua
+m=nn.ReLU6(true) -- true = in-place, false = keeping separate state.
+```
+
+```lua
+ii=torch.linspace(-3, 9)
+m=nn.ReLU6() 
+oo=m:forward(ii)
+go=torch.ones(100)
+gi=m:backward(ii,go)
+gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
+gnuplot.grid(true)
+```
+![](image/relu6.png)
+
 <a name="nn.PReLU"></a>
 ## PReLU ##
 
