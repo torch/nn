@@ -263,6 +263,23 @@ function nntest.ReLU()
    mytester:assertTensorEq(gradInput, gradInput2, 0.000001, 'ReLU gradInput')
 end
 
+function nntest.ReLU6()
+   for inplace = 0, 1 do
+      local input = torch.randn(3, 4):mul(6)
+      local gradOutput = torch.randn(3,4)
+      local module = nn.ReLU6(inplace == 1)
+      local output = module:forward(input:clone())
+      local gt = input:clone():gt(input, 0)
+      local lt = input:clone():lt(input, 6)
+      local output2 = gt:clone():cmul(lt):cmul(input)
+      output2:add(6, input:clone():gt(input, 6))
+      mytester:assertTensorEq(output, output2, 0.000001, 'ReLU6 output')
+      local gradInput = module:backward(input, gradOutput:clone())
+      local gradInput2 = gt:clone():cmul(lt):cmul(gradOutput)
+      mytester:assertTensorEq(gradInput, gradInput2, 0.000001, 'ReLU gradInput')
+   end
+end
+
 function nntest.Exp()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
