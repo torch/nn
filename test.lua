@@ -6084,6 +6084,37 @@ function nntest.SpatialReplicationPadding()
    mytester:assertalmosteq(err, 0.0, 1e-7)
 end
 
+function nntest.VolumetricReplicationPadding()
+   for batch = 0, 1 do
+      local nbatch
+      if batch == 1 then
+         nbatch = math.random(1,3)
+      end
+      local plane = math.random(1,3)
+      local sizeZ = math.random(7,16)
+      local sizeY = math.random(7,16)
+      local sizeX = math.random(7,16)
+      local padLeft = math.random(-3,3)
+      local padRight = math.random(-3,3)
+      local padTop = math.random(-3,3)
+      local padBotom = math.random(-3,3)
+      local padFront = math.random(3,3)
+      local padBack = math.random(3,3)
+      local jac = nn.Jacobian
+      local layer =
+          nn.VolumetricReplicationPadding(padLeft, padRight, padTop,
+                                          padBottom, padFront, padBack)
+      local input
+      if batch == 1 then
+         input = torch.rand(nbatch, plane, sizeZ, sizeY, sizeX)
+      else
+         input = torch.rand(plane, sizeZ, sizeY, sizeX)
+      end
+      local err = jac.testJacobian(layer, input)
+      mytester:assertalmosteq(err, 0.0, 1e-7)
+   end
+end
+
 function nntest.Typecast()
   local function make_network()
     local seq = nn.Sequential()
