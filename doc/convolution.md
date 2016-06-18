@@ -22,9 +22,9 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialMaxUnpooling](#nn.SpatialMaxUnpooling) : a 2D max-unpooling operation ;
     * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
     * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
-    * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
-    * [SpatialReflectionPadding](#nn.SpatialReflectionPadding) : padds a feature map with the reflection of the input ;
-    * [SpatialReplicationPadding](#nn.SpatialReplicationPadding) : padds a feature map with the value at the edge of the input borders ;
+    * [SpatialZeroPadding](#nn.SpatialZeroPadding) : pads a feature map with specified number of zeros ;
+    * [SpatialReflectionPadding](#nn.SpatialReflectionPadding) : pads a feature map with the reflection of the input ;
+    * [SpatialReplicationPadding](#nn.SpatialReplicationPadding) : pads a feature map with the value at the edge of the input borders ;
     * [SpatialSubtractiveNormalization](#nn.SpatialSubtractiveNormalization) : a spatial subtraction operation on a series of 2D inputs using
     * [SpatialCrossMapLRN](#nn.SpatialCrossMapLRN) : a spatial local response normalization between feature maps ;
     * [SpatialBatchNormalization](#nn.SpatialBatchNormalization): mean/std normalization over the mini-batch inputs and pixels, with an optional affine transform that follows
@@ -35,7 +35,8 @@ a kernel for computing the weighted average in a neighborhood ;
     * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
-    * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation ;
+    * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation.
+    * [VolumetricReplicationPadding](#nn.VolumetricReplicationPadding) : Pads a volumetric feature map with the value at the edge of the input borders. ;
 
 
 <a name="nn.TemporalModules"></a>
@@ -962,3 +963,14 @@ values (corresponding to their position within each map) are stored:
 If `C` is a tensor of same size as `B`, `module:updateOutput(C)` outputs a
 tensor `D` of same size as `A` such that:
 `D[{n,k,indices[{n,k,t}],indices[{n,k,i}],indices[{n,k,j}]}] = C[{n,k,t,i,j}]`.
+
+<a name="nn.VolumetricReplicationPadding"></a>
+### VolumetricReplicationPadding ###
+
+```lua
+module = nn.VolumetricReplicationPadding(padLeft, padRight, padTop, padBottom,
+                                         padFront, padBack)
+```
+
+Each feature map of a given input is padded with the replication of the input boundary.
+

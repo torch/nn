@@ -124,6 +124,7 @@ require('nn.VolumetricMaxPooling')
 require('nn.VolumetricMaxUnpooling')
 require('nn.VolumetricAveragePooling')
 require('nn.VolumetricBatchNormalization')
+require('nn.VolumetricReplicationPadding')
 
 require('nn.ParallelTable')
 require('nn.Identity')
