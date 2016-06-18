@@ -15,7 +15,7 @@ thus outputting a Tensor of the same dimension.
   * `f(x)` = `x,` `otherwise.`
 
 The range of the linear region `[-1 1]` can be adjusted by specifying arguments in declaration, for example `nn.HardTanh(min_value, max_value)`.
-Otherwise, `[min_value max_value]` is set to `[-1 1]` by default.
+Otherwise, `[min_value max_value]` is set to `[-1 1]` by default. In-place operation defined by third argument boolean.
 
 
 ```lua

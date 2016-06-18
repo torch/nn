@@ -273,10 +273,10 @@ function nntest.ReLU6()
       local lt = input:clone():lt(input, 6)
       local output2 = gt:clone():cmul(lt):cmul(input)
       output2:add(6, input:clone():gt(input, 6))
-      mytester:assertTensorEq(output, output2, 0.000001, 'ReLU6 output')
+      mytester:assertTensorEq(output, output2, 0.000001, 'ReLU6 output '..(inplace and '(inplace)' or '') )
       local gradInput = module:backward(input, gradOutput:clone())
       local gradInput2 = gt:clone():cmul(lt):cmul(gradOutput)
-      mytester:assertTensorEq(gradInput, gradInput2, 0.000001, 'ReLU gradInput')
+      mytester:assertTensorEq(gradInput, gradInput2, 0.000001, 'ReLU gradInput '..(inplace and '(inplace)' or '') )
    end
 end
 
