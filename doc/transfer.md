@@ -183,7 +183,7 @@ gnuplot.grid(true)
 <a name="nn.LogSoftMax"></a>
 ## LogSoftMax ##
 
-Applies the `LogSoftmax` function to an n-dimensional input Tensor.
+Applies the `LogSoftMax` function to an n-dimensional input Tensor.
 
 `LogSoftmax` is defined as `f_i(x)` = `log(1/a exp(x_i))`,
 where  `a` = `sum_j exp(x_j)`.
