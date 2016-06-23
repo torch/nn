@@ -2488,76 +2488,99 @@ function nntest.SpatialFullConvolution()
    local module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH, adjW, adjH)
    local input = torch.Tensor(from, inj, ini):zero()
 
-   -- stochastic
+   local function jacTests(module)
+      -- stochastic
 
-   local err = jac.testJacobian(module, input)
-   mytester:assertlt(err, precision, 'error on state ')
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error on state ')
 
-   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
-   mytester:assertlt(err , precision, 'error on weight ')
+      local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+      mytester:assertlt(err , precision, 'error on weight ')
+     
+      if module.bias then
+         local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+         mytester:assertlt(err , precision, 'error on bias ')
+      end
+   
+      local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+      mytester:assertlt(err , precision, 'error on weight [direct update] ')
+     
+      if module.bias then
+         local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+         mytester:assertlt(err , precision, 'error on bias [direct update] ')
+      end
 
-   local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
-   mytester:assertlt(err , precision, 'error on bias ')
+      for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+         mytester:assertlt(err, precision, string.format(
+                            'error on weight [%s]', t))
+      end    
+     
+      if module.bias then
+         for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+            mytester:assertlt(err, precision, string.format(
+                               'error on bias [%s]', t))
+         end
+      end
 
-   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
-   mytester:assertlt(err , precision, 'error on weight [direct update] ')
+      -- batch
 
-   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
-   mytester:assertlt(err , precision, 'error on bias [direct update] ')
+      --verbose = true
+      local batch = math.random(2,5)
 
-   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
-      mytester:assertlt(err, precision, string.format(
-                         'error on weight [%s]', t))
+      module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH, adjW, adjH)
+      input = torch.Tensor(batch,from,inj,ini):zero()
+
+      -- Check that the required output size matches the actual output size
+      local output = module:forward(input)
+      mytester:asserteq(output:size(3), outj, 'output height error')
+      mytester:asserteq(output:size(4), outi, 'output width error')
+
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'batch error on state ')
+
+      local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+      mytester:assertlt(err , precision, 'batch error on weight ')
+     
+      if module.bias then
+         local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+         mytester:assertlt(err , precision, 'batch error on bias ')
+      end
+
+      local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+      mytester:assertlt(err , precision, 'batch error on weight [direct update] ')
+     
+      if module.bias then
+         local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+         mytester:assertlt(err , precision, 'batch error on bias [direct update] ')
+      end
+
+      for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+         mytester:assertlt(err, precision, string.format(
+                            'error on weight [%s]', t))
+      end
+     
+      if module.bias then
+         for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+            mytester:assertlt(err, precision, string.format(
+                               'batch error on bias [%s]', t))
+         end
+      end
+
+      local ferr, berr = jac.testIO(module, input)
+      mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+      mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
    end
-
-   for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
-      mytester:assertlt(err, precision, string.format(
-                         'error on bias [%s]', t))
-   end
-
-   -- batch
-
-   --verbose = true
-   local batch = math.random(2,5)
-
-   module = nn.SpatialFullConvolution(from, to, ki, kj, di, dj, padW, padH, adjW, adjH)
-   input = torch.Tensor(batch,from,inj,ini):zero()
-
-   -- Check that the required output size matches the actual output size
-   local output = module:forward(input)
-   mytester:asserteq(output:size(3), outj, 'output height error')
-   mytester:asserteq(output:size(4), outi, 'output width error')
-
-   local err = jac.testJacobian(module, input)
-   mytester:assertlt(err, precision, 'batch error on state ')
-
-   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
-   mytester:assertlt(err , precision, 'batch error on weight ')
-
-   local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
-   mytester:assertlt(err , precision, 'batch error on bias ')
-
-   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
-   mytester:assertlt(err , precision, 'batch error on weight [direct update] ')
-
-   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
-   mytester:assertlt(err , precision, 'batch error on bias [direct update] ')
-
-   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
-      mytester:assertlt(err, precision, string.format(
-                         'error on weight [%s]', t))
-   end
-
-   for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
-      mytester:assertlt(err, precision, string.format(
-                         'batch error on bias [%s]', t))
-   end
-
-   local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   
+   jacTests(module)
+   module:noBias()
+   jacTests(module)
+   module.bias = torch.Tensor(module.nOutputPlane):zero()
+   module.gradBias = torch.Tensor(module.nOutputPlane):zero()
+   module:reset()
+   jacTests(module)
 
    -- non-contiguous
+   local batch = math.random(2,5)
    local input = torch.randn(batch,from,ini,inj):transpose(3,4) -- non-contiguous
    local inputc = input:contiguous() -- contiguous
    local output = module:forward(input)
