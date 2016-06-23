@@ -423,7 +423,7 @@ module = nn.SpatialFullConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH]
 Applies a 2D full convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D or 4D tensor. Note that instead of setting `adjW` and `adjH`, SpatialFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution
 is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
-will ignore the `adjW` and `adjH` values used to construct the module.
+will ignore the `adjW` and `adjH` values used to construct the module. The layer can be used without a bias by module:noBias().
 
 Other frameworks call this operation "In-network Upsampling", "Fractionally-strided convolution", "Backwards Convolution," "Deconvolution", or "Upconvolution."
 

@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local SpatialFullConvolution, parent = torch.class('nn.SpatialFullConvolution','nn.Module')
 
 function SpatialFullConvolution:__init(nInputPlane, nOutputPlane,
@@ -33,6 +34,12 @@ function SpatialFullConvolution:__init(nInputPlane, nOutputPlane,
    self:reset()
 end
 
+function SpatialFullConvolution:noBias()
+	self.bias = nil
+	self.gradBias = nil
+	return self
+end
+
 function SpatialFullConvolution:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
@@ -43,7 +50,9 @@ function SpatialFullConvolution:reset(stdv)
       stdv = 1/math.sqrt(kW*kH*nInputPlane)
    end
    self.weight:uniform(-stdv, stdv)
-   self.bias:uniform(-stdv, stdv)
+   if self.bias then
+      self.bias:uniform(-stdv, stdv)
+   end
 end
 
 local function makeContiguous(self, input, gradOutput)
@@ -99,7 +108,7 @@ function SpatialFullConvolution:updateOutput(input)
     inputTensor:cdata(),
     self.output:cdata(),
     self.weight:cdata(),
-    self.bias:cdata(),
+    THNN.optionalTensor(self.bias),
     self.finput:cdata(),
     self.fgradInput:cdata(),
     self.kW, self.kH,
@@ -186,7 +195,7 @@ function SpatialFullConvolution:accGradParameters(input, gradOutput, scale)
     inputTensor:cdata(),
     gradOutput:cdata(),
     self.gradWeight:cdata(),
-    self.gradBias:cdata(),
+    THNN.optionalTensor(self.gradBias),
     self.finput:cdata(),
     self.fgradInput:cdata(),
     self.kW, self.kH,
@@ -215,7 +224,11 @@ function SpatialFullConvolution:__tostring__()
   if (self.adjW or self.adjH) and (self.adjW ~= 0 or self.adjH ~= 0) then
     s = s .. ', ' .. self.adjW .. ',' .. self.adjH
   end
-  return s .. ')'
+  if self.bias then
+     return s .. ')'
+  else
+     return s .. ') without bias'
+ end
 end
 
 function SpatialFullConvolution:clearState()
