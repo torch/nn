@@ -36,6 +36,7 @@ function VolumetricFullConvolution:__init(nInputPlane, nOutputPlane,
    self.bias = torch.Tensor(self.nOutputPlane)
    self.gradBias = torch.Tensor(self.nOutputPlane)
 
+   self.ones = torch.Tensor()
    self.finput = torch.Tensor()
    self.fgradInput = torch.Tensor()
 
@@ -72,6 +73,10 @@ local function makeContiguous(self, input, gradOutput)
    return input, gradOutput
 end
 
+local function calculateAdj(targetSize, ker, pad, stride)
+  return (targetSize + 2 * pad - ker) % stride
+end
+
 function VolumetricFullConvolution:backCompatibility()
    -- Transpose the weight when loading from an old version
    if not self.adjW then
@@ -91,9 +96,26 @@ end
 function VolumetricFullConvolution:updateOutput(input)
    self:backCompatibility()
 
-   input = makeContiguous(self, input)
-   input.THNN.VolumetricFullConvolution_updateOutput(
-      input:cdata(),
+  local inputTensor = input
+  local adjT, adjW, adjH = self.adjT, self.adjW, self.adjH
+
+  -- The input can be a table where the second element indicates the target
+  -- output size, in which case the adj factors are computed automatically
+  if type(inputTensor) == 'table' then
+    inputTensor = input[1]
+    local targetTensor = input[2]
+    local tDims = targetTensor:dim()
+    local tT = targetTensor:size(tDims-2)
+    local tH = targetTensor:size(tDims-1)
+    local tW = targetTensor:size(tDims)
+    adjT = calculateAdj(tT, self.kT, self.padT, self.dT)
+    adjW = calculateAdj(tW, self.kW, self.padW, self.dW)
+    adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
+  end
+
+   inputTensor = makeContiguous(self, inputTensor)
+   inputTensor.THNN.VolumetricFullConvolution_updateOutput(
+      inputTensor:cdata(),
       self.output:cdata(),
       self.weight:cdata(),
       self.bias:cdata(),
@@ -101,7 +123,7 @@ function VolumetricFullConvolution:updateOutput(input)
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
       self.padT, self.padW, self.padH,
-      self.adjT, self.adjW, self.adjH
+      adjT, adjW, adjH
    )
 
    return self.output
@@ -110,9 +132,30 @@ end
 function VolumetricFullConvolution:updateGradInput(input, gradOutput)
    self:backCompatibility()
 
-   input, gradOutput = makeContiguous(self, input, gradOutput)
-   input.THNN.VolumetricFullConvolution_updateGradInput(
-      input:cdata(),
+    local inputTensor = input
+    local adjT, adjW, adjH = self.adjT, self.adjW, self.adjH
+
+    -- The input can be a table where the second element indicates the target
+    -- output size, in which case the adj factors are computed automatically
+    if type(inputTensor) == 'table' then
+      inputTensor = input[1]
+      local targetTensor = input[2]
+      local tDims = targetTensor:dim()
+      local tT = targetTensor:size(tDims-2)
+      local tH = targetTensor:size(tDims-1)
+      local tW = targetTensor:size(tDims)
+      adjT = calculateAdj(tT, self.kT, self.padT, self.dT)
+      adjW = calculateAdj(tW, self.kW, self.padW, self.dW)
+      adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
+      -- Momentarily extract the gradInput tensor
+      if type(self.gradInput) == 'table' then
+        self.gradInput = self.gradInput[1]
+      end
+    end
+
+   inputTensor, gradOutput = makeContiguous(self, inputTensor, gradOutput)
+   inputTensor.THNN.VolumetricFullConvolution_updateGradInput(
+      inputTensor:cdata(),
       gradOutput:cdata(),
       self.gradInput:cdata(),
       self.weight:cdata(),
@@ -120,17 +163,45 @@ function VolumetricFullConvolution:updateGradInput(input, gradOutput)
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
       self.padT, self.padW, self.padH,
-      self.adjT, self.adjW, self.adjH
+      adjT, adjW, adjH
    )
+
+    if type(input) == 'table' then
+     -- Create a zero tensor to be expanded and used as gradInput[2].
+      self.zeroScalar = self.zeroScalar or input[2].new(1):zero()
+      self.ones:resize(input[2]:dim()):fill(1)
+      local zeroTensor =  self.zeroScalar
+          :view(table.unpack(self.ones:totable()))
+          :expandAs(input[2])
+      self.gradInput = {self.gradInput, zeroTensor}
+    end
+
    return self.gradInput
 end
 
 function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
    self:backCompatibility()
 
-   input, gradOutput = makeContiguous(self, input, gradOutput)
-   input.THNN.VolumetricFullConvolution_accGradParameters(
-      input:cdata(),
+  local inputTensor = input
+  local adjT, adjW, adjH = self.adjT, self.adjW, self.adjH
+
+  -- The input can be a table where the second element indicates the target
+  -- output size, in which case the adj factors are computed automatically
+  if type(inputTensor) == 'table' then
+    inputTensor = input[1]
+    local targetTensor = input[2]
+    local tDims = targetTensor:dim()
+    local tT = targetTensor:size(tDims-2)
+    local tH = targetTensor:size(tDims-1)
+    local tW = targetTensor:size(tDims)
+    adjT = calculateAdj(tT, self.kT, self.padT, self.dT)
+    adjW = calculateAdj(tW, self.kW, self.padW, self.dW)
+    adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
+  end
+
+   inputTensor, gradOutput = makeContiguous(self, inputTensor, gradOutput)
+   inputTensor.THNN.VolumetricFullConvolution_accGradParameters(
+      inputTensor:cdata(),
       gradOutput:cdata(),
       self.gradWeight:cdata(),
       self.gradBias:cdata(),
@@ -138,7 +209,7 @@ function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
       self.padT, self.padW, self.padH,
-      self.adjT, self.adjW, self.adjH,
+      adjT, adjW, adjH,
       scale or 1
    )
 end

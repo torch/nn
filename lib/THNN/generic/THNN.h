@@ -106,14 +106,16 @@ TH_API void THNN_(HardTanh_updateOutput)(
           THTensor *input,             // input tensor
           THTensor *output,            // [OUT] output tensor
           real min_val,                // lower threshold
-          real max_val);               // upper threshold
+          real max_val,
+          bool inplace);               // upper threshold
 TH_API void THNN_(HardTanh_updateGradInput)(
           THNNState *state,            // library's state
           THTensor *input,             // input tensor
           THTensor *gradOutput,        // gradient w.r.t. module's output
           THTensor *gradInput,         // [OUT] gradient w.r.t. the input
           real min_val,                // lower threshold
-          real max_val);               // upper threshold
+          real max_val,
+          bool inplace);               // upper threshold
 
 TH_API void THNN_(L1Cost_updateOutput)(
           THNNState *state,            // library's state
@@ -1092,5 +1094,14 @@ TH_API void THNN_(SpatialReplicationPadding_updateGradInput)(THNNState *state,
                                                             THTensor *gradInput,
                                                             int pad_l, int pad_r,
                                                             int pad_t, int pad_b);
+
+TH_API void THNN_(VolumetricReplicationPadding_updateOutput)(
+          THNNState *state, THTensor *input, THTensor *output, int pleft,
+          int pright, int ptop, int pbottom, int pfront, int pback);
+
+TH_API void THNN_(VolumetricReplicationPadding_updateGradInput)(
+          THNNState *state, THTensor *input, THTensor *gradOutput,
+          THTensor *gradInput, int pleft, int pright, int ptop, int pbottom,
+          int pfront, int pback);
 
 #endif

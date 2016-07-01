@@ -15,7 +15,7 @@ thus outputting a Tensor of the same dimension.
   * `f(x)` = `x,` `otherwise.`
 
 The range of the linear region `[-1 1]` can be adjusted by specifying arguments in declaration, for example `nn.HardTanh(min_value, max_value)`.
-Otherwise, `[min_value max_value]` is set to `[-1 1]` by default.
+Otherwise, `[min_value max_value]` is set to `[-1 1]` by default. In-place operation defined by third argument boolean.
 
 
 ```lua
@@ -183,7 +183,7 @@ gnuplot.grid(true)
 <a name="nn.LogSoftMax"></a>
 ## LogSoftMax ##
 
-Applies the `LogSoftmax` function to an n-dimensional input Tensor.
+Applies the `LogSoftMax` function to an n-dimensional input Tensor.
 
 `LogSoftmax` is defined as `f_i(x)` = `log(1/a exp(x_i))`,
 where  `a` = `sum_j exp(x_j)`.
@@ -260,6 +260,29 @@ gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
 gnuplot.grid(true)
 ```
 ![](image/relu.png)
+
+<a name="nn.ReLU6"></a>
+## ReLU6 ##
+
+Same as `ReLU` except that the rectifying function `f(x)` saturates at `x = 6`. This layer is useful for training networks that do not loose precision (due to FP saturation) when implemented as FP16.
+
+`ReLU6` is defined as `f(x)` = `min(max(0, x), 6)`
+
+Can optionally do its operation in-place without using extra state memory:
+```lua
+m=nn.ReLU6(true) -- true = in-place, false = keeping separate state.
+```
+
+```lua
+ii=torch.linspace(-3, 9)
+m=nn.ReLU6() 
+oo=m:forward(ii)
+go=torch.ones(100)
+gi=m:backward(ii,go)
+gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
+gnuplot.grid(true)
+```
+![](image/relu6.png)
 
 <a name="nn.PReLU"></a>
 ## PReLU ##

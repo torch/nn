@@ -130,8 +130,13 @@ function SparseLinear:accGradParameters(input, gradOutput, scale)
          gradOutput:resize(1, gradOutput:size(1))
       end
 
+      local rows = self.formatted_input:select(2, 1)
+      local cols = self.formatted_input:select(2, 2)
+      local sortinds = cols * gradOutput:size(1) + rows
+      local _, inds = sortinds:sort(1, false)
+      local newinput = self.formatted_input:index(1, inds)
       input[1].THNN.SparseLinear_accGradParameters(
-         self.formatted_input:cdata(),
+         newinput:cdata(),
          gradOutput:cdata(),
          self.gradWeight:cdata(),
          self.gradBias:cdata(),

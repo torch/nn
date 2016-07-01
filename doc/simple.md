@@ -25,12 +25,16 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
     * [Squeeze](#nn.Squeeze) : [squeezes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) the input;
     * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;  
+    * [Transpose](#nn.Transpose) : [transposes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-transposedim1-dim2) the input ;
   * Modules that adapt mathematical Tensor methods :
+    * [AddConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#nn.AddConstant) : adding a constant ;
+    * [MulConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#nn.MulConstant) : multiplying a constant ;
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
     * [Mean](#nn.Mean) : a [mean](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchmeanres-x-dim) operation over a given dimension ;
     * [Sum](#nn.Sum) : a [sum](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchsumres-x) operation over a given dimension ;
     * [Exp](#nn.Exp) : an element-wise [exp](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchexpres-x) operation ;
+    * [Log](#nn.Log) : an element-wise [log](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchlogres-x) operation ;
     * [Abs](#nn.Abs) : an element-wise [abs](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchabsres-x) operation ;
     * [Power](#nn.Power) : an element-wise [pow](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchpowres-x) operation ;
     * [Square](#nn.Square) : an element-wise square operation ;
@@ -603,7 +607,54 @@ When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module
 module = nn.Narrow(dimension, offset, length)
 ```
 
-Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module.
+Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module. The module further supports a negative `length` in order to handle inputs with an unknown size.
+
+```lua
+> x = torch.rand(4, 5)
+
+> x
+ 0.3695  0.2017  0.4485  0.4638  0.0513
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 4x5]
+
+> nn.Narrow(1, 2, 3):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 3x5]
+
+> nn.Narrow(1, 2, -1):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 3x5]
+
+> nn.Narrow(1, 2, 2):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+[torch.DoubleTensor of size 2x5]
+
+> nn.Narrow(1, 2, -2):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+[torch.DoubleTensor of size 2x5]
+
+> nn.Narrow(2, 2, 3):forward(x)
+ 0.2017  0.4485  0.4638
+ 0.1877  0.3388  0.6265
+ 0.7394  0.8265  0.9212
+ 0.7971  0.2113  0.1097
+[torch.DoubleTensor of size 4x3]
+
+> nn.Narrow(2, 2, -2):forward(x)
+ 0.2017  0.4485  0.4638
+ 0.1877  0.3388  0.6265
+ 0.7394  0.8265  0.9212
+ 0.7971  0.2113  0.1097
+[torch.DoubleTensor of size 4x3]
+```
 
 <a name="nn.Replicate"></a>
 ## Replicate ##
@@ -1032,6 +1083,26 @@ m = nn.Unsqueeze(2):setNumInputDims(numInputDims)
 m:forward(input) -- output: b x 2 x 1 x 4 x 3
 ```
 
+<a name="nn.Transpose"></a>
+## Transpose ##
+
+```lua
+module = nn.Transpose({dim1, dim2} [, {dim3, dim4}, ...])
+```
+
+Swaps dimension `dim1` with `dim2`, then `dim3` with `dim4`, and so on. So
+
+```lua
+nn.Transpose({dim1, dim2}, {dim3, dim4}):forward(t)
+```
+
+gives the same output as
+
+```lua
+t:transpose(dim1, dim2)
+t:transpose(dim3, dim4)
+```
+
 <a name="nn.Exp"></a>
 ## Exp ##
 
@@ -1052,6 +1123,16 @@ gnuplot.grid(true)
 ```
 
 ![](image/exp.png)
+
+
+<a name="nn.Log"></a>
+## Log ##
+
+```lua
+module = nn.Log()
+```
+
+Applies the `log` function element-wise to the input Tensor, thus outputting a Tensor of the same dimension.
 
 
 <a name="nn.Square"></a>
