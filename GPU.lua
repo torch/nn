@@ -26,7 +26,7 @@ function GPU:__init(module, device, outdevice)
 end
 
 function GPU.recursiveModuleDevice(obj, device)
-   if type(obj) == 'table' and not torch.isTypeOf(obj, 'nn.GPU') then
+   if type(obj) == 'table' and not torch.isTypeOf(obj, 'nn.GPU') and not obj.__noGPU__ then
       for k,v in pairs(obj) do
          obj[k] = GPU.recursiveModuleDevice(v, device)
       end
@@ -53,39 +53,23 @@ function GPU:setDevice(device)
    return self
 end
 
--- returns a dst that has device device for each element in src
-function GPU.recursiveSetDevice(dst, src, device)
-   if torch.type(src) == 'table' then
-      dst = torch.type(dst) == 'table' and dst or {}
-      for k,v in ipairs(src) do
-         dst[k] = GPU.recursiveSetDevice(dst[k], v, device)
-      end
-      for k=#src+1,#dst do
-         dst[k] = nil
-      end
-   elseif torch.type(src):match('torch.Cuda.*Tensor') and src:getDevice() ~= device and src:getDevice() ~= 0 then
-      if not (torch.type(dst):match('torch.Cuda.*Tensor') and dst:getDevice() == device) then
-         dst = src.new()
-      end
-      dst:resizeAs(src):copy(src)
-   else
-      dst = src
-   end
-   return dst 
-end
-
--- makes sure dst is a identical to src except but on the same device as proto
-function GPU.recursiveSetDeviceAs(dst, src, proto)
-   local device
+-- when proto is a device number, returns a dst that has device device for each element in src
+-- otherwise, if proto is a table/tensor, makes sure dst is a identical to src, yet on the same device as proto
+function GPU.recursiveSetDevice(dst, src, proto)
+   local device, prototable
    if torch.isTensor(proto) then
       device = proto:getDevice()
    elseif torch.type(proto) == 'number' then
       device = proto
+   elseif torch.type(proto) == 'table' then
+      prototable = true
+   else
+      error"Expecting number, table or tensor for arg 3 (proto)"
    end
    if torch.type(src) == 'table' then
       dst = torch.type(dst) == 'table' and dst or {}
       for k,v in ipairs(src) do
-         dst[k] = GPU.recursiveSetDeviceAs(dst[k], v, proto[k])
+         dst[k] = GPU.recursiveSetDevice(dst[k], v, prototable and proto[k] or device)
       end
       for k=#src+1,#dst do
          dst[k] = nil
@@ -103,15 +87,14 @@ end
 
 function GPU:updateOutput(input)
    if self._type == 'torch.CudaTensor' then
+      self._input = self.recursiveSetDevice(self._input, input, self.device)
+      
       local output = cutorch.withDevice(self.device, function()
-         self._input = self.recursiveSetDevice(self._input, input, self.device)
          return self.modules[1]:updateOutput(self._input)
       end)
       
       if self.device ~= self.outdevice then
-         self.output = cutorch.withDevice(self.outdevice, function()
-            return self.recursiveSetDevice(self.output, output, self.outdevice)
-         end)
+         self.output = self.recursiveSetDevice(self.output, output, self.outdevice)
       else
          self.output = output
       end
@@ -124,12 +107,13 @@ end
 
 function GPU:updateGradInput(input, gradOutput)
    if self._type == 'torch.CudaTensor' then
+      self._gradOutput = self.recursiveSetDevice(self._gradOutput, gradOutput, self.device)
+      
       local gradInput = cutorch.withDevice(self.device, function()
-         self._gradOutput = self.recursiveSetDevice(self._gradOutput, gradOutput, self.device)
          return self.modules[1]:updateGradInput(self._input, self._gradOutput)
       end)
       
-      self.gradInput = self.recursiveSetDeviceAs(self.gradInput, gradInput, input)
+      self.gradInput = self.recursiveSetDevice(self.gradInput, gradInput, input)
    else
       self.gradInput = self.modules[1]:updateGradInput(input, gradOutput)
    end
@@ -170,8 +154,7 @@ function GPU:type(type, typecache)
 end
 
 function GPU:clearState()
-   self.output = nil
-   self.gradInput = nil
+   nn.utils.clear(self, 'output', 'gradInput')
    self._input = nil
    self._gradOutput = nil
    if self._type == 'torch.CudaTensor' then
@@ -219,6 +202,16 @@ function GPU:share(mlp, ...)
       cutorch.withDevice(self.device, function() parent.share(self, mlp, unpack(args)) end)
    else
       parent.share(self, mlp, unpack(args))
+   end
+   return self
+end
+
+function GPU:reset(...)
+   local args = {...}
+   if self._type == 'torch.CudaTensor' then
+      cutorch.withDevice(self.device, function() parent.reset(self, unpack(args)) end)
+   else
+      parent.reset(self, unpack(args))
    end
    return self
 end
