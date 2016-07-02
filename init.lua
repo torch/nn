@@ -126,6 +126,8 @@ require('nn.VolumetricAveragePooling')
 require('nn.VolumetricBatchNormalization')
 require('nn.VolumetricReplicationPadding')
 
+require('nn.GPU')
+
 require('nn.ParallelTable')
 require('nn.Identity')
 require('nn.ConcatTable')

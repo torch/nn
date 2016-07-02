@@ -6359,6 +6359,11 @@ function nntest.ErrorHandling()
    )
 end
 
+function nntest.GPU()
+   -- this is a placeholder to let you know that the nn.GPU unit test
+   -- is located in cunn package.
+end
+
 mytester:add(nntest)
 
 jac = nn.Jacobian
