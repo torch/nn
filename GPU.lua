@@ -240,7 +240,13 @@ function GPU:read(file)
    local header = file:readObject()
    local object
    if header[1] == 'torch.CudaTensor' then
-      object = cutorch.withDevice(header[2], function() return file:readObject() end)
+      local device = header[2] 
+      if device > cutorch.getDeviceCount() then
+         print"Warning : model was saved with more devices than available on current host."
+         print"Attempting to load module onto device 1"
+         device = 1
+      end
+      object = cutorch.withDevice(device, function() return file:readObject() end)
    else
       object = file:readObject()
    end
@@ -259,9 +265,9 @@ function GPU:__tostring__()
 end
 
 function GPU:accUpdateGradParameters(input, gradOutput, lr)
-   error"Not Implemented"
+   error("Not Implemented for "..torch.type(self))
 end
 
 function GPU:sharedAccUpdateGradParameters(input, gradOutput, lr)
-   error"Not Implemented"
+   error("Not Implemented for "..torch.type(self))
 end
