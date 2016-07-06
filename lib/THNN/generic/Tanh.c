@@ -7,8 +7,32 @@ void THNN_(Tanh_updateOutput)(
           THTensor *input,
           THTensor *output)
 {
+  input = THTensor_(newContiguous)(input);
   THTensor_(resizeAs)(output, input);
-  THTensor_(tanh)(output, input);
+//  printf("%s: THTensor input dimension: %d\n", __FILE__, input->nDimension);
+//  for (int i = 0; i < input->nDimension; i++) {
+//    printf("%s: THTensor input size[%d]:%d, stride[%d]:%d\n", __FILE__, i, input->size[i], i, input->stride[i]);
+//  }
+//  printf("%s: THTensor output dimension: %d\n", __FILE__, output->nDimension);
+//  for (int i = 0; i < output->nDimension; i++) {
+//    printf("%s: THTensor output size[%d]:%d, stride[%d]:%d\n", __FILE__, i, output->size[i], i, output->stride[i]);
+//  }
+
+  real * in  = THTensor_(data)(input);
+  real * out = THTensor_(data)(output);
+
+#ifdef TH_REAL_IS_FLOAT
+#pragma simd
+  for (int j = 0; j < THTensor_(nElement)(input); j++) {
+    out[j] = tanhf(in[j]);
+  }
+#else
+#pragma simd
+  for (int j = 0; j < THTensor_(nElement)(input); j++) {
+    out[j] = tanh(in[j]);
+  }
+#endif
+  THTensor_(free)(input);
 }
 
 void THNN_(Tanh_updateGradInput)(
