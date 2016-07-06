@@ -7,8 +7,24 @@ void THNN_(Tanh_updateOutput)(
           THTensor *input,
           THTensor *output)
 {
+  input = THTensor_(newContiguous)(input);
   THTensor_(resizeAs)(output, input);
-  THTensor_(tanh)(output, input);
+
+  real * in  = THTensor_(data)(input);
+  real * out = THTensor_(data)(output);
+
+#ifdef TH_REAL_IS_FLOAT
+#pragma simd
+  for (int j = 0; j < THTensor_(nElement)(input); j++) {
+    out[j] = tanhf(in[j]);
+  }
+#else
+#pragma simd
+  for (int j = 0; j < THTensor_(nElement)(input); j++) {
+    out[j] = tanh(in[j]);
+  }
+#endif
+  THTensor_(free)(input);
 }
 
 void THNN_(Tanh_updateGradInput)(

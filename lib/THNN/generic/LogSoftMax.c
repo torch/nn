@@ -2,12 +2,13 @@
 #define TH_GENERIC_FILE "generic/LogSoftMax.c"
 #else
 
+
 void THNN_(LogSoftMax_updateOutput)(
           THNNState *state,
           THTensor *input,
           THTensor *output)
 {
-  real *input_data, *output_data;
+  real *input_data, *output_data; 
   long nframe = 0, dim = 0;
   long t, d;
 
@@ -32,28 +33,43 @@ void THNN_(LogSoftMax_updateOutput)(
   real *input_data0 = THTensor_(data)(input);
   real *output_data0 = THTensor_(data)(output);
 
-  accreal logsum;
+  accreal logsum; //real logsum;
   real maxInput;
-  #pragma omp parallel for private(t, d, maxInput, logsum, input_data, output_data)
-  for (t = 0; t < nframe; t++)
-  {
+#pragma omp parallel for private(t, d, maxInput, logsum, input_data, output_data)
+  for (t = 0; t < nframe; t++) {
     logsum = 0;
-    maxInput = -THInf;
+    maxInput = -THInf; //sizeof(real) == sizeof(float) ? -FLT_MAX : -DBL_MAX;
     input_data = input_data0 + dim*t;
     output_data = output_data0 + dim*t;
-
+    
     for (d = 0; d < dim; d++)
       maxInput = THMax(maxInput, input_data[d]);
-
+    
+#ifdef TH_REAL_IS_FLOAT
+    for (d = 0; d < dim; d++)
+      logsum += expf(input_data[d] - maxInput);
+    logsum = maxInput + logf(logsum);
+#else
     for (d = 0; d < dim; d++)
       logsum += exp(input_data[d] - maxInput);
     logsum = maxInput + log(logsum);
+#endif
 
+    /* if(sizeof(real) == sizeof(float)) { */
+    /*   for (d = 0; d < dim; d++) */
+    /* 	logsum += expf(input_data[d] - maxInput); */
+    /*   logsum = maxInput + logf(logsum); */
+    /* } else { */
+    /*   for (d = 0; d < dim; d++) */
+    /* 	logsum += exp(input_data[d] - maxInput); */
+    /*   logsum = maxInput + log(logsum);       */
+    /* } */
     for (d = 0; d < dim; d++)
       output_data[d] = input_data[d] - logsum;
   }
-
+  
   THTensor_(free)(input);
+  //printf("LogSoftMax timer %.2fus\n", 1000 * 1000 * (omp_get_wtime() - t0));
 }
 
 void THNN_(LogSoftMax_updateGradInput)(
@@ -63,7 +79,6 @@ void THNN_(LogSoftMax_updateGradInput)(
           THTensor *gradInput,
           THTensor *output)
 {
-
   gradOutput = THTensor_(newContiguous)(gradOutput);
   real *gradInput_data, *gradOutput_data, *output_data;
   long nframe = 0, dim = 0;
@@ -103,7 +118,6 @@ void THNN_(LogSoftMax_updateGradInput)(
     for (d = 0; d < dim; d++)
       gradInput_data[d] = gradOutput_data[d] - exp(output_data[d])*sum;
   }
-
   THTensor_(free)(gradOutput);
 }
 
