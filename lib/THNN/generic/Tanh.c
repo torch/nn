@@ -9,14 +9,6 @@ void THNN_(Tanh_updateOutput)(
 {
   input = THTensor_(newContiguous)(input);
   THTensor_(resizeAs)(output, input);
-//  printf("%s: THTensor input dimension: %d\n", __FILE__, input->nDimension);
-//  for (int i = 0; i < input->nDimension; i++) {
-//    printf("%s: THTensor input size[%d]:%d, stride[%d]:%d\n", __FILE__, i, input->size[i], i, input->stride[i]);
-//  }
-//  printf("%s: THTensor output dimension: %d\n", __FILE__, output->nDimension);
-//  for (int i = 0; i < output->nDimension; i++) {
-//    printf("%s: THTensor output size[%d]:%d, stride[%d]:%d\n", __FILE__, i, output->size[i], i, output->stride[i]);
-//  }
 
   real * in  = THTensor_(data)(input);
   real * out = THTensor_(data)(output);

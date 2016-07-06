@@ -8,14 +8,6 @@ void THNN_(Sigmoid_updateOutput)(
           THTensor *output)
 {
   THTensor_(resizeAs)(output, input);
-//  printf("Sigmoid.c: THTensor input dimension: %d\n", input->nDimension);
-//  for (int i = 0; i < input->nDimension; i++) {
-//    printf("Sigmoid.c: THTensor input size[%d]:%d, stride[%d]:%d\n", i, input->size[i], i, input->stride[i]);
-//  }
-//  printf("Sigmoid.c: THTensor output dimension: %d\n", output->nDimension);
-//  for (int i = 0; i < output->nDimension; i++) {
-//    printf("Sigmoid.c: THTensor output size[%d]:%d, stride[%d]:%d\n", i, output->size[i], i, output->stride[i]);
-//  }
   real * in  = THTensor_(data)(input);
   real * out = THTensor_(data)(output);
   const int iStride =  input->stride[0];
