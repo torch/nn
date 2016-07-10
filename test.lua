@@ -3600,6 +3600,48 @@ function nntest.TemporalConvolution()
    mytester:assertTensorEq(inputGrad:select(1,2), inputGrad1D, 0.000001, 'error on 2D vs 1D backward)')
 end
 
+function nntest.TemporalDynamicKMaxPooling()
+   local features = math.random(5,10)
+   local seqLen = math.random(4,7)
+   local minK = math.random(3,6)
+   local factor = math.random(1,100)*0.01
+   local nBatchFrame = math.random(2,4)
+   local module = nn.TemporalDynamicKMaxPooling(minK, factor)
+
+   -- 1D
+   local input = torch.Tensor(seqLen, features)
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+
+   -- 2D
+   local input = torch.Tensor(nBatchFrame, seqLen, features)
+   local err = jac.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state ')
+
+   local ferr, berr = jac.testIO(module, input)
+   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+
+   -- 2D matches 1D
+   local output = module:forward(input):clone()
+   local outputGrad = torch.randn(output:size())
+   local inputGrad = module:backward(input, outputGrad):clone()
+
+   local input1D = input:select(1, 2)
+   local output1D = module:forward(input1D)
+   local outputGrad1D = outputGrad:select(1, 2)
+   local inputGrad1D = module:backward(input1D, outputGrad1D)
+
+   mytester:assertTensorEq(output:select(1,2), output1D, 0.000001, 'error on 2D vs 1D forward)')
+   mytester:assertTensorEq(inputGrad:select(1,2), inputGrad1D, 0.000001, 'error on 2D vs 1D backward)')
+
+
+end
+
 function nntest.TemporalSubSampling()
    local from = math.random(1,5)
    local ki = math.random(1,6)
