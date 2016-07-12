@@ -3602,7 +3602,7 @@ end
 
 function nntest.TemporalDynamicKMaxPooling()
    local features = math.random(5,10)
-   local seqLen = math.random(4,7)
+   local seqLen = math.random(6,9)
    local minK = math.random(3,6)
    local factor = math.random(1,100)*0.01
    local nBatchFrame = math.random(2,4)
