@@ -5217,6 +5217,30 @@ function nntest.SpatialUpSamplingNearest()
   end
 end
 
+function nntest.SpatialUpSamplingBilinear()
+  for scale=2,4 do
+     for dim = 3,4 do
+       local m = nn.SpatialUpSamplingBilinear(scale)
+
+       -- Create a randomly sized dimD vector
+       local shape = {}
+       for i = 1, dim do
+         table.insert(shape, torch.random(2, 2+dim-1))
+       end
+
+       -- Check that the gradient is correct by using finite elements
+       local input = torch.DoubleTensor(table.unpack(shape)):normal()
+
+       local err = jac.testJacobian(m, input)
+       mytester:assertlt(err, precision, ' error on state ')
+
+       local ferr, berr = jac.testIO(m, input)
+       mytester:asserteq(ferr, 0, torch.typename(m)..' - i/o forward err ')
+       mytester:asserteq(berr, 0, torch.typename(m)..' - i/o backward err ')
+   end
+  end
+end
+
 function nntest.Concat()
    local input = torch.randn(4, 2)
    local num_modules = math.random(2, 5)

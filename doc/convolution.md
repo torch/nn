@@ -29,7 +29,8 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialCrossMapLRN](#nn.SpatialCrossMapLRN) : a spatial local response normalization between feature maps ;
     * [SpatialBatchNormalization](#nn.SpatialBatchNormalization): mean/std normalization over the mini-batch inputs and pixels, with an optional affine transform that follows
 a kernel for computing the weighted average in a neighborhood ;
-    * [SpatialUpsamplingNearest](#nn.SpatialUpSamplingNearest): A simple upsampler applied to every channel of the feature map.
+    * [SpatialUpsamplingNearest](#nn.SpatialUpSamplingNearest): A simple nearest neighbor upsampler applied to every channel of the feature map.
+    * [SpatialUpsamplingBilinear](#nn.SpatialUpSamplingNearest): A simple bilinear upsampler applied to every channel of the feature map.
   * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
     * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
     * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
@@ -716,6 +717,27 @@ output(u,v) = input(floor((u-1)/scale)+1, floor((v-1)/scale)+1)
 ```
 
 Where `u` and `v` are index from 1 (as per lua convention).  There are no learnable parameters.
+
+<a name="nn.SpatialUpSamplingBilinear"></a>
+### SpatialUpSamplingBilinear ###
+
+```lua
+module = nn.SpatialUpSamplingBilinear(scale)
+```
+
+Applies a 2D up-sampling over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 3D or 4D tensor (i.e. for 4D: `nBatchPlane x nInputPlane x height x width`). The number of output planes will be the same. The v dimension is assumed to be the second last dimension (i.e. for 4D it will be the 3rd dim), and the u dimension is assumed to be the last dimension.
+
+The parameters are the following:
+  * `scale`: The upscale ratio.  Must be a positive integer
+
+The up-scaling method is bilinear, and given an input of height iH and width iW, output height and width will be:
+```lua
+oH = (iH - 1)(scale - 1) + iH
+oW = (iW - 1)(scale - 1) + iW
+```
+
+There are no learnable parameters.
 
 <a name="nn.SpatialZeroPadding"></a>
 ### SpatialZeroPadding ###
