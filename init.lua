@@ -116,6 +116,7 @@ require('nn.SpatialZeroPadding')
 require('nn.SpatialReflectionPadding')
 require('nn.SpatialReplicationPadding')
 require('nn.SpatialUpSamplingNearest')
+require('nn.SpatialUpSamplingBilinear')
 require('nn.SpatialBatchNormalization')
 
 require('nn.VolumetricConvolution')
