@@ -1626,7 +1626,7 @@ function nntest.LogSoftmax()
    local ferr,berr = jac.testIO(module,input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
-   
+
    -- test logsoftmax when gradOutput is non-contiguous
    local layer = nn.LogSoftMax()
    layer:zeroGradParameters()
@@ -1639,13 +1639,13 @@ function nntest.LogSoftmax()
    gradOutput = gradOutput:clone()
    local gradInput2 = layer:backward(input, gradOutput):clone()
 
-   mytester:assertlt(gradInput1:add(-1, gradInput2):abs():max(), 
-		     1e-10, 
-		     torch.typename(layer) 
+   mytester:assertlt(gradInput1:add(-1, gradInput2):abs():max(),
+		     1e-10,
+		     torch.typename(layer)
 			.. ' non-contiguous gradOutput check')
-   
-   
-   
+
+
+
 
 end
 
@@ -2496,15 +2496,15 @@ function nntest.SpatialFullConvolution()
 
       local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
       mytester:assertlt(err , precision, 'error on weight ')
-     
+
       if module.bias then
          local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
          mytester:assertlt(err , precision, 'error on bias ')
       end
-   
+
       local err = jac.testJacobianUpdateParameters(module, input, module.weight)
       mytester:assertlt(err , precision, 'error on weight [direct update] ')
-     
+
       if module.bias then
          local err = jac.testJacobianUpdateParameters(module, input, module.bias)
          mytester:assertlt(err , precision, 'error on bias [direct update] ')
@@ -2513,8 +2513,8 @@ function nntest.SpatialFullConvolution()
       for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
          mytester:assertlt(err, precision, string.format(
                             'error on weight [%s]', t))
-      end    
-     
+      end
+
       if module.bias then
          for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
             mytester:assertlt(err, precision, string.format(
@@ -2540,7 +2540,7 @@ function nntest.SpatialFullConvolution()
 
       local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
       mytester:assertlt(err , precision, 'batch error on weight ')
-     
+
       if module.bias then
          local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
          mytester:assertlt(err , precision, 'batch error on bias ')
@@ -2548,7 +2548,7 @@ function nntest.SpatialFullConvolution()
 
       local err = jac.testJacobianUpdateParameters(module, input, module.weight)
       mytester:assertlt(err , precision, 'batch error on weight [direct update] ')
-     
+
       if module.bias then
          local err = jac.testJacobianUpdateParameters(module, input, module.bias)
          mytester:assertlt(err , precision, 'batch error on bias [direct update] ')
@@ -2558,7 +2558,7 @@ function nntest.SpatialFullConvolution()
          mytester:assertlt(err, precision, string.format(
                             'error on weight [%s]', t))
       end
-     
+
       if module.bias then
          for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
             mytester:assertlt(err, precision, string.format(
@@ -2570,7 +2570,7 @@ function nntest.SpatialFullConvolution()
       mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
       mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
    end
-   
+
    jacTests(module)
    module:noBias()
    jacTests(module)
@@ -5060,7 +5060,7 @@ function nntest.Narrow()
    mytester:assertTensorEq(gradInput, gradInput1, 0.00001, "Narrow #3 gradInput err")
    mytester:assertTensorEq(output, output2, 0.0000001, "Narrow #3 negative output err")
    mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "Narrow #3 negative gradInput err")
-   
+
    -- check basic narrow functionality #4
    local input = torch.rand(3, 10, 4)
    local output = input:narrow(2, 5, 3)
@@ -6157,9 +6157,9 @@ function nntest.VolumetricReplicationPadding()
          nbatch = math.random(1,3)
       end
       local plane = math.random(1,3)
-      local sizeZ = math.random(7,16)
-      local sizeY = math.random(7,16)
-      local sizeX = math.random(7,16)
+      local sizeZ = math.random(1,4)
+      local sizeY = math.random(7,11)
+      local sizeX = math.random(7,11)
       local padLeft = math.random(-3,3)
       local padRight = math.random(-3,3)
       local padTop = math.random(-3,3)
