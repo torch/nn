@@ -2,55 +2,56 @@
 #define TH_GENERIC_FILE "generic/SpatialFullConvolution.c"
 #else
 
-
 static void THNN_(im2col)(const real* data_im, const int channels,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w,
-    const int stride_h, const int stride_w,
-    real* data_col) {
-  int c, h, w;
-  int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
-  int channels_col = channels * kernel_h * kernel_w;
-  for (c = 0; c < channels_col; ++c) {
-    int w_offset = c % kernel_w;
-    int h_offset = (c / kernel_w) % kernel_h;
-    int c_im = c / kernel_h / kernel_w;
-    for (h = 0; h < height_col; ++h) {
-      for (w = 0; w < width_col; ++w) {
-        int h_pad = h * stride_h - pad_h + h_offset;
-        int w_pad = w * stride_w - pad_w + w_offset;
-        if (h_pad >= 0 && h_pad < height && w_pad >= 0 && w_pad < width)
-          data_col[(c * height_col + h) * width_col + w] =
-            data_im[(c_im * height + h_pad) * width + w_pad];
-        else
-          data_col[(c * height_col + h) * width_col + w] = 0;
+      const int height, const int width, const int kernel_h, const int kernel_w,
+      const int pad_h, const int pad_w,
+      const int stride_h, const int stride_w,
+      const int dilation_h, const int dilation_w,
+      real* data_col) {
+  const int height_col = (height + 2 * pad_h -
+                          (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+  const int width_col = (width + 2 * pad_w -
+                         (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+  const int channels_col = channels * kernel_h * kernel_w;
+  for (int c_col = 0; c_col < channels_col; ++c_col) {
+    int w_offset = c_col % kernel_w;
+    int h_offset = (c_col / kernel_w) % kernel_h;
+    int c_im = c_col / kernel_h / kernel_w;
+    for (int h_col = 0; h_col < height_col; ++h_col) {
+      for (int w_col = 0; w_col < width_col; ++w_col) {
+        int h_im = h_col * stride_h - pad_h + h_offset * dilation_h;
+        int w_im = w_col * stride_w - pad_w + w_offset * dilation_w;
+        data_col[(c_col * height_col + h_col) * width_col + w_col] =
+          (h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?
+          data_im[(c_im * height + h_im) * width + w_im] : 0;
       }
     }
   }
 }
 
 static void THNN_(col2im)(const real* data_col, const int channels,
-    const int height, const int width, const int patch_h, const int patch_w,
-    const int pad_h, const int pad_w,
-    const int stride_h, const int stride_w,
-    real* data_im) {
-  int c, h, w;
-  memset(data_im, 0, sizeof(real)*height * width * channels);
-  int height_col = (height + 2 * pad_h - patch_h) / stride_h + 1;
-  int width_col = (width + 2 * pad_w - patch_w) / stride_w + 1;
-  int channels_col = channels * patch_h * patch_w;
-  for (c = 0; c < channels_col; ++c) {
-    int w_offset = c % patch_w;
-    int h_offset = (c / patch_w) % patch_h;
-    int c_im = c / patch_h / patch_w;
-    for (h = 0; h < height_col; ++h) {
-      for (w = 0; w < width_col; ++w) {
-        int h_pad = h * stride_h - pad_h + h_offset;
-        int w_pad = w * stride_w - pad_w + w_offset;
-        if (h_pad >= 0 && h_pad < height && w_pad >= 0 && w_pad < width)
-          data_im[(c_im * height + h_pad) * width + w_pad] +=
-            data_col[(c * height_col + h) * width_col + w];
+      const int height, const int width, const int kernel_h, const int kernel_w,
+      const int pad_h, const int pad_w,
+      const int stride_h, const int stride_w,
+      const int dilation_h, const int dilation_w,
+      real* data_im) {
+  memset(data_im, 0, sizeof(real) * height * width * channels);
+  const int height_col = (height + 2 * pad_h -
+                          (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+  const int width_col = (width + 2 * pad_w -
+                         (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+  const int channels_col = channels * kernel_h * kernel_w;
+  for (int c_col = 0; c_col < channels_col; ++c_col) {
+    int w_offset = c_col % kernel_w;
+    int h_offset = (c_col / kernel_w) % kernel_h;
+    int c_im = c_col / kernel_h / kernel_w;
+    for (int h_col = 0; h_col < height_col; ++h_col) {
+      for (int w_col = 0; w_col < width_col; ++w_col) {
+        int h_im = h_col * stride_h - pad_h + h_offset * dilation_h;
+        int w_im = w_col * stride_w - pad_w + w_offset * dilation_w;
+        if (h_im >= 0 && h_im < height && w_im >= 0 && w_im < width)
+          data_im[(c_im * height + h_im) * width + w_im] +=
+            data_col[(c_col * height_col + h_col) * width_col + w_col];
       }
     }
   }
@@ -68,7 +69,7 @@ void THNN_(SpatialFullConvolution_updateOutput)(
     int dW, int dH,
     int padW, int padH,
     int adjW, int adjH)
-{  
+{
   int nInputPlane = THTensor_(size)(weight,0);
   int nOutputPlane = THTensor_(size)(weight,1);
 
@@ -139,6 +140,7 @@ void THNN_(SpatialFullConvolution_updateOutput)(
     THNN_(col2im)(
       THTensor_(data)(columns),
       nOutputPlane, outputHeight, outputWidth, kH, kW, padH, padW, dH, dW,
+      1, 1,
       THTensor_(data)(output_n)
     );
 
@@ -150,16 +152,17 @@ void THNN_(SpatialFullConvolution_updateOutput)(
     long k_ = 1;
 
     // Do GEMM (note: this is a bit confusing because gemm assumes column-major matrices)
-    THBlas_(gemm)(
-        't', 'n',
-        n_, m_, k_,
-        1,
-        THTensor_(data)(ones), k_,
-        THTensor_(data)(bias), k_,
-        1,
-        THTensor_(data)(output_n), n_
-    );
-
+    if (bias) {
+      THBlas_(gemm)(
+          't', 'n',
+          n_, m_, k_,
+          1,
+          THTensor_(data)(ones), k_,
+          THTensor_(data)(bias), k_,
+          1,
+          THTensor_(data)(output_n), n_
+      );
+    }
   }
 
   // Free
@@ -227,6 +230,7 @@ void THNN_(SpatialFullConvolution_updateGradInput)(
     THNN_(im2col)(
       THTensor_(data)(gradOutput_n),
       nOutputPlane, outputHeight, outputWidth, kH, kW, padH, padW, dH, dW,
+      1, 1,
       THTensor_(data)(gradColumns)
     );
 
@@ -323,6 +327,7 @@ void THNN_(SpatialFullConvolution_accGradParameters)(
     THNN_(im2col)(
       THTensor_(data)(gradOutput_n),
       nOutputPlane, outputHeight, outputWidth, kH, kW, padH, padW, dH, dW,
+      1, 1,
       THTensor_(data)(columns)
     );
 
@@ -351,15 +356,17 @@ void THNN_(SpatialFullConvolution_accGradParameters)(
     long k_ = outputHeight * outputWidth;
 
     // Do GEMV (note: this is a bit confusing because gemv assumes column-major matrices)
-    THBlas_(gemv)(
-        't',
-        k_, m_,
-        scale,
-        THTensor_(data)(gradOutput_n), k_,
-        THTensor_(data)(ones), 1,
-        1,
-        THTensor_(data)(gradBias), 1
-    );
+    if (gradBias) {
+      THBlas_(gemv)(
+          't',
+          k_, m_,
+          scale,
+          THTensor_(data)(gradOutput_n), k_,
+          THTensor_(data)(ones), 1,
+          1,
+          THTensor_(data)(gradBias), 1
+      );
+    }
   }
 
   // Free

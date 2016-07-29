@@ -1,6 +1,6 @@
 local Log, parent = torch.class('nn.Log', 'nn.Module')
 
-function Log:__init(inputSize)
+function Log:__init()
    parent.__init(self)
 end
 

@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local SpatialConvolution, parent = torch.class('nn.SpatialConvolution', 'nn.Module')
 
 function SpatialConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH)
@@ -22,6 +23,12 @@ function SpatialConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, pa
    self.gradBias = torch.Tensor(nOutputPlane)
 
    self:reset()
+end
+
+function SpatialConvolution:noBias()
+   self.bias = nil
+   self.gradBias = nil
+   return self
 end
 
 function SpatialConvolution:reset(stdv)
@@ -98,6 +105,7 @@ local function unviewWeight(self)
 end
 
 function SpatialConvolution:updateOutput(input)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    backCompatibility(self)
    viewWeight(self)
    input = makeContiguous(self, input)
@@ -105,7 +113,7 @@ function SpatialConvolution:updateOutput(input)
       input:cdata(),
       self.output:cdata(),
       self.weight:cdata(),
-      self.bias:cdata(),
+      THNN.optionalTensor(self.bias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.kW, self.kH,
@@ -117,6 +125,7 @@ function SpatialConvolution:updateOutput(input)
 end
 
 function SpatialConvolution:updateGradInput(input, gradOutput)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    if self.gradInput then
       backCompatibility(self)
       viewWeight(self)
@@ -125,8 +134,7 @@ function SpatialConvolution:updateGradInput(input, gradOutput)
          input:cdata(),
          gradOutput:cdata(),
          self.gradInput:cdata(),
-         self.weight:cdata(),
-         self.bias:cdata(),
+         self.weight:cdata(),         
          self.finput:cdata(),
          self.fgradInput:cdata(),
          self.kW, self.kH,
@@ -139,6 +147,7 @@ function SpatialConvolution:updateGradInput(input, gradOutput)
 end
 
 function SpatialConvolution:accGradParameters(input, gradOutput, scale)
+   assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    scale = scale or 1
    backCompatibility(self)
    input, gradOutput = makeContiguous(self, input, gradOutput)
@@ -147,7 +156,7 @@ function SpatialConvolution:accGradParameters(input, gradOutput, scale)
       input:cdata(),
       gradOutput:cdata(),
       self.gradWeight:cdata(),
-      self.gradBias:cdata(),
+      THNN.optionalTensor(self.gradBias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.kW, self.kH,
@@ -173,7 +182,11 @@ function SpatialConvolution:__tostring__()
    if (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
      s = s .. ', ' .. self.padW .. ',' .. self.padH
    end
-   return s .. ')'
+   if self.bias then
+      return s .. ')'
+   else
+      return s .. ') without bias'
+   end
 end
 
 function SpatialConvolution:clearState()

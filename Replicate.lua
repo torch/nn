@@ -34,7 +34,7 @@ function Replicate:updateOutput(input)
       end
       st[i+offset] = input:stride(i)
    end
-   self.output = input.new(input:storage(),input:storageOffset(),sz,st)
+   self.output:set(input:storage(),input:storageOffset(),sz,st)
    return self.output
 end
 

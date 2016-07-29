@@ -187,7 +187,9 @@ function nn.Jacobian.linearModuleDiagHessian(module, input, gradParamName)
       gradOutput1D:zero()
       gradOutput1D[i] = 1
       module.gradWeight:zero()
-      module.gradBias:zero()
+      if module.bias then
+         module.gradBias:zero()
+      end
       module:updateGradInput(input, gradOutput)
       module:accGradParameters(input, gradOutput)
       diagHessian:addcmul(gradParam, gradParam)
@@ -305,7 +307,8 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
    -- write module
    local filename = os.tmpname()
    local f = torch.DiskFile(filename, 'w'):binary()
-   module:clearState()
+   -- call clearState and check that it returns itself
+   assert(module == module:clearState(),'clearState did not return self')
    f:writeObject(module)
    f:close()
    -- read module
@@ -322,7 +325,7 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
 
    local errf = fo - fo2
    local errb = bo - bo2
-   return errf:abs():max(), errb:abs():max()
+   return errf:abs():max(), errb:numel() == 0 and 0 or errb:abs():max()
 end
 
 function nn.Jacobian.testAllUpdate(module, input, weight, gradWeight)
@@ -340,7 +343,7 @@ function nn.Jacobian.testAllUpdate(module, input, weight, gradWeight)
    maccgp:accGradParameters(input, gradOutput)
    maccgp:updateParameters(lr)
    errors["accGradParameters"] = (weightc-maccgp[gradWeight]*lr-maccgp[weight]):norm()
-   
+
    -- accUpdateGradParameters
    local maccugp = module:clone()
    maccugp:forward(input)
@@ -365,7 +368,7 @@ function nn.Jacobian.testAllUpdate(module, input, weight, gradWeight)
    local err = (weightc-maccgp[gradWeight]*(lr*2)-macsh1[weight]):norm()
    err = err + (weightc-maccgp[gradWeight]*(lr*2)-macsh2[weight]):norm()
    errors["accGradParameters [shared]"] = err
-   
+
    -- shared, accUpdateGradParameters
    local macshu1 = module:clone()
    local macshu2 = module:clone()

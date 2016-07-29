@@ -130,13 +130,38 @@ function nn.utils.recursiveAdd(t1, val, t2)
    return t1, t2
 end
 
-function nn.utils.addSingletonDimension(t, dim)
+function nn.utils.recursiveCopy(t1,t2)
+   if torch.type(t2) == 'table' then
+      t1 = (torch.type(t1) == 'table') and t1 or {t1}
+      for key,_ in pairs(t2) do
+         t1[key], t2[key] = nn.utils.recursiveCopy(t1[key], t2[key])
+      end
+   elseif torch.isTensor(t2) then
+      t1 = torch.isTensor(t1) and t1 or t2.new()
+      t1:resizeAs(t2):copy(t2)
+   else
+      error("expecting nested tensors or tables. Got "..
+            torch.type(t1).." and "..torch.type(t2).." instead")
+   end
+   return t1, t2
+end
+
+function nn.utils.addSingletonDimension(...)
+  local view, t, dim
+  if select('#',...) < 3 then
+    t, dim = select(1,...)
+  else
+    view, t, dim = select(1,...)
+    assert(torch.isTensor(view),
+           "output tensor expected, got " .. type(view))
+  end
+
   assert(torch.isTensor(t), "input tensor expected")
-  local dim = dim or 1
+  dim = dim or 1
   assert(dim > 0 and dim <= (t:dim() + 1), "invalid dimension: " .. dim
              .. '. Tensor is of ' .. t:dim() .. ' dimensions.')
 
-  local view = t.new()
+  view = view or t.new()
   local size = torch.LongStorage(t:dim() + 1)
   local stride = torch.LongStorage(t:dim() + 1)
 

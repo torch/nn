@@ -75,8 +75,11 @@ end
 
 function BN:checkInputDim(input)
    assert(input:dim() == self.nDim, string.format(
-     'only mini-batch supported (%dD tensor), got %dD tensor instead',
-     self.nDim, input:dim()))
+      'only mini-batch supported (%dD tensor), got %dD tensor instead',
+      self.nDim, input:dim()))
+   assert(input:size(2) == self.running_mean:nElement(), string.format(
+      'got %d-feature tensor, expected %d',
+      input:size(2), self.running_mean:nElement()))
 end
 
 local function makeContiguous(self, input, gradOutput)
@@ -125,7 +128,6 @@ end
 local function backward(self, input, gradOutput, scale, gradInput, gradWeight, gradBias)
    self:checkInputDim(input)
    self:checkInputDim(gradOutput)
-   assert(self.train == true, 'should be in training mode when self.train is true')
    assert(self.save_mean and self.save_std, 'must call :updateOutput() first')
 
    input, gradOutput = makeContiguous(self, input, gradOutput)
@@ -142,9 +144,13 @@ local function backward(self, input, gradOutput, scale, gradInput, gradWeight, g
       THNN.optionalTensor(gradWeight),
       THNN.optionalTensor(gradBias),
       THNN.optionalTensor(self.weight),
+      self.running_mean:cdata(),
+      self.running_var:cdata(),
       self.save_mean:cdata(),
       self.save_std:cdata(),
-      scale)
+      self.train,
+      scale,
+      self.eps)
 
    return self.gradInput
 end

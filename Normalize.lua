@@ -42,7 +42,7 @@ function Normalize:updateOutput(input)
   end
   self._output:cdiv(input, self.norm:view(-1,1):expandAs(input))
 
-  self.output = self._output:view(input_size)
+  self.output:view(self._output, input_size)
   return self.output
 end
 
@@ -111,7 +111,7 @@ function Normalize:updateGradInput(input, gradOutput)
   end
   self._gradInput:cdiv(self.cross:expand(n,d))
 
-  self.gradInput = self._gradInput:view(input_size)
+  self.gradInput:view(self._gradInput, input_size)
   return self.gradInput
 end
 

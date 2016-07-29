@@ -29,7 +29,7 @@ function Sum:updateOutput(input)
         self.output:div(input:size(dimension))
     end
     if self.output:nDimension() > 1 then
-        self.output = self.output:select(dimension, 1)
+        self.output:set(self.output:select(dimension, 1))
     end
     return self.output
 end
@@ -41,6 +41,11 @@ function Sum:updateGradInput(input, gradOutput)
     -- Instead, do a deepcopy
     local size      = input:size()
     size[dimension] = 1
+    if not gradOutput:isContiguous() then
+        self._gradOutput = self._gradOutput or gradOutput.new()
+        self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
+        gradOutput = self._gradOutput
+    end
     gradOutput      = gradOutput:view(size)
     self.gradInput:resizeAs(input)
     self.gradInput:copy(gradOutput:expandAs(input))
@@ -48,4 +53,9 @@ function Sum:updateGradInput(input, gradOutput)
         self.gradInput:div(input:size(dimension))
     end
     return self.gradInput
+end
+
+function Sum:clearState()
+    nn.utils.clear(self, '_gradOutput')
+    return parent.clearState(self)
 end

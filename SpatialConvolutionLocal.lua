@@ -66,14 +66,14 @@ end
 
 local function viewWeight(self)
    self.weight = self.weight:view(self.oH * self.oW, self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then 
+   if self.gradWeight and self.gradWeight:dim() > 0 then
       self.gradWeight = self.gradWeight:view(self.oH * self.oW, self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
    end
 end
 
 local function unviewWeight(self)
    self.weight = self.weight:view(self.oH, self.oW, self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then 
+   if self.gradWeight and self.gradWeight:dim() > 0 then
       self.gradWeight = self.gradWeight:view(self.oH, self.oW, self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
    end
 end
@@ -81,12 +81,12 @@ end
 local function checkInputSize(self, input)
    if input:nDimension() == 3 then
       if input:size(1) ~= self.nInputPlane or input:size(2) ~= self.iH or input:size(3) ~= self.iW then
-         error(string.format('Given input size: (%dx%dx%d) inconsistent with expected input size: (%dx%dx%d).', 
+         error(string.format('Given input size: (%dx%dx%d) inconsistent with expected input size: (%dx%dx%d).',
                              input:size(1), input:size(2), input:size(3), self.nInputPlane, self.iH, self.iW))
       end
    elseif input:nDimension() == 4 then
       if input:size(2) ~= self.nInputPlane or input:size(3) ~= self.iH or input:size(4) ~= self.iW then
-         error(string.format('Given input size: (%dx%dx%dx%d) inconsistent with expected input size: (batchsize x%dx%dx%d).', 
+         error(string.format('Given input size: (%dx%dx%dx%d) inconsistent with expected input size: (batchsize x%dx%dx%d).',
                               input:size(1), input:size(2), input:size(3), input:size(4), self.nInputPlane, self.iH, self.iW))
       end
    else
@@ -100,12 +100,12 @@ local function checkOutputSize(self, input, output)
    end
    if output:nDimension() == 3 then
       if output:size(1) ~= self.nOutputPlane or output:size(2) ~= self.oH or output:size(3) ~= self.oW then
-         error(string.format('Given output size: (%dx%dx%d) inconsistent with expected output size: (%dx%dx%d).', 
+         error(string.format('Given output size: (%dx%dx%d) inconsistent with expected output size: (%dx%dx%d).',
                              output:size(1), output:size(2), output:size(3), self.nOutputPlane, self.oH, self.oW))
       end
    elseif output:nDimension() == 4 then
       if output:size(2) ~= self.nOutputPlane or output:size(3) ~= self.oH or output:size(4) ~= self.oW then
-         error(string.format('Given output size: (%dx%dx%dx%d) inconsistent with expected output size: (batchsize x%dx%dx%d).', 
+         error(string.format('Given output size: (%dx%dx%dx%d) inconsistent with expected output size: (batchsize x%dx%dx%d).',
                               output:size(1), output:size(2), output:size(3), output:size(4), self.nOutputPlane, self.oH, self.oW))
       end
    else

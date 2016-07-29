@@ -29,9 +29,9 @@ function Max:updateOutput(input)
    local dimension = self:_getPositiveDimension(input)
    torch.max(self._output, self._indices, input, dimension)
    if input:dim() > 1 then
-     self.output = self._output:select(dimension, 1)
+     self.output:set(self._output:select(dimension, 1))
    else
-     self.output = self._output
+     self.output:set(self._output)
    end
    return self.output
 end

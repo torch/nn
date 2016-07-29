@@ -48,7 +48,7 @@ function PartialLinear:parameters()
 end  -- should return only the relevant partition?
 
 function PartialLinear:updateOutput(input)
-   self.output = self.network:forward{input, self.partition}
+   self.output:set(self.network:forward{input, self.partition})
    if self.bias then
       self.output:add(
          self.bias:index(2, self.partition:long()):expandAs(self.output)
@@ -64,7 +64,7 @@ end
 function PartialLinear:updateGradInput(input, gradOutput)
    if self.gradInput then
       self.network:updateGradInput({input, self.partition}, gradOutput)
-      self.gradInput = self.network.gradInput[1]
+      self.gradInput:set(self.network.gradInput[1])
    end
    return self.gradInput
 end
