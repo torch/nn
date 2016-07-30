@@ -7,6 +7,7 @@ Complex neural networks are easily built using container classes:
     * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
     * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
       * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
+    * [Bottle](#nn.Bottle) : allows any dimensionality input be forwarded through a module ;
  
 See also the [Table Containers](#nn.TableContainers) for manipulating tables of [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
@@ -273,6 +274,37 @@ This is inevitable when the component
 module output tensors non-`dim` sizes aren't all odd or even. 
 Such that in order to keep the mappings aligned, one need 
 only ensure that these be all odd (or even).
+
+<a name="nn.Bottle"></a>
+## Bottle
+
+
+```lua
+module = nn.Bottle(module, [nInputDim], [nOutputDim])
+```
+Bottle allows varying dimensionality input to be forwarded through any module that accepts input of `nInputDim` dimensions, and generates output of `nOutputDim` dimensions.
+
+Bottle can be used to forward a 4D input of varying sizes through a 2D module `b x n`. The module `Bottle(module, 2)` will accept input of shape `p x q x r x n` and outputs with the shape `p x q x r x m`. Internally Bottle will view the input of `module` as `p*q*r x n`, and view the output as `p x q x r x m`. The numbers `p x q x r` are inferred from the input and can change for every forward/backward pass.
+
+```lua
+input=torch.Tensor(4, 5, 3, 10)
+mlp=nn.Bottle(nn.Linear(10, 2))
+print(input:size())
+print(mlp:forward(input):size())
+```
+which gives the output:
+```lua
+  4
+  5
+  3
+ 10
+[torch.LongStorage of size 4]
+ 4
+ 5
+ 3
+ 2
+[torch.LongStorage of size 4]
+```
 
 <a name="nn.TableContainers"></a>
 ## Table Containers ##
