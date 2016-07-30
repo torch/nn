@@ -23,3 +23,8 @@ function Index:updateGradInput(input, gradOutput)
     return self.gradInput
 end
 
+
+function Index:clearState()
+    self.gradInput[1]:set()
+    self.output:set()
+end
