@@ -8,7 +8,8 @@ target, they compute a gradient according to a given loss function.
     * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy for [`Sigmoid`](transfer.md#nn.Sigmoid) (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
     * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
     * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
-    * [`ClassSimplexCriterion`](#nn.ClassSimplexCriterion): A simplex embedding criterion for classification.
+    * [`ClassSimplexCriterion`](#nn.ClassSimplexCriterion): A simplex embedding criterion for classification;
+    * [`DICECriterion`](criterion.md#nn.DICECriterion): A criterion for comparing the similarity of two samples;
     * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
     * [`SoftMarginCriterion`](#nn.SoftMarginCriterion): two class softmargin-based loss;
     * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
@@ -210,6 +211,50 @@ end
 ```
 
 This criterion also provides two helper functions `getPredictions(input)` and `getTopPrediction(input)` that return the raw predictions and the top prediction index respectively, given an input sample.
+
+<a name="nn.DICECriterion"></a>
+## DICECriterion ##
+
+```lua
+criterion = nn.DICECriterion()
+```
+
+The [Sørensen–Dice index](https://en.wikipedia.org/wiki/Sørensen–Dice_coefficient) measures the degree of similarity between two sample sets. Geiven targets `X` and `Y` in  two sample datasets, the quotient of similarity is calculated as
+
+```lua
+  Q =   2 * (X n Y)
+      --------------
+          X + Y
+```
+
+Q typically ranges between 0 and 1. The closer Q is to one, the more similar both datasets are and the closer Q is to zero, the less similar the two data samples are.
+
+The input tensor and output tensor are expected to be of the same size when calling [`forward(input, target)`](#nn.CriterionForward) and [`backward(input, target)`](#nn.CriterionBackward).
+
+Example
+-------
+
+```lua
+local dice = nn.DICECriterion
+
+inputs = torch.FloatTensor(1, 5)
+preds  = torch.FloatTensor(1, 5)
+
+inputs = torch.range(1, 5);  preds  = inputs:clone()
+
+loss = dice:forward(preds, inputs)
+df_do = dice:backward(preds, inputs)
+
+print('loss', loss)
+print('df_do', df_do)
+```
+
+Prints
+
+```bash
+loss  0.9999999999999 
+df_do 0.1
+```.
 
 <a name="nn.DistKLDivCriterion"></a>
 ## DistKLDivCriterion ##
