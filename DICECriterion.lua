@@ -34,26 +34,21 @@ function DICECriterion:updateOutput(input, target)
 
 	local weights = self.weights
 
-	local numerator, denom, output, common
-
-	numerator = input.new()
-
-	numerator:resizeAs(input)
+	local numerator, denom, common
 
 	if weights ~= nil and target:dim() ~= 1 then
 	      weights = self.weights:view(1, target:size(2)):expandAs(target)
 	end
 
-	numerator:add(input, eps)
-
-	--	compute numerator: 2 * |X n Y|   ; eps for numeric stability
-	common = torch.eq(numerator, target)  --find logical equivalence between both
-	numerator = 2*torch.sum(common)
+	-- compute numerator: 2 * |X n Y|   ; eps for numeric stability
+	common = torch.eq(input, target)  --find logical equivalence between both
+	common:mul(2)
+	numerator = torch.sum(common)
 
 	-- compute denominator: |X| + |Y|
 	denom = input:nElement() + target:nElement() + eps
 
-	local output = numerator / denom
+	output = numerator/denom
 	self.output = output
 
 	return self.output
@@ -64,9 +59,9 @@ function DICECriterion:updateGradInput(input, target)
 	assert(input:nElement() == target:nElement(), "inputs and target size mismatch")
 
 	--[[ 
-			2 * |X| * |Y|   
-	    -------------------
-	   	 |X|*(|X| + |Y|)^2
+								2 * |X| * |Y|   
+	    		Gradient = 	 ----------------------
+	   	 						|X|*(|X| + |Y|)^2
 	    ]]
 
 	local weights = self.weights
@@ -77,10 +72,6 @@ function DICECriterion:updateGradInput(input, target)
 	    weights = self.weights:view(1, target:size(2)):expandAs(target)
 	end
 
-	gradInput:resizeAs(input)
-
-	gradInput = -1*self:updateOutput(input, target)
-
 	if weights ~= nil then
 	    gradInput:cmul(weights)
 	end
@@ -89,28 +80,22 @@ function DICECriterion:updateGradInput(input, target)
 	    gradInput:div(target:nElement())
 	end
 
-	--	2 * |X| * |Y|   
+	-- compute 2 * |X| * |Y|   
 	numerator = 2 * input:nElement() * target:nElement()
 
-	--|X|
+	-- compute |X|
 	denom = input:nElement()
 
-	--(|X| + |Y|)
+	-- compute (|X| + |Y|)
 	den_term2 = input:nElement() + target:nElement()
 
-	-- |X| * (|X| + |Y|)^2
+	-- compute |X| * (|X| + |Y|)^2
 	denom = denom * (den_term2 * den_term2)
 
-	--compute gradients
+	-- compute gradients
 	gradInput = numerator / denom
 
 	self.gradInput = gradInput
 
 	return self.gradInput
 end
-
--- function DICECriterion:accGradParameters(input, gradOutput)
--- end
-
--- function DICECriterion:reset()
--- end
