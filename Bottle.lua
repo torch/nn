@@ -1,4 +1,5 @@
 local Bottle, parent = torch.class("nn.Bottle", "nn.Container")
+local unpack = unpack or table.unpack
 
 function Bottle:__init(module, nInputDim, nOutputDim)
    parent.__init(self)
