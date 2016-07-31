@@ -4730,6 +4730,36 @@ function nntest.Copy()
    mytester:assert(torch.type(output) == 'torch.FloatTensor', 'copy forward type err')
 end
 
+function nntest.CMaxTable()
+   local input1 = torch.Tensor{{1,3},{2,4}}
+   local input2 = torch.Tensor{{4,2},{3,1}}
+   local input = {input1, input2}
+   local module = nn.CMaxTable()
+   local err1 = torch.add(module:forward(input), -1, torch.Tensor{{4,3},{3,4}})
+   mytester:assertalmosteq(err1:abs():max(), 0, 1e-15, "CMaxTable forward call")
+   local gradOutputs = torch.Tensor{5,6,7,8}
+   local gradInputs = module:backward(input, gradOutputs)
+   local err2 = torch.add(gradInputs[1], -1, torch.Tensor{{0,6},{0,8}})
+   local err3 = torch.add(gradInputs[2], -1, torch.Tensor{{5,0},{7,0}})
+   mytester:assertalmosteq(err2:abs():max(), 0, 1e-15, "CMaxTable backward call")
+   mytester:assertalmosteq(err3:abs():max(), 0, 1e-15, "CMaxTable backward call")
+end
+
+function nntest.CMinTable()
+   local input1 = torch.Tensor{{1,3},{2,4}}
+   local input2 = torch.Tensor{{4,2},{3,1}}
+   local input = {input1, input2}
+   local module = nn.CMinTable()
+   local err1 = torch.add(module:forward(input), -1, torch.Tensor{{1,2},{2,1}})
+   mytester:assertalmosteq(err1:abs():max(), 0, 1e-15, "CMinTable forward call")
+   local gradOutputs = torch.Tensor{5,6,7,8}
+   local gradInputs = module:backward(input, gradOutputs)
+   local err2 = torch.add(gradInputs[1], -1, torch.Tensor{{5,0},{7,0}})
+   local err3 = torch.add(gradInputs[2], -1, torch.Tensor{{0,6},{0,8}})
+   mytester:assertalmosteq(err2:abs():max(), 0, 1e-15, "CMinTable backward call")
+   mytester:assertalmosteq(err3:abs():max(), 0, 1e-15, "CMinTable backward call")
+end
+
 function nntest.JoinTable()
    local tensor = torch.rand(3,4,5)
    local input = {tensor, tensor}
