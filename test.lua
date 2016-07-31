@@ -90,7 +90,7 @@ function nntest.Bottle()
    local inj = 3
    local ink = 4
    local out = 5
-   local input = torch.Tensor(ini,inj,ink)
+   local input = torch.Tensor(ini,inj,ink):normal()
    local linear = nn.Linear(ink, out)
    local module1 = nn.Bottle(linear)
    local module2 = nn.Sequential()
@@ -102,7 +102,7 @@ function nntest.Bottle()
    mytester:eq(output1, output2, 0.0001, 'Bottle output not the same as Module')
    
    local shape = {4, 5, 6, 7, 8, 1, 3}
-   local input = torch.Tensor(unpack(shape))
+   local input = torch.Tensor(unpack(shape)):normal()
    local module = nn.Sequential()
    module:add(nn.Squeeze(2))
    module:add(nn.Linear(3, 3))
@@ -113,7 +113,7 @@ function nntest.Bottle()
    module2:add(module)
    module2:add(nn.View(unpack(outShape)))
    local output1 = module1:forward(input)
-   local grad = torch.Tensor(output1:size())
+   local grad = torch.Tensor(output1:size()):normal()
    local gradOutput1 = module1:backward(input, grad):clone()
    local output2 = module2:forward(input)
    local gradOutput2 = module2:backward(input, grad):clone()
