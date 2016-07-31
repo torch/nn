@@ -2,7 +2,7 @@ package = "nn"
 version = "scm-1"
 
 source = {
-   url = "git://github.com/lakehanne/nn.git",
+   url = "git://github.com/torch/nn.git",
 }
 
 description = {
