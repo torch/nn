@@ -222,12 +222,15 @@ criterion = nn.DICECriterion()
 The [Sørensen–Dice index](https://en.wikipedia.org/wiki/Sørensen–Dice_coefficient) measures the degree of similarity between two sample sets. Geiven targets `X` and `Y` in  two sample datasets, the quotient of similarity is calculated as
 
 ```lua
-  Q =   2 * (X n Y)
-      --------------
-          X + Y
+    Q =       2 * |X n Y|
+            --------------
+              |X| + |Y|
 ```
 
-Q typically ranges between 0 and 1. The closer Q is to one, the more similar both datasets are and the closer Q is to zero, the less similar the two data samples are.
+where |X| and |Y| are the numbers of elements in the two samples. 
+The resulting quotient is a measure of the similarity between the two samples.
+It ranges between 0 and 1. If it is 1, the two images are perfectly similar. Otherwise, 
+they are perfectly dissimilar.
 
 The input tensor and output tensor are expected to be of the same size when calling [`forward(input, target)`](#nn.CriterionForward) and [`backward(input, target)`](#nn.CriterionBackward).
 

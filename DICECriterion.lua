@@ -1,11 +1,13 @@
 --[[
-	A  statistic used for comparing the similarity of two samples
-	Sorensen's original formula =  2 * |X n Y|
-	                              ------------
-	                                |X| + |Y|
+	A  statistic used for comparing the similarity of two samples based on 
+	Sorensen's original formula ==> 	 2 * |X n Y|
+	                                	------------
+	                               		 |X| + |Y|
 
-	Note: |X| and |Y| are the numbers of species in the two samples. 
-	The result is the quotient of similarity and ranges between 0 and 1.
+	where |X| and |Y| are the numbers of elements in the two samples. 
+	The resulting quotient is an indicator measure of the similarity between the two samples.
+	It ranges between 0 and 1. If it is 1, the two images are perfectly similar. Otherwise, 
+	they are perfectly dissimilar.
 
 	Ref 1: https://en.wikipedia.org/wiki/Sørensen–Dice_coefficient
 	Ref 2: https://github.com/jocicmarko/ultrasound-nerve-segmentation/blob/master/train.py#L19
@@ -48,8 +50,7 @@ function DICECriterion:updateOutput(input, target)
 	-- compute denominator: |X| + |Y|
 	denom = input:nElement() + target:nElement() + eps
 
-	output = numerator/denom
-	self.output = output
+	self.output = numerator/denom
 
 	return self.output
 end
@@ -67,6 +68,8 @@ function DICECriterion:updateGradInput(input, target)
 	local weights = self.weights
 	local gradInput = self.gradInput or input.new()
 	local numerator, denom, den_term2, output
+
+	gradInput:resizeAs(input)
 
 	if weights ~= nil and target:dim() ~= 1 then
 	    weights = self.weights:view(1, target:size(2)):expandAs(target)
