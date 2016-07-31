@@ -14,6 +14,7 @@ This package provides an easy and modular way to build and train simple or compl
    * [Criterions](doc/criterion.md#nn.Criterions): a list of all criterions, including [`Criterion`](doc/criterion.md#nn.Criterion), the abstract class;
    * [`MSECriterion`](doc/criterion.md#nn.MSECriterion): the Mean Squared Error criterion used for regression;
    * [`ClassNLLCriterion`](doc/criterion.md#nn.ClassNLLCriterion): the Negative Log Likelihood criterion used for classification;
+   * [`DICECriterion`](doc/criterion.md#nn.DICECriterion): the Sørensen–Dice index, used for comparing the similarity of two samples;
  * Additional documentation:
    * [Overview](doc/overview.md#nn.overview.dok) of the package essentials including modules, containers and training;
    * [Training](doc/training.md#nn.traningneuralnet.dok): how to train a neural network using [optim](https://github.com/torch/optim);
