@@ -23,6 +23,8 @@ This allows one to build very rich architectures:
     * [`CSubTable`](#nn.CSubTable): substraction of input `Tensor`s;
     * [`CMulTable`](#nn.CMulTable): multiplication of input `Tensor`s;
     * [`CDivTable`](#nn.CDivTable): division of input `Tensor`s;
+    * [`CMaxTable`](#nn.CMaxTable): max of input `Tensor`s;
+    * [`CMinTable`](#nn.CMinTable): min of input `Tensor`s;
   * `Table` of Criteria:
     * [`CriterionTable`](#nn.CriterionTable): wraps a [Criterion](criterion.md#nn.Criterion) so that it can accept a `table` of inputs.
 
@@ -1212,3 +1214,30 @@ m = nn.CDivTable()
 [torch.DoubleTensor of dimension 5]
 ```
 
+<a name="nn.CMaxTable"></a>
+## CMaxTable ##
+
+Takes a `table` of `Tensor`s and outputs the max of all of them.
+
+```lua
+m = nn.CMaxTable()
+=m:forward({{torch.Tensor{1,2,3}, torch.Tensor{3,2,1}})
+ 3
+ 2
+ 3
+[torch.DoubleTensor of size 3]
+```
+
+<a name="nn.CMinTable"></a>
+## CMinTable ##
+
+Takes a `table` of `Tensor`s and outputs the min of all of them.
+
+```lua
+m = nn.CMinTable()
+=m:forward({{torch.Tensor{1,2,3}, torch.Tensor{3,2,1}})
+ 1
+ 2
+ 1
+[torch.DoubleTensor of size 3]
+```
