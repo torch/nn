@@ -85,6 +85,42 @@ function nntest.Add()
    end
 end
 
+function nntest.Bottle()
+   local ini = 2
+   local inj = 3
+   local ink = 4
+   local out = 5
+   local input = torch.Tensor(ini,inj,ink)
+   local linear = nn.Linear(ink, out)
+   local module1 = nn.Bottle(linear)
+   local module2 = nn.Sequential()
+   module2:add(nn.View(ini*inj, ink))
+   module2:add(linear)
+   module2:add(nn.View(ini, inj, out))
+   local output1 = module1:forward(input)
+   local output2 = module2:forward(input)
+   mytester:eq(output1, output2, 0.0001, 'Bottle output not the same as Module')
+   
+   local shape = {4, 5, 6, 7, 8, 1, 3}
+   local input = torch.Tensor(unpack(shape))
+   local module = nn.Sequential()
+   module:add(nn.Squeeze(2))
+   module:add(nn.Linear(3, 3))
+   local module1 = nn.Bottle(module, 3, 2)
+   local outShape = {4, 5, 6, 7, 8, 3}
+   local module2 = nn.Sequential()
+   module2:add(nn.View(4*5*6*7*8, 1, 3))
+   module2:add(module)
+   module2:add(nn.View(unpack(outShape)))
+   local output1 = module1:forward(input)
+   local grad = torch.Tensor(output1:size())
+   local gradOutput1 = module1:backward(input, grad):clone()
+   local output2 = module2:forward(input)
+   local gradOutput2 = module2:backward(input, grad):clone()
+   mytester:eq(output1, output2, 0.0001, 'Bottle output not the same as Module')
+   mytester:eq(gradOutput1, gradOutput2, 0.0001, 'Bottle gradOutput not the same as Module')
+end
+
 function nntest.CMul()
    local ini = math.random(3,5)
    local inj = math.random(3,5)

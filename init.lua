@@ -15,6 +15,7 @@ require('nn.Concat')
 require('nn.Parallel')
 require('nn.Sequential')
 require('nn.DepthConcat')
+require('nn.Bottle')
 
 require('nn.Linear')
 require('nn.Bilinear')
