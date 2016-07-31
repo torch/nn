@@ -5,7 +5,7 @@
 
 local DICECriterion, parent = torch.class('nn.DICECriterion', 'nn.Criterion')
 
-local eps = 1e-12
+local eps = 1
 
 function DICECriterion:_init(weights)
 	parent._init(self)
@@ -31,8 +31,8 @@ function DICECriterion:updateOutput(input, target)
 
 	-- compute numerator: 2 * |X n Y|   ; eps for numeric stability
 	common = torch.eq(input, target)  --find logical equivalence between both
-	common:mul(2)
 	numerator = torch.sum(common)
+	numerator = numerator * 2
 
 	-- compute denominator: |X| + |Y|
 	denom = input:nElement() + target:nElement() + eps
@@ -57,7 +57,6 @@ function DICECriterion:updateGradInput(input, target)
 	local buffer = self.buffer
 	local weights = self.weights
 	local gradInput = self.gradInput --or input.new()
-	local numerator, denom, den_term2, output
 
 	if weights ~= nil and target:dim() ~= 1 then
 	    weights = self.weights:view(1, target:size(2)):expandAs(target)
