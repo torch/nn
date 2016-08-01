@@ -903,7 +903,7 @@ columns or rows of the input image might be lost. It is up to the user to
 add proper padding in images.
 
 If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
-will be `nOutputPlane x otime x owidth x oheight` where
+will be `nOutputPlane x otime x oheight x owidth` where
 ```lua
 otime  = floor((time  + 2*padT - kT) / dT + 1)
 owidth  = floor((width  + 2*padW - kW) / dW + 1)
