@@ -100,7 +100,7 @@ function nntest.Bottle()
    local output1 = module1:forward(input)
    local output2 = module2:forward(input)
    mytester:eq(output1, output2, 0.0001, 'Bottle output not the same as Module')
-   
+
    local shape = {4, 5, 6, 7, 8, 1, 3}
    local input = torch.Tensor(table.unpack(shape)):normal()
    local module = nn.Sequential()
@@ -6058,6 +6058,7 @@ local function testBatchNormalization(moduleName, dim, k)
    jacTests(module, input, true)
    module:evaluate()
    jacTests(module, input, true)
+   jacTests(module, input[1], true)
 
    -- batch norm without affine transform
    module = nn[moduleName](planes, 1e-5, 0.1, false)
@@ -6065,6 +6066,7 @@ local function testBatchNormalization(moduleName, dim, k)
    jacTests(module, input, false)
    module:evaluate()
    jacTests(module, input, false)
+   jacTests(module, input[1], false)
 end
 
 function nntest.BatchNormalization()
