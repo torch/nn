@@ -4415,6 +4415,16 @@ function nntest.Index()
     local gradOutput = torch.Tensor{{1, 2}, {1, 2}}
     local gradInput = net:backward(input, gradOutput)
     equal(gradInput[1], torch.Tensor{{2, 4}, {0, 0}}, "error in 2D backward pass")
+
+    -- test clearState
+    local m = nn.Index(1)
+    local tensor = torch.Tensor(10, 3)
+    local indices = torch.LongTensor{ 2,3,4}
+
+    m:clearState()
+    m:forward({tensor, indices})
+    m:backward({tensor,indices}, torch.rand(3,3))
+
 end
 
 function nntest.Squeeze()
