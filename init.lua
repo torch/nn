@@ -122,6 +122,7 @@ require('nn.SpatialBatchNormalization')
 
 require('nn.VolumetricConvolution')
 require('nn.VolumetricFullConvolution')
+require('nn.VolumetricDilatedConvolution')
 require('nn.VolumetricMaxPooling')
 require('nn.VolumetricMaxUnpooling')
 require('nn.VolumetricAveragePooling')

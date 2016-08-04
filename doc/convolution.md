@@ -34,6 +34,7 @@ a kernel for computing the weighted average in a neighborhood ;
   * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
     * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
     * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
+    * [VolumetricDilatedConvolution](#nn.VolumetricDilatedConvolution) : a 3D dilated convolution over an input image ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
     * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation.
@@ -947,6 +948,42 @@ owidth  = (width  - 1) * dW - 2*padW + kW
 oheight = (height - 1) * dH - 2*padH + kH
 ```
 
+<a name="nn.VolumetricDilatedConvolution"></a>
+### VolumetricDilatedConvolution ###
+
+```lua
+module = nn.VolumetricDilatedConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH], [dilationT], [dilationW], [dilationH])
+```
+
+Applies a 3D dilated convolution over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 4D or 5D tensor.
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `nOutputPlane`: The number of output planes the convolution layer will produce.
+  * `kT`: The kernel depth of the convolution
+  * `kW`: The kernel width of the convolution
+  * `kH`: The kernel height of the convolution
+  * `dT`: The step of the convolution in the depth dimension. Default is `1`.
+  * `dW`: The step of the convolution in the width dimension. Default is `1`.
+  * `dH`: The step of the convolution in the height dimension. Default is `1`.
+  * `padT`: The additional zeros added per depth to the input planes. Default is `0`, a good number is `(kT-1)/2`.
+  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
+  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `dilationT`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
+  * `dilationW`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
+  * `dilationH`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
+
+If the input image is a 4D tensor `nInputPlane x depth x height x width`, the output image size
+will be `nOutputPlane x odepth x oheight x owidth` where
+```lua
+odepth  = floor(depth + 2 * padT - dilationT * (kT-1) + 1) / dT + 1
+owidth  = floor(width + 2 * padW - dilationW * (kW-1) + 1) / dW + 1
+oheight = floor(height + 2 * padH - dilationH * (kH-1) + 1) / dH + 1
+```
+
+Further information about the dilated convolution can be found in the following paper: [Multi-Scale Context Aggregation by Dilated Convolutions](http://arxiv.org/abs/1511.07122).
+
 <a name="nn.VolumetricMaxPooling"></a>
 ### VolumetricMaxPooling ###
 
@@ -995,4 +1032,3 @@ module = nn.VolumetricReplicationPadding(padLeft, padRight, padTop, padBottom,
 ```
 
 Each feature map of a given input is padded with the replication of the input boundary.
-
