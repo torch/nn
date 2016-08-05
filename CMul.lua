@@ -47,10 +47,15 @@ function CMul:updateOutput(input)
       
       self._output:cmul(self._weight)
    else
-      local batchSize = input:size(1)
-      self._output:view(self.output, batchSize, -1)
-      self._weight:view(self.weight, 1, -1)
-      
+      if self.weight:dim() == input:dim() then
+         self._output:set(self.output)
+         self._weight:set(self.weight)
+      else
+         local batchSize = input:size(1)
+         self._output:view(self.output, batchSize, -1)
+         self._weight:view(self.weight, 1, -1)
+      end
+
       self._expand:expandAs(self._weight, self._output)
       
       if torch.type(input) == 'torch.CudaTensor' then
@@ -76,10 +81,17 @@ function CMul:updateGradInput(input, gradOutput)
    if self.weight:nElement() == gradOutput:nElement() then
       self.gradInput:addcmul(1, self.weight, gradOutput)
    else
-      local batchSize = input:size(1)
-      nn.utils.contiguousView(self._gradOutput, gradOutput, batchSize, -1)
-      nn.utils.contiguousView(self._gradInput, self.gradInput, batchSize, -1)
-      self._weight:view(self.weight, 1, -1)
+      if self.weight:dim() == input:dim() then
+         nn.utils.contiguousView(self._gradOutput, gradOutput, gradOutput:size())
+         nn.utils.contiguousView(self._gradInput, self.gradInput, self.gradInput:size())
+         self._weight:set(self.weight)
+      else
+         local batchSize = input:size(1)
+         nn.utils.contiguousView(self._gradOutput, gradOutput, batchSize, -1)
+         nn.utils.contiguousView(self._gradInput, self.gradInput, batchSize, -1)
+         self._weight:view(self.weight, 1, -1)
+      end
+
       self._expand:expandAs(self._weight, self._gradOutput)
       
       if torch.type(input) == 'torch.CudaTensor' then
@@ -103,14 +115,33 @@ function CMul:accGradParameters(input, gradOutput, scale)
    if self.weight:nElement() == gradOutput:nElement() then
       self.gradWeight:addcmul(scale, input, gradOutput)
    else
-      local batchSize = input:size(1)
-      nn.utils.contiguousView(self._input, input, batchSize, -1)
-      nn.utils.contiguousView(self._gradOutput, gradOutput, batchSize, -1)
-      self._gradWeight:view(self.gradWeight, 1, -1)
+      if self.weight:dim() == input:dim() then
+         nn.utils.contiguousView(self._input, input, input:size())
+         nn.utils.contiguousView(self._gradOutput, gradOutput, gradOutput:size())
+         self._gradWeight:set(self.gradWeight)
       
-      self._repeat:cmul(self._input, self._gradOutput)
-      self._sum:sum(self._repeat, 1)
-      self._gradWeight:add(scale, self._sum)
+         self._repeat:cmul(self._input, self._gradOutput)
+         local sumInto = self._sum
+         local sumFrom = self._repeat
+         for i=1,self.weight:dim() do
+            if self.weight:size(i) ~= input:size(i) then
+               sumInto:sum(sumFrom, i)
+               sumInto = sumFrom
+               sumFrom = sumFrom == self._repeat and self._sum or self._repeat
+            end
+         end
+         self._gradWeight:add(scale, sumFrom)
+      else
+         local batchSize = input:size(1)
+         nn.utils.contiguousView(self._input, input, batchSize, -1)
+         nn.utils.contiguousView(self._gradOutput, gradOutput, batchSize, -1)
+         self._gradWeight:view(self.gradWeight, 1, -1)
+
+         self._repeat:cmul(self._input, self._gradOutput)
+         self._sum:sum(self._repeat, 1)
+         self._gradWeight:add(scale, self._sum)
+      end
+
    end
 end
 
