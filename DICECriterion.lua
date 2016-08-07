@@ -100,9 +100,3 @@ function DICECriterion:updateGradInput(input, target)
 
 	return gradInput
 end
-
-function DICECriterion:accGradParameters(input, gradOutput)
-end
-
-function DICECriterion:reset()
-end

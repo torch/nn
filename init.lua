@@ -144,6 +144,7 @@ require('nn.NarrowTable')
 
 require('nn.Criterion')
 require('nn.MSECriterion')
+require('nn.DICECriterion')
 require('nn.SmoothL1Criterion')
 require('nn.MarginCriterion')
 require('nn.SoftMarginCriterion')
