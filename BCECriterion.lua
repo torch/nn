@@ -37,6 +37,7 @@ function BCECriterion:updateOutput(input, target)
     local output
 
     buffer:resizeAs(input)
+    buffer:zero()
 
     if weights ~= nil and target:dim() ~= 1 then
         weights = self.weights:view(1, target:size(2)):expandAs(target)

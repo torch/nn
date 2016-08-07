@@ -1,4 +1,13 @@
 --[[
+		Computes the Sorensen-dice coefficient of similarity given two samples. 
+		The quotient of similarity is defined as:
+
+   		 	    Q =     2 * (X n Y)
+         		     -------------------
+        		      sum_i(X) + sum_i(Y)
+		where X and Y are the in the two samples; 
+		(X n Y) denote the intersection where the elements of X and Y are equal.
+
 	Author: Olalekan Ogunmolu, July 2016
 			patlekano@gmail.com
 ]]
@@ -29,12 +38,12 @@ function DICECriterion:updateOutput(input, target)
 	      weights = self.weights:view(1, target:size(2)):expandAs(target)
 	end
 
-	-- compute numerator: 2 * |X n Y|   ; eps for numeric stability
-	common = torch.eq(input, target)  --find logical equivalence between both
+	-- compute 2 * (X intersection Y)
+	common = torch.eq(input, target)  		--find logical equivalence between both
 	numerator = torch.sum(common)
 	numerator = numerator * 2
 
-	-- compute denominator: |X| + |Y|
+	-- compute denominator: sum_i(X) + sum_i(Y)
 	denom = input:nElement() + target:nElement() + eps
 
 	output = numerator/denom
@@ -46,9 +55,9 @@ end
 
 function DICECriterion:updateGradInput(input, target)
 	--[[ 
-								2 * |X| * |Y|   
-	    		Gradient = 	 ----------------------
-	   	 						|X|*(|X| + |Y|)^2
+								      2 * sum_i(X) * sum_i(Y)  
+	    		Gradient = 	    ---------------------------------
+	   	 						sum_i(X)*(sum_i(X) + sum_i(Y))^2
 	    ]]
 
 	assert(input:nElement() == target:nElement(), "inputs and target size mismatch")
@@ -56,22 +65,26 @@ function DICECriterion:updateGradInput(input, target)
 
 	local buffer = self.buffer
 	local weights = self.weights
-	local gradInput = self.gradInput --or input.new()
+	local gradInput = self.gradInput 
 
 	if weights ~= nil and target:dim() ~= 1 then
 	    weights = self.weights:view(1, target:size(2)):expandAs(target)
 	end
 
 	buffer:resizeAs(input)
-	-- compute |X| + |Y| + eps 
+    buffer:zero()
+
+	-- compute sum_i(X) + sum_i(Y) + eps 
 	buffer:add(input:nElement()):add(target:nElement()):add(eps)
-	-- compute (|X| + |Y| + eps)^2 + eps
+	-- compute (sum_i(X) + sum_i(Y) + eps )^2 + eps
 	buffer:cmul(buffer):add(eps)
-	-- compute |X|(|X| + |Y| + eps)^2 + eps
+	-- compute sum_i(X)*(sum_i(X) + sum_i(Y) + eps )^2 + eps
 	buffer:mul(input:nElement())
 
 	gradInput:resizeAs(input)	
-	-- compute 2 * |X| * |Y|  
+	gradInput:zero()
+
+	-- compute 2 * sum_i(X) * sum_i(Y)
 	gradInput:add(input:nElement()):mul(target:nElement()):mul(2)
 
 	-- compute quotient
