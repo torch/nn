@@ -8,7 +8,8 @@ target, they compute a gradient according to a given loss function.
     * [`BCECriterion`](#nn.BCECriterion): binary cross-entropy for [`Sigmoid`](transfer.md#nn.Sigmoid) (two-class version of [`ClassNLLCriterion`](#nn.ClassNLLCriterion));
     * [`ClassNLLCriterion`](#nn.ClassNLLCriterion): negative log-likelihood for [`LogSoftMax`](transfer.md#nn.LogSoftMax) (multi-class);
     * [`CrossEntropyCriterion`](#nn.CrossEntropyCriterion): combines [`LogSoftMax`](transfer.md#nn.LogSoftMax) and [`ClassNLLCriterion`](#nn.ClassNLLCriterion);
-    * [`ClassSimplexCriterion`](#nn.ClassSimplexCriterion): A simplex embedding criterion for classification.
+    * [`ClassSimplexCriterion`](#nn.ClassSimplexCriterion): A simplex embedding criterion for classification;
+    * [`DICECriterion`](criterion.md#nn.DICECriterion): A criterion for comparing the similarity of two samples;
     * [`MarginCriterion`](#nn.MarginCriterion): two class margin-based loss;
     * [`SoftMarginCriterion`](#nn.SoftMarginCriterion): two class softmargin-based loss;
     * [`MultiMarginCriterion`](#nn.MultiMarginCriterion): multi-class margin-based loss;
@@ -210,6 +211,55 @@ end
 ```
 
 This criterion also provides two helper functions `getPredictions(input)` and `getTopPrediction(input)` that return the raw predictions and the top prediction index respectively, given an input sample.
+
+<a name="nn.DICECriterion"></a>
+## DICECriterion ##
+
+```lua
+criterion = nn.DICECriterion()
+```
+
+The [Sørensen–Dice index](https://en.wikipedia.org/wiki/Sørensen–Dice_coefficient) measures the degree of similarity between two sample sets. Geiven targets `X` and `Y` in  two sample datasets, the quotient of similarity is calculated as
+
+```lua
+    Q =           2 * (X n Y)
+              -------------------
+              sum_i(X) + sum_i(Y)
+```
+
+where X and Y are the two samples. 
+X n Y denote the intersection where the elements of X and Y are equal.
+The resulting quotient is a measure of the similarity between the two samples.
+It ranges between 0 and 1. If it is 1, the two images are perfectly similar. Otherwise, 
+they are perfectly dissimilar.
+
+The input tensor and output tensor are expected to be of the same size when calling [`forward(input, target)`](#nn.CriterionForward) and [`backward(input, target)`](#nn.CriterionBackward).
+
+Example
+-------
+```lua
+require 'torch'
+require 'nn'
+
+local dice = nn.DICECriterion
+
+inputs = torch.FloatTensor(1, 5)
+preds  = torch.FloatTensor(1, 5)
+
+inputs = torch.range(1, 5)
+preds  = inputs:clone()
+
+loss = dice:forward(preds, inputs)
+df_do = dice:backward(preds, inputs)
+
+print('loss', loss)
+```
+
+Prints 
+
+```bash
+  loss  -0.9999999999999  
+```
 
 <a name="nn.DistKLDivCriterion"></a>
 ## DistKLDivCriterion ##
