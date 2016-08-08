@@ -927,6 +927,8 @@ Applies a 3D full convolution over an input image composed of several input plan
 `forward(input)` is expected to be a 4D or 5D tensor. Note that instead of setting `adjT`, `adjW` and `adjH`, VolumetricFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
 will ignore the `adjT`, `adjW` and `adjH` values used to construct the module.
 
+This can be used as 3D deconvolution, or 3D upsampling. So that the 3D FCN can be easly implemented.
+
 The parameters are the following:
 * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
 * `nOutputPlane`: The number of output planes the convolution layer will produce.
