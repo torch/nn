@@ -4882,6 +4882,66 @@ function nntest.Copy()
    mytester:assert(torch.type(output) == 'torch.FloatTensor', 'copy forward type err')
 end
 
+function nntest.Identity()
+   local input
+   local out
+   local module = nn.Identity()
+
+   -- compare the input and the output to see if they share the
+   -- same storages and that they are different Lua elements
+   -- (in case of tensors). Recusively go into tables, and compare
+   -- for equality for other types of data
+   local mname = torch.typename(module)
+   local function testIdentity(out, input)
+      if torch.isTensor(input) then
+         mytester:assert(input:isSetTo(out), mname ..
+            ' - output does not share the same storage as input')
+         mytester:assert(out ~= input, mname ..
+            ' - output should be a new Lua element and not the same as input')
+      elseif torch.type(input) ~= 'table' then
+         mytester:assert(input == out, mname .. ' - elements differ')
+      else
+         for k, v in pairs(input) do
+            mytester:assert(out[k] ~= nil, mname .. ' - missing element in output')
+            testIdentity(out[k], v)
+         end
+         for k, v in pairs(out) do
+            mytester:assert(input[k] ~= nil, mname .. ' - extra element in output')
+            testIdentity(v, input[k])
+         end
+      end
+   end
+
+   -- test tensor
+   input = torch.rand(5)
+   out = module:forward(input)
+   testIdentity(out, input)
+
+   -- test table of tensors
+   input = {torch.rand(5), torch.rand(5)}
+   out = module:forward(input)
+   testIdentity(out, input)
+
+   -- test table of tensors with smaller size
+   input = {torch.rand(5)}
+   out = module:forward(input)
+   testIdentity(out, input)
+
+   -- nested table with diverse elements inside
+   input = { torch.rand(2), torch.rand(3),
+             { torch.rand(4), 5, { 'hi', torch.rand(5) } },
+             function() return 'hi' end,
+             true, false
+           }
+   out = module:forward(input)
+   testIdentity(out, input)
+
+   -- test tensor again
+   input = torch.rand(5)
+   out = module:forward(input)
+   testIdentity(out, input)
+end
+
 function nntest.JoinTable()
    local tensor = torch.rand(3,4,5)
    local input = {tensor, tensor}
