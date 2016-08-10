@@ -1676,9 +1676,9 @@ function nntest.LogSoftmax()
    local gradInput2 = layer:backward(input, gradOutput):clone()
 
    mytester:assertlt(gradInput1:add(-1, gradInput2):abs():max(),
-		     1e-10,
-		     torch.typename(layer)
-			.. ' non-contiguous gradOutput check')
+           1e-10,
+           torch.typename(layer)
+         .. ' non-contiguous gradOutput check')
 
 
 
@@ -3200,6 +3200,49 @@ function nntest.SpatialMaxUnpooling()
       output = module:forward(input)
 
       mytester:assert(output:isSameSizeAs(original),'SpatialMaxUnpooling batch output size err')
+
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state (Batch)')
+
+      local ferr, berr = jac.testIO(module, input)
+      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
+      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+  end
+end
+
+function nntest.SpatialDilatedMaxPooling()
+   for _,ceil_mode in pairs({true,false}) do
+      local from = math.random(1,5)
+      local ki = math.random(1,4)
+      local kj = math.random(1,4)
+      local si = math.random(1,3)
+      local sj = math.random(1,3)
+      local outi = math.random(4,5)
+      local outj = math.random(4,5)
+      local padW = math.min(math.random(0,1),math.floor(ki/2))
+      local padH =  math.min(math.random(0,1),math.floor(kj/2))
+      local dilationW = math.random(1,5)
+      local dilationH = math.random(1,5)
+      local ini = (outi-1)*si+(dilationW*(ki-1)+1)-2*padW
+      local inj = (outj-1)*sj+(dilationH*(kj-1)+1)-2*padH
+
+      local ceil_string = ceil_mode and 'ceil' or 'floor'
+      local module = nn.SpatialDilatedMaxPooling(ki,kj,si,sj,padW,padH,dilationW, dilationH)
+      if ceil_mode then module:ceil() else module:floor() end
+      local input = torch.rand(from,inj,ini)
+
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state ')
+
+      local ferr, berr = jac.testIO(module, input)
+      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+
+      -- batch
+      local nbatch = math.random(2,5)
+      input = torch.rand(nbatch,from,inj,ini)
+      module = nn.SpatialDilatedMaxPooling(ki,kj,si,sj,padW,padH,dilationW,dilationH)
+      if ceil_mode then module:ceil() else module:floor() end
 
       local err = jac.testJacobian(module, input)
       mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state (Batch)')
