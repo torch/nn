@@ -1,44 +1,20 @@
-local SpatialMaxPooling, parent = torch.class('nn.SpatialMaxPooling', 'nn.Module')
+local THNN = require 'nn.THNN'
+local SpatialDilatedMaxPooling, parent = torch.class('nn.SpatialDilatedMaxPooling', 'nn.SpatialMaxPooling')
 
-function SpatialMaxPooling:__init(kW, kH, dW, dH, padW, padH)
-   parent.__init(self)
+function SpatialDilatedMaxPooling:__init(kW, kH, dW, dH, padW, padH, dilationW, dilationH)
+   parent.__init(self, kW, kH, dW, dH, padW, padH)
 
-   dW = dW or kW
-   dH = dH or kH
-
-   self.kW = kW
-   self.kH = kH
-   self.dW = dW
-   self.dH = dH
-
-   self.padW = padW or 0
-   self.padH = padH or 0
-
-   self.ceil_mode = false
-   self.indices = torch.Tensor()
+   self.dilationW = dilationW or 1
+   self.dilationH = dilationH or 1
 end
 
-function SpatialMaxPooling:ceil()
-  self.ceil_mode = true
-  return self
-end
-
-function SpatialMaxPooling:floor()
-  self.ceil_mode = false
-  return self
-end
-
-function SpatialMaxPooling:updateOutput(input)
+function SpatialDilatedMaxPooling:updateOutput(input)
    self.indices = self.indices or input.new()
 
    local dims = input:dim()
    self.iheight = input:size(dims-1)
    self.iwidth = input:size(dims)
 
-   -- backward compatibility
-   self.ceil_mode = self.ceil_mode or false
-   self.padW = self.padW or 0
-   self.padH = self.padH or 0
    input.THNN.SpatialMaxPooling_updateOutput(
       input:cdata(),
       self.output:cdata(),
@@ -46,13 +22,13 @@ function SpatialMaxPooling:updateOutput(input)
       self.kW, self.kH,
       self.dW, self.dH,
       self.padW, self.padH,
-      1, 1,
+      self.dilationW, self.dilationH,
       self.ceil_mode
    )
    return self.output
 end
 
-function SpatialMaxPooling:updateGradInput(input, gradOutput)
+function SpatialDilatedMaxPooling:updateGradInput(input, gradOutput)
    input.THNN.SpatialMaxPooling_updateGradInput(
       input:cdata(),
       gradOutput:cdata(),
@@ -61,29 +37,24 @@ function SpatialMaxPooling:updateGradInput(input, gradOutput)
       self.kW, self.kH,
       self.dW, self.dH,
       self.padW, self.padH,
-      1, 1,
+      self.dilationW, self.dilationH,
       self.ceil_mode
    )
    return self.gradInput
 end
 
--- for backward compat
-function SpatialMaxPooling:empty()
-   self:clearState()
-end
-
-function SpatialMaxPooling:__tostring__()
+function SpatialDilatedMaxPooling:__tostring__()
    local s =  string.format('%s(%dx%d, %d,%d', torch.type(self),
                             self.kW, self.kH, self.dW, self.dH)
    if (self.padW or self.padH) and (self.padW ~= 0 or self.padH ~= 0) then
       s = s .. ', ' .. self.padW .. ','.. self.padH
    end
+   s = s .. ', ' .. self.dilationW .. ',' .. self.dilationH
    s = s .. ')'
-
    return s
 end
 
-function SpatialMaxPooling:clearState()
+function SpatialDilatedMaxPooling:clearState()
    if self.indices then
       self.indices:set()
    end
