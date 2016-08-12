@@ -16,6 +16,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialConvolutionLocal](#nn.SpatialConvolutionLocal) : a 2D locally-connected layer over an input image ;
     * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
     * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
+    * [SpatialDilatedMaxPooling](#nn.SpatialDilatedMaxPooling) : a 2D dilated max-pooling operation over an input image ;
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
     * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
     * [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling) : a 2D max-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
@@ -457,6 +458,7 @@ Further information about the full convolution can be found in the following pap
 module = nn.SpatialDilatedConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH], [dilationW], [dilationH])
 ```
 
+Also sometimes referred to as **atrous convolution**.
 Applies a 2D dilated convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D or 4D tensor.
 
@@ -538,6 +540,29 @@ image size will be `nOutputPlane x oheight x owidth` where
 ```lua
 owidth  = op((width  + 2*padW - kW) / dW + 1)
 oheight = op((height + 2*padH - kH) / dH + 1)
+```
+
+`op` is a rounding operator. By default, it is `floor`. It can be changed
+by calling `:ceil()` or `:floor()` methods.
+
+<a name="nn.SpatialDilatedMaxPooling"></a>
+### SpatialDilatedMaxPooling ###
+
+```lua
+module = nn.SpatialDilatedMaxPooling(kW, kH [, dW, dH, padW, padH, dilationW, dilationH])
+```
+
+Also sometimes referred to as **atrous pooling**.
+Applies 2D dilated max-pooling operation in `kWxkH` regions by step size
+`dWxdH` steps. The number of output features is equal to the number of
+input planes. If `dilationW` and `dilationH` are not provided, this is equivalent to performing normal `nn.SpatialMaxPooling`.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output
+image size will be `nOutputPlane x oheight x owidth` where
+
+```lua
+owidth  = op((width - (dilationW * (kW - 1) + 1) + 2*padW) / dW + 1)
+oheight = op((height - (dilationH * (kH - 1) + 1) + 2*padH) / dH + 1)
 ```
 
 `op` is a rounding operator. By default, it is `floor`. It can be changed
