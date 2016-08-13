@@ -125,7 +125,7 @@ function LookupTable:renorm(input)
    if not self.maxNorm then
       return
    end
-   -- copy input into _input, so _input is continous.
+   -- copy input into _input, so _input is continuous.
    -- The copied _input will be modified in the C code.
    self._input:resize(input:size()):copy(input)
    local row_idx = self._input

@@ -6306,9 +6306,9 @@ function nntest.addSingletonDimension()
    local resultArg = torch.Tensor()
    local resultR = nn.utils.addSingletonDimension(resultArg, tensor, dim)
    mytester:eq(resultArg:size():totable(), resultSize,
-               'wrong content for random singleton dimention '..
+               'wrong content for random singleton dimension '..
                'when the result is passed as argument')
-   mytester:eq(resultArg, result, 'wrong content for random singleton dimention '..
+   mytester:eq(resultArg, result, 'wrong content for random singleton dimension '..
                'when the result is passed as argument')
 
    mytester:eq(resultR == resultArg, true,

@@ -598,7 +598,7 @@ end
 module = nn.Copy(inputType, outputType, [forceCopy, dontCast])
 ```
 
-This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transfered as the output. The default `forceCopy` is false.
+This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transferred as the output. The default `forceCopy` is false.
 When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module's `output` and `gradInput` Tensors to the new type. The default is false.
 
 <a name="nn.Narrow"></a>
@@ -1432,10 +1432,10 @@ gpustr = torch.serialize(gpu)
 ``` 
 
 The module is located in the __nn__ package instead of __cunn__ as this allows
-it to be used in CPU-only enviroments, which are common for production models.
+it to be used in CPU-only environments, which are common for production models.
 
 The module supports nested table `input` and `gradOutput` tensors originating from multiple devices.
-Each nested tensor in the returned `gradInput` will be transfered to the device its commensurate tensor in the `input`.
+Each nested tensor in the returned `gradInput` will be transferred to the device its commensurate tensor in the `input`.
 
 The intended use-case is not for model-parallelism where the models are executed in parallel on multiple devices, but 
 for sequential models where a single GPU doesn't have enough memory. 
