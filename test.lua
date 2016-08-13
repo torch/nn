@@ -4766,7 +4766,7 @@ function nntest.LookupTable()
    for _, normType in ipairs{1, 2, math.random()} do
       local module = nn.LookupTable(totalIndex, entry_size, 0, maxNorm, normType)
       local oriW = module.weight:clone()
-      output = module:updateOutput(input)
+      local output = module:updateOutput(input)
       -- check output is of small norm
       for j = 1,output:size(1) do
          local norm = torch.norm(output:select(1, j), normType)
@@ -6360,7 +6360,7 @@ function nntest.VolumetricReplicationPadding()
       local padLeft = math.random(-3,3)
       local padRight = math.random(-3,3)
       local padTop = math.random(-3,3)
-      local padBotom = math.random(-3,3)
+      local padBottom = math.random(-3,3)
       local padFront = math.random(3,3)
       local padBack = math.random(3,3)
       local jac = nn.Jacobian
