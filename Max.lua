@@ -21,7 +21,7 @@ end
 function Max:_lazyInit()
    self._output = self._output or self.output.new()
    self._indices = self._indices or
-      (torch.type(self.output) == 'torch.CudaTensor' and torch.CudaTensor() or torch.LongTensor())
+      (torch.type(self.output) == 'torch.CudaTensor' and torch.CudaLongTensor() or torch.LongTensor())
 end
 
 function Max:updateOutput(input)
@@ -50,18 +50,9 @@ function Max:updateGradInput(input, gradOutput)
 end
 
 function Max:type(type, tensorCache)
-  -- torch.max expects a LongTensor as indices, whereas cutorch.max expects a CudaTensor.
-  if type == 'torch.CudaTensor' then
+    self._indices = nil
     parent.type(self, type, tensorCache)
-  else
-    -- self._indices must be a LongTensor. Setting it to nil temporarily avoids
-    -- unnecessary memory allocations.
-    local indices
-    indices, self._indices = self._indices, nil
-    parent.type(self, type, tensorCache)
-    self._indices = indices and indices:long() or nil
-  end
-  return self
+    return self
 end
 
 function Max:clearState()
