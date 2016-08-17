@@ -5451,6 +5451,7 @@ function nntest.Concat()
       module.weight:fill(1)
       module.bias:fill(0)
    end
+   mytester:asserteq(m:size(), num_modules)
 
    local output = m:forward(input)
    local output2 = input:sum(2):expand(4, 5):repeatTensor(num_modules, 1)
