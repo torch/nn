@@ -89,25 +89,9 @@ local function makeContiguous(self, input, gradOutput)
    return input, gradOutput
 end
 
--- function to re-view the weight layout in a way that would make the MM ops happy
-local function viewWeight(self)
-   self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then
-      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kH * self.kW)
-   end
-end
-
-local function unviewWeight(self)
-   self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then
-      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kH, self.kW)
-   end
-end
-
 function SpatialConvolution:updateOutput(input)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    backCompatibility(self)
-   viewWeight(self)
    input = makeContiguous(self, input)
    input.THNN.SpatialConvolutionMM_updateOutput(
       input:cdata(),
@@ -120,7 +104,6 @@ function SpatialConvolution:updateOutput(input)
       self.dW, self.dH,
       self.padW, self.padH
    )
-   unviewWeight(self)
    return self.output
 end
 
@@ -128,20 +111,18 @@ function SpatialConvolution:updateGradInput(input, gradOutput)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    if self.gradInput then
       backCompatibility(self)
-      viewWeight(self)
       input, gradOutput = makeContiguous(self, input, gradOutput)
       input.THNN.SpatialConvolutionMM_updateGradInput(
          input:cdata(),
          gradOutput:cdata(),
          self.gradInput:cdata(),
-         self.weight:cdata(),         
+         self.weight:cdata(),
          self.finput:cdata(),
          self.fgradInput:cdata(),
          self.kW, self.kH,
          self.dW, self.dH,
          self.padW, self.padH
       )
-      unviewWeight(self)
       return self.gradInput
    end
 end
@@ -151,7 +132,6 @@ function SpatialConvolution:accGradParameters(input, gradOutput, scale)
    scale = scale or 1
    backCompatibility(self)
    input, gradOutput = makeContiguous(self, input, gradOutput)
-   viewWeight(self)
    input.THNN.SpatialConvolutionMM_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),
@@ -164,7 +144,6 @@ function SpatialConvolution:accGradParameters(input, gradOutput, scale)
       self.padW, self.padH,
       scale
    )
-   unviewWeight(self)
 end
 
 function SpatialConvolution:type(type,tensorCache)
