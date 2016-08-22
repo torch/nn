@@ -3,14 +3,14 @@ local MarginRankingCriterion, parent = torch.class('nn.MarginRankingCriterion', 
 function MarginRankingCriterion:__init(margin)
    parent.__init(self)
    margin=margin or 1
-   self.margin = margin 
+   self.margin = margin
    self.gradInput = {torch.Tensor(1), torch.Tensor(1)}
    self.sizeAverage = true
-end 
- 
-function MarginRankingCriterion:updateOutput(input,y)
-   if input[1]:size(1) == 1 then
-      self.output=math.max(0, -y*(input[1][1]-input[2][1]) + self.margin  ) 
+end
+
+function MarginRankingCriterion:updateOutput(input, y)
+    if torch.type(y) == 'number' then -- non-batch mode
+      self.output = math.max(0, -y * (input[1][1] - input[2][1]) + self.margin)
    else
       self._output = self._output or input[1]:clone()
       self._output:resizeAs(input[1])
@@ -33,14 +33,14 @@ function MarginRankingCriterion:updateOutput(input,y)
 end
 
 function MarginRankingCriterion:updateGradInput(input, y)
-   if input[1]:size(1) == 1 then
-      local dist = -y*(input[1][1]-input[2][1]) + self.margin
+    if torch.type(y) == 'number' then -- non-batch mode
+      local dist = -y * (input[1][1] - input[2][1]) + self.margin
       if dist < 0 then
-         self.gradInput[1][1]=0;
-         self.gradInput[2][1]=0;
-      else	
-         self.gradInput[1][1]=-y
-         self.gradInput[2][1]=y
+         self.gradInput[1][1] = 0;
+         self.gradInput[2][1] = 0;
+      else
+         self.gradInput[1][1] = -y
+         self.gradInput[2][1] = y
       end
    else
       self.dist = self.dist or input[1].new()
@@ -71,5 +71,5 @@ function MarginRankingCriterion:updateGradInput(input, y)
       end
 
    end
-   return self.gradInput 
+   return self.gradInput
 end

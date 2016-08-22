@@ -98,6 +98,7 @@ void THNN_(SpatialFullConvolution_updateOutput)(
 
   // Resize temporary columns
   THTensor_(resize2d)(columns, nOutputPlane*kW*kH, inputHeight*inputWidth);
+  THTensor_(zero)(columns);
 
   // Define a buffer of ones, for bias accumulation
   // Note: this buffer can be shared with other modules, it only ever gets increased,
@@ -152,16 +153,17 @@ void THNN_(SpatialFullConvolution_updateOutput)(
     long k_ = 1;
 
     // Do GEMM (note: this is a bit confusing because gemm assumes column-major matrices)
-    THBlas_(gemm)(
-        't', 'n',
-        n_, m_, k_,
-        1,
-        THTensor_(data)(ones), k_,
-        THTensor_(data)(bias), k_,
-        1,
-        THTensor_(data)(output_n), n_
-    );
-
+    if (bias) {
+      THBlas_(gemm)(
+          't', 'n',
+          n_, m_, k_,
+          1,
+          THTensor_(data)(ones), k_,
+          THTensor_(data)(bias), k_,
+          1,
+          THTensor_(data)(output_n), n_
+      );
+    }
   }
 
   // Free
@@ -210,6 +212,7 @@ void THNN_(SpatialFullConvolution_updateGradInput)(
 
   // Resize output
   THTensor_(resize4d)(gradInput, batchSize, nInputPlane, inputHeight, inputWidth);
+  THTensor_(zero)(gradInput);
 
   // Resize temporary columns
   THTensor_(resize2d)(gradColumns, nOutputPlane*kW*kH, inputHeight*inputWidth);
@@ -355,15 +358,17 @@ void THNN_(SpatialFullConvolution_accGradParameters)(
     long k_ = outputHeight * outputWidth;
 
     // Do GEMV (note: this is a bit confusing because gemv assumes column-major matrices)
-    THBlas_(gemv)(
-        't',
-        k_, m_,
-        scale,
-        THTensor_(data)(gradOutput_n), k_,
-        THTensor_(data)(ones), 1,
-        1,
-        THTensor_(data)(gradBias), 1
-    );
+    if (gradBias) {
+      THBlas_(gemv)(
+          't',
+          k_, m_,
+          scale,
+          THTensor_(data)(gradOutput_n), k_,
+          THTensor_(data)(ones), 1,
+          1,
+          THTensor_(data)(gradBias), 1
+      );
+    }
   }
 
   // Free

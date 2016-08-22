@@ -11,15 +11,25 @@ function Narrow:__init(dimension,offset,length)
 end
 
 function Narrow:updateOutput(input)
-   local output=input:narrow(self.dimension,self.index,self.length)
+   local dim = self.dimension < 0 and input:dim() + self.dimension + 1 or self.dimension
+   local length = self.length
+   if length < 0 then
+      length = input:size(dim) - self.index + self.length + 2
+   end
+   local output=input:narrow(dim,self.index,length)
    self.output = self.output:typeAs(output)
    self.output:resizeAs(output):copy(output)
    return self.output
 end
 
 function Narrow:updateGradInput(input, gradOutput)
+   local dim = self.dimension < 0 and input:dim() + self.dimension + 1 or self.dimension
+   local length = self.length
+   if length < 0 then
+      length = input:size(dim) - self.index + self.length + 2
+   end
    self.gradInput = self.gradInput:typeAs(input)
    self.gradInput:resizeAs(input):zero()
-   self.gradInput:narrow(self.dimension,self.index,self.length):copy(gradOutput)
+   self.gradInput:narrow(dim,self.index,length):copy(gradOutput)
    return self.gradInput
 end

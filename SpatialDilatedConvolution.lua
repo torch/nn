@@ -1,11 +1,11 @@
 local THNN = require 'nn.THNN'
 local SpatialDilatedConvolution, parent = torch.class('nn.SpatialDilatedConvolution', 'nn.SpatialConvolution')
 
-function SpatialDilatedConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH, dilationH, dilationW)
+function SpatialDilatedConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH, dilationW, dilationH)
    parent.__init(self, nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH)
 
-   self.dilationH = dilationH or 1
    self.dilationW = dilationW or 1
+   self.dilationH = dilationH or 1
 end
 
 local function makeContiguous(self, input, gradOutput)
@@ -38,7 +38,7 @@ function SpatialDilatedConvolution:updateOutput(input)
       self.kW, self.kH,
       self.dW, self.dH,
       self.padW, self.padH,
-      self.dilationH, self.dilationW
+      self.dilationW, self.dilationH
    )
    return self.output
 end
@@ -56,7 +56,7 @@ function SpatialDilatedConvolution:updateGradInput(input, gradOutput)
          self.kW, self.kH,
          self.dW, self.dH,
          self.padW, self.padH,
-         self.dilationH, self.dilationW
+         self.dilationW, self.dilationH
       )
       return self.gradInput
    end
@@ -76,7 +76,7 @@ function SpatialDilatedConvolution:accGradParameters(input, gradOutput, scale)
       self.kW, self.kH,
       self.dW, self.dH,
       self.padW, self.padH,
-      self.dilationH, self.dilationW,
+      self.dilationW, self.dilationH,
       scale
    )
 end

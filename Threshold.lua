@@ -34,6 +34,7 @@ function Threshold:updateGradInput(input, gradOutput)
       gradOutput:cdata(),
       self.gradInput:cdata(),
       self.threshold,
+      self.val,
       self.inplace
    )
    return self.gradInput

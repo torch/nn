@@ -51,6 +51,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Padding](#nn.Padding) : adds padding to a dimension ;
     * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity) ;
     * [GradientReversal](#nn.GradientReversal) : reverses the gradient (to maximize an objective function) ;
+    * [GPU](#nn.GPU) : decorates a module so that it can be executed on a specific GPU device.
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -597,7 +598,7 @@ end
 module = nn.Copy(inputType, outputType, [forceCopy, dontCast])
 ```
 
-This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transfered as the output. The default `forceCopy` is false.
+This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transferred as the output. The default `forceCopy` is false.
 When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module's `output` and `gradInput` Tensors to the new type. The default is false.
 
 <a name="nn.Narrow"></a>
@@ -607,7 +608,54 @@ When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module
 module = nn.Narrow(dimension, offset, length)
 ```
 
-Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module.
+Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module. The module further supports a negative `length` in order to handle inputs with an unknown size.
+
+```lua
+> x = torch.rand(4, 5)
+
+> x
+ 0.3695  0.2017  0.4485  0.4638  0.0513
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 4x5]
+
+> nn.Narrow(1, 2, 3):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 3x5]
+
+> nn.Narrow(1, 2, -1):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 3x5]
+
+> nn.Narrow(1, 2, 2):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+[torch.DoubleTensor of size 2x5]
+
+> nn.Narrow(1, 2, -2):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+[torch.DoubleTensor of size 2x5]
+
+> nn.Narrow(2, 2, 3):forward(x)
+ 0.2017  0.4485  0.4638
+ 0.1877  0.3388  0.6265
+ 0.7394  0.8265  0.9212
+ 0.7971  0.2113  0.1097
+[torch.DoubleTensor of size 4x3]
+
+> nn.Narrow(2, 2, -2):forward(x)
+ 0.2017  0.4485  0.4638
+ 0.1877  0.3388  0.6265
+ 0.7394  0.8265  0.9212
+ 0.7971  0.2113  0.1097
+[torch.DoubleTensor of size 4x3]
+```
 
 <a name="nn.Replicate"></a>
 ## Replicate ##
@@ -1357,3 +1405,50 @@ One can also call:
 module:setLambda(lambda)
 ```
 to set the hyper-parameter `lambda` dynamically during training.
+
+<a name="nn.GPU"></a>
+## GPU ##
+
+```lua
+gpu = nn.GPU(module, device, [outdevice])
+require 'cunn'
+gpu:cuda()
+``` 
+
+Decorates an encapsulated `module` so that it can be executed on a specific GPU `device`.
+The decorated module's `parameters` are thus hosted on the specified GPU `device`.
+All operations on the `gpu` module are executed on that device.
+Calls to `forward`/`backward` will transfer arguments `input` and `gradOutput` to the specified `device`, 
+which are then fed as arguments to the decorated `module`. 
+Returned `output` is located on the specified `outdevice` (defaults to `device`). 
+Returned `gradInput` is allocated on the same device as the `input`.
+
+When serialized/deserialized, the `gpu` module will be run on the same `device` that it was serialized with.
+To prevent this from happening, the module can be converted to float/double before serialization:
+
+```lua
+gpu:float()
+gpustr = torch.serialize(gpu)
+``` 
+
+The module is located in the __nn__ package instead of __cunn__ as this allows
+it to be used in CPU-only environments, which are common for production models.
+
+The module supports nested table `input` and `gradOutput` tensors originating from multiple devices.
+Each nested tensor in the returned `gradInput` will be transferred to the device its commensurate tensor in the `input`.
+
+The intended use-case is not for model-parallelism where the models are executed in parallel on multiple devices, but 
+for sequential models where a single GPU doesn't have enough memory. 
+
+Example using 4 GPUs:
+
+```lua
+mlp = nn.Sequential()
+   :add(nn.GPU(nn.Linear(10000,10000), 1))
+   :add(nn.GPU(nn.Linear(10000,10000), 2))
+   :add(nn.GPU(nn.Linear(10000,10000), 3))
+   :add(nn.GPU(nn.Linear(10000,10000), 4, cutorch.getDevice()))
+``` 
+
+Note how the last `GPU` instance will return an `output` tensor on the same device as the current device (`cutorch.getDevice`).
+ 

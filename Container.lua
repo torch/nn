@@ -22,7 +22,7 @@ end
 
 -- Check if passing arguments through xpcall is supported in this Lua interpreter.
 local _, XPCALL_ARGS = xpcall(function(x) return x ~= nil end, function() end, 1)
-local TRACEBACK_WARNING = "WARNING: If you see a stack trace below, it doesn't point to the place where this error occured. Please use only the one above."
+local TRACEBACK_WARNING = "WARNING: If you see a stack trace below, it doesn't point to the place where this error occurred. Please use only the one above."
 -- module argument can be retrieved with moduleIndex, but code is cleaner when
 -- it has to be specified anyway.
 function Container:rethrowErrors(module, moduleIndex, funcName, ...)
