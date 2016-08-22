@@ -2296,6 +2296,21 @@ function nntest.SpatialConvolution()
    module.gradBias = torch.Tensor(module.nOutputPlane):zero()
    module:reset()
    jacTests(module)
+
+   local output = module:forward(input):clone()
+   local gradOutput = output:clone():normal()
+   local gradInput = module:forward(input, gradOutput):clone()
+   local bigWeight = module.weight.new(module.weight:nElement() * 4):fill(0/0) -- fill with nans
+   local newWeight = bigWeight:narrow(1, module.weight:nElement() * 3, module.weight:nElement())
+   newWeight = newWeight:viewAs(module.weight):copy(module.weight)
+   module.weight = newWeight
+   local newOutput = module:forward(input)
+   local newGradInput = module:forward(input, gradOutput)
+   mytester:asserteq((newOutput - output):abs():max(), 0,
+      torch.typename(module) .. ' forward failure case in a getParameters setting ')
+   mytester:asserteq((newGradInput - gradInput):abs():max(), 0,
+      torch.typename(module) .. ' backward failure case in a getParameters setting ')
+
 end
 
 function nntest.SpatialConvolutionMM()
