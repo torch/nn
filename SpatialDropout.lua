@@ -1,27 +1,29 @@
 local SpatialDropout, Parent = torch.class('nn.SpatialDropout', 'nn.Module')
 
-function SpatialDropout:__init(p)
+function SpatialDropout:__init(p,stochasticInference)
    Parent.__init(self)
    self.p = p or 0.5
    self.train = true
+   self.si = stochasticInference or false
    self.noise = torch.Tensor()
 end
 
 function SpatialDropout:updateOutput(input)
    self.output:resizeAs(input):copy(input)
-   if self.train then
+   if self.train or self.si and not self.train then
+      local noise = self.si and self.noise:clone() or self.noise
       if input:dim() == 4 then
-        self.noise:resize(input:size(1), input:size(2), 1, 1)
+        noise:resize(input:size(1), input:size(2), 1, 1)
       elseif input:dim() == 3 then
-        self.noise:resize(input:size(1), 1, 1)
+        noise:resize(input:size(1), 1, 1)
       else
         error('Input must be 4D (nbatch, nfeat, h, w) or 3D (nfeat, h, w)')
       end
-      self.noise:bernoulli(1-self.p)
+      noise:bernoulli(1-self.p)
       -- We expand the random dropouts to the entire feature map because the
       -- features are likely correlated across the map and so the dropout
       -- should also be correlated.
-      self.output:cmul(torch.expandAs(self.noise, input))
+      self.output:cmul(torch.expandAs(noise, input))
    else
       self.output:mul(1-self.p)
    end

@@ -1,10 +1,11 @@
 local Dropout, Parent = torch.class('nn.Dropout', 'nn.Module')
 
-function Dropout:__init(p,v1,inplace)
+function Dropout:__init(p,v1,inplace,stochasticInference)
    Parent.__init(self)
    self.p = p or 0.5
    self.train = true
    self.inplace = inplace
+   self.si = stochasticInference or false
    -- version 2 scales output during training instead of evaluation
    self.v2 = not v1
    if self.p >= 1 or self.p < 0 then
@@ -20,13 +21,13 @@ function Dropout:updateOutput(input)
       self.output:resizeAs(input):copy(input)
    end
    if self.p > 0 then
-      if self.train then
-         self.noise:resizeAs(input)
-         self.noise:bernoulli(1-self.p)
+      if self.train or self.si and not self.v2 and not self.train then
+         local noise = self.si and input:clone() or self.noise:resizeAs(input)
+         noise:bernoulli(1-self.p)
          if self.v2 then
-            self.noise:div(1-self.p)
+            noise:div(1-self.p)
          end
-         self.output:cmul(self.noise)
+         self.output:cmul(noise)
       elseif not self.v2 then
          self.output:mul(1-self.p)
       end
