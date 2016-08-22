@@ -10,8 +10,9 @@ end
 
 function SpatialDropout:updateOutput(input)
    self.output:resizeAs(input):copy(input)
-   if self.train or self.si and not self.train then
-      local noise = self.si and self.noise:clone() or self.noise
+   local si = self.si and not self.train
+   if self.train or si then
+      local noise = si and self.noise:clone() or self.noise
       if input:dim() == 4 then
         noise:resize(input:size(1), input:size(2), 1, 1)
       elseif input:dim() == 3 then
