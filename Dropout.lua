@@ -21,14 +21,13 @@ function Dropout:updateOutput(input)
       self.output:resizeAs(input):copy(input)
    end
    if self.p > 0 then
-      local si = self.si and not self.train
-      if self.train or si and not self.v2 then
-         local noise = si and input:clone() or self.noise:resizeAs(input)
-         noise:bernoulli(1-self.p)
+      if self.train or self.si and not self.train and not self.v2 then
+         self.noise:resizeAs(input)
+         self.noise:bernoulli(1-self.p)
          if self.v2 then
-            noise:div(1-self.p)
+            self.noise:div(1-self.p)
          end
-         self.output:cmul(noise)
+         self.output:cmul(self.noise)
       elseif not self.v2 then
          self.output:mul(1-self.p)
       end

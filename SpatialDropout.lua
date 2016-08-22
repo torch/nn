@@ -10,21 +10,19 @@ end
 
 function SpatialDropout:updateOutput(input)
    self.output:resizeAs(input):copy(input)
-   local si = self.si and not self.train
-   if self.train or si then
-      local noise = si and self.noise:clone() or self.noise
+   if self.train or self.si and not self.train then
       if input:dim() == 4 then
-        noise:resize(input:size(1), input:size(2), 1, 1)
+        self.noise:resize(input:size(1), input:size(2), 1, 1)
       elseif input:dim() == 3 then
-        noise:resize(input:size(1), 1, 1)
+        self.noise:resize(input:size(1), 1, 1)
       else
         error('Input must be 4D (nbatch, nfeat, h, w) or 3D (nfeat, h, w)')
       end
-      noise:bernoulli(1-self.p)
+      self.noise:bernoulli(1-self.p)
       -- We expand the random dropouts to the entire feature map because the
       -- features are likely correlated across the map and so the dropout
       -- should also be correlated.
-      self.output:cmul(torch.expandAs(noise, input))
+      self.output:cmul(torch.expandAs(self.noise, input))
    else
       self.output:mul(1-self.p)
    end
