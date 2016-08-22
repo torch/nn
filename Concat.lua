@@ -2,22 +2,24 @@ local Concat, parent = torch.class('nn.Concat', 'nn.Container')
 
 function Concat:__init(dimension)
    parent.__init(self)
-   self.size = torch.LongStorage()
+   self.outputSize = torch.LongStorage()
    self.dimension = dimension
 end
 
 function Concat:updateOutput(input)
+   self.outputSize = self.outputSize or torch.LongStorage()
+
    local outs = {}
    for i=1,#self.modules do
       local currentOutput = self:rethrowErrors(self.modules[i], i, 'updateOutput', input)
       outs[i] = currentOutput
       if i == 1 then
-         self.size:resize(currentOutput:dim()):copy(currentOutput:size())
+         self.outputSize:resize(currentOutput:dim()):copy(currentOutput:size())
       else
-         self.size[self.dimension] = self.size[self.dimension] + currentOutput:size(self.dimension)
+         self.outputSize[self.dimension] = self.outputSize[self.dimension] + currentOutput:size(self.dimension)
       end
    end
-   self.output:resize(self.size)
+   self.output:resize(self.outputSize)
 
    local offset = 1
    for i,module in ipairs(self.modules) do

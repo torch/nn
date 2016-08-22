@@ -307,7 +307,8 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
    -- write module
    local filename = os.tmpname()
    local f = torch.DiskFile(filename, 'w'):binary()
-   module:clearState()
+   -- call clearState and check that it returns itself
+   assert(module == module:clearState(),'clearState did not return self')
    f:writeObject(module)
    f:close()
    -- read module

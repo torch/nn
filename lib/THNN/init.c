@@ -148,6 +148,9 @@
 #include "generic/SpatialUpSamplingNearest.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/SpatialUpSamplingBilinear.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/VolumetricAveragePooling.c"
 #include "THGenerateFloatTypes.h"
 
@@ -160,6 +163,9 @@
 #include "generic/VolumetricFullConvolution.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/VolumetricDilatedConvolution.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/VolumetricMaxPooling.c"
 #include "THGenerateFloatTypes.h"
 
@@ -170,4 +176,7 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SpatialReplicationPadding.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/VolumetricReplicationPadding.c"
 #include "THGenerateFloatTypes.h"

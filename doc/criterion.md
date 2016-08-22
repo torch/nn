@@ -332,7 +332,7 @@ By default, the losses are averaged over observations for each minibatch. Howeve
 criterion = nn.SoftMarginCriterion()
 ```
 
-Creates a criterion that optimizes a two-class classification logisitic loss between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a tensor containing either `1`s or `-1`s).
+Creates a criterion that optimizes a two-class classification logistic loss between input `x` (a `Tensor` of dimension `1`) and output `y` (which is a tensor containing either `1`s or `-1`s).
 
 ```lua
 loss(x, y) = sum_i (log(1 + exp(-y[i]*x[i]))) / x:nElement()

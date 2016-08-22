@@ -300,11 +300,11 @@ This function will go over all the weights and gradWeights and make them view in
 
 <a name="nn.Module.training"></a>
 ### training() ###
-This sets the mode of the Module (or sub-modules) to `train=true`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
+This sets the mode of the Module (or sub-modules) to `train=true`. This is useful for modules like [Dropout](simple.md#nn.Dropout) or [BatchNormalization](simple.md#nn.BatchNormalization) that have a different behaviour during training vs evaluation.
 
 <a name="nn.Module.evaluate"></a>
 ### evaluate() ###
-This sets the mode of the Module (or sub-modules) to `train=false`. This is useful for modules like [Dropout](simple.md#nn.Dropout) that have a different behaviour during training vs evaluation.
+This sets the mode of the Module (or sub-modules) to `train=false`. This is useful for modules like [Dropout](simple.md#nn.Dropout) or [BatchNormalization](simple.md#nn.BatchNormalization) that have a different behaviour during training vs evaluation.
 
 <a name="nn.Module.findModules"></a>
 ### findModules(typename) ###
