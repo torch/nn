@@ -142,6 +142,7 @@ require('nn.MixtureTable')
 require('nn.CriterionTable')
 require('nn.FlattenTable')
 require('nn.NarrowTable')
+require('nn.MapTable')
 
 require('nn.Criterion')
 require('nn.MSECriterion')

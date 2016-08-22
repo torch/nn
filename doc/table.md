@@ -7,6 +7,7 @@ This allows one to build very rich architectures:
   * `table` Container Modules encapsulate sub-Modules:
     * [`ConcatTable`](#nn.ConcatTable): applies each member module to the same input     [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor) and outputs a `table`;
     * [`ParallelTable`](#nn.ParallelTable): applies the `i`-th member module to the `i`-th input and outputs a `table`;
+    * [`MapTable`](#nn.MapTable): applies a single module to every input and outputs a `table`;
   * Table Conversion Modules convert between `table`s and `Tensor`s or `table`s:
     * [`SplitTable`](#nn.SplitTable): splits a `Tensor` into a `table` of `Tensor`s;
     * [`JoinTable`](#nn.JoinTable): joins a `table` of `Tensor`s into a `Tensor`;
@@ -162,6 +163,57 @@ which gives the output:
 -0.1657
 -0.7383
 [torch.Tensor of dimension 3]
+```
+
+
+<a name="nn.MapTable"></a>
+## MapTable ##
+
+```lua
+module = nn.MapTable(m, share)
+```
+
+`MapTable` is a container for a single module which will be applied to all input elements. The member module is cloned as necessary to process all input elements. Call `resize(n)` to set the number of clones manually or call `clearState()` to discard all clones.
+
+Optionally, the module can be initialized with the contained module and with a list of parameters that are shared across all clones. By default, these parameters are `weight`, `bias`, `gradWeight` and `gradBias`.
+
+```
++----------+         +-----------+
+| {input1, +---------> {member,  |
+|          |         |           |
+|  input2, +--------->  clone,   |
+|          |         |           |
+|  input3} +--------->  clone}   |
++----------+         +-----------+
+```
+
+### Example
+
+```lua
+map = nn.MapTable()
+map:add(nn.Linear(10, 3))
+
+x1 = torch.rand(10)
+x2 = torch.rand(10)
+y = map:forward{x1, x2}
+
+for i, k in pairs(y) do print(i, k) end
+```
+
+which gives the output:
+
+```lua
+1
+ 0.0345
+ 0.8695
+ 0.6502
+[torch.DoubleTensor of size 3]
+
+2
+ 0.0269
+ 0.4953
+ 0.2691
+[torch.DoubleTensor of size 3]
 ```
 
 

@@ -5562,6 +5562,53 @@ function nntest.ConcatTable()
    mytester:assert(go2 == 1, "ConcatTable table variable length")
 end
 
+function nntest.MapTable()
+   local map = nn.MapTable(nn.Linear(10,5))
+   local lin = map:get(1):clone()
+
+   -- ParalleTable with clones as reference
+   local parallel = nn.ParallelTable()
+   parallel:add(lin)
+   parallel:add(lin:clone('weight','bias'))
+   parallel:add(lin:clone('weight','bias'))
+
+   local input = {torch.rand(10), torch.rand(10), torch.rand(10)}
+   local gradOutput = {torch.ones(5), torch.ones(5), torch.ones(5)}
+
+   local outputM = map:forward(input)
+   local outputP = parallel:forward(input)
+   mytester:assertTensorEq(outputM[1], outputP[1])
+   mytester:assertTensorEq(outputM[2], outputP[2])
+   mytester:assertTensorEq(outputM[3], outputP[3])
+   mytester:assert(map:size() == #input)
+
+   map:zeroGradParameters()
+   parallel:zeroGradParameters()
+   local gradInputM = map:backward(input, gradOutput)
+   local gradInputP = parallel:backward(input, gradOutput)
+   mytester:assertTensorEq(gradInputM[1], gradInputP[1])
+   mytester:assertTensorEq(gradInputM[2], gradInputP[2])
+   mytester:assertTensorEq(gradInputM[3], gradInputP[3])
+
+   map:updateParameters(1)
+   parallel:updateParameters(1)
+   mytester:assertTensorEq(map:get(1).weight, parallel:get(1).weight, 0.00001)
+
+   local output = map:forward({input[1], input[2], input[3], input[3]})
+   mytester:assert(#output == 4)
+   local output = map:forward({input[1], input[2]})
+   mytester:assert(#output == 2)
+
+   map:resize(10)
+   mytester:assert(map:size() == 10)
+   map:resize(4)
+   mytester:assert(map:size() == 4)
+   mytester:assert(torch.pointer(map:get(4).weight:storage())
+      == torch.pointer(map:get(1).weight:storage()))
+   map:clearState()
+   mytester:assert(map:size() == 1)
+end
+
 function nntest.FlattenTable()
    -- Create a nested table.  Obviously we can't even stochastically test
    -- the space of all possible nested tables (it's infinite), but here is a
