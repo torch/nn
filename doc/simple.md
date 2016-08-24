@@ -404,15 +404,16 @@ module = nn.CMul(size)
 ```
 
 Applies a component-wise multiplication to the incoming data, i.e. `y_i = w_i * x_i`. Argument `size` can be one or many numbers (sizes) or a `torch.LongStorage`. For example, `nn.CMul(3,4,5)` is equivalent to `nn.CMul(torch.LongStorage{3,4,5})`.
+If the size for a particular dimension is 1, the multiplication will be expanded along the entire axis.
 
 Example:
 
 ```lua
 mlp = nn.Sequential()
-mlp:add(nn.CMul(5))
+mlp:add(nn.CMul(5, 1))
 
-y = torch.Tensor(5)
-sc = torch.Tensor(5)
+y = torch.Tensor(5, 4)
+sc = torch.Tensor(5, 4)
 for i = 1, 5 do sc[i] = i; end -- scale input with this
 
 function gradUpdate(mlp, x, y, criterion, learningRate)
@@ -426,7 +427,7 @@ function gradUpdate(mlp, x, y, criterion, learningRate)
 end
 
 for i = 1, 10000 do
-   x = torch.rand(5)
+   x = torch.rand(5, 4)
    y:copy(x)
    y:cmul(sc)
    err = gradUpdate(mlp, x, y, nn.MSECriterion(), 0.01)
@@ -443,7 +444,7 @@ gives the output:
  3.0000
  4.0000
  5.0000
-[torch.Tensor of dimension 5]
+[torch.Tensor of dimension 5x1]
 ```
 
 i.e. the network successfully learns the input `x` has been scaled by those scaling factors to produce the output `y`.
