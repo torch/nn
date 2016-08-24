@@ -125,8 +125,9 @@ function nntest.CMul()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
    local ink = math.random(3,5)
+   local inl = math.random(3,5)
    local input = torch.Tensor(ini,inj,ink):zero()
-   local module = nn.CMul(ini, inj, ink)
+   local module = nn.CMul(1, ini, inj, ink, 1)
 
    -- 1D
    local err = jac.testJacobian(module,input)
@@ -144,8 +145,7 @@ function nntest.CMul()
    end
 
    -- 2D
-   local nframe = math.random(50,70)
-   local nframe = 5
+   local nframe = math.random(3,14)
    local input = torch.randn(nframe, ini,inj,ink)
    local output = module:forward(input)
    local output2 = torch.cmul(input, module.weight:view(1,ini,inj,ink):expandAs(input))
@@ -167,6 +167,27 @@ function nntest.CMul()
    end
    mytester:assertTensorEq(gradWeight, module.gradWeight, 0.000001, 'CMul accGradParameters 2D err')
    mytester:assert(module.weight:isSameSizeAs(module.gradWeight), 'CMul gradWeight size err')
+
+   -- Expansion
+   input = torch.randn(nframe, ini,inj,ink,inl)
+   output = module:forward(input)
+   output2 = torch.cmul(input, module.weight:expandAs(input))
+   mytester:assertTensorEq(output2, output, 0.000001, 'CMul forward expand err')
+
+   module:zeroGradParameters()
+   gradWeight:zero()
+   gradInput = module:backward(input, output)
+   gradInput2 = gradInput:clone():zero()
+   gradInput2:addcmul(1, module.weight:expandAs(output), output)
+   mytester:assertTensorEq(gradInput2, gradInput, 0.000001, 'CMul updateGradInput expansion err')
+   mytester:assert(gradInput:isSameSizeAs(input), 'CMul gradInput expand size err')
+
+   for i=1,nframe do
+      -- 4 is the [non-batch] singleton dim
+      gradWeight:add(torch.cmul(input[i], output[i]):sum(4))
+   end
+   mytester:assertTensorEq(gradWeight:sum(5), module.gradWeight, 0.000001, 'CMul accGradParameters expand err')
+   mytester:assert(module.weight:isSameSizeAs(module.gradWeight), 'CMul accGradParameters expand size err')
 
    input:zero()
 
