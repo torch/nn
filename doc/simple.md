@@ -52,6 +52,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity) ;
     * [GradientReversal](#nn.GradientReversal) : reverses the gradient (to maximize an objective function) ;
     * [GPU](#nn.GPU) : decorates a module so that it can be executed on a specific GPU device.
+    * [TemporalDynamicKMaxPooling](#nn.TemporalDynamicKMaxPooling) : selects the k highest values in a sequence. k can be calculated based on sequence length ;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1453,3 +1454,16 @@ mlp = nn.Sequential()
 
 Note how the last `GPU` instance will return an `output` tensor on the same device as the current device (`cutorch.getDevice`).
  
+<a name="nn.TemporalDynamicKMaxPooling"></a>
+## TemporalDynamicKMaxPooling ##
+
+```lua
+module = nn.TemporalDynamicKMaxPooling(minK, [factor])
+```
+
+Selects the highest `k` values for each feature in the feature map sequence provided. The input sequence is composed of `nInputFrame` frames (i.e. `nInputFrame` is sequence length). The `input` tensor in `forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`), where `inputFrameSize` is the number of features across the sequence.
+
+If `factor` is not provided, `k = minK`, else the value of k is calculated with:
+```lua
+k = math.max(minK, math.ceil(factor*nInputFrame)))
+```
