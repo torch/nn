@@ -5,7 +5,7 @@ function Dropout:__init(p,v1,inplace,stochasticInference)
    self.p = p or 0.5
    self.train = true
    self.inplace = inplace
-   self.si = stochasticInference or false
+   self.stochastic_inference = stochasticInference or false
    -- version 2 scales output during training instead of evaluation
    self.v2 = not v1
    if self.p >= 1 or self.p < 0 then
@@ -21,7 +21,7 @@ function Dropout:updateOutput(input)
       self.output:resizeAs(input):copy(input)
    end
    if self.p > 0 then
-      if self.train or self.si and not self.train and not self.v2 then
+      if self.train or self.stochastic_inference and not self.train and not self.v2 then
          self.noise:resizeAs(input)
          self.noise:bernoulli(1-self.p)
          if self.v2 then

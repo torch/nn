@@ -246,6 +246,19 @@ During [evaluation](module.md#evaluate), `Dropout` does nothing more than forwar
 [torch.DoubleTensor of dimension 2x4]
 ```
 
+There is also an option for stochastic [evaluation](module.md#evaluate) which drops the `outputs` just like how it is done during [training](module.md#training):
+
+```lua
+module_stochastic_evaluation = nn.Dropout(nil, nil, nil, true)
+
+> module_stochastic_evaluation:evaluate()
+
+> module_stochastic_evaluation:forward(x)
+  2   4   6   0
+  0  12  14   0
+[torch.DoubleTensor of dimension 2x4]
+```
+
 We can return to training our model by first calling [Module:training()](module.md#training):
 
 ```lua
@@ -1039,7 +1052,7 @@ Setting `numInputDims` allows to use this module on batches.
 ```lua
 module = nn.Unsqueeze(pos [, numInputDims])
 ```
-Insert singleton dim (i.e., dimension 1) at position `pos`. 
+Insert singleton dim (i.e., dimension 1) at position `pos`.
 For an `input` with `dim = input:dim()`, there are `dim + 1` possible positions to insert the singleton dimension.
 For example, if `input` is `3` dimensional tensor in size `p x q x r`, then the singleton dim can be inserted at the following `4` positions
 ```
@@ -1070,7 +1083,7 @@ input2 = torch.Tensor(3, 5, 7) -- input2: 3 x 5 x 7
 m:forward(input2) -- output: 3 x 1 x 5 x 7
 ```
 
-Indicate the expected input feature map dimension by specifying `numInputDims`. 
+Indicate the expected input feature map dimension by specifying `numInputDims`.
 This allows the module to work with mini-batch. Example:
 ```lua
 b = 5 -- batch size 5
@@ -1413,14 +1426,14 @@ to set the hyper-parameter `lambda` dynamically during training.
 gpu = nn.GPU(module, device, [outdevice])
 require 'cunn'
 gpu:cuda()
-``` 
+```
 
 Decorates an encapsulated `module` so that it can be executed on a specific GPU `device`.
 The decorated module's `parameters` are thus hosted on the specified GPU `device`.
 All operations on the `gpu` module are executed on that device.
-Calls to `forward`/`backward` will transfer arguments `input` and `gradOutput` to the specified `device`, 
-which are then fed as arguments to the decorated `module`. 
-Returned `output` is located on the specified `outdevice` (defaults to `device`). 
+Calls to `forward`/`backward` will transfer arguments `input` and `gradOutput` to the specified `device`,
+which are then fed as arguments to the decorated `module`.
+Returned `output` is located on the specified `outdevice` (defaults to `device`).
 Returned `gradInput` is allocated on the same device as the `input`.
 
 When serialized/deserialized, the `gpu` module will be run on the same `device` that it was serialized with.
@@ -1429,7 +1442,7 @@ To prevent this from happening, the module can be converted to float/double befo
 ```lua
 gpu:float()
 gpustr = torch.serialize(gpu)
-``` 
+```
 
 The module is located in the __nn__ package instead of __cunn__ as this allows
 it to be used in CPU-only environments, which are common for production models.
@@ -1437,8 +1450,8 @@ it to be used in CPU-only environments, which are common for production models.
 The module supports nested table `input` and `gradOutput` tensors originating from multiple devices.
 Each nested tensor in the returned `gradInput` will be transferred to the device its commensurate tensor in the `input`.
 
-The intended use-case is not for model-parallelism where the models are executed in parallel on multiple devices, but 
-for sequential models where a single GPU doesn't have enough memory. 
+The intended use-case is not for model-parallelism where the models are executed in parallel on multiple devices, but
+for sequential models where a single GPU doesn't have enough memory.
 
 Example using 4 GPUs:
 
@@ -1448,7 +1461,6 @@ mlp = nn.Sequential()
    :add(nn.GPU(nn.Linear(10000,10000), 2))
    :add(nn.GPU(nn.Linear(10000,10000), 3))
    :add(nn.GPU(nn.Linear(10000,10000), 4, cutorch.getDevice()))
-``` 
+```
 
 Note how the last `GPU` instance will return an `output` tensor on the same device as the current device (`cutorch.getDevice`).
- 
