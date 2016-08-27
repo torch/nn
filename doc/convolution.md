@@ -16,6 +16,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialConvolutionLocal](#nn.SpatialConvolutionLocal) : a 2D locally-connected layer over an input image ;
     * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
     * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
+    * [SpatialDilatedMaxPooling](#nn.SpatialDilatedMaxPooling) : a 2D dilated max-pooling operation over an input image ;
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
     * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
     * [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling) : a 2D max-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
@@ -36,6 +37,7 @@ a kernel for computing the weighted average in a neighborhood ;
     * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
     * [VolumetricDilatedConvolution](#nn.VolumetricDilatedConvolution) : a 3D dilated convolution over an input image ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
+    * [VolumetricDilatedMaxPooling](#nn.VolumetricDilatedMaxPooling) : a 3D dilated max-pooling operation over an input video ;
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
     * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation.
     * [VolumetricReplicationPadding](#nn.VolumetricReplicationPadding) : Pads a volumetric feature map with the value at the edge of the input borders. ;
@@ -457,6 +459,7 @@ Further information about the full convolution can be found in the following pap
 module = nn.SpatialDilatedConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH], [dilationW], [dilationH])
 ```
 
+Also sometimes referred to as **atrous convolution**.
 Applies a 2D dilated convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D or 4D tensor.
 
@@ -538,6 +541,29 @@ image size will be `nOutputPlane x oheight x owidth` where
 ```lua
 owidth  = op((width  + 2*padW - kW) / dW + 1)
 oheight = op((height + 2*padH - kH) / dH + 1)
+```
+
+`op` is a rounding operator. By default, it is `floor`. It can be changed
+by calling `:ceil()` or `:floor()` methods.
+
+<a name="nn.SpatialDilatedMaxPooling"></a>
+### SpatialDilatedMaxPooling ###
+
+```lua
+module = nn.SpatialDilatedMaxPooling(kW, kH [, dW, dH, padW, padH, dilationW, dilationH])
+```
+
+Also sometimes referred to as **atrous pooling**.
+Applies 2D dilated max-pooling operation in `kWxkH` regions by step size
+`dWxdH` steps. The number of output features is equal to the number of
+input planes. If `dilationW` and `dilationH` are not provided, this is equivalent to performing normal `nn.SpatialMaxPooling`.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output
+image size will be `nOutputPlane x oheight x owidth` where
+
+```lua
+owidth  = op((width - (dilationW * (kW - 1) + 1) + 2*padW) / dW + 1)
+oheight = op((height - (dilationH * (kH - 1) + 1) + 2*padH) / dH + 1)
 ```
 
 `op` is a rounding operator. By default, it is `floor`. It can be changed
@@ -996,6 +1022,30 @@ module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH, padT, padW, padH])
 Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
 `dTxdWxdH` steps. The number of output features is equal to the number of
 input planes / dT. The input can optionally be padded with zeros. Padding should be smaller than half of kernel size.  That is, `padT < kT/2`, `padW < kW/2` and `padH < kH/2`.
+
+<a name="nn.VolumetricDilatedMaxPooling"></a>
+### VolumetricDilatedMaxPooling ###
+
+```lua
+module = nn.VolumetricDilatedMaxPooling(kT, kW, kH [, dT, dW, dH, padT, padW, padH, dilationT, dilationW, dilationH])
+```
+
+Also sometimes referred to as **atrous pooling**.
+Applies 3D dilated max-pooling operation in `kTxkWxkH` regions by step size
+`dTxdWxdH` steps. The number of output features is equal to the number of
+input planes. If `dilationT`, `dilationW` and `dilationH` are not provided, this is equivalent to performing normal `nn.VolumetricMaxPooling`.
+
+If the input image is a 4D tensor `nInputPlane x depth x height x width`, the output
+image size will be `nOutputPlane x otime x oheight x owidth` where
+
+```lua
+otime  = op((depth - (dilationT * (kT - 1) + 1) + 2*padT) / dT + 1)
+owidth  = op((width - (dilationW * (kW - 1) + 1) + 2*padW) / dW + 1)
+oheight = op((height - (dilationH * (kH - 1) + 1) + 2*padH) / dH + 1)
+```
+
+`op` is a rounding operator. By default, it is `floor`. It can be changed
+by calling `:ceil()` or `:floor()` methods.
 
 <a name="nn.VolumetricAveragePooling"></a>
 ### VolumetricAveragePooling ###

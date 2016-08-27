@@ -52,6 +52,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity) ;
     * [GradientReversal](#nn.GradientReversal) : reverses the gradient (to maximize an objective function) ;
     * [GPU](#nn.GPU) : decorates a module so that it can be executed on a specific GPU device.
+    * [TemporalDynamicKMaxPooling](#nn.TemporalDynamicKMaxPooling) : selects the k highest values in a sequence. k can be calculated based on sequence length ;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -404,15 +405,16 @@ module = nn.CMul(size)
 ```
 
 Applies a component-wise multiplication to the incoming data, i.e. `y_i = w_i * x_i`. Argument `size` can be one or many numbers (sizes) or a `torch.LongStorage`. For example, `nn.CMul(3,4,5)` is equivalent to `nn.CMul(torch.LongStorage{3,4,5})`.
+If the size for a particular dimension is 1, the multiplication will be expanded along the entire axis.
 
 Example:
 
 ```lua
 mlp = nn.Sequential()
-mlp:add(nn.CMul(5))
+mlp:add(nn.CMul(5, 1))
 
-y = torch.Tensor(5)
-sc = torch.Tensor(5)
+y = torch.Tensor(5, 4)
+sc = torch.Tensor(5, 4)
 for i = 1, 5 do sc[i] = i; end -- scale input with this
 
 function gradUpdate(mlp, x, y, criterion, learningRate)
@@ -426,7 +428,7 @@ function gradUpdate(mlp, x, y, criterion, learningRate)
 end
 
 for i = 1, 10000 do
-   x = torch.rand(5)
+   x = torch.rand(5, 4)
    y:copy(x)
    y:cmul(sc)
    err = gradUpdate(mlp, x, y, nn.MSECriterion(), 0.01)
@@ -443,7 +445,7 @@ gives the output:
  3.0000
  4.0000
  5.0000
-[torch.Tensor of dimension 5]
+[torch.Tensor of dimension 5x1]
 ```
 
 i.e. the network successfully learns the input `x` has been scaled by those scaling factors to produce the output `y`.
@@ -598,7 +600,7 @@ end
 module = nn.Copy(inputType, outputType, [forceCopy, dontCast])
 ```
 
-This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transfered as the output. The default `forceCopy` is false.
+This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transferred as the output. The default `forceCopy` is false.
 When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module's `output` and `gradInput` Tensors to the new type. The default is false.
 
 <a name="nn.Narrow"></a>
@@ -1432,10 +1434,10 @@ gpustr = torch.serialize(gpu)
 ``` 
 
 The module is located in the __nn__ package instead of __cunn__ as this allows
-it to be used in CPU-only enviroments, which are common for production models.
+it to be used in CPU-only environments, which are common for production models.
 
 The module supports nested table `input` and `gradOutput` tensors originating from multiple devices.
-Each nested tensor in the returned `gradInput` will be transfered to the device its commensurate tensor in the `input`.
+Each nested tensor in the returned `gradInput` will be transferred to the device its commensurate tensor in the `input`.
 
 The intended use-case is not for model-parallelism where the models are executed in parallel on multiple devices, but 
 for sequential models where a single GPU doesn't have enough memory. 
@@ -1452,3 +1454,16 @@ mlp = nn.Sequential()
 
 Note how the last `GPU` instance will return an `output` tensor on the same device as the current device (`cutorch.getDevice`).
  
+<a name="nn.TemporalDynamicKMaxPooling"></a>
+## TemporalDynamicKMaxPooling ##
+
+```lua
+module = nn.TemporalDynamicKMaxPooling(minK, [factor])
+```
+
+Selects the highest `k` values for each feature in the feature map sequence provided. The input sequence is composed of `nInputFrame` frames (i.e. `nInputFrame` is sequence length). The `input` tensor in `forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`), where `inputFrameSize` is the number of features across the sequence.
+
+If `factor` is not provided, `k = minK`, else the value of k is calculated with:
+```lua
+k = math.max(minK, math.ceil(factor*nInputFrame)))
+```

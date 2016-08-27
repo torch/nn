@@ -472,6 +472,7 @@ TH_API void THNN_(Threshold_updateGradInput)(
           THTensor *gradOutput,
           THTensor *gradInput,
           real threshold,
+          real val,
           bool inplace);
 
 TH_API void THNN_(TemporalConvolution_updateOutput)(
@@ -852,6 +853,28 @@ TH_API void THNN_(SpatialMaxPooling_updateGradInput)(
           int padW, int padH,
           bool ceil_mode);
 
+TH_API void THNN_(SpatialDilatedMaxPooling_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *indices,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH,
+          int dilationW, int dilationH,
+          bool ceil_mode);
+TH_API void THNN_(SpatialDilatedMaxPooling_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *indices,
+          int kW, int kH,
+          int dW, int dH,
+          int padW, int padH,
+          int dilationW, int dilationH,
+          bool ceil_mode);
+
 TH_API void THNN_(SpatialMaxUnpooling_updateOutput)(
           THNNState *state,
           THTensor *input,
@@ -1098,6 +1121,26 @@ TH_API void THNN_(VolumetricMaxPooling_updateGradInput)(
           THTensor *indices,
           int dT, int dW, int dH,
           int pT, int pW, int pH);
+
+TH_API void THNN_(VolumetricDilatedMaxPooling_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *indices,
+          int kT, int kW, int kH,
+          int dT, int dW, int dH,
+          int pT, int pW, int pH,
+          int dilationT, int dilationW, int dilationH,
+          bool ceilMode);
+TH_API void THNN_(VolumetricDilatedMaxPooling_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *indices,
+          int dT, int dW, int dH,
+          int pT, int pW, int pH,
+          int dilationT, int dilationW, int dilationH);
 
 TH_API void THNN_(VolumetricMaxUnpooling_updateOutput)(
           THNNState *state,

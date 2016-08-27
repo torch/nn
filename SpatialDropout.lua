@@ -19,7 +19,7 @@ function SpatialDropout:updateOutput(input)
       end
       self.noise:bernoulli(1-self.p)
       -- We expand the random dropouts to the entire feature map because the
-      -- features are likely correlated accross the map and so the dropout
+      -- features are likely correlated across the map and so the dropout
       -- should also be correlated.
       self.output:cmul(torch.expandAs(self.noise, input))
    else

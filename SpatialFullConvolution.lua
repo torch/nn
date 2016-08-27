@@ -140,7 +140,7 @@ function SpatialFullConvolution:updateGradInput(input, gradOutput)
       adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
       -- Momentarily extract the gradInput tensor
       if type(self.gradInput) == 'table' then
-        self.gradInput = self.gradInput[1]
+        self.gradInput = self.gradInput[1] or inputTensor.new()
       end
     end
 
