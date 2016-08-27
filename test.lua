@@ -1332,6 +1332,20 @@ function nntest.SmoothL1Criterion()
    criterionJacobianTest(cri, input, target)
 end
 
+function nntest.WeightedSmoothL1Criterion()
+   local input = torch.rand(10)
+   local target = input:clone():add(torch.rand(10))
+   local cri = nn.WeightedSmoothL1Criterion()
+   criterionJacobianTest(cri, input, target)
+
+   -- default ClassNLLCriterion
+   criterionJacobianTest(cri, input, target)
+
+   -- ClassNLLCriterion with weights
+   local weights = torch.rand(10)
+   criterionJacobianTest(cri, input, {target, weights})
+end
+
 function nntest.MSECriterion()
    local input = torch.rand(10)
    local target = input:clone():add(torch.rand(10))
@@ -1583,6 +1597,27 @@ function nntest.ClassNLLCriterion()
    criterionJacobianTest(cri, input, target)
 end
 
+function nntest.WeightedClassNLLCriterion()
+   local cri = nn.WeightedClassNLLCriterion()
+
+   -- default ClassNLLCriterion
+   local numLabels = math.random(5,10)
+   local input = torch.rand(numLabels)
+   local target = math.random(1,numLabels)
+   criterionJacobianTest(cri, input, target)
+
+   -- batch
+   local numLabels = math.random(5,10)
+   local bsz = math.random(3, 7)
+   local input = torch.zeros(bsz, numLabels)
+   local target = torch.Tensor(bsz):random(1, numLabels)
+   criterionJacobianTest(cri, input, target)
+
+   -- with weights
+   local weights = torch.rand(bsz)
+   criterionJacobianTest(cri, input, {target, weights})
+end
+
 function nntest.SpatialClassNLLCriterion()
    local numLabels = math.random(5,10)
    local h = math.random(5, 20)
@@ -1609,6 +1644,25 @@ function nntest.SpatialClassNLLCriterion()
                                        target:view(-1))
    mytester:eq(spatial_out, regular_out, 1e-6,
          "spatial and regular criterions give different results")
+end
+
+function nntest.SpatialWeightedClassNLLCriterion()
+   local numLabels = math.random(5,10)
+   local h = math.random(5, 20)
+   local w = math.random(5, 20)
+   local batchSize = math.random(1, 4)
+   local input = torch.rand(batchSize, numLabels, h, w)
+   local target = torch.Tensor(batchSize, h, w)
+   target:apply(function() return math.random(1, numLabels) end)
+
+   -- default ClassNLLCriterion
+   local cri = nn.SpatialWeightedClassNLLCriterion()
+   criterionJacobianTest(cri, input, target)
+
+   -- ClassNLLCriterion with weights
+   local weights = torch.rand(batchSize, h, w)
+   cri = nn.SpatialWeightedClassNLLCriterion()
+   criterionJacobianTest(cri, input, {target, weights})
 end
 
 function nntest.MultiLabelSoftMarginCriterion()
@@ -1654,6 +1708,27 @@ function nntest.CrossEntropyCriterion()
    weights = weights / weights:sum()
    cri = nn.CrossEntropyCriterion(weights)
    criterionJacobianTest(cri, input, target)
+end
+
+function nntest.WeightedCrossEntropyCriterion()
+   local cri = nn.WeightedCrossEntropyCriterion()
+
+   -- stochastic
+   local numLabels = math.random(5, 10)
+   local input = torch.zeros(numLabels)
+   local target = torch.random(1, numLabels)
+   criterionJacobianTest(cri, input, target)
+
+   -- batch
+   local numLabels = math.random(5,10)
+   local bsz = math.random(3, 7)
+   local input = torch.zeros(bsz, numLabels)
+   local target = torch.Tensor(bsz):random(1, numLabels)
+   criterionJacobianTest(cri, input, target)
+
+   -- with weights
+   local weights = torch.rand(bsz)
+   criterionJacobianTest(cri, input, {target, weights})
 end
 
 function nntest.LogSigmoid()
@@ -1884,6 +1959,21 @@ function nntest.Softmax()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
 end
 
+function nntest.SoftmaxAtTest()
+   local ini = math.random(3,5)
+   local ink = math.random(3,5)
+   local input = torch.Tensor(ink, ini):zero()
+   local module = nn.SoftMaxAtTest()
+   module:training() -- set to training
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,expprecision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
 function nntest.SpatialSoftMax()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
@@ -1891,6 +1981,23 @@ function nntest.SpatialSoftMax()
    local inl = math.random(3,5)
    local input = torch.Tensor(inl, ink, inj, ini):zero()
    local module = nn.SpatialSoftMax()
+
+   local err = jac.testJacobian(module,input)
+   mytester:assertlt(err,expprecision, 'error on state ')
+
+   local ferr,berr = jac.testIO(module,input)
+   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+end
+
+function nntest.SpatialSoftMaxAtTest()
+   local ini = math.random(3,5)
+   local inj = math.random(3,5)
+   local ink = math.random(3,5)
+   local inl = math.random(3,5)
+   local input = torch.Tensor(inl, ink, inj, ini):zero()
+   local module = nn.SpatialSoftMaxAtTest()
+   module:training() -- set to training
 
    local err = jac.testJacobian(module,input)
    mytester:assertlt(err,expprecision, 'error on state ')

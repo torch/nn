@@ -13,7 +13,13 @@
 #include "generic/ClassNLLCriterion.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/WeightedClassNLLCriterion.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/SpatialClassNLLCriterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SpatialWeightedClassNLLCriterion.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/DistKLDivCriterion.c"
@@ -68,6 +74,9 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SmoothL1Criterion.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/WeightedSmoothL1Criterion.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SoftMax.c"
