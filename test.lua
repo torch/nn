@@ -4223,6 +4223,55 @@ function nntest.VolumetricMaxPooling()
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
 end
 
+function nntest.VolumetricDilatedMaxPooling()
+   for _,ceil_mode in pairs({true,false}) do
+      local from = math.random(2,3)
+      local kt = math.random(3,4)
+      local ki = math.random(3,4)
+      local kj = math.random(3,4)
+      local st = math.random(2,3)
+      local si = math.random(2,3)
+      local sj = math.random(2,3)
+      local outt = math.random(3,4)
+      local outi = math.random(3,4)
+      local outj = math.random(3,4)
+      local padT = math.min(math.random(0,1),math.floor(kt/2))
+      local padW = math.min(math.random(0,1),math.floor(ki/2))
+      local padH =  math.min(math.random(0,1),math.floor(kj/2))
+      local dilationT = math.random(1,3)
+      local dilationW = math.random(1,3)
+      local dilationH = math.random(1,3)
+      local int = (outt-1)*st+(dilationT*(kt-1)+1)-2*padT
+      local ini = (outi-1)*si+(dilationW*(ki-1)+1)-2*padW
+      local inj = (outj-1)*sj+(dilationH*(kj-1)+1)-2*padH
+
+      local ceil_string = ceil_mode and 'ceil' or 'floor'
+      local module = nn.VolumetricDilatedMaxPooling(kt,ki,kj,st,si,sj,padT,padW,padH,dilationT,dilationW,dilationH)
+      if ceil_mode then module:ceil() else module:floor() end
+      local input = torch.rand(from,int,inj,ini)
+
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state ')
+
+      local ferr, berr = jac.testIO(module, input)
+      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
+      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+
+      -- batch
+      local nbatch = math.random(2,5)
+      input = torch.rand(nbatch,from,int,inj,ini)
+      module = nn.VolumetricDilatedMaxPooling(kt,ki,kj,st,si,sj,padT,padW,padH,dilationT,dilationW,dilationH)
+      if ceil_mode then module:ceil() else module:floor() end
+
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state (Batch)')
+
+      local ferr, berr = jac.testIO(module, input)
+      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
+      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+  end
+end
+
 function nntest.VolumetricMaxUnpooling()
    local from = math.random(2,3)
    local kt = math.random(3,4)
