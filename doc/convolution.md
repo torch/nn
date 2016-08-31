@@ -37,6 +37,7 @@ a kernel for computing the weighted average in a neighborhood ;
     * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
     * [VolumetricDilatedConvolution](#nn.VolumetricDilatedConvolution) : a 3D dilated convolution over an input image ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
+    * [VolumetricDilatedMaxPooling](#nn.VolumetricDilatedMaxPooling) : a 3D dilated max-pooling operation over an input video ;
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
     * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation.
     * [VolumetricReplicationPadding](#nn.VolumetricReplicationPadding) : Pads a volumetric feature map with the value at the edge of the input borders. ;
@@ -1021,6 +1022,30 @@ module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH, padT, padW, padH])
 Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
 `dTxdWxdH` steps. The number of output features is equal to the number of
 input planes / dT. The input can optionally be padded with zeros. Padding should be smaller than half of kernel size.  That is, `padT < kT/2`, `padW < kW/2` and `padH < kH/2`.
+
+<a name="nn.VolumetricDilatedMaxPooling"></a>
+### VolumetricDilatedMaxPooling ###
+
+```lua
+module = nn.VolumetricDilatedMaxPooling(kT, kW, kH [, dT, dW, dH, padT, padW, padH, dilationT, dilationW, dilationH])
+```
+
+Also sometimes referred to as **atrous pooling**.
+Applies 3D dilated max-pooling operation in `kTxkWxkH` regions by step size
+`dTxdWxdH` steps. The number of output features is equal to the number of
+input planes. If `dilationT`, `dilationW` and `dilationH` are not provided, this is equivalent to performing normal `nn.VolumetricMaxPooling`.
+
+If the input image is a 4D tensor `nInputPlane x depth x height x width`, the output
+image size will be `nOutputPlane x otime x oheight x owidth` where
+
+```lua
+otime  = op((depth - (dilationT * (kT - 1) + 1) + 2*padT) / dT + 1)
+owidth  = op((width - (dilationW * (kW - 1) + 1) + 2*padW) / dW + 1)
+oheight = op((height - (dilationH * (kH - 1) + 1) + 2*padH) / dH + 1)
+```
+
+`op` is a rounding operator. By default, it is `floor`. It can be changed
+by calling `:ceil()` or `:floor()` methods.
 
 <a name="nn.VolumetricAveragePooling"></a>
 ### VolumetricAveragePooling ###

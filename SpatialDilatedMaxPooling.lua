@@ -15,7 +15,7 @@ function SpatialDilatedMaxPooling:updateOutput(input)
    self.iheight = input:size(dims-1)
    self.iwidth = input:size(dims)
 
-   input.THNN.SpatialMaxPooling_updateOutput(
+   input.THNN.SpatialDilatedMaxPooling_updateOutput(
       input:cdata(),
       self.output:cdata(),
       self.indices:cdata(),
@@ -29,7 +29,7 @@ function SpatialDilatedMaxPooling:updateOutput(input)
 end
 
 function SpatialDilatedMaxPooling:updateGradInput(input, gradOutput)
-   input.THNN.SpatialMaxPooling_updateGradInput(
+   input.THNN.SpatialDilatedMaxPooling_updateGradInput(
       input:cdata(),
       gradOutput:cdata(),
       self.gradInput:cdata(),

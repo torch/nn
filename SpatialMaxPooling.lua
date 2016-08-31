@@ -46,7 +46,6 @@ function SpatialMaxPooling:updateOutput(input)
       self.kW, self.kH,
       self.dW, self.dH,
       self.padW, self.padH,
-      1, 1,
       self.ceil_mode
    )
    return self.output
@@ -61,7 +60,6 @@ function SpatialMaxPooling:updateGradInput(input, gradOutput)
       self.kW, self.kH,
       self.dW, self.dH,
       self.padW, self.padH,
-      1, 1,
       self.ceil_mode
    )
    return self.gradInput
