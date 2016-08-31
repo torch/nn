@@ -381,6 +381,19 @@ function nntest.HardTanh()
    local ferr, berr = jac.testIO(module, input)
    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+
+   -- test inclusive bounds -- HardTahn(1,inf) should behave like Threshold(1)
+   local input = torch.Tensor({1})
+   local gradOutput = torch.Tensor({1})
+   local gradOutputClone = gradOutput:clone()
+   local module = nn.HardTanh(1, math.huge, true)
+   local tanhGradInput = module:backward(input, gradOutput)
+
+   local input = input:clone()
+   local gradOutput = gradOutputClone
+   local module  = nn.Threshold(1, 0, true)
+   local threshGradInput = module:backward(input, gradOutput)
+   mytester:assertTensorEq(tanhGradInput, threshGradInput, 0.000001, 'HardTanh gradInput')
 end
 
 function nntest.Clamp()
