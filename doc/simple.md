@@ -27,8 +27,8 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;  
     * [Transpose](#nn.Transpose) : [transposes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-transposedim1-dim2) the input ;
   * Modules that adapt mathematical Tensor methods :
-    * [AddConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#nn.AddConstant) : adding a constant ;
-    * [MulConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#nn.MulConstant) : multiplying a constant ;
+    * [AddConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#addconstant) : adding a constant ;
+    * [MulConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#mulconstant) : multiplying a constant ;
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
     * [Mean](#nn.Mean) : a [mean](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchmeanres-x-dim) operation over a given dimension ;
