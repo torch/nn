@@ -10,7 +10,7 @@ end
 
 function VolumetricDropout:updateOutput(input)
    self.output:resizeAs(input):copy(input)
-   if self.train or self.stochastic_inference and not self.train then
+   if self.train or self.stochastic_inference then
       if input:dim() == 5 then
         self.noise:resize(input:size(1), input:size(2), 1, 1, 1)
       elseif input:dim() == 4 then

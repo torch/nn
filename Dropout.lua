@@ -21,7 +21,7 @@ function Dropout:updateOutput(input)
       self.output:resizeAs(input):copy(input)
    end
    if self.p > 0 then
-      if self.train or self.stochastic_inference and not self.train and not self.v2 then
+      if self.train or self.stochastic_inference then
          self.noise:resizeAs(input)
          self.noise:bernoulli(1-self.p)
          if self.v2 then
