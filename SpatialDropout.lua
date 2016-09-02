@@ -1,15 +1,16 @@
 local SpatialDropout, Parent = torch.class('nn.SpatialDropout', 'nn.Module')
 
-function SpatialDropout:__init(p)
+function SpatialDropout:__init(p,stochasticInference)
    Parent.__init(self)
    self.p = p or 0.5
    self.train = true
+   self.stochastic_inference = stochasticInference or false
    self.noise = torch.Tensor()
 end
 
 function SpatialDropout:updateOutput(input)
    self.output:resizeAs(input):copy(input)
-   if self.train then
+   if self.train or self.stochastic_inference then
       if input:dim() == 4 then
         self.noise:resize(input:size(1), input:size(2), 1, 1)
       elseif input:dim() == 3 then
