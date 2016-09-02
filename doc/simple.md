@@ -139,7 +139,7 @@ module = nn.Bilinear(inputDimension1, inputDimension2, outputDimension, [bias = 
 ```
 
 Applies a bilinear transformation to the incoming data, i.e. `\forall k: y_k = x_1 A_k x_2 + b`. The `input` tensor given in `forward(input)` is a table containing both inputs `x_1` and `x_2`, which are tensors of size `N x inputDimension1`
-and `N x inputDimension1`, respectively. The layer can be trained without biases by setting `bias = false`.
+and `N x inputDimension2`, respectively. The layer can be trained without biases by setting `bias = false`.
 
 You can create a layer in the following way:
 
