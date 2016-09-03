@@ -7,8 +7,12 @@ function SelectTable:__init(index)
 end
 
 function SelectTable:updateOutput(input)
+
    -- handle negative indices
-   local index = self.index < 0 and #input + self.index + 1 or self.index
+   local index = self.index
+   if type(index) == "number" then
+      index = index < 0 and #input + index + 1 or index
+   end
 
    assert(input[index], "index does not exist in the input table")
    self.output = input[index]
@@ -41,7 +45,10 @@ function SelectTable:updateGradInput(input, gradOutput)
    -- make gradInput a zeroed copy of input
    zeroTableCopy(self.gradInput, input)
    -- handle negative indices
-   local index = self.index < 0 and #input + self.index + 1 or self.index
+   local index = self.index
+   if type(index) == "number" then
+      index = index < 0 and #input + index + 1 or index
+   end
    -- copy into gradInput[index] (necessary for variable sized inputs)
    assert(self.gradInput[index])
    nn.utils.recursiveCopy(self.gradInput[index], gradOutput)
