@@ -47,7 +47,7 @@ function MultiLabelSoftMarginCriterion:updateOutput(input, target)
         - torch.cmul(x, t - indicator)
 
     if weights ~= nil then
-        buffer:cmul(weights:reshape(weights:nElement()))
+        buffer:cmul(weights:resize(weights:nElement()))
     end
 
     self.output = torch.sum(buffer)
