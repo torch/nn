@@ -183,4 +183,9 @@ require('nn.SparseJacobian')
 require('nn.hessian')
 require('nn.test')
 
+local nnMetaTable = {
+   __tostring = function() return 'Neural Network package' end,
+}
+setmetatable(nn, nnMetaTable)
+
 return nn
