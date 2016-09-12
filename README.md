@@ -4,18 +4,18 @@
 
 This package provides an easy and modular way to build and train simple or complex neural networks using [Torch](https://github.com/torch/torch7/blob/master/README.md):
  * Modules are the bricks used to build neural networks. Each are themselves neural networks, but can be combined with other networks using containers to create complex neural networks:
-   * [Module](doc/module.md#nn.Module): abstract class inherited by all modules;
-   * [Containers](doc/containers.md#nn.Containers): container classes like [`Sequential`](doc/containers.md#nn.Sequential), [`Parallel`](doc/containers.md#nn.Parallel) and [`Concat`](doc/containers.md#nn.Concat);
-   * [Transfer functions](doc/transfer.md#nn.transfer.dok): non-linear functions like [`Tanh`](doc/transfer.md#nn.Tanh) and [`Sigmoid`](doc/transfer.md#nn.Sigmoid);
-   * [Simple layers](doc/simple.md#nn.simplelayers.dok): like [`Linear`](doc/simple.md#nn.Linear), [`Mean`](doc/simple.md#nn.Mean), [`Max`](doc/simple.md#nn.Max) and [`Reshape`](doc/simple.md#nn.Reshape);
-   * [Table layers](doc/table.md#nn.TableLayers): layers for manipulating `table`s like [`SplitTable`](doc/table.md#nn.SplitTable), [`ConcatTable`](doc/table.md#nn.ConcatTable) and [`JoinTable`](doc/table.md#nn.JoinTable);
-   * [Convolution layers](doc/convolution.md#nn.convlayers.dok): [`Temporal`](doc/convolution.md#nn.TemporalModules),  [`Spatial`](doc/convolution.md#nn.SpatialModules) and [`Volumetric`](doc/convolution.md#nn.VolumetricModules) convolutions;
+   * [Module](nn/blob/master/doc/module.md#nn.Module): abstract class inherited by all modules;
+   * [Containers](nn/blob/master/doc/containers.md#nn.Containers): container classes like [`Sequential`](nn/blob/master/doc/containers.md#nn.Sequential), [`Parallel`](nn/blob/master/doc/containers.md#nn.Parallel) and [`Concat`](nn/blob/master/doc/containers.md#nn.Concat);
+   * [Transfer functions](nn/blob/master/doc/transfer.md#nn.transfer.dok): non-linear functions like [`Tanh`](nn/blob/master/doc/transfer.md#nn.Tanh) and [`Sigmoid`](nn/blob/master/doc/transfer.md#nn.Sigmoid);
+   * [Simple layers](nn/blob/master/doc/simple.md#nn.simplelayers.dok): like [`Linear`](nn/blob/master/doc/simple.md#nn.Linear), [`Mean`](nn/blob/master/doc/simple.md#nn.Mean), [`Max`](nn/blob/master/doc/simple.md#nn.Max) and [`Reshape`](nn/blob/master/doc/simple.md#nn.Reshape);
+   * [Table layers](nn/blob/master/doc/table.md#nn.TableLayers): layers for manipulating `table`s like [`SplitTable`](nn/blob/master/doc/table.md#nn.SplitTable), [`ConcatTable`](nn/blob/master/doc/table.md#nn.ConcatTable) and [`JoinTable`](nn/blob/master/doc/table.md#nn.JoinTable);
+   * [Convolution layers](nn/blob/master/doc/convolution.md#nn.convlayers.dok): [`Temporal`](nn/blob/master/doc/convolution.md#nn.TemporalModules),  [`Spatial`](nn/blob/master/doc/convolution.md#nn.SpatialModules) and [`Volumetric`](nn/blob/master/doc/convolution.md#nn.VolumetricModules) convolutions;
  * Criterions compute a gradient according to a given loss function given an input and a target:
-   * [Criterions](doc/criterion.md#nn.Criterions): a list of all criterions, including [`Criterion`](doc/criterion.md#nn.Criterion), the abstract class;
-   * [`MSECriterion`](doc/criterion.md#nn.MSECriterion): the Mean Squared Error criterion used for regression;
-   * [`ClassNLLCriterion`](doc/criterion.md#nn.ClassNLLCriterion): the Negative Log Likelihood criterion used for classification;
+   * [Criterions](nn/blob/master/doc/criterion.md#nn.Criterions): a list of all criterions, including [`Criterion`](nn/blob/master/doc/criterion.md#nn.Criterion), the abstract class;
+   * [`MSECriterion`](nn/blob/master/doc/criterion.md#nn.MSECriterion): the Mean Squared Error criterion used for regression;
+   * [`ClassNLLCriterion`](nn/blob/master/doc/criterion.md#nn.ClassNLLCriterion): the Negative Log Likelihood criterion used for classification;
  * Additional documentation:
-   * [Overview](doc/overview.md#nn.overview.dok) of the package essentials including modules, containers and training;
-   * [Training](doc/training.md#nn.traningneuralnet.dok): how to train a neural network using [optim](https://github.com/torch/optim);
-   * [Testing](doc/testing.md): how to test your modules.
+   * [Overview](nn/blob/master/doc/overview.md#nn.overview.dok) of the package essentials including modules, containers and training;
+   * [Training](nn/blob/master/doc/training.md#nn.traningneuralnet.dok): how to train a neural network using [optim](https://github.com/torch/optim);
+   * [Testing](nn/blob/master/doc/testing.md): how to test your modules.
    * [Experimental Modules](https://github.com/clementfarabet/lua---nnx/blob/master/README.md): a package containing experimental modules and criteria.
