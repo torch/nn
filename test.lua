@@ -80,8 +80,8 @@ function nntest.Add()
 
       -- IO
       local ferr,berr = jac.testIO(module,input)
-      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+      mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+      mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
    end
 end
 
@@ -219,8 +219,8 @@ function nntest.CMul()
 
    -- IO
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Dropout()
@@ -348,8 +348,8 @@ function nntest.Exp()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Log()
@@ -363,8 +363,8 @@ function nntest.Log()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input, 0.1, 10)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.HardTanh()
@@ -379,8 +379,8 @@ function nntest.HardTanh()
    mytester:assertlt(err, precision ,  'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- test inclusive bounds -- HardTahn(1,inf) should behave like Threshold(1)
    local input = torch.Tensor({1})
@@ -410,8 +410,8 @@ function nntest.Clamp()
    mytester:assertlt(err, precision ,  'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Abs()
@@ -426,8 +426,8 @@ function nntest.Abs()
    mytester:assertlt(err, precision ,  'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Threshold()
@@ -442,8 +442,8 @@ function nntest.Threshold()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = nn.Jacobian.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.ELU()
@@ -458,8 +458,8 @@ function nntest.ELU()
    mytester:assertlt(err, precision ,  'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.ELUIP()
@@ -540,8 +540,8 @@ function nntest.PReLU()
 
    -- IO
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.RReLU()
@@ -564,8 +564,8 @@ function nntest.RReLU()
 
    -- IO
    local ferr,berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- test training and evalation mode
    for _,train in ipairs({true,false}) do
@@ -639,8 +639,8 @@ function nntest.HardShrink()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = nn.Jacobian.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SoftShrink()
@@ -655,8 +655,8 @@ function nntest.SoftShrink()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = nn.Jacobian.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Power()
@@ -678,8 +678,8 @@ function nntest.Power()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = nn.Jacobian.testIO(module,input, 0.1, 2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Normalize()
@@ -720,8 +720,8 @@ function nntest.Normalize()
    local module = nn.Normalize(2)
 
    local ferr, berr = jac.testIO(module,input, 0.1, 2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
 end
 
@@ -743,8 +743,8 @@ function nntest.Square()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = nn.Jacobian.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Sqrt()
@@ -772,8 +772,8 @@ function nntest.Sqrt()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = nn.Jacobian.testIO(module, input, 0, 2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Linear()
@@ -878,8 +878,8 @@ function nntest.Linear()
 
          -- IO
          local ferr,berr = jac.testIO(module,input)
-         mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-         mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+         mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+         mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
       end
 
       jacTests(module)
@@ -1108,8 +1108,8 @@ function nntest.PartialLinear()
    mytester:assertlt(err,precision, 'error on bias [direct update] ')
 
    local ferr, berr = sjac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Euclidean()
@@ -1170,8 +1170,8 @@ function nntest.Euclidean()
    mytester:assertlt(err,precision, 'error on weight ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.WeightedEuclidean()
@@ -1253,8 +1253,8 @@ function nntest.WeightedEuclidean()
    mytester:assertlt(err,precision, 'error on bias ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    input:zero()
    module:zeroGradParameters()
@@ -1268,8 +1268,8 @@ function nntest.WeightedEuclidean()
    mytester:assertlt(err,precision, 'error on bias ')
 
    local ferr,berr = jac.testIO(module,input2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 local function criterionJacobianTest(cri, input, target)
@@ -1680,8 +1680,8 @@ function nntest.LogSigmoid()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.LogSoftmax()
@@ -1694,8 +1694,8 @@ function nntest.LogSoftmax()
    mytester:assertlt(err, 1e-3, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- test logsoftmax when gradOutput is non-contiguous
    local layer = nn.LogSoftMax()
@@ -1729,8 +1729,8 @@ end
 --    mytester:assertlt(err,precision, 'error on state ')
 
 --    local ferr,berr = jac.testIO(module,input)
---    mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
---    mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+--    mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+--    mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 -- end
 
 function nntest.Max()
@@ -1766,8 +1766,8 @@ function nntest.Max()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Min()
@@ -1803,8 +1803,8 @@ function nntest.Min()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Mean()
@@ -1840,8 +1840,8 @@ function nntest.Mean()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Mul()
@@ -1864,8 +1864,8 @@ function nntest.Mul()
    end
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Sigmoid()
@@ -1879,8 +1879,8 @@ function nntest.Sigmoid()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Softmax()
@@ -1893,8 +1893,8 @@ function nntest.Softmax()
    mytester:assertlt(err,expprecision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialSoftMax()
@@ -1909,8 +1909,8 @@ function nntest.SpatialSoftMax()
    mytester:assertlt(err,expprecision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Softmin()
@@ -1923,8 +1923,8 @@ function nntest.Softmin()
    mytester:assertlt(err,expprecision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Softsign()
@@ -1937,8 +1937,8 @@ function nntest.Softsign()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SoftPlus()
@@ -1952,8 +1952,8 @@ function nntest.SoftPlus()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialSubtractiveNormalization_2dkernel()
@@ -1968,8 +1968,8 @@ function nntest.SpatialSubtractiveNormalization_2dkernel()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
     -- test batch mode
    local output = module:forward(input):clone()
@@ -1991,8 +1991,8 @@ function nntest.SpatialSubtractiveNormalization_2dkernel()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
 end
 
@@ -2008,8 +2008,8 @@ function nntest.SpatialSubtractiveNormalization_1dkernel()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
     -- test batch mode
    local output = module:forward(input):clone()
@@ -2031,8 +2031,8 @@ function nntest.SpatialSubtractiveNormalization_1dkernel()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialDivisiveNormalization_2dkernel()
@@ -2047,8 +2047,8 @@ function nntest.SpatialDivisiveNormalization_2dkernel()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- test batch mode
    local output = module:forward(input):clone()
@@ -2070,8 +2070,8 @@ function nntest.SpatialDivisiveNormalization_2dkernel()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialDivisiveNormalization_1dkernel()
@@ -2086,8 +2086,8 @@ function nntest.SpatialDivisiveNormalization_1dkernel()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
     -- test batch mode
    local output = module:forward(input):clone()
@@ -2109,8 +2109,8 @@ function nntest.SpatialDivisiveNormalization_1dkernel()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialContrastiveNormalization()
@@ -2125,8 +2125,8 @@ function nntest.SpatialContrastiveNormalization()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- test batch mode and type
    local output = module:forward(input):clone()
@@ -2151,8 +2151,8 @@ function nntest.SpatialContrastiveNormalization()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialCrossMapLRN()
@@ -2169,8 +2169,8 @@ function nntest.SpatialCrossMapLRN()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- test batch mode and type
    local output = module:forward(input):clone()
@@ -2195,8 +2195,8 @@ function nntest.SpatialCrossMapLRN()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input2)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 
@@ -2319,8 +2319,8 @@ function nntest.SpatialConvolution()
       end
 
       local ferr, berr = jac.testIO(module, input)
-      mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-      mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+      mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+      mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
    end
 
    jacTests(module)
@@ -2424,8 +2424,8 @@ function nntest.SpatialConvolutionMM()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- non-contiguous
    local input = torch.randn(batch,from,ini,inj):transpose(3,4) -- non-contiguous
@@ -2540,8 +2540,8 @@ function nntest.SpatialConvolutionLocal()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- check against nn.SpatialConvolution
    local conv = nn.SpatialConvolution(from, to, ki, kj, si, sj)
@@ -2652,8 +2652,8 @@ function nntest.SpatialFullConvolution()
       end
 
       local ferr, berr = jac.testIO(module, input)
-      mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-      mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+      mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+      mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
    end
 
    jacTests(module)
@@ -2803,8 +2803,8 @@ function nntest.SpatialDilatedConvolution()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- non-contiguous
    local input = torch.randn(batch,from,ini,inj):transpose(3,4) -- non-contiguous
@@ -2864,8 +2864,8 @@ function nntest.SpatialConvolutionMap()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
 
 
@@ -2911,8 +2911,8 @@ function nntest.SpatialConvolutionMap()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialFullConvolutionMap()
@@ -2967,8 +2967,8 @@ function nntest.SpatialFullConvolutionMap()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialFullConvolutionCompare()
@@ -3166,8 +3166,8 @@ function nntest.SpatialSubSampling()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.SpatialMaxPooling()
@@ -3193,8 +3193,8 @@ function nntest.SpatialMaxPooling()
       mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state ')
 
       local ferr, berr = jac.testIO(module, input)
-      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+      mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+      mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
       -- batch
       local nbatch = math.random(2,5)
@@ -3206,8 +3206,8 @@ function nntest.SpatialMaxPooling()
       mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state (Batch)')
 
       local ferr, berr = jac.testIO(module, input)
-      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
-      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+      mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ', precision)
+      mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ', precision)
   end
 end
 
@@ -3239,8 +3239,8 @@ function nntest.SpatialMaxUnpooling()
       mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state ')
 
       local ferr, berr = jac.testIO(module, input)
-      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+      mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+      mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
       -- batch
       local nbatch = math.random(2,5)
@@ -3254,8 +3254,8 @@ function nntest.SpatialMaxUnpooling()
       mytester:assertlt(err, precision, 'error '..ceil_string..' mode on state (Batch)')
 
       local ferr, berr = jac.testIO(module, input)
-      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
-      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+      mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ', precision)
+      mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ', precision)
   end
 end
 
@@ -3409,8 +3409,8 @@ function nntest.SpatialAveragePooling()
         mytester:assertlt(err, precision, 'error'..mode_string..' on state ')
 
         local ferr, berr = jac.testIO(module, input)
-        mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-        mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+        mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+        mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
         -- batch
         local batch = math.random(2,5)
@@ -3434,12 +3434,12 @@ function nntest.SpatialAveragePooling()
         mytester:assertlt(err, precision, 'batch error'..mode_string..' on state ')
 
         local ferr, berr = jac.testIO(module, input)
-        mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-        mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+        mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+        mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
         local ferr, berr = jac.testIO(module, input)
-        mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
-        mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+        mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ', precision)
+        mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ', precision)
 
       end
    end
@@ -3511,8 +3511,8 @@ function nntest.SpatialAdaptiveMaxPooling()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- batch
    local nbatch = math.random(1,3)
@@ -3523,8 +3523,8 @@ function nntest.SpatialAdaptiveMaxPooling()
    mytester:assertlt(err, precision, 'error on state (Batch) ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ', precision)
 
    -- non-contiguous
 
@@ -3571,8 +3571,8 @@ function nntest.SpatialLPPooling()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Sum()
@@ -3625,8 +3625,8 @@ function nntest.Sum()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Tanh()
@@ -3641,8 +3641,8 @@ function nntest.Tanh()
    mytester:assertlt(err, precision ,  'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.TemporalConvolution()
@@ -3711,8 +3711,8 @@ function nntest.TemporalConvolution()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- 2D matches 1D
    local output = module:forward(input):clone()
@@ -3805,8 +3805,8 @@ function nntest.TemporalSubSampling()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.TemporalMaxPooling()
@@ -3823,8 +3823,8 @@ function nntest.TemporalMaxPooling()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- 2D
    local nBatchFrame = 2
@@ -3833,8 +3833,8 @@ function nntest.TemporalMaxPooling()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- 2D matches 1D
    local output = module:forward(input):clone()
@@ -3925,8 +3925,8 @@ function nntest.VolumetricFullConvolution()
     mytester:assertlt(err , precision, 'error on bias ')
 
     local ferr, berr = jac.testIO(module, input)
-    mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-    mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+    mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+    mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.VolumetricFullConvolutionDualInput()
@@ -4025,8 +4025,8 @@ function nntest.VolumetricConvolution()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.VolumetricDilatedConvolution()
@@ -4121,8 +4121,8 @@ function nntest.VolumetricDilatedConvolution()
    end
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- non-contiguous
    local input = torch.randn(batch,from,ink,ini,inj):transpose(4,5) -- non-contiguous
@@ -4180,8 +4180,8 @@ function nntest.VolumetricAveragePooling()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
       -- batch
    local nbatch = math.random(2,3)
@@ -4192,8 +4192,8 @@ function nntest.VolumetricAveragePooling()
    mytester:assertlt(err, precision, 'error on state (Batch) ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ', precision)
 end
 
 function nntest.VolumetricMaxPooling()
@@ -4220,8 +4220,8 @@ function nntest.VolumetricMaxPooling()
    mytester:assertlt(err, precision, 'error on state ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(0, ferr, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(0, berr, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- batch
    local nbatch = math.random(2,3)
@@ -4232,8 +4232,8 @@ function nntest.VolumetricMaxPooling()
    mytester:assertlt(err, precision, 'error on state (Batch) ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ', precision)
 end
 
 function nntest.VolumetricDilatedMaxPooling()
@@ -4313,8 +4313,8 @@ function nntest.VolumetricMaxUnpooling()
    mytester:assertlt(err, precision, 'error ')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
    -- batch
    local nbatch = math.random(2,3)
@@ -4328,8 +4328,8 @@ function nntest.VolumetricMaxUnpooling()
    mytester:assertlt(err, precision, 'error on Batch')
 
    local ferr, berr = jac.testIO(module, input)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err (Batch) ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err (Batch) ', precision)
 end
 
 function nntest.VolumetricMaxPooling_boundary()
@@ -4862,8 +4862,8 @@ function nntest.LookupTable()
        -- IO
        module.gradInput = torch.Tensor(3,4):zero() --fixes an error
        local ferr,berr = jac.testIO(module,input,minval,maxval)
-       mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-       mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+       mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+       mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
        -- accUpdate
        module:accUpdateOnly()
@@ -6215,8 +6215,8 @@ function nntest.DotProduct()
 
   -- IO
   local ferr,berr = jac.testIO(module,input)
-  mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-  mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+  mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+  mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
   -- batch
   -- rebuild module to avoid correlated tests
@@ -6264,8 +6264,8 @@ function nntest.CosineDistance()
 
   -- IO
   local ferr,berr = jac.testIO(module,input)
-  mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-  mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+  mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+  mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 
   -- batch
   -- rebuild module to avoid correlated tests
@@ -6426,8 +6426,8 @@ local function testBatchNormalization(moduleName, dim, k)
 
       -- IO
       local ferr,berr = jac.testIO(module,input)
-      mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-      mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+      mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+      mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
    end
 
    local module = nn[moduleName](planes)
@@ -6472,8 +6472,8 @@ function nntest.GradientReversal()
    mytester:assertlt(err,precision, 'error on state ')
 
    local ferr,berr = jac.testIO(module,input, 0.1, 10)
-   mytester:asserteq(ferr, 0, torch.typename(module) .. ' - i/o forward err ')
-   mytester:asserteq(berr, 0, torch.typename(module) .. ' - i/o backward err ')
+   mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+   mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
 function nntest.Padding()
