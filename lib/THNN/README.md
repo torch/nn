@@ -6,8 +6,8 @@ There is also a CUDA counterpart of THNN (THCUNN) in the [cunn repository](https
 
 ## Links
 
-* [API reference](doc/api_reference.md)
-* [Style guidelines](doc/style_guidelines.md)
+* [API reference](THNN/doc/api_reference.md)
+* [Style guidelines](THNN/doc/style_guidelines.md)
 
 ## Motivation
 
@@ -23,10 +23,10 @@ THNN is a purely functional library. It provides 2-3 functions for each module, 
 * **updateGradInput** - accepts gradient w.r.t. output and previous module input, and computes a gradient w.r.t. that input
 * **accGradParameters** - *(optional, only modules with parameters)* accepts gradient w.r.t. output and previous module input, and computes gradient w.r.t. the parameters
 
-For information on argument types please check the [API reference](doc/api_reference.md).
+For information on argument types please check the [API reference](THNN/doc/api_reference.md).
 
 ## Developer docs
 
-* [Style guidelines](doc/style_guidelines.md)
+* [Style guidelines](THNN/doc/style_guidelines.md)
 
 This section will be expanded when FFI refactoring will be finished.
