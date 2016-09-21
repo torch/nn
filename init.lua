@@ -183,4 +183,7 @@ require('nn.SparseJacobian')
 require('nn.hessian')
 require('nn.test')
 
+nn.config = {}
+nn.config.prettyPrint = false
+
 return nn

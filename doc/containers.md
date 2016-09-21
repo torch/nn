@@ -8,20 +8,20 @@ Complex neural networks are easily built using container classes:
     * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
       * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
     * [Bottle](#nn.Bottle) : allows any dimensionality input be forwarded through a module ;
- 
+
 See also the [Table Containers](#nn.TableContainers) for manipulating tables of [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
 <a name="nn.Container"></a>
 ## Container ##
 
 This is an abstract [Module](module.md#nn.Module) class which declares methods defined in all containers.
-It reimplements many of the Module methods such that calls are propagated to the 
-contained modules. For example, a call to [zeroGradParameters](module.md#nn.Module.zeroGradParameters)
-will be propagated to all contained modules.
+It reimplements many of the Module methods such that calls are propagated to the contained modules.
+For example, a call to [zeroGradParameters](module.md#nn.Module.zeroGradParameters) will be propagated to all contained modules.
 
 <a name="nn.Container.add"></a>
 ### add(module) ###
-Adds the given `module` to the container. The order is important
+Adds the given `module` to the container.
+The order is important!
 
 <a name="nn.Container.get"></a>
 ### get(index) ###
@@ -31,23 +31,32 @@ Returns the contained modules at index `index`.
 ### size() ###
 Returns the number of contained modules.
 
+<a name="nn.Container.prettyPrint"></a>
+### prettyPrint([status]) ###
+If there is no `status` argument, this function toggles the output color option, which is `false` by default.
+Otherwise, sets the output color option to `status`, which can be `true` or `false`.
+By color coding different `Container`s, helps navigating the architecture of complex networks, which might be otherwise hard to grasp.
+
 <a name="nn.Sequential"></a>
 ## Sequential ##
 
 Sequential provides a means to plug layers together
 in a feed-forward fully connected manner.
 
-E.g. 
+E.g.
 creating a one hidden-layer multi-layer perceptron is thus just as easy as:
+
 ```lua
 mlp = nn.Sequential()
-mlp:add( nn.Linear(10, 25) ) -- 10 input, 25 hidden units
-mlp:add( nn.Tanh() ) -- some hyperbolic tangent transfer function
-mlp:add( nn.Linear(25, 1) ) -- 1 output
+mlp:add(nn.Linear(10, 25)) -- 10 input, 25 hidden units
+mlp:add(nn.Tanh())         -- some hyperbolic tangent transfer function
+mlp:add(nn.Linear(25, 1))  -- 1 output
 
 print(mlp:forward(torch.randn(10)))
 ```
+
 which gives the output:
+
 ```lua
 -0.1815
 [torch.Tensor of dimension 1]
@@ -99,7 +108,7 @@ nn.Sequential {
 
 `module` = `Parallel(inputDimension,outputDimension)`
 
-Creates a container module that applies its `ith` child module to the  `ith` slice of the input Tensor by using [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index) 
+Creates a container module that applies its `ith` child module to the  `ith` slice of the input Tensor by using [select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-selectdim-index)
 on dimension `inputDimension`. It concatenates the results of its contained modules together along dimension `outputDimension`.
 
 Example:
@@ -144,7 +153,7 @@ for i=1,10000 do     -- Train for a few iterations
  local err=criterion:forward(pred,y)
  local gradCriterion = criterion:backward(pred,y);
  mlp:zeroGradParameters();
- mlp:backward(x, gradCriterion); 
+ mlp:backward(x, gradCriterion);
  mlp:updateParameters(0.01);
  print(err)
 end
@@ -190,16 +199,16 @@ module = nn.DepthConcat(dim)
 DepthConcat concatenates the output of one layer of "parallel" modules along the
 provided dimension `dim`: they take the same inputs, and their output is
 concatenated. For dimensions other than `dim` having different sizes,
-the smaller tensors are copied in the center of the output tensor, 
+the smaller tensors are copied in the center of the output tensor,
 effectively padding the borders with zeros.
 
-The module is particularly useful for concatenating the output of [Convolutions](convolution.md) 
-along the depth dimension (i.e. `nOutputFrame`). 
-This is used to implement the *DepthConcat* layer 
+The module is particularly useful for concatenating the output of [Convolutions](convolution.md)
+along the depth dimension (i.e. `nOutputFrame`).
+This is used to implement the *DepthConcat* layer
 of the [Going deeper with convolutions](http://arxiv.org/pdf/1409.4842v1.pdf) article.
-The normal [Concat](#nn.Concat) Module can't be used since the spatial 
-dimensions (height and width) of the output Tensors requiring concatenation 
-may have different values. To deal with this, the output uses the largest 
+The normal [Concat](#nn.Concat) Module can't be used since the spatial
+dimensions (height and width) of the output Tensors requiring concatenation
+may have different values. To deal with this, the output uses the largest
 spatial dimensions and adds zero-padding around the smaller Tensors.
 ```lua
 inputSize = 3
@@ -213,7 +222,7 @@ print(mlp:forward(input))
 ```
 which gives the output:
 ```lua
-(1,.,.) = 
+(1,.,.) =
  -0.2874  0.6255  1.1122  0.4768  0.9863 -0.2201 -0.1516
   0.2779  0.9295  1.1944  0.4457  1.1470  0.9693  0.1654
  -0.5769 -0.4730  0.3283  0.6729  1.3574 -0.6610  0.0265
@@ -222,7 +231,7 @@ which gives the output:
   0.4147  0.5062  0.6251  0.4374  0.3252  0.3478  0.0046
   0.7845 -0.0902  0.3499  0.0342  1.0706 -0.0605  0.5525
 
-(2,.,.) = 
+(2,.,.) =
  -0.7351 -0.9327 -0.3092 -1.3395 -0.4596 -0.6377 -0.5097
  -0.2406 -0.2617 -0.3400 -0.4339 -0.3648  0.1539 -0.2961
  -0.7124 -1.2228 -0.2632  0.1690  0.4836 -0.9469 -0.7003
@@ -231,7 +240,7 @@ which gives the output:
  -0.3086 -0.0298 -0.2031  0.1026 -0.5785 -0.3275 -0.1630
   0.0596 -0.6097  0.1443 -0.8603 -0.2774 -0.4506 -0.5367
 
-(3,.,.) = 
+(3,.,.) =
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
   0.0000 -0.7326  0.3544  0.1821  0.4796  1.0164  0.0000
   0.0000 -0.9195 -0.0567 -0.1947  0.0169  0.1924  0.0000
@@ -240,7 +249,7 @@ which gives the output:
   0.0000 -0.1911  0.2912  0.5092  0.2955  0.7171  0.0000
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
 
-(4,.,.) = 
+(4,.,.) =
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
   0.0000 -0.8263  0.3646  0.6750  0.2062  0.2785  0.0000
   0.0000 -0.7572  0.0432 -0.0821  0.4871  1.9506  0.0000
@@ -249,7 +258,7 @@ which gives the output:
   0.0000  0.2570  0.4694 -0.1262  0.5602  0.0821  0.0000
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
 
-(5,.,.) = 
+(5,.,.) =
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
   0.0000  0.3158  0.4389 -0.0485 -0.2179  0.0000  0.0000
   0.0000  0.1966  0.6185 -0.9563 -0.3365  0.0000  0.0000
@@ -258,7 +267,7 @@ which gives the output:
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
 
-(6,.,.) = 
+(6,.,.) =
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
   0.0000  1.1148  0.2324 -0.1093  0.5024  0.0000  0.0000
   0.0000 -0.2624 -0.5863  0.3444  0.3506  0.0000  0.0000
@@ -268,11 +277,11 @@ which gives the output:
   0.0000  0.0000  0.0000  0.0000  0.0000  0.0000  0.0000
 [torch.DoubleTensor of dimension 6x7x7]
 ```
-Note how the last 2 of 6 filter maps have 1 column of zero-padding 
-on the left and top, as well as 2 on the right and bottom. 
+Note how the last 2 of 6 filter maps have 1 column of zero-padding
+on the left and top, as well as 2 on the right and bottom.
 This is inevitable when the component
-module output tensors non-`dim` sizes aren't all odd or even. 
-Such that in order to keep the mappings aligned, one need 
+module output tensors non-`dim` sizes aren't all odd or even.
+Such that in order to keep the mappings aligned, one need
 only ensure that these be all odd (or even).
 
 <a name="nn.Bottle"></a>

@@ -146,3 +146,11 @@ function Container:clearState()
    end
    return self
 end
+
+function Container:prettyPrint(status)
+   if status == nil then
+      nn.config.prettyPrint = not nn.config.prettyPrint
+   else
+      nn.config.prettyPrint = status
+   end
+end
