@@ -97,6 +97,7 @@ function Parallel:__tostring__()
    local tab = '  '
    local line = '\n'
    local next = '  |`-> '
+   local lastNext = '   `-> '
    local ext = '  |    '
    local extlast = '       '
    local last = '   ... -> '
@@ -104,7 +105,7 @@ function Parallel:__tostring__()
    str = str .. ' {' .. line .. tab .. 'input'
    for i=1,#self.modules do
       if i == #self.modules then
-         str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
+         str = str .. line .. tab .. lastNext .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. extlast)
       else
          str = str .. line .. tab .. next .. '(' .. i .. '): ' .. tostring(self.modules[i]):gsub(line, line .. tab .. ext)
       end
