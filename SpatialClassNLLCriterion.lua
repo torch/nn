@@ -33,7 +33,7 @@ function SpatialClassNLLCriterion:updateOutput(input, target)
       end
       self.target[1] = target
    elseif target:type() == 'torch.CudaTensor' then
-      self.target = target
+      self.target = target:cudaLong()
    else
       self.target = target:long()
    end
@@ -54,7 +54,7 @@ function SpatialClassNLLCriterion:updateGradInput(input, target)
    if type(target) == 'number' then
       self.target[1] = target
    elseif target:type() == 'torch.CudaTensor' then
-      self.target = target
+      self.target = target:cudaLong()
    else
       self.target = target:long()
    end
