@@ -322,7 +322,7 @@ gnuplot.grid(true)
 module = nn.Add(inputDimension, scalar)
 ```
 
-Applies a bias term to the incoming data, i.e. `yi = x_i + b_i`,  or if `scalar = true` then uses a single bias term, `yi = x_i + b`.
+Applies a bias term to the incoming data, i.e. `yi = x_i + b_i`,  or if `scalar = true` then uses a single bias term, `yi = x_i + b`. So if `scalar = true` then `inputDimension` value will be disregarded.
 
 Example:
 
