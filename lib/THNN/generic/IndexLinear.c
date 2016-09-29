@@ -6,12 +6,19 @@
 #include <omp.h>
 #endif
 
+/* Threshold used to trigger multithreading */
 #ifndef THNN_SPARSE_OMP_THRESHOLD
 #define THNN_SPARSE_OMP_THRESHOLD 100000
 #endif
 
+/* Threshold used to trigger BLAS axpy call */
 #ifndef THNN_SPARSE_OUTDIM_THRESHOLD
 #define THNN_SPARSE_OUTDIM_THRESHOLD 49
+#endif
+
+/* sign MACRO */
+#ifndef THNN_INDEXLINEAR_SIGN
+#define THNN_INDEXLINEAR_SIGN(a) ( ( (a) < 0 )  ?  -1   : ( (a) > 0 ) )
 #endif
 
 static bool THNN_(checkKeysValues)(THLongTensor* keys, THTensor* values)
@@ -34,46 +41,27 @@ void THNN_(IndexLinear_updateOutput)(
           THTensor *normalizedValues,
           int  train)
 {
-  // Retrieve all the dimensions of the problem
+  /* Retrieve all the dimensions of the problem */
   long batchSize = THLongTensor_size(sizes, 0);
   long keysSize = THLongTensor_size(keys, 0);
   long outDim = THTensor_(size)(bias, 0);
   long woutDim = THTensor_(size)(weight, 1);
   int maxNormalize = woutDim - outDim;
-  long inputDim = THTensor_(size)(weight, 0);
-  long fakeBatch = 0;
   long* sizesData = sizes->storage->data + sizes->storageOffset;
   long* cumSumSizesData = cumSumSizes->storage->data + cumSumSizes->storageOffset;
 
-#ifdef _OPENMP
-  // Create a fake batch
-  if (keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize == 1 && omp_get_max_threads() > 1) {
-    fakeBatch = batchSize;
-    batchSize = omp_get_max_threads();
-    batchSize = keysSize / batchSize >= 1 ? batchSize:keysSize;
-    THLongTensor_resize1d(sizes, batchSize);
-    THLongTensor_fill(sizes, keysSize / batchSize);
-    sizesData = sizes->storage->data + sizes->storageOffset;
-    sizesData[0] += keysSize % batchSize;
-    int k;
-    THLongTensor_resize1d(cumSumSizes, batchSize);
-    cumSumSizesData = cumSumSizes->storage->data + cumSumSizes->storageOffset;
-    cumSumSizesData[0] = 0L;
-    for (k = 1; k < batchSize; k++)
-    {
-      cumSumSizesData[k] = cumSumSizesData[k-1] + sizesData[k-1];
-    }
-  }
-#endif
-
+  /* Define/resize the normalized values tensor if maxNormalize is  > 0 */
   real* normalizedValuesData = NULL;
   if (maxNormalize)
   {
     THTensor_(resize1d)(normalizedValues, keysSize);
     normalizedValuesData = normalizedValues->storage->data + normalizedValues->storageOffset;
   }
-  // Resize the output
+
+  /* Resize the output */
   THTensor_(resize2d)(output, batchSize, outDim);
+
+  /* Access the storage data/strides */
   real* outputData = output->storage->data + output->storageOffset;
   real* valuesData = values->storage->data + values->storageOffset;
   real* weightData = weight->storage->data + weight->storageOffset;
@@ -81,8 +69,8 @@ void THNN_(IndexLinear_updateOutput)(
   long weightStride1 = weight->stride[1];
   real* biasData = bias->storage->data + bias->storageOffset;
   long* keysData = keys->storage->data + keys->storageOffset;
-  // Make sure these inputs are contiguous
-  // to accelerate the computation
+
+  /* Make sure these inputs are contiguous to accelerate computations */
   THArgCheck(THTensor_(isContiguous)(output), 1, "keys vector must be contiguous");
   THArgCheck(THLongTensor_isContiguous(keys), 1, "keys vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(values), 2, "values vector must be contiguous");
@@ -92,12 +80,14 @@ void THNN_(IndexLinear_updateOutput)(
   THArgCheck(THNN_(checkKeysValues)(keys, values), 1, "Keys and values should have the same number of elements");
   long i,j,k;
 
+  /* Separate cases: output dimension is == 1, or > 1
+   * This allows for some optimizations. */
   if (outDim == 1)
   {
     THVector_(fill)(outputData, *biasData, batchSize);
-//    printf("keysSize: %li\n",keysSize);
     if (maxNormalize)
     {
+      /* Parallelize on the batch itself */
       #pragma omp parallel for private(i,j) firstprivate(outDim, keysOffset, weightData, keysData, valuesData, outputData, cumSumSizesData, sizesData) schedule(static)  if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
       for (j = 0; j < batchSize; j++)
       {
@@ -106,27 +96,27 @@ void THNN_(IndexLinear_updateOutput)(
         real absVal = 0;
         long offset = cumSumSizesData[j];
 
-//        printf("offset: %li, keysOffset: %li, keysSize: %li, eoffset: %li\n",offset, keysOffset, keysSize, offset+sizesData[j]-1);
-
         for (i = 0; i < sizesData[j]; i++)
         {
           long woffset = weightStride0*(keysData[offset] + keysOffset);
+          absVal = fabs(valuesData[offset]);
           if (train)
           {
-            absVal = fabs(valuesData[offset]);
             if (absVal > weightData[woffset])
             {
               weightData[woffset] = absVal;
               weightData[woffset+1] = 1/absVal;
             }
+
+            /*
+             * The following can be used to scale the size of the updates
+             * depending on some rule, e.g. the frequency of a feature, ...
+             * This is used at update time.
+             * TODO: implement a smarter update scale.
+             */
             weightData[woffset+2] = 1;
-//            real alpha = 1 - 0.00001;
-//            real beta = 100;
-//            real l = weightData[woffset+2]==0?0:1/((1-alpha)*weightData[woffset+2]);
-//            l = alpha*l + beta;
-//            weightData[woffset+2] = 1/((1-alpha)*l);
           }
-          normalizedValuesData[offset] = weightData[woffset+1] * valuesData[offset] + weightData[woffset+3];
+          normalizedValuesData[offset] = (absVal > weightData[woffset] ? THNN_INDEXLINEAR_SIGN(valuesData[offset]):valuesData[offset]*weightData[woffset+1]) + weightData[woffset+3];
           val += normalizedValuesData[offset] * weightData[woffset+maxNormalize];
           offset++;
         }
@@ -135,6 +125,7 @@ void THNN_(IndexLinear_updateOutput)(
     }
     else
     {
+      /* Parallelize on the batch itself */
       #pragma omp parallel for private(i,j) firstprivate(outDim, weightData, keysData, valuesData, outputData, cumSumSizesData, sizesData) schedule(static)  if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
       for (j = 0; j < batchSize; j++)
       {
@@ -165,25 +156,39 @@ void THNN_(IndexLinear_updateOutput)(
         if (maxNormalize)
         {
           val = valuesData[offset];
+          real absVal = fabs(val);
           if (train)
           {
-            real absVal = fabs(val);
             if (absVal > weightData[woffset])
             {
               weightData[woffset] = absVal;
               weightData[woffset+1] = 1/absVal;
             }
-//            weightData[woffset+2] = weightData[woffset+2]==0?1:(weightData[woffset+2] / (weightData[woffset+2] + 1));
+
+            /*
+             * The following can be used to scale the size of the updates
+             * depending on some rule, e.g. the frequency of a feature, ...
+             * The commented section thereafter is just an example of what can be done:
+             *
+             *```
+             * weightData[woffset+2] = weightData[woffset+2]==0?1:(weightData[woffset+2] / (weightData[woffset+2] + 1));
+             * real alpha = 1;
+             * real beta = 0.01;
+             * real gamma = 1 - 0.000001;
+             * real l = weightData[woffset+2]==0?1/gamma:(weightData[woffset+2] - beta) / (alpha - beta);
+             * l = gamma*l;
+             * weightData[woffset+2] = (alpha-beta)*l + beta;
+             * ```
+             *
+             * TODO: implement a smarter update scale.
+             */
             weightData[woffset+2] = 1;
-//            real alpha = 1;
-//            real beta = 0.01;
-//            real gamma = 1 - 0.000001;
-//            real l = weightData[woffset+2]==0?1/gamma:(weightData[woffset+2] - beta) / (alpha - beta);
-//            l = gamma*l;
-//            weightData[woffset+2] = (alpha-beta)*l + beta;
           }
-          val = (weightData[woffset+1] * val + weightData[woffset+3]);
+
+          /* Normalize + Clamp */
+          val = (absVal > weightData[woffset] ? THNN_INDEXLINEAR_SIGN(val):val*weightData[woffset+1]) + weightData[woffset+3];
           normalizedValuesData[offset] = val;
+
           lweightData = weightData + woffset + maxNormalize*weightStride1;
         }
         else
@@ -205,29 +210,6 @@ void THNN_(IndexLinear_updateOutput)(
         offset++;
       }
     }
-    if (fakeBatch)
-    {
-      for (j=0; j < batchSize; j++)
-      {
-        real* loutputData = outputData + j*outDim;
-        if (outDim > THNN_SPARSE_OUTDIM_THRESHOLD)
-        {
-          THBlas_(axpy)(outDim, 1, loutputData+1, 1, loutputData, 1);
-        }
-        else
-        {
-          for (k=1; k < outDim; k++)
-          {
-            loutputData[0] += loutputData[k];
-          }
-        }
-      }
-      THTensor_(resize2d)(output, 1, outDim);
-      THLongTensor_resize1d(sizes, 1);
-      sizesData[0] = keysSize;
-      THLongTensor_resize1d(cumSumSizes, 1);
-      cumSumSizesData[0] = 0L;
-    }
   }
   return;
 }
@@ -243,24 +225,22 @@ void THNN_(IndexLinear_updateParameters)(
           real weightDecay,
           real learningRate)
 {
-
+  /* Retrieve all the dimensions of the problem */
   long outDim = THTensor_(size)(bias, 0);
   long woutDim = THTensor_(size)(weight, 1);
   int maxNormalize = woutDim - outDim;
-  long inputDim = THTensor_(size)(weight, 0);
+  long keysSize = THLongTensor_size(runningKeys, 0);
 
+  /* Access the storage data/strides */
   real* gradWeightData = THTensor_(data)(gradWeight) + gradWeight->storageOffset;
   real* weightData = THTensor_(data)(weight) + weight->storageOffset;
   long weightStride0 = weight->stride[0];
   long weightStride1 = weight->stride[1];
   real* gradBiasData = THTensor_(data)(gradBias) + gradBias->storageOffset;
   real* biasData = THTensor_(data)(bias) + bias->storageOffset;
-
-  long keysSize = THLongTensor_size(runningKeys, 0);
-  long gwSize0 = THTensor_(size)(gradWeight, 0);
-  long gwSize1 = THTensor_(size)(gradWeight, 1);
   long* keysData = THLongTensor_data(runningKeys) + runningKeys->storageOffset;
 
+  /* Make sure these inputs are contiguous to accelerate computations */
   THArgCheck(THLongTensor_isContiguous(runningKeys), 1, "keys vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(bias), 6, "gradBias vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(weight), 5, "gradBias vector must be contiguous");
@@ -269,10 +249,16 @@ void THNN_(IndexLinear_updateParameters)(
 
   int j,k;
   long offset = 0;
+
+  /* Update the bias first */
   THVector_(add)(biasData, gradBiasData, -learningRate, outDim);
+
+  /* Separate cases: output dimension is == 1, or > 1
+   * This allows for some optimizations.
+   * No multithreading here as this could
+   * corrupt the results (hogwild style) */
   if (outDim == 1)
   {
-//    printf("gwSize0: %lu, gwSize1: %lu\n", gwSize0, gwSize1);
     if (maxNormalize)
     {
       if (weightDecay)
@@ -291,8 +277,6 @@ void THNN_(IndexLinear_updateParameters)(
         {
           long woffset = weightStride0*(keysData[j] + keysOffset) + maxNormalize;
           real lr = learningRate*weightData[woffset-2];
-//          printf("weightData[woffset-2]: %f, weightData[woffset]: %f, gradWeightData[2*j]: %f, gradWeightData[2*j+1]: %f\n", weightData[woffset-2], weightData[woffset], gradWeightData[2*j], gradWeightData[2*j+1]);
-//          printf("gradWeightData[2*j]: %f, gradWeightData[2*j+1]: %f\n", gradWeightData[2*j], gradWeightData[2*j+1]);
           weightData[woffset-1] -= weightData[woffset]*gradWeightData[2*j]*lr;
           weightData[woffset] -= gradWeightData[2*j+1]*lr;
         }
@@ -345,6 +329,16 @@ void THNN_(IndexLinear_updateParameters)(
         lweightData = weightData + woffset;
       }
 
+      /* We do sparse weight decay.
+       * We think it makes more sense. */
+      if (weightDecay)
+      {
+        for (k=0; k < outDim; k++)
+        {
+            lweightData[k] -= lweightData[k]*wd;
+        }
+      }
+
       if (outDim > THNN_SPARSE_OUTDIM_THRESHOLD)
       {
         THBlas_(axpy)(outDim, -lr, lgradWeightData, 1, lweightData, 1);
@@ -353,14 +347,7 @@ void THNN_(IndexLinear_updateParameters)(
       {
         for (k=0; k < outDim; k++)
         {
-            lweightData[k] -= lgradWeightData[k]*lr*lgradWeightData[outDim];
-        }
-      }
-      if (weightDecay)
-      {
-        for (k=0; k < outDim; k++)
-        {
-            lweightData[k] -= lweightData[k]*wd;
+          lweightData[k] -= lgradWeightData[k]*lr;
         }
       }
     }
@@ -380,14 +367,15 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
           real weightDecay,
           real scale)
 {
+  /* Retrieve all the dimensions of the problem */
   long batchSize = THLongTensor_size(sizes, 0);
   long keysSize = THLongTensor_size(keys, 0);
   long outDim = THTensor_(size)(bias, 0);
   long woutDim = THTensor_(size)(weight, 1);
   int maxNormalize = woutDim - outDim;
-  long inputDim = THTensor_(size)(weight, 0);
   THArgCheck(THNN_(checkKeysValues)(keys, values), 1, "Keys and values should have the same number of elements");
 
+  /* Access the storage data/strides */
   real* gradOutputData = THTensor_(data)(gradOutput) + gradOutput->storageOffset;
   real* valuesData =THTensor_(data)(values) + values->storageOffset;
   real* weightData = THTensor_(data)(weight) + weight->storageOffset;
@@ -398,6 +386,7 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
   long* keysData = THLongTensor_data(keys) + keys->storageOffset;
   long* sizesData = THLongTensor_data(sizes) + sizes->storageOffset;
 
+  /* Make sure these inputs are contiguous to accelerate computations */
   THArgCheck(THLongTensor_isContiguous(keys), 1, "keys vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(values), 2, "values vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(values), 6, "weight matrix must be contiguous");
@@ -405,6 +394,10 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
 
   int i,j,k;
 
+  /* Separate cases: output dimension is == 1, or > 1
+   * This allows for some optimizations.
+   * No multithreading here as this could
+   * corrupt the results (hogwild style) */
   if (outDim == 1)
   {
     if (maxNormalize)
@@ -418,7 +411,6 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
           real* lweightData = weightData;
           for (i = 0; i < sizesData[j]; i++) {
             long idx = weightStride0*(keysData[offset] + keysOffset) + maxNormalize;
-//            printf("weightData[idx-2]: %f, weightData[idx]: %f, val: %f, val*valuesData[offset]: %f\n", weightData[idx-2], weightData[idx], val, val*valuesData[offset]);
             weightData[idx-1] -= weightData[idx]*val*weightData[idx-2];
             weightData[idx] -= (val*valuesData[offset] - weightDecay * weightData[idx])*weightData[idx-2];
             offset++;
@@ -438,7 +430,6 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
     }
     else
     {
-      // No openmp for that loop as this could corrupt the results (hogwild style, but non-uniform)
       if (weightDecay)
       {
         long offset = 0;
@@ -472,7 +463,6 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
   }
   else {
     long offset = 0;
-    // No openmp for that loop as this could corrupt the results (hogwild style, but non-uniform)
     for (j = 0; j < batchSize; j++)
     {
       real val = 0;
@@ -500,17 +490,8 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
           lweightData = weightData + weightStride0*(keysData[offset] + keysOffset);
         }
 
-        if (outDim > THNN_SPARSE_OUTDIM_THRESHOLD)
-        {
-          THBlas_(axpy)(outDim, -val, lgradOutputData, 1, lweightData, weightStride1);
-        }
-        else
-        {
-          for (k=0; k < outDim; k++)
-          {
-            lweightData[k*weightStride1] -= val * lgradOutputData[k];
-          }
-        }
+        /* We do sparse weight decay.
+         * We think it makes more sense. */
         if (weightDecay)
         {
           if (outDim > THNN_SPARSE_OUTDIM_THRESHOLD)
@@ -525,17 +506,38 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
             }
           }
         }
+
+        if (outDim > THNN_SPARSE_OUTDIM_THRESHOLD)
+        {
+          THBlas_(axpy)(outDim, -val, lgradOutputData, 1, lweightData, weightStride1);
+        }
+        else
+        {
+          for (k=0; k < outDim; k++)
+          {
+            lweightData[k*weightStride1] -= val * lgradOutputData[k];
+          }
+        }
         offset++;
       }
     }
-    offset = 0;
-    for (j = 0; j < batchSize; j++)
+
+    /* Max Normalize case:
+     * Reset the smart update scaling if
+     * one does it batch-wise.
+     * TODO: Decide what to do with that piece of code.
+     * NB: If the code belowe is uncommented, so should the commented
+     * code in IndexLinear:zeroGradParameters() */
+
+    /*
+    if (maxNormalize)
     {
-      real* lweightData = weightData;
-      // Max normalize case
-      if (maxNormalize)
+      offset = 0;
+      for (j = 0; j < batchSize; j++)
       {
-        for (i = 0; i < sizesData[j]; i++) {
+        real* lweightData = weightData;
+        for (i = 0; i < sizesData[j]; i++)
+        {
           real val = valuesData[offset] * scale;
           real wd = weightDecay;
 
@@ -545,6 +547,7 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
         }
       }
     }
+    */
   }
   return;
 }
@@ -564,35 +567,25 @@ void THNN_(IndexLinear_accGradParameters)(
           real weightDecay,
           real scale)
 {
+  /* Retrieve all the dimensions of the problem */
   long batchSize = THLongTensor_size(sizes, 0);
   long keysSize = THLongTensor_size(keys, 0);
   long outDim = THTensor_(size)(bias, 0);
-  long inputDim = THTensor_(size)(weight, 0);
   long woutDim = THTensor_(size)(weight, 1);
   long maxNormalize = (woutDim - outDim) > 0 ?1:0;
   THArgCheck(THNN_(checkKeysValues)(keys, values), 1, "Keys and values should have the same number of elements");
-  long fakeBatch = 0;
   long* sizesData = sizes->storage->data + sizes->storageOffset;
-/*
-#ifdef _OPENMP
-  // Create a fake batch
-  if (keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize == 1 && omp_get_max_threads() > 1) {
-    fakeBatch = 1;
-    batchSize = omp_get_max_threads();
-    batchSize = keysSize / batchSize >= 1 ? batchSize:keysSize;
-    THLongTensor_resize1d(sizes, batchSize);
-    THLongTensor_fill(sizes, keysSize / batchSize);
-    sizesData = sizes->storage->data + sizes->storageOffset;
-    sizesData[0] += keysSize % batchSize;
-  }
-#endif
-*/
+
+  /* COmpute the cumulative sizes */
   THLongTensor* cumSizes = THLongTensor_new();
   THLongTensor_cumsum(cumSizes, sizes, 0);
   long* cumSizesData = cumSizes->storage->data +cumSizes->storageOffset;
-  // Resize the gradWeight buffer
+
+  /* Resize the gradWeight buffer to keep it dense.
+   * That speeds up updates A LOT assuming random mem access. */
   THTensor_(resize2d)(gradWeight, keysSize, outDim * (maxNormalize>0?2:1));
 
+  /* Access the storage data/strides */
   real* gradOutputData = THTensor_(data)(gradOutput) + gradOutput->storageOffset;
   real* valuesData =THTensor_(data)(values) + values->storageOffset;
   real* gradWeightData = THTensor_(data)(gradWeight) + gradWeight->storageOffset;
@@ -604,6 +597,7 @@ void THNN_(IndexLinear_accGradParameters)(
   long weightStride1 = weight->stride[1];
   long* keysData = THLongTensor_data(keys) + keys->storageOffset;
 
+  /* Make sure these inputs are contiguous to accelerate computations */
   THArgCheck(THLongTensor_isContiguous(keys), 2, "keys vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(values), 3, "values vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(gradBias), 8, "gradBias vector must be contiguous");
@@ -613,14 +607,16 @@ void THNN_(IndexLinear_accGradParameters)(
 
   int i,j,k;
 
+  /* Separate cases: output dimension is == 1, or > 1
+   * This allows for some optimizations.
+   * No multithreading here as this could
+   * corrupt the results (hogwild style) */
   if (outDim == 1)
   {
-    // No openmp for that loop as this could corrupt the results (hogwild style, but non-uniform)
-//TODO    #pragma omp parallel for private(i,j) firstprivate(batchSize, scale, keysOffset, gradOutputData, gradWeightData, gradBiasData, valuesData, cumSizesData, sizesData) schedule(static)  if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
     for (j = 0; j < batchSize; j++)
     {
       long offset = j==0?0:cumSizesData[j-1];
-      real val = gradOutputData[(1-fakeBatch)*j] * scale;
+      real val = gradOutputData[j] * scale;
       real* lgradWeightData = gradWeightData + offset;
       real* lvaluesData = valuesData + offset;
       long end = sizesData[j];
@@ -633,7 +629,6 @@ void THNN_(IndexLinear_accGradParameters)(
         {
           lgradWeightData[2*i] = val;
           lgradWeightData[2*i+1] = val * lvaluesData[i];
-//          printf("offset: %lu, i: %i, lgradWeightData[2*i]: %f, lgradWeightData[2*i+1]: %f\n", offset, i, lgradWeightData[2*i], lgradWeightData[2*i+1]);
         }
       }
       else
@@ -656,12 +651,11 @@ void THNN_(IndexLinear_accGradParameters)(
     }
   }
   else {
-//TODO    #pragma omp parallel for private(i,j) firstprivate(outDim, batchSize, scale, keysOffset, weightStride0, weightDecay, gradOutputData, gradBiasData, weightData, gradWeightData, keysData, valuesData, cumSizesData, sizesData) schedule(static)  if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
     for (j = 0; j < batchSize; j++)
     {
       long offset = j==0?0:cumSizesData[j-1];
       real val = 0;
-      real* lgradOutputData = gradOutputData + (1-fakeBatch)*j*outDim;
+      real* lgradOutputData = gradOutputData + j*outDim;
       real* lgradWeightData = gradWeightData;
       real* lweightData = weightData;
       THVector_(add)(gradBiasData, lgradOutputData, scale, outDim);
@@ -702,13 +696,6 @@ void THNN_(IndexLinear_accGradParameters)(
       }
     }
   }
-  /*
-  if (fakeBatch)
-  {
-    THLongTensor_resize1d(sizes, 1);
-    sizesData[0] = keysSize;
-  }
-  */
   THLongTensor_free(cumSizes);
   return;
 }

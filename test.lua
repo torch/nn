@@ -1412,15 +1412,15 @@ function nntest.SparseLinear()
    test_sparse_linear(1000, 1000, 10, 100)
 end
 
-function nntest.IndexLinear()
-   local inb = math.random(5,10)
-   local ini = math.random(50,100)
-   local inj = math.random(5,10)
-   local numNonzero = math.random(3,5)
+local function testIndexLinear(bsize, iSize, oSize, nnz)
+   local inb = bsize
+   local ini = iSize
+   local inj = oSize
 
-   local module = nn.IndexLinear(ini,inj, true)
+   local module = nn.IndexLinear(ini,inj, true, nil, nil, nil, false)
    local linear = nn.Linear(ini, inj)
-   module.weight = linear.weight:t():clone()
+   module.weight:zero()
+   module.weight:copy(linear.weight:t():clone())
    module.bias = linear.bias:clone()
    module:zeroGradParameters()
    linear:zeroGradParameters()
@@ -1429,10 +1429,9 @@ function nntest.IndexLinear()
    local input = {{},{}}
    local nonsparse = torch.zeros(inb, ini)
    for i=1,inb do
-       local nnz = math.random(1, 3)
-       input[1][i] = torch.randperm(ini)[{{1,nnz}}]:long()
-       input[2][i] = torch.ones(nnz)
-       nonsparse[i]:scatter(1, input[1][i], input[2][i])
+      input[1][i] = torch.randperm(ini)[{{1,nnz}}]:long()
+      input[2][i] = torch.ones(nnz):uniform()
+      nonsparse[i]:scatter(1, input[1][i], input[2][i])
    end
    local gradOutput = torch.rand(inb, inj)
    local cmps = {'weight', 'bias', 'gradBias'}
@@ -1444,11 +1443,11 @@ function nntest.IndexLinear()
    module:updateParameters(1)
    linear:updateParameters(1)
 
+
    local err = (expected - actual):abs():max()
    local gierr = (expectedgi - actualgi[2]):abs():max()
    mytester:assertle(err, precision, 'error on result')
    mytester:assertle(gierr, precision, 'error on gradInput')
-
    for _,var in ipairs(cmps) do
       local err
       if var == 'weight' then
@@ -1499,6 +1498,12 @@ function nntest.IndexLinear()
    test_n_times(1)
    test_n_times(2)
    test_n_times(3)
+end
+
+function nntest.IndexLinear()
+   testIndexLinear(4, 40 , 10, 30)
+   testIndexLinear(4, 40 , 500, 30)
+   testIndexLinear(4, 200000 , 5, 150000)
 
    local sizes = {
       {osize = 1, isize = 10000, nnz = 10000, bsize = 16},

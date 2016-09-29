@@ -9,8 +9,8 @@ function IndexLinear:__init(inputSize, outputSize, doGradInput, keysOffset, weig
    -- This is important to keep the possibility of sharing a weight
    -- directly, without having to allocate it first.
    -- The reason is these weights can be very large.
-   self.weight = self.weight or torch.Tensor(inputSize, outputSize + self.normalize):zero()
-   self.bias = self.bias or torch.Tensor(outputSize):zero()
+   self.weight = weight or torch.Tensor(inputSize, outputSize + self.normalize):zero()
+   self.bias = bias or torch.Tensor(outputSize):zero()
    self.inputSize = self.weight and self.weight:size(1) or inputSize
    self.outputSize = self.weight and (self.weight:size(2)-self.normalize) or outputSize
 
@@ -51,11 +51,9 @@ function IndexLinear:reset(stdv)
       stdv = 1./math.sqrt(self.weight:size(2))
    end
    self.weight:uniform(-stdv, stdv)
-   self.bias:uniform(-stdv, stdv)
-   if self.normalize then
+   self.bias:uniform(-stdv, stdv):mul(0.000001)
+   if self.normalize and self.normalize > 0 then
       self.weight[{{}, {1,self.normalize}}]:zero()
-      self.weight[{{}, {self.normalize+1,self.normalize+1}}]:fill(1/self.outputSize)
-      self.bias:fill(0)
    end
 end
 
@@ -90,12 +88,12 @@ function IndexLinear:updateOutput(input)
    self.cumSumSizes:resize(#self.lkeys)
    self.cumSumSizes[1] = 0
    for i=1,#self.lkeys do
+      assert(self.lvalues[i]:dim() == 1 and self.lkeys[i]:dim() == 1, "keys and values should be 1D")
       self.sizes[i] = self.lkeys[i]:size(1)
       if i > 1 then
          self.cumSumSizes[i] = self.cumSumSizes[i-1] + self.sizes[i-1]
       end
    end
---    print(self.cumSumSizes)
    self.keys:cat(self.lkeys, 1)
    self.values:cat(self.lvalues, 1)
 
@@ -159,6 +157,9 @@ end
 function IndexLinear:updateGradInput(input, gradOutput)
    self.gradInput = {{},{}}
    -- Revamped from nn.SparseLinear.updateGradInput
+   if self.doGradInput and self.normalize > 0 then
+      error('updateGradInput is not implemented in max-normalize mode')
+   end
    if self.doGradInput then
       local gi = gradOutput.new()
       if gradOutput:dim() == 1 then
@@ -223,11 +224,21 @@ end
 function IndexLinear:zeroGradParameters()
    -- No need to do anything here as gradWeight is dense
    self.gradBias:zero()
---    local w = self.weight:select(2, 3)
---    if self.updateKeys and self.updateKeys:nElement() > 0 then
---       self.updateKeysBuffer:resizeAs(self.updateKeys):copy(self.updateKeys):add(self.offset+1)
---       w:indexFill(1, self.updateKeysBuffer, 0)
---    end
+
+   -- The below piece of code would reset
+   -- the smart scaling parameters for each features
+   -- each time we call zeroGradParameters
+   -- TODO: decide what to do with that piece of code.
+   -- NB: this should be commented along with the corresponding
+   -- piece of code in lib/THNN/generic/IndexLinear.c, in the accUpdateGradParameters function.
+
+   --[[
+   local w = self.weight:select(2, 3)
+   if self.updateKeys and self.updateKeys:nElement() > 0 then
+      self.updateKeysBuffer:resizeAs(self.updateKeys):copy(self.updateKeys):add(self.offset+1)
+      w:indexFill(1, self.updateKeysBuffer, 0)
+   end
+   ]]--
    self.runningCter = 1
 end
 
