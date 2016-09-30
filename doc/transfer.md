@@ -252,7 +252,7 @@ gnuplot.grid(true)
 ## LogSoftMax ##
 
 ```lua
-f = nn.LogSoftMax
+f = nn.LogSoftMax()
 ```
 
 Applies the `LogSoftMax` function to an n-dimensional input `Tensor`.
