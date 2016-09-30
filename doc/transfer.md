@@ -1,32 +1,41 @@
 <a name="nn.transfer.dok"></a>
 # Transfer Function Layers #
-Transfer functions are normally used to introduce a non-linearity after a parameterized layer like [Linear](simple.md#nn.Linear) and  [SpatialConvolution](convolution.md#nn.SpatialConvolution). Non-linearities allows for dividing the problem space into more complex regions than what a simple logistic regressor would permit.
+
+Transfer functions are normally used to introduce a non-linearity after a parameterized layer like [`Linear`](simple.md#nn.Linear) and [`SpatialConvolution`](convolution.md#nn.SpatialConvolution).
+Non-linearities allows for dividing the problem space into more complex regions than what a simple logistic regressor would permit.
+
 
 <a name="nn.HardTanh"></a>
 ## HardTanh ##
 
-Applies the `HardTanh` function element-wise to the input Tensor,
-thus outputting a Tensor of the same dimension.
+```lua
+g = nn.HardTanh([min_value, max_value[, inplace]])
+```
+
+Applies the `HardTanh` function element-wise to the input `Tensor`, thus outputting a `Tensor` of the same dimension.
 
 `HardTanh` is defined as:
 
-  * `f(x)` = `1, if x >`  `1,`
-  * `f(x)` = `-1, if x <`  `-1,`
-  * `f(x)` = `x,` `otherwise.`
+```lua
+       ⎧ 1, if x >  1
+g(x) = ⎨-1, if x < -1
+       ⎩ x, otherwise
+```
 
-The range of the linear region `[-1 1]` can be adjusted by specifying arguments in declaration, for example `nn.HardTanh(min_value, max_value)`.
-Otherwise, `[min_value max_value]` is set to `[-1 1]` by default. In-place operation defined by third argument boolean.
-
+The range of the linear region `[-1 1]` can be adjusted by specifying arguments in declaration, for example  `nn.HardTanh(min_value, max_value)`.
+Otherwise, `[min_value max_value]` is set to `[-1 1]` by default.
+In-place operation defined by third argument boolean.
 
 ```lua
-ii=torch.linspace(-2,2)
-m=nn.HardTanh()
-oo=m:forward(ii)
-go=torch.ones(100)
-gi=m:backward(ii,go)
-gnuplot.plot({'f(x)',ii,oo,'+-'},{'df/dx',ii,gi,'+-'})
+ii = torch.linspace(-2, 2)
+m = nn.HardTanh()
+oo = m:forward(ii)
+go = torch.ones(100)
+gi = m:backward(ii, go)
+gnuplot.plot({'f(x)', ii, oo, '+-'}, {'df/dx', ii, gi, '+-'})
 gnuplot.grid(true)
 ```
+
 ![](image/htanh.png)
 
 
