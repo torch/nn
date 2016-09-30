@@ -1,7 +1,7 @@
 local ffi = require 'ffi'
 local RReLU, parent = torch.class('nn.RReLU', 'nn.Module')
 
-function RReLU:__init(l, u, ip)
+function RReLU:__init(l, u, ip, cw)
    parent.__init(self)
    self.lower = l or 1/8
    self.upper = u or 1/3
@@ -9,6 +9,7 @@ function RReLU:__init(l, u, ip)
    self.noise = torch.Tensor()
    self.train = true
    self.inplace = ip or false
+   self.channelwise = cw or false
 end
 
 function RReLU:updateOutput(input)
@@ -21,6 +22,7 @@ function RReLU:updateOutput(input)
       self.upper,
       self.train,
       self.inplace,
+      self.channelwise,
       gen
    )
    return self.output
@@ -35,13 +37,14 @@ function RReLU:updateGradInput(input, gradOutput)
       self.lower,
       self.upper,
       self.train,
-      self.inplace
+      self.inplace,
+      self.channelwise
    )
    return self.gradInput
 end
 
 function RReLU:__tostring__()
-  return string.format('%s (l:%f, u:%f)', torch.type(self), self.lower, self.upper)
+  return string.format('%s (l:%f, u:%f, channel-wise:%s)', torch.type(self), self.lower, self.upper, self.channelwise)
 end
 
 function RReLU:clearState()

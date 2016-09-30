@@ -308,6 +308,7 @@ TH_API void THNN_(RReLU_updateOutput)(
           real upper,
           bool train,
           bool inplace,
+          bool channelwise,
           THGenerator *generator);
 TH_API void THNN_(RReLU_updateGradInput)(
           THNNState *state,
@@ -318,7 +319,8 @@ TH_API void THNN_(RReLU_updateGradInput)(
           real lower,
           real upper,
           bool train,
-          bool inplace);
+          bool inplace,
+          bool channelwise);
 
 TH_API void THNN_(Sigmoid_updateOutput)(
           THNNState *state,

@@ -313,6 +313,7 @@ m=nn.ReLU(
    l,       -- minimum factor for negative inputs, default: 1/8;
    u,       -- maximum factor for negative inputs, default: 1/3;
    inplace  -- if true the result will be written to the input tensor, default: false;
+   cw       -- if true all elements of the same channel share the same `a`, default: false;
 )
 ```
 If `l == u` a RReLU effectively becomes a LeakyReLU. Regardless of operating in in-place mode a RReLU will internally allocate an input-sized `noise` tensor to store random factors for negative inputs. The backward() operation assumes that forward() has been called before.
