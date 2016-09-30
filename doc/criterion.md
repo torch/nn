@@ -131,7 +131,8 @@ function gradUpdate(mlp, x, y, learningRate)
 end
 ```
 
-By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed for each minibatch.
+By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed for each minibatch. Because of the current weighted average implementation, for weights to have any effect you need to disable minibatch averaging (by setting `sizeAverage` to `false`).
+
 
 
 <a name="nn.CrossEntropyCriterion"></a>
