@@ -117,7 +117,7 @@ function SpatialUpSamplingBilinear:updateGradInput(input, gradOutput)
 end
 
 
-function SpatialUp:__tostring__()
+function SpatialUpSamplingBilinear:__tostring__()
    local s
    if self.scale_factor ~= nil then
       s = string.format('%s(%d)', torch.type(self), self.scale_factor)
