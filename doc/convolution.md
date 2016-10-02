@@ -750,6 +750,7 @@ Where `u` and `v` are index from 1 (as per lua convention).  There are no learna
 
 ```lua
 module = nn.SpatialUpSamplingBilinear(scale)
+module = nn.SpatialUpSamplingBilinear({oheight=H, owidth=W})
 ```
 
 Applies a 2D up-sampling over an input image composed of several input planes. The `input` tensor in
