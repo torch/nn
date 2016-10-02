@@ -148,10 +148,10 @@ function LookupTable:type(type, tensorCache)
 
    if type == 'torch.CudaTensor' then
       -- CUDA uses _sorted and _indices temporary tensors
-      self._sorted = torch.CudaLongTensor.new()
-      self._indices = torch.CudaLongTensor.new()
-      self._count = torch.CudaLongTensor.new()
-      self._input = torch.CudaLongTensor.new()
+      self._sorted = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
+      self._indices = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
+      self._count = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
+      self._input = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
    else
       -- self._count and self._input should only be converted if using Cuda
       self._count = torch.IntTensor()

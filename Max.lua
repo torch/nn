@@ -20,8 +20,13 @@ end
 
 function Max:_lazyInit()
    self._output = self._output or self.output.new()
-   self._indices = self._indices or
-      (torch.type(self.output) == 'torch.CudaTensor' and torch.CudaLongTensor() or torch.LongTensor())
+   if not self._indices then
+      if torch.type(self.output) == 'torch.CudaTensor' then
+         self._indices = torch.CudaLongTensor and torch.CudaLongTensor() or torch.CudaTensor()
+      else
+         self._indices = torch.LongTensor()
+      end
+   end
 end
 
 function Max:updateOutput(input)
