@@ -23,9 +23,13 @@ function Normalize:updateOutput(input)
 
   if self.p == math.huge then
     -- specialization for the infinity norm
-    self._indices = self._indices or
-      (torch.type(self.output) == 'torch.CudaTensor' and
-       torch.CudaLongTensor() or torch.LongTensor())
+    if not self._indices then
+      if torch.type(self.output) == 'torch.CudaTensor' then
+        self._indices = torch.CudaLongTensor and torch.CudaLongTensor() or torch.CudaTensor()
+      else
+        self._indices = torch.LongTensor()
+      end
+    end
 
     self.buffer:abs(input)
     torch.max(self.norm, self._indices, self.buffer, 2)
