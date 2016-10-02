@@ -29,13 +29,13 @@ end
 function ClassNLLCriterion:updateOutput(input, target)
    if type(target) == 'number' then
       if input:type() == 'torch.CudaTensor' then
-          self.target = torch.cudaLong and self.target:cudaLong() or self.target:cuda()
+          self.target = torch.CudaLongTensor and self.target:cudaLong() or self.target:cuda()
       else
           self.target = self.target:long()
       end
       self.target[1] = target
    elseif target:type() == 'torch.CudaTensor' then
-      self.target = torch.cudaLong and target:cudaLong() or target
+      self.target = torch.CudaLongTensor and target:cudaLong() or target
    else
       self.target = target:long()
    end
@@ -55,13 +55,13 @@ end
 function ClassNLLCriterion:updateGradInput(input, target)
    if type(target) == 'number' then
       if input:type() == 'torch.CudaTensor' then
-          self.target = torch.cudaLong and self.target:cudaLong() or self.target:cuda()
+          self.target = torch.CudaLongTensor and self.target:cudaLong() or self.target:cuda()
       else
           self.target = self.target:long()
       end
       self.target[1] = target
    elseif target:type() == 'torch.CudaTensor' then
-      self.target = torch.cudaLong and target:cudaLong() or target
+      self.target = torch.CudaLongTensor and target:cudaLong() or target
    else
       self.target = target:long()
    end
