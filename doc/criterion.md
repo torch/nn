@@ -112,10 +112,10 @@ loss(x, class) = -x[class]
 ```
 
 or in the case of the `weights` argument it is specified as follows:
-
 ```lua
 loss(x, class) = -weights[class] * x[class]
 ```
+Due to the behaviour of the backend code, it is necessary to set sizeAverage to false when calculating losses *in non-batch mode*.
 
 The following is a code fragment showing how to make a gradient step given an input `x`, a desired output `y` (an integer `1` to `n`, in this case `n = 2` classes), a network `mlp` and a learning rate `learningRate`:
 
@@ -161,7 +161,11 @@ or in the case of the `weights` argument being specified:
 ```lua
 loss(x, class) = weights[class] * (-x[class] + log(\sum_j exp(x[j])))
 ```
-
+Due to the behaviour of the backend code, it is necessary to set sizeAverage to false when calculating losses *in non-batch mode*.
+```lua
+crit = nn.CrossEntropyCriterion(weights)
+crit.nll.sizeAverage = false
+```
 The losses are averaged across observations for each minibatch.
 
 <a name="nn.ClassSimplexCriterion"/>
