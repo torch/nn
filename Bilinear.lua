@@ -86,7 +86,8 @@ function Bilinear:updateGradInput(input, gradOutput)
       self:__assertInputGradOutput(input, gradOutput)
 
       if #self.gradInput == 0 then
-          for i = 1, 2 do self.gradInput[i] = input[1].new() end                                                                                                                                               end
+          for i = 1, 2 do self.gradInput[i] = input[1].new() end
+      end
 
       -- compute d output / d input:
       self.gradInput[1]:resizeAs(input[1]):fill(0)
