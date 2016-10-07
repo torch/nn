@@ -8,21 +8,28 @@ input planes.
 
 The Y and X dimensions are assumed to be the last 2 tensor dimensions.  For
 instance, if the tensor is 4D, then dim 3 is the y dimension and dim 4 is the x.
-scale_factor is assumed to be a positive integer.
 
+scale_factor is assumed to be a positive integer. 
 owidth  = (width-1)*(scale_factor-1) + width
 oheight  = (height-1)*(scale_factor-1) + height
+
+Alternatively, owidth and oheight can be directly provided as input.
 --]]
 
-function SpatialUpSamplingBilinear:__init(scale_factor)
+function SpatialUpSamplingBilinear:__init(params)
    parent.__init(self)
 
-   self.scale_factor = scale_factor
-   if self.scale_factor < 1 then
-     error('scale_factor must be greater than 1')
-   end
-   if math.floor(self.scale_factor) ~= self.scale_factor then
-     error('scale_factor must be integer')
+   self.owidth, self.oheight, self.scale_factor = nil, nil, nil
+   if torch.type(params) == 'table' then
+      self.owidth, self.oheight = params.owidth, params.oheight
+   else
+      self.scale_factor = params   
+      if self.scale_factor < 1 then
+         error('scale_factor must be greater than 1')
+      end
+      if math.floor(self.scale_factor) ~= self.scale_factor then
+         error('scale_factor must be integer')
+      end
    end
    self.inputSize = torch.LongStorage(4)
    self.outputSize = torch.LongStorage(4)
@@ -46,7 +53,7 @@ end
 
 function SpatialUpSamplingBilinear:updateOutput(input)
    assert(input:dim() == 4 or input:dim()==3,
-            'SpatialUpSamplingBilinear only support 3D or 4D tensors' )
+            'SpatialUpSamplingBilinear only supports 3D or 4D tensors' )
    local inputwas3D = false
    if input:dim() == 3 then
       input=input:view(-1, input:size(1), input:size(2), input:size(3))
@@ -58,13 +65,18 @@ function SpatialUpSamplingBilinear:updateOutput(input)
    local xdim = input:dim()
    local ydim = input:dim() - 1
    for i = 1, input:dim() do
-     self.inputSize[i] = input:size(i)
-     self.outputSize[i] = input:size(i)
+      self.inputSize[i] = input:size(i)
+      self.outputSize[i] = input:size(i)
    end
-   self.outputSize[ydim] = (self.outputSize[ydim]-1) * (self.scale_factor-1)
-                           + self.outputSize[ydim]
-   self.outputSize[xdim] = (self.outputSize[xdim]-1) * (self.scale_factor -1)
-                           + self.outputSize[xdim]
+   if self.scale_factor ~= nil then
+      self.outputSize[ydim] = (self.outputSize[ydim]-1) * (self.scale_factor-1)
+                              + self.outputSize[ydim]
+      self.outputSize[xdim] = (self.outputSize[xdim]-1) * (self.scale_factor -1)
+                              + self.outputSize[xdim]
+   else
+      self.outputSize[ydim] = self.oheight
+      self.outputSize[xdim] = self.owidth
+   end
    -- Resize the output if needed
    self.output:resize(self.outputSize)
    input.THNN.SpatialUpSamplingBilinear_updateOutput(
@@ -106,6 +118,12 @@ end
 
 
 function SpatialUpSamplingBilinear:__tostring__()
-   local s = string.format('%s(%d)', torch.type(self), self.scale_factor)
+   local s
+   if self.scale_factor ~= nil then
+      s = string.format('%s(%d)', torch.type(self), self.scale_factor)
+   else
+      s = string.format('%s(%d, %d)', 
+         torch.type(self), self.oheight, self.owidth)
+   end
    return s
 end

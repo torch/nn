@@ -750,6 +750,7 @@ Where `u` and `v` are index from 1 (as per lua convention).  There are no learna
 
 ```lua
 module = nn.SpatialUpSamplingBilinear(scale)
+module = nn.SpatialUpSamplingBilinear({oheight=H, owidth=W})
 ```
 
 Applies a 2D up-sampling over an input image composed of several input planes. The `input` tensor in
@@ -757,8 +758,10 @@ Applies a 2D up-sampling over an input image composed of several input planes. T
 
 The parameters are the following:
   * `scale`: The upscale ratio.  Must be a positive integer
+  * Or a table `{oheight=H, owidth=W}`: The required output height and width, should be positive integers.
 
-The up-scaling method is bilinear, and given an input of height iH and width iW, output height and width will be:
+The up-scaling method is bilinear.
+If `scale` is specified, given an input of height iH and width iW, output height and width will be:
 ```lua
 oH = (iH - 1)(scale - 1) + iH
 oW = (iW - 1)(scale - 1) + iW
