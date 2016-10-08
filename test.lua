@@ -121,6 +121,200 @@ function nntest.Bottle()
    mytester:eq(gradOutput1, gradOutput2, 0.0001, 'Bottle gradOutput not the same as Module')
 end
 
+function nntest.CAdd()
+   local function testBackwardPass(module, input, params, dparams)
+      local err = jac.testJacobian(module,input)
+      mytester:assertlt(err,precision, "error computing gradiens w.r.t. inputs")
+
+      err = jac.testJacobianParameters(module, input, params, dparams)
+      mytester:assertlt(err,precision, "error computing gradients w.r.t params")
+
+      err = jac.testJacobianUpdateParameters(module, input, module.bias)
+      mytester:assertlt(err,precision, "error in update using gradients w.r.t parameters")
+
+      --Test all of the various update methods
+      for test, err in pairs(jac.testAllUpdate(module, input, "bias", "gradBias")) do
+         mytester:assertlt(err, precision, string.format("error on bias [%s]", test))
+      end
+   end
+
+   local function testModuleIO(module, input)
+      local fwdErr,bkwdErr = jac.testIO(module,input)
+      mytester:asserteq(fwdErr, 0, torch.typename(module) .. " - i/o forward err ")
+      mytester:asserteq(bkwdErr, 0, torch.typename(module) .. " - i/o backward err ")
+   end
+
+   local function testCAddWithNonBatchedInput()
+      local channels = math.random(3,5)
+      local width = math.random(3,5)
+      local height = math.random(3,5)
+
+      local input = torch.Tensor(channels, height, width):zero()
+
+      --Per channel bias
+      local module = nn.CAdd(channels, 1, 1)
+      local params, gradParams = module:getParameters()
+
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      local output = module:forward(input)
+      mytester:assert(output:isSameSizeAs(input))
+
+      for i = 1, module.bias:view(-1):size(1) do
+         local bias = module.bias:view(-1)[i]
+         local result = output[i]:view(-1)
+         local expectedResult = torch.Tensor({bias}):expandAs(result)
+         mytester:assertTensorEq(result, expectedResult, precision)
+      end
+
+      --Per row bias
+      module = nn.CAdd(1, height, 1)
+      params, gradParams = module:getParameters()
+
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      output = module:forward(input)
+      mytester:assert(output:isSameSizeAs(input))
+
+      for i = 1, module.bias:view(-1):size(1) do
+         local bias = module.bias:view(-1)[i]
+         local result = output[{{}, {i}, {}}]:contiguous():view(-1)
+         local expectedResult = torch.Tensor({bias}):expandAs(result)
+         mytester:assertTensorEq(result, expectedResult, precision)
+      end
+
+      --Per column bias
+      module = nn.CAdd(1, 1, width)
+      params, gradParams = module:getParameters()
+
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      output = module:forward(input)
+      mytester:assert(output:isSameSizeAs(input))
+
+      for i = 1, module.bias:view(-1):size(1) do
+         local bias = module.bias:view(-1)[i]
+         local result = output[{{}, {}, {i}}]:contiguous():view(-1)
+         local expectedResult = torch.Tensor({bias}):expandAs(result)
+         mytester:assertTensorEq(result, expectedResult, precision)
+      end
+
+      --Per input component bias
+      module = nn.CAdd(channels, height, width)
+      params, gradParams = module:getParameters()
+
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      output = module:forward(input)
+
+      mytester:assert(output:isSameSizeAs(input))
+      mytester:assert(module.bias:isSameSizeAs(input))
+      mytester:assertTensorEq(module.bias, output, precision)
+
+      testModuleIO(module, input)
+   end
+
+   local function testCAddWithBatchedInput()
+      local batchSize = math.random(3,5)
+      local channels = math.random(3,5)
+      local width = math.random(3,5)
+      local height = math.random(3,5)
+
+      local input = torch.Tensor(batchSize, channels, height, width):zero()
+      local module = nn.CAdd(batchSize, channels, height, width)
+
+      --Per batch bias
+      local module = nn.CAdd(batchSize, 1, 1, 1)
+      local params, gradParams = module:getParameters()
+
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      local output = module:forward(input)
+      mytester:assert(output:isSameSizeAs(input))
+
+      for i = 1, module.bias:view(-1):size(1) do
+         local bias = module.bias:view(-1)[i]
+         local result = output[i]:view(-1)
+         local expectedResult = torch.Tensor({bias}):expandAs(result)
+         mytester:assertTensorEq(result, expectedResult, precision)
+      end
+
+      --Per channel bias
+      module = nn.CAdd(1, channels, 1, 1)
+      params, gradParams = module:getParameters()
+
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      output = module:forward(input)
+      mytester:assert(output:isSameSizeAs(input))
+
+      for i = 1, module.bias:view(-1):size(1) do
+         local bias = module.bias:view(-1)[i]
+         local result = output[{{}, {i}, {}, {}}]:contiguous():view(-1)
+         local expectedResult = torch.Tensor({bias}):expandAs(result)
+         mytester:assertTensorEq(result, expectedResult, precision)
+      end
+
+      --Per row bias
+      module = nn.CAdd(1, 1, height, 1)
+      params, gradParams = module:getParameters()
+
+       testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      output = module:forward(input)
+      mytester:assert(output:isSameSizeAs(input))
+
+      for i = 1, module.bias:view(-1):size(1) do
+         local bias = module.bias:view(-1)[i]
+         local result = output[{{}, {}, {i}, {}}]:contiguous():view(-1)
+         local expectedResult = torch.Tensor({bias}):expandAs(result)
+         mytester:assertTensorEq(result, expectedResult, precision)
+      end
+
+      --Per column bias
+      module = nn.CAdd(1, 1, 1, width)
+      params, gradParams = module:getParameters()
+
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      output = module:forward(input)
+      mytester:assert(output:isSameSizeAs(input))
+
+      for i = 1, module.bias:view(-1):size(1) do
+         local bias = module.bias:view(-1)[i]
+         local result = output[{{}, {}, {}, {i}}]:contiguous():view(-1)
+         local expectedResult = torch.Tensor({bias}):expandAs(result)
+         mytester:assertTensorEq(result, expectedResult, precision)
+      end
+
+      --Per input component bias
+      module = nn.CAdd(batchSize, channels, height, width)
+      params, gradParams = module:getParameters()
+
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      output = module:forward(input)
+
+      mytester:assert(output:isSameSizeAs(input))
+      mytester:assert(module.bias:isSameSizeAs(input))
+      mytester:assertTensorEq(module.bias, output, precision)
+
+      testModuleIO(module, input)
+   end
+
+   testCAddWithNonBatchedInput()
+   testCAddWithBatchedInput()
+end
+
 function nntest.CMul()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
