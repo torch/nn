@@ -9,7 +9,12 @@ function SpatialDilatedMaxPooling:__init(kW, kH, dW, dH, padW, padH, dilationW, 
 end
 
 function SpatialDilatedMaxPooling:updateOutput(input)
-   self.indices = self.indices or input.new()
+   self.indices = self.indices or torch.LongTensor()
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+      self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
+   else
+      self.indices = self.indices:long()
+   end
 
    local dims = input:dim()
    self.iheight = input:size(dims-1)
