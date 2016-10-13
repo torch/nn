@@ -10,9 +10,9 @@ end
 function SpatialAdaptiveMaxPooling:updateOutput(input)
    self.indices = self.indices or torch.LongTensor()
    if torch.typename(input):find('torch%.Cuda.*Tensor') then
-       self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
+      self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
    else
-       self.indices = self.indices:long()
+      self.indices = self.indices:long()
    end
    input.THNN.SpatialAdaptiveMaxPooling_updateOutput(
       input:cdata(),
