@@ -6855,3 +6855,9 @@ function nn.test(tests, seed)
    torch.setnumthreads(nThreads)
    return mytester
 end
+
+function nn.testTHNN(tests, seed)
+   require 'test.LinearTHNN'
+   nn.Linear = nn.LinearTHNN
+   return nn.test(tests,seed)
+end
