@@ -174,6 +174,8 @@ require('nn.BCECriterion')
 require('nn.CrossEntropyCriterion')
 require('nn.ParallelCriterion')
 
+require('nn.PixelShuffle')
+
 require('nn.StochasticGradient')
 
 require('nn.MM')

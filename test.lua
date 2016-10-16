@@ -6612,6 +6612,167 @@ function nntest.VolumetricReplicationPadding()
    end
 end
 
+function nntest.PixelShuffle()
+   -- Checks whether a given tensor has the specified size
+   local function tensorHasSize(tensor, size)
+      local tensorSize = tensor:size()
+
+      if tensorSize:size() ~= #size then
+         return false
+      end
+      for i,v in ipairs(size) do
+         if tensorSize[i] ~= size[i] then
+            return false
+         end
+      end
+      return true
+   end
+
+   --Verifies that the output is the input re-shuffled as per Eq 4. in
+   -- "Real-Time Single Image and Video Super-Resolution Using an Efficient
+   -- Sub-Pixel Convolutional Neural Network", Shi et al.
+   -- @param - the input, low-resolution image of shape [1, c, h , w]
+   -- @param - the output, super resolved image of shape [1, c, h ,w]
+   -- @param - upscale factor of the super resolutin
+   -- @returns true if output complies with Eq 4.
+   local function verifyPixelShuffle(_input, _output, upscaleFactor)
+      local input = _input
+      local output = _output
+
+      if input:nDimension() == 3 then
+         input = input:view(1, input:size(1), input:size(2), input:size(3))
+         output = output:view(1, output:size(1), output:size(2), output:size(3))
+      end
+
+      for c = 1, output:size(2)  do
+         for h = 1, output:size(3) do
+            for w = 1, output:size(4) do
+               local heightIdx = torch.floor((h - 1)/upscaleFactor) + 1
+               local widthIdx = torch.floor((w - 1)/upscaleFactor) + 1
+                  --c does not need to be (c - 1) as it starts at 1 not zero
+                  local channelIdx = upscaleFactor * ((h-1) % upscaleFactor) + ((w-1) % upscaleFactor) + 1 + (c-1)*upscaleFactor*upscaleFactor
+
+                  mytester:assertTensorEq(output[{{}, {c}, {h}, {w}}], input[{{}, {channelIdx}, {heightIdx}, {widthIdx}}],
+                                        string.format("output at location (%d, %d, %d) is incorrect", c, h, w))
+            end
+         end
+      end
+      return true
+   end
+
+   -- Checks the nn.PixelShuffle layer's forward pass. It checks that is
+   -- re-arranges input pixels correctly according to Eq. 4 of
+   -- "Real-Time Single Image and Video Super-Resolution Using an Efficient
+   -- Sub-Pixel Convolutional Neural Network", Shi et al.
+   -- This function tests for multip batch sizes, multiple channels and multiple input dimensions (square)
+   -- It also tests for normal tensors (un-batched)
+   function testPixelShuffleUpdateOutput()
+      --Test with batched input
+      for h = 1, 3 do
+         local batchSize = torch.round(torch.uniform(1, 3))
+         for i = 1, 3 do
+            local upscaleFactor = torch.round(torch.uniform(2,5))
+            local pixelShuffle = nn.PixelShuffle(upscaleFactor)
+            for j = 1, 3 do
+               local channels = torch.round(torch.uniform(1, 4))
+               for k = 1, 3 do
+
+                     local inputDim = torch.round(torch.uniform(5, 10))
+                     local input = torch.Tensor(batchSize, channels * upscaleFactor * upscaleFactor, inputDim, inputDim)
+                     input:uniform()
+
+                     local output = pixelShuffle:forward(input)
+                     local expectedOutputDim = inputDim * upscaleFactor
+                     mytester:assert(tensorHasSize(output, {batchSize, channels, expectedOutputDim, expectedOutputDim}),
+                     string.format("Output tensor should have size (%d, %d, %d, %d) not %s", batchSize, channels, expectedOutputDim, expectedOutputDim, tostring(output:size())))
+                     verifyPixelShuffle(input, output, upscaleFactor)
+               end
+            end
+         end
+      end
+
+      --Test with non-batched input
+      local inputDim = torch.round(torch.uniform(5, 10))
+      local channels = torch.round(torch.uniform(1, 4))
+      local upscaleFactor = torch.round(torch.uniform(2,5))
+
+      local input = torch.Tensor(channels * upscaleFactor * upscaleFactor, inputDim, inputDim)
+      input:uniform()
+
+      local pixelShuffle = nn.PixelShuffle(upscaleFactor)
+      local output = pixelShuffle:forward(input)
+      local expectedOutputDim = inputDim * upscaleFactor
+      mytester:assert(tensorHasSize(output, {channels, expectedOutputDim, expectedOutputDim}),
+      string.format("Output tensor should have size (%d, %d, %d) not %s", channels, expectedOutputDim, expectedOutputDim, tostring(output:size())))
+
+      verifyPixelShuffle(input, output, upscaleFactor)
+   end
+
+   -- Checks the nn.PixelShuffle layer's backward pass. It checks that is
+   -- essentially performs the inverse of Eq 4. in
+   -- "Real-Time Single Image and Video Super-Resolution Using an Efficient
+   -- Sub-Pixel Convolutional Neural Network", Shi et al.
+   -- This function tests for multip batch sizes, multiple channels and multiple input dimensions (square)
+   -- It also tests for normal tensors (un-batched)
+   function testPixelShuffleUpdateGradInput()
+      --Test with batched input
+      for h = 1, 3 do
+         local batchSize = torch.round(torch.uniform(1, 3))
+         for i = 1, 3 do
+            local upscaleFactor = torch.round(torch.uniform(2,5))
+            local pixelShuffle = nn.PixelShuffle(upscaleFactor)
+               for j = 1, 3 do
+                  local channels = torch.round(torch.uniform(1, 4))
+                  for k = 1, 3 do
+                     local inputDim = torch.round(torch.uniform(5, 10))
+                     local input = torch.Tensor(batchSize, channels * upscaleFactor * upscaleFactor, inputDim, inputDim)
+
+                     input:uniform()
+
+                     local output = pixelShuffle:forward(input)
+                     --here we treat output as the same as gradOutput as they have the same shape
+                     local reconstructedInput = pixelShuffle:backward(input, output)
+                     mytester:assertTensorEq(reconstructedInput, input, 0)
+                  end
+            end
+         end
+      end
+
+      --Test with non-batched input
+      local inputDim = torch.round(torch.uniform(5, 10))
+      local channels = torch.round(torch.uniform(1, 4))
+      local upscaleFactor = torch.round(torch.uniform(2,5))
+      local input = torch.Tensor(channels * upscaleFactor * upscaleFactor, inputDim, inputDim)
+      input:uniform()
+
+      local pixelShuffle = nn.PixelShuffle(upscaleFactor)
+      local output = pixelShuffle:forward(input)
+      --here we treat output as the same as gradOutput as they have the same shape
+      local reconstructedInput = pixelShuffle:backward(input, output)
+      mytester:assertTensorEq(reconstructedInput, input, 0)
+
+      local err = jac.testJacobian(pixelShuffle, input)
+      mytester:assertlt(err,precision, "error computing gradiens w.r.t. inputs")
+   end
+
+   function testModuleIO()
+      --Test with non-batched input
+      local inputDim = torch.round(torch.uniform(5, 10))
+      local channels = torch.round(torch.uniform(1, 4))
+      local upscaleFactor = torch.round(torch.uniform(2,5))
+      local input = torch.Tensor(channels * upscaleFactor * upscaleFactor, inputDim, inputDim):uniform()
+      local pixelShuffle = nn.PixelShuffle(upscaleFactor)
+
+      local fwdErr,bkwdErr = jac.testIO(pixelShuffle,input)
+      mytester:asserteq(fwdErr, 0, torch.typename(pixelShuffle) .. " - i/o forward err ")
+      mytester:asserteq(bkwdErr, 0, torch.typename(pixelShuffle) .. " - i/o backward err ")
+   end
+
+   testPixelShuffleUpdateOutput()
+   testPixelShuffleUpdateGradInput()
+   testModuleIO()
+end
+
 function nntest.Typecast()
   local function make_network()
     local seq = nn.Sequential()
