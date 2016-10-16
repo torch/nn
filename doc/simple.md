@@ -45,6 +45,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [MM](#nn.MM) : matrix-matrix multiplication (also supports batches of matrices) ;
   * Miscellaneous Modules :
     * [BatchNormalization](#nn.BatchNormalization) : mean/std normalization over the mini-batch inputs (with an optional affine transform) ;
+    * [PixelShuffle](#nn.PixelShuffle) : Rearranges elements in a tensor of shape `[C*r, H, W]` to a tensor of shape `[C, H*r, W*r]` ;
     * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable)) ;
     * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
     * [SpatialDropout](#nn.SpatialDropout) : same as Dropout but for spatial inputs where adjacent pixels are strongly correlated ;
@@ -295,6 +296,7 @@ This version performs the same function as ```nn.Dropout```, however it assumes 
 As described in the paper "Efficient Object Localization Using Convolutional Networks" (http://arxiv.org/abs/1411.4280), if adjacent voxels within feature maps are strongly correlated (as is normally the case in early convolution layers) then iid dropout will not regularize the activations and will otherwise just result in an effective learning rate decrease.  In this case, ```nn.VolumetricDropout``` will help promote independence between feature maps and should be used instead.
 
 ```nn.VolumetricDropout``` accepts 4D or 5D inputs.  If the input is 4D than a layout of (features x time x height x width) is assumed and for 5D (batch x features x time x height x width) is assumed.
+
 
 <a name="nn.Abs"></a>
 ## Abs ##
@@ -1384,6 +1386,37 @@ model = nn.BatchNormalization(m, nil, nil, false)
 A = torch.randn(b, m)
 C = model:forward(A)  -- C will be of size `b x m`
 ```
+
+
+<a name="nn.PixelShuffle"></a>
+## PixelShuffle ##
+```module = nn.PixelShuffle(r)```
+
+Rearranges elements in a tensor of shape `[C*r, H, W]` to a tensor of shape `[C, H*r, W*r]`. This is useful for implementing efficient sub-pixel convolution with a stride of `1/r` (see [Shi et. al](https://arxiv.org/abs/1609.05158)). Below we show how the `PixelShuffle` module can be used to learn upscaling filters to transform a low-resolution input to a high resolution one, with a 3x upscale factor. This is useful for tasks such as super-resolution, see ["Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel Convolutional Neural Network" - Shi et al.](https://arxiv.org/abs/1609.05158) for further details.
+
+```
+upscaleFactor = 3
+inputChannels = 1
+
+model = nn.Sequential()
+model:add(nn.SpatialConvolution(inputChannels, 64, 5, 5, 1, 1, 2, 2))
+model:add(nn.ReLU())
+
+model:add(nn.SpatialConvolution(64, 32, 3, 3, 1, 1, 1, 1))
+model:add(nn.ReLU())
+
+model:add(nn.SpatialConvolution(32, inputChannels * upscaleFactor * upscaleFactor, 3, 3, 1, 1, 1, 1))
+model:add(nn.PixelShuffle(upscaleFactor))
+
+input = torch.Tensor(1, 192, 256);
+out = model:forward(input)
+out:size()
+   1
+ 576
+ 768
+[torch.LongStorage of size 3]
+```
+
 
 <a name="nn.Padding"></a>
 ## Padding ##
