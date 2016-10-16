@@ -8,6 +8,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Bilinear](#nn.Bilinear) : a bilinear transformation with sparse inputs ;
     * [PartialLinear](#nn.PartialLinear) : a linear transformation with sparse inputs with the option of only computing a subset ;
     * [Add](#nn.Add) : adds a bias term to the incoming data ;
+    * [CAdd](#nn.CAdd) : a component-wise addition to the incoming data ;
     * [Mul](#nn.Mul) : multiply a single scalar factor to the incoming data ;
     * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
     * [Euclidean](#nn.Euclidean) : the euclidean distance of the input to `k` mean centers ;
@@ -364,6 +365,57 @@ gives the output:
 
 i.e. the network successfully learns the input `x` has been shifted to produce the output `y`.
 
+<a name='nn.CAdd'></a>
+## CAdd ##
+
+```lua
+module = nn.CAdd(size)
+```
+
+Applies a component-wise addition to the incoming data, i.e. `y_i = x_i + b_i`. Argument `size` can be one or many numbers (sizes) or a `torch.LongStorage`. For example, `nn.CAdd(3,4,5)` is equivalent to `nn.CAdd(torch.LongStorage{3,4,5})`. If the size for a particular dimension is 1, the addition will be expanded along the entire axis.
+
+Example:
+
+```lua
+mlp = nn.Sequential()
+mlp:add(nn.CAdd(5, 1))
+
+y = torch.Tensor(5, 4)
+bf = torch.Tensor(5, 4)
+for i = 1, 5 do bf[i] = i; end -- scale input with this
+
+function gradUpdate(mlp, x, y, criterion, learningRate)
+   local pred = mlp:forward(x)
+   local err = criterion:forward(pred, y)
+   local gradCriterion = criterion:backward(pred, y)
+   mlp:zeroGradParameters()
+   mlp:backward(x, gradCriterion)
+   mlp:updateParameters(learningRate)
+   return err
+end
+
+for i = 1, 10000 do
+   x = torch.rand(5, 4)
+   y:copy(x)
+   y:add(bf)
+   err = gradUpdate(mlp, x, y, nn.MSECriterion(), 0.01)
+end
+
+print(mlp:get(1).bias)
+```
+
+gives the output:
+
+```lua
+ 1.0000
+ 2.0000
+ 3.0000
+ 4.0000
+ 5.0000
+[torch.Tensor of dimension 5x1]
+```
+
+i.e. the network successfully learns the input `x` has been shifted by those bias factors to produce the output `y`.
 
 <a name="nn.Mul"></a>
 ## Mul ##
