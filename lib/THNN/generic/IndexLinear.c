@@ -47,37 +47,36 @@ void THNN_(IndexLinear_updateOutput)(
   long outDim = THTensor_(size)(bias, 0);
   long woutDim = THTensor_(size)(weight, 1);
   int maxNormalize = woutDim - outDim;
-  long* sizesData = sizes->storage->data + sizes->storageOffset;
-  long* cumSumSizesData = cumSumSizes->storage->data + cumSumSizes->storageOffset;
+  long* sizesData = THLongTensor_data(sizes);
+  long* cumSumSizesData = THLongTensor_data(cumSumSizes);
 
   /* Define/resize the normalized values tensor if maxNormalize is  > 0 */
   real* normalizedValuesData = NULL;
   if (maxNormalize)
   {
     THTensor_(resize1d)(normalizedValues, keysSize);
-    normalizedValuesData = normalizedValues->storage->data + normalizedValues->storageOffset;
+    normalizedValuesData = THTensor_(data)(normalizedValues);
   }
 
   /* Resize the output */
   THTensor_(resize2d)(output, batchSize, outDim);
 
   /* Access the storage data/strides */
-  real* outputData = output->storage->data + output->storageOffset;
-  real* valuesData = values->storage->data + values->storageOffset;
-  real* weightData = weight->storage->data + weight->storageOffset;
+  real* outputData = THTensor_(data)(output);
+  real* valuesData = THTensor_(data)(values);
+  real* weightData = THTensor_(data)(weight);
   long weightStride0 = weight->stride[0];
-  long weightStride1 = weight->stride[1];
-  real* biasData = bias->storage->data + bias->storageOffset;
-  long* keysData = keys->storage->data + keys->storageOffset;
+  real* biasData = THTensor_(data)(bias);
+  long* keysData = THLongTensor_data(keys);
 
   /* Make sure these inputs are contiguous to accelerate computations */
-  THArgCheck(THTensor_(isContiguous)(output), 1, "keys vector must be contiguous");
   THArgCheck(THLongTensor_isContiguous(keys), 1, "keys vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(values), 2, "values vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(normalizedValues), 2, "normalizedValues vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(bias), 7, "bias vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(weight), 6, "weight matrix must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(values), 3, "values vector must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(output), 6, "output vector must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(weight), 7, "weight matrix must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(bias), 8, "bias vector must be contiguous");
   THArgCheck(THNN_(checkKeysValues)(keys, values), 1, "Keys and values should have the same number of elements");
+  THArgCheck(THTensor_(isContiguous)(normalizedValues), 9, "normalizedValues vector must be contiguous");
   long i,j,k;
 
   /* Separate cases: output dimension is == 1, or > 1
@@ -88,7 +87,14 @@ void THNN_(IndexLinear_updateOutput)(
     if (maxNormalize)
     {
       /* Parallelize on the batch itself */
-      #pragma omp parallel for private(i,j) firstprivate(outDim, keysOffset, weightData, keysData, valuesData, outputData, cumSumSizesData, sizesData) schedule(static)  if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
+#pragma omp parallel                                                    \
+    for private(i,j)                                                    \
+    firstprivate(outDim, keysOffset,                                    \
+                 weightData, keysData,                                  \
+                 valuesData, outputData,                                \
+                 cumSumSizesData, sizesData)                            \
+    schedule(static)                                                    \
+    if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
       for (j = 0; j < batchSize; j++)
       {
         real* loutputData = outputData + j;
@@ -126,14 +132,22 @@ void THNN_(IndexLinear_updateOutput)(
     else
     {
       /* Parallelize on the batch itself */
-      #pragma omp parallel for private(i,j) firstprivate(outDim, weightData, keysData, valuesData, outputData, cumSumSizesData, sizesData) schedule(static)  if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
+#pragma omp parallel                                                    \
+    for private(i,j)                                                    \
+    firstprivate(outDim, weightData,                                    \
+                 keysData, valuesData,                                  \
+                 outputData, cumSumSizesData,                           \
+                 sizesData)                                             \
+    schedule(static)                                                    \
+    if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
       for (j = 0; j < batchSize; j++)
       {
         long offset = cumSumSizesData[j];
         real* loutputData = outputData + j;
         real val = 0;
 
-        for (i = 0; i < sizesData[j]; i++) {
+        for (i = 0; i < sizesData[j]; i++)
+        {
           val += weightData[weightStride0*(keysData[offset] + keysOffset)] * valuesData[offset];
           offset++;
         }
@@ -142,7 +156,14 @@ void THNN_(IndexLinear_updateOutput)(
     }
   }
   else {
-    #pragma omp parallel for private(i,j,k) firstprivate(outDim, weightData, keysData, valuesData, biasData, outputData, cumSumSizesData, sizesData) schedule(static)  if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
+#pragma omp parallel                                                    \
+    for private(i,j,k)                                                  \
+    firstprivate(outDim, weightData,                                    \
+                 keysData, valuesData,                                  \
+                 biasData, outputData,                                  \
+                 cumSumSizesData, sizesData)                            \
+    schedule(static)                                                    \
+    if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
     for (j = 0; j < batchSize; j++)
     {
       long offset = cumSumSizesData[j];
@@ -150,7 +171,8 @@ void THNN_(IndexLinear_updateOutput)(
       real* loutputData = outputData + j*outDim;
       real* lweightData = weightData;
       memcpy(loutputData, biasData, outDim*sizeof(real));
-      for (i = 0; i < sizesData[j]; i++) {
+      for (i = 0; i < sizesData[j]; i++)
+      {
         real val;
         long woffset = weightStride0*(keysData[offset] + keysOffset);
         if (maxNormalize)
@@ -189,7 +211,7 @@ void THNN_(IndexLinear_updateOutput)(
           val = (absVal > weightData[woffset] ? THNN_INDEXLINEAR_SIGN(val):val*weightData[woffset+1]) + weightData[woffset+3];
           normalizedValuesData[offset] = val;
 
-          lweightData = weightData + woffset + maxNormalize*weightStride1;
+          lweightData = weightData + woffset + maxNormalize;
         }
         else
         {
@@ -198,13 +220,13 @@ void THNN_(IndexLinear_updateOutput)(
         }
         if (outDim > THNN_SPARSE_OUTDIM_THRESHOLD)
         {
-          THBlas_(axpy)(outDim, val, lweightData, weightStride1, loutputData, 1);
+          THBlas_(axpy)(outDim, val, lweightData, 1, loutputData, 1);
         }
         else
         {
           for (k=0; k < outDim; k++)
           {
-            loutputData[k] += lweightData[k*weightStride1] * val;
+            loutputData[k] += lweightData[k] * val;
           }
         }
         offset++;
@@ -221,6 +243,7 @@ void THNN_(IndexLinear_updateParameters)(
           THTensor *weight,
           THTensor *bias,
           THLongTensor *runningKeys,
+          THLongTensor *cumSumSizes,
           long keysOffset,
           real weightDecay,
           real learningRate)
@@ -232,20 +255,19 @@ void THNN_(IndexLinear_updateParameters)(
   long keysSize = THLongTensor_size(runningKeys, 0);
 
   /* Access the storage data/strides */
-  real* gradWeightData = THTensor_(data)(gradWeight) + gradWeight->storageOffset;
-  real* weightData = THTensor_(data)(weight) + weight->storageOffset;
+  real* gradWeightData = THTensor_(data)(gradWeight);
+  real* weightData = THTensor_(data)(weight);
   long weightStride0 = weight->stride[0];
-  long weightStride1 = weight->stride[1];
-  real* gradBiasData = THTensor_(data)(gradBias) + gradBias->storageOffset;
-  real* biasData = THTensor_(data)(bias) + bias->storageOffset;
-  long* keysData = THLongTensor_data(runningKeys) + runningKeys->storageOffset;
+  real* gradBiasData = THTensor_(data)(gradBias);
+  real* biasData = THTensor_(data)(bias);
+  long* keysData = THLongTensor_data(runningKeys);
 
   /* Make sure these inputs are contiguous to accelerate computations */
-  THArgCheck(THLongTensor_isContiguous(runningKeys), 1, "keys vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(bias), 6, "gradBias vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(weight), 5, "gradBias vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(gradBias), 4, "gradBias vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(gradWeight), 3, "gradWeight must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(gradWeight), 1, "gradWeight must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(gradBias), 2, "gradBias vector must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(weight), 3, "gradBias vector must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(bias), 4, "gradBias vector must be contiguous");
+  THArgCheck(THLongTensor_isContiguous(runningKeys), 5, "keys vector must be contiguous");
 
   int j,k;
   long offset = 0;
@@ -313,9 +335,11 @@ void THNN_(IndexLinear_updateParameters)(
       if (maxNormalize)
       {
         lgradWeightData += j*outDim;
+        /* weightData[woffset + 2] */
         lweightData = weightData + woffset + maxNormalize - 2;
         lr = lr*lweightData[0];
         wd = weightDecay*lweightData[0];
+        /* weightData[woffset + 3] */
         lweightData++;
         for (k=0; k < outDim; k++)
         {
@@ -361,6 +385,7 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
           long keysOffset,
           THTensor *values,
           THLongTensor *sizes,
+          THLongTensor *cumSumSizes,
           THTensor *gradOutput,
           THTensor *weight,
           THTensor *bias,
@@ -376,21 +401,21 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
   THArgCheck(THNN_(checkKeysValues)(keys, values), 1, "Keys and values should have the same number of elements");
 
   /* Access the storage data/strides */
-  real* gradOutputData = THTensor_(data)(gradOutput) + gradOutput->storageOffset;
-  real* valuesData =THTensor_(data)(values) + values->storageOffset;
-  real* weightData = THTensor_(data)(weight) + weight->storageOffset;
-  real* biasData = THTensor_(data)(bias) + bias->storageOffset;
+  real* gradOutputData = THTensor_(data)(gradOutput);
+  real* valuesData =THTensor_(data)(values);
+  real* weightData = THTensor_(data)(weight);
+  real* biasData = THTensor_(data)(bias);
   long weightStride0 = weight->stride[0];
-  long weightStride1 = weight->stride[1];
   long biasStride = bias->stride[0];
-  long* keysData = THLongTensor_data(keys) + keys->storageOffset;
-  long* sizesData = THLongTensor_data(sizes) + sizes->storageOffset;
+  long* keysData = THLongTensor_data(keys);
+  long* sizesData = THLongTensor_data(sizes);
 
   /* Make sure these inputs are contiguous to accelerate computations */
   THArgCheck(THLongTensor_isContiguous(keys), 1, "keys vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(values), 2, "values vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(values), 6, "weight matrix must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(gradOutput), 5, "gradOutput vector must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(values), 3, "values vector must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(gradOutput), 6, "gradOutput vector must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(weight), 7, "weight matrix must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(bias), 8, "bias matrix must be contiguous");
 
   int i,j,k;
 
@@ -409,7 +434,8 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
           *biasData -= *lgradOutputData * scale;
           real val = *lgradOutputData * scale;
           real* lweightData = weightData;
-          for (i = 0; i < sizesData[j]; i++) {
+          for (i = 0; i < sizesData[j]; i++)
+          {
             long idx = weightStride0*(keysData[offset] + keysOffset) + maxNormalize;
             weightData[idx-1] -= weightData[idx]*val*weightData[idx-2];
             weightData[idx] -= (val*valuesData[offset] - weightDecay * weightData[idx])*weightData[idx-2];
@@ -421,7 +447,8 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
         for (j = 0; j < batchSize; j++)
         {
           real* lweightData = weightData;
-          for (i = 0; i < sizesData[j]; i++) {
+          for (i = 0; i < sizesData[j]; i++)
+          {
             long idx = weightStride0*(keysData[offset] + keysOffset) + maxNormalize;
             weightData[idx-2] = 0;
             offset++;
@@ -439,7 +466,8 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
           *biasData -= *lgradOutputData * scale;
           real val = *lgradOutputData * scale;
           real* lweightData = weightData;
-          for (i = 0; i < sizesData[j]; i++) {
+          for (i = 0; i < sizesData[j]; i++)
+          {
             long idx = weightStride0*(keysData[offset] + keysOffset);
             weightData[idx] -= val * valuesData[offset] + weightData[idx] * weightDecay;
             offset++;
@@ -452,7 +480,8 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
         for (j = 0; j < batchSize; j++)
         {
           real val = gradOutputData[j] * scale;
-          for (i = 0; i < sizesData[j]; i++) {
+          for (i = 0; i < sizesData[j]; i++)
+          {
             weightData[(keysData[offset] + keysOffset)*weightStride0] -= val * valuesData[offset];
             offset++;
           }
@@ -469,14 +498,15 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
       real* lgradOutputData = gradOutputData + j*outDim;
       real* lweightData = weightData;
       THVector_(add)(biasData, lgradOutputData, -scale, outDim);
-      for (i = 0; i < sizesData[j]; i++) {
+      for (i = 0; i < sizesData[j]; i++)
+      {
         real val = valuesData[offset] * scale;
         real wd = weightDecay;
 
         // Max normalize case
         if (maxNormalize)
         {
-          lweightData = weightData + weightStride0*(keysData[offset] + keysOffset) + (maxNormalize-2)*weightStride1;
+          lweightData = weightData + weightStride0*(keysData[offset] + keysOffset) + (maxNormalize-2);
           val *= lweightData[0];
           wd *= lweightData[0];
           for (k=0; k < outDim; k++)
@@ -496,26 +526,26 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
         {
           if (outDim > THNN_SPARSE_OUTDIM_THRESHOLD)
           {
-            THBlas_(axpy)(outDim, -wd, lweightData, weightStride1, lweightData, weightStride1);
+            THBlas_(axpy)(outDim, -wd, lweightData, 1, lweightData, 1);
           }
           else
           {
             for (k=0; k < outDim; k++)
             {
-              lweightData[k*weightStride1] -= wd * lweightData[k*weightStride1];
+              lweightData[k] -= wd * lweightData[k];
             }
           }
         }
 
         if (outDim > THNN_SPARSE_OUTDIM_THRESHOLD)
         {
-          THBlas_(axpy)(outDim, -val, lgradOutputData, 1, lweightData, weightStride1);
+          THBlas_(axpy)(outDim, -val, lgradOutputData, 1, lweightData, 1);
         }
         else
         {
           for (k=0; k < outDim; k++)
           {
-            lweightData[k*weightStride1] -= val * lgradOutputData[k];
+            lweightData[k] -= val * lgradOutputData[k];
           }
         }
         offset++;
@@ -541,7 +571,7 @@ void THNN_(IndexLinear_accUpdateGradParameters)(
           real val = valuesData[offset] * scale;
           real wd = weightDecay;
 
-          lweightData = weightData + weightStride0*(keysData[offset] + keysOffset) + (maxNormalize-2)*weightStride1;
+          lweightData = weightData + weightStride0*(keysData[offset] + keysOffset) + (maxNormalize-2);
           lweightData[0] = 0;
           offset++;
         }
@@ -558,6 +588,7 @@ void THNN_(IndexLinear_accGradParameters)(
           long keysOffset,
           THTensor *values,
           THLongTensor *sizes,
+          THLongTensor *cumSumSizes,
           THTensor *gradOutput,
           THTensor *gradWeight,
           THTensor *gradBias,
@@ -574,35 +605,35 @@ void THNN_(IndexLinear_accGradParameters)(
   long woutDim = THTensor_(size)(weight, 1);
   long maxNormalize = (woutDim - outDim) > 0 ?1:0;
   THArgCheck(THNN_(checkKeysValues)(keys, values), 1, "Keys and values should have the same number of elements");
-  long* sizesData = sizes->storage->data + sizes->storageOffset;
+  long* sizesData = THLongTensor_data(sizes);
 
   /* COmpute the cumulative sizes */
   THLongTensor* cumSizes = THLongTensor_new();
   THLongTensor_cumsum(cumSizes, sizes, 0);
-  long* cumSizesData = cumSizes->storage->data +cumSizes->storageOffset;
+  long* cumSizesData = THLongTensor_data(cumSizes);
 
   /* Resize the gradWeight buffer to keep it dense.
    * That speeds up updates A LOT assuming random mem access. */
   THTensor_(resize2d)(gradWeight, keysSize, outDim * (maxNormalize>0?2:1));
 
   /* Access the storage data/strides */
-  real* gradOutputData = THTensor_(data)(gradOutput) + gradOutput->storageOffset;
-  real* valuesData =THTensor_(data)(values) + values->storageOffset;
-  real* gradWeightData = THTensor_(data)(gradWeight) + gradWeight->storageOffset;
-  real* weightData = THTensor_(data)(weight) + weight->storageOffset;
-  real* gradBiasData = THTensor_(data)(gradBias) + gradBias->storageOffset;
+  real* gradOutputData = THTensor_(data)(gradOutput);
+  real* valuesData =THTensor_(data)(values);
+  real* gradWeightData = THTensor_(data)(gradWeight);
+  real* weightData = THTensor_(data)(weight);
+  real* gradBiasData = THTensor_(data)(gradBias);
   long gradWeightStride0 = gradWeight->stride[0];
-  long gradWeightStride1 = gradWeight->stride[1];
   long weightStride0 = weight->stride[0];
-  long weightStride1 = weight->stride[1];
-  long* keysData = THLongTensor_data(keys) + keys->storageOffset;
+  long* keysData = THLongTensor_data(keys);
 
   /* Make sure these inputs are contiguous to accelerate computations */
-  THArgCheck(THLongTensor_isContiguous(keys), 2, "keys vector must be contiguous");
+  THArgCheck(THLongTensor_isContiguous(keys), 1, "keys vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(values), 3, "values vector must be contiguous");
-  THArgCheck(THTensor_(isContiguous)(gradBias), 8, "gradBias vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(gradOutput), 6, "gradOutput vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(gradWeight), 7, "gradWeight must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(gradBias), 8, "gradBias vector must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(weight), 9, "weight must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(bias), 10, "bias vector must be contiguous");
   THArgCheck(THTensor_(isContiguous)(valuesBuffer), 11, "valuesBuffer must be contiguous");
 
   int i,j,k;
@@ -642,7 +673,8 @@ void THNN_(IndexLinear_accGradParameters)(
           lgradWeightData[i+3] = val * lvaluesData[i+3];
         }
 
-        for(; i < end; i++) {
+        for(; i < end; i++)
+        {
           lgradWeightData[i] = val * lvaluesData[i];
         }
       }
@@ -675,7 +707,8 @@ void THNN_(IndexLinear_accGradParameters)(
             lgradWeightData[k+3] = lgradOutputData[k+3]*scale;
           }
 
-          for(; k < outDim; k++) {
+          for(; k < outDim; k++)
+          {
             lgradWeightData[k] = lgradOutputData[k]*scale;
           }
           lgradWeightData += outDim;
@@ -689,7 +722,8 @@ void THNN_(IndexLinear_accGradParameters)(
           lgradWeightData[k+3] = val * lgradOutputData[k+3];
         }
 
-        for(; k < outDim; k++) {
+        for(; k < outDim; k++)
+        {
           lgradWeightData[k] = val * lgradOutputData[k];
         }
         offset++;

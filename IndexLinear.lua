@@ -31,8 +31,16 @@ function IndexLinear:__init(inputSize, outputSize, doGradInput, keysOffset, weig
    self.values = torch.Tensor()
    self.sizes = torch.LongTensor()
    self.cumSumSizes = torch.LongTensor()
+   self.runningCumSumSizes = {}
    self.runningKeys = {}
    self.runningGradWeights = {}
+
+   -- self.sizes, self.cumSumSizes are calculated on the CPU even when using CUDA.
+   -- These two tables make it easier to resize these buffers instead of re-allocating them.
+   -- self.*Cache[1] always contains values on CPU.
+   -- If CUDA is being used, self.*Cache[2] contains values on GPU.
+   self.sizesCache = {}
+   self.cumSumSizesCache = {}
 
    -- A few options
    self.weightDecay = 0
@@ -72,30 +80,71 @@ function IndexLinear:reshapeInput(input)
       error('Wrong input format.')
    end
 
+   for i=1,#lkeys do
+      assert(lvalues[i]:dim() == 1 and lkeys[i]:dim() == 1, "keys and values should be 1D")
+   end
+
    return lkeys, lvalues
 end
 
-function IndexLinear:updateOutput(input)
+function IndexLinear:flattenInputs(input)
    self.lkeys, self.lvalues = self:reshapeInput(input)
-   self.runningKeys[self.runningCter] = self.runningKeys[self.runningCter] or torch.LongTensor()
-   self.keys = self.runningKeys[self.runningCter]
-   self.keys = self.keys:type('torch.LongTensor')
-   local marker = 0
+   local batchSize = #self.lkeys
+   local counter = self.runningCter
 
-   self.sizes = self.sizes:type('torch.LongTensor')
-   self.cumSumSizes = self.cumSumSizes:type('torch.LongTensor')
-   self.sizes:resize(#self.lkeys)
-   self.cumSumSizes:resize(#self.lkeys)
+   -- Ensure everything is of the right type
+   local isCuda = (self:type() == 'torch.CudaTensor')
+   local longTensor =  isCuda and torch.CudaLongTensor or torch.LongTensor
+   self.runningKeys[counter] = self.runningKeys[counter] or longTensor()
+   self.keys = self.runningKeys[counter]
+
+   self.sizesCache[1] = self.sizesCache[1] or torch.LongTensor(batchSize)
+   self.cumSumSizesCache[1] = self.cumSumSizesCache[1] or torch.LongTensor(batchSize)
+
+   -- The first field of the caches are always in Host memory
+   self.sizesCache[1] = self.sizesCache[1]:type('torch.LongTensor')
+   self.cumSumSizesCache[1] = self.cumSumSizesCache[1]:type('torch.LongTensor')
+
+   self.sizes = self.sizesCache[1]
+   self.cumSumSizes = self.cumSumSizesCache[1]
+
+   self.sizes:resize(batchSize)
+   self.cumSumSizes:resize(batchSize + 1)
+
    self.cumSumSizes[1] = 0
-   for i=1,#self.lkeys do
-      assert(self.lvalues[i]:dim() == 1 and self.lkeys[i]:dim() == 1, "keys and values should be 1D")
+   self.sizes[1] = self.lkeys[1]:size(1)
+   for i=2,batchSize do
       self.sizes[i] = self.lkeys[i]:size(1)
-      if i > 1 then
-         self.cumSumSizes[i] = self.cumSumSizes[i-1] + self.sizes[i-1]
-      end
+      self.cumSumSizes[i] = self.cumSumSizes[i-1] + self.sizes[i-1]
    end
+   local totalSize = self.cumSumSizes[batchSize] + self.sizes[batchSize]
+   self.cumSumSizes[batchSize + 1] = totalSize
+
    self.keys:cat(self.lkeys, 1)
    self.values:cat(self.lvalues, 1)
+
+   if isCuda then
+      -- Get the GPU cache
+      self.sizesCache[2] = self.sizesCache[2] or torch.CudaLongTensor(1)
+      self.cumSumSizesCache[2] = self.cumSumSizesCache[2] or torch.CudaLongTensor(1)
+
+      -- Ensure everything is of the right type
+      self.sizesCache[2] = self.sizesCache[2]:type('torch.CudaLongTensor')
+      self.cumSumSizesCache[2] = self.cumSumSizesCache[2]:type('torch.CudaLongTensor')
+
+      self.sizes = self.sizesCache[2]
+      self.cumSumSizes = self.cumSumSizesCache[2]
+
+      -- Resize and copy to GPU
+      self.sizes:resize(batchSize):copyAsync(self.sizesCache[1])
+      self.cumSumSizes:resize(batchSize+1):copyAsync(self.cumSumSizesCache[1])
+   end
+   self.runningCumSumSizes[counter] = self.cumSumSizes
+end
+
+function IndexLinear:updateOutput(input)
+
+   self:flattenInputs(input)
 
    self.values.THNN.IndexLinear_updateOutput(
       self.keys:cdata(),
@@ -122,6 +171,7 @@ function IndexLinear:accUpdateGradParameters(input, gradOutput, scale)
       self.offset,
       self.normalize > 0 and self.normalizedValues:cdata() or self.values:cdata(),
       self.sizes:cdata(),
+      self.cumSumSizes:cdata(),
       gradOutput:cdata(),
       self.weight:cdata(),
       self.bias:cdata(),
@@ -131,16 +181,20 @@ function IndexLinear:accUpdateGradParameters(input, gradOutput, scale)
 end
 
 function IndexLinear:accGradParameters(input, gradOutput, scale)
+
+   local counter = self.runningCter
+
    -- Same as the runningKeys in the updateOutput function,
    -- get a table of dense runningGradWeights
-   self.runningGradWeights[self.runningCter] = self.runningGradWeights[self.runningCter] or self.values.new()
+   self.runningGradWeights[counter] = self.runningGradWeights[counter] or self.values.new()
    self.values.THNN.IndexLinear_accGradParameters(
       self.keys:cdata(),
       self.offset,
       self.normalize > 0 and self.normalizedValues:cdata() or self.values:cdata(),
       self.sizes:cdata(),
+      self.cumSumSizes:cdata(),
       gradOutput:cdata(),
-      self.runningGradWeights[self.runningCter]:cdata(),
+      self.runningGradWeights[counter]:cdata(),
       self.gradBias:cdata(),
       self.weight:cdata(),
       self.bias:cdata(),
@@ -187,23 +241,36 @@ function IndexLinear:updateGradInput(input, gradOutput)
 end
 
 function IndexLinear:updateParameters(lr)
-   if self.runningCter > 1 then
-      if self.runningCter == 2 then
+   local counter = self.runningCter
+   if counter > 1 then
+      if counter == 2 then
          self.updateKeys = self.runningKeys[1]
          self.gradWeight = self.runningGradWeights[1]
       else
          local lkeys = {}
          local lgweights = {}
          local totalSize = 0
-         for i=1,self.runningCter-1 do
+         local lCumSumSizes = {}
+         for i=1,counter-1 do
             lkeys[i] = self.runningKeys[i]
             -- Change layout to take advantage of the 1-D contiguous torch.cat
             lgweights[i] = self.runningGradWeights[i]:contiguous()
             lgweights[i]:resize(lgweights[i]:nElement())
             totalSize = totalSize + lkeys[i]:size(1)
+            lCumSumSizes[i] = self.runningCumSumSizes[i]
+            -- runningCumSumSizes[i] is an array of size batchSize + 1
+            -- The last element contains the value lkeys[i]:size(1)
+            -- We need to remove this last element for all entries except the last one
+            local batchSize = lCumSumSizes[i]:nElement() - 1
+            if (i < counter - 1) then
+               lCumSumSizes[i] = lCumSumSizes[i][{{1, batchSize}}]
+            end
+            -- The running total needs to be added to the current entry
+            lCumSumSizes[i] = (i > 1 and totalSize or 0) + lCumSumSizes[i]
          end
          self.updateKeysBuffer:cat(lkeys, 1)
          self.gradWeightBuffer:cat(lgweights, 1)
+         self.cumSumSizes:cat(lCumSumSizes, 1)
          self.gradWeightBuffer:resize(totalSize, self.outputSize)
          self.gradWeight = self.gradWeightBuffer
          self.updateKeys = self.updateKeysBuffer
@@ -214,6 +281,7 @@ function IndexLinear:updateParameters(lr)
             self.weight:cdata(),
             self.bias:cdata(),
             self.updateKeys:cdata(),
+            self.cumSumSizes:cdata(),
             self.offset,
             self.weightDecay or 0,
             lr or error('You must specify a learning rate')
