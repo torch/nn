@@ -15,7 +15,7 @@ function SpatialCrossMapLRN:updateOutput(input)
 
   self.scale = self.scale or input.new()
 
-  if torch.type(input) == 'torch.CudaTensor' then
+  if torch.typename(input):find('torch%.Cuda.*Tensor') then
      input.THNN.SpatialCrossMapLRN_updateOutput(
         input:cdata(),
         self.output:cdata(),
@@ -33,9 +33,9 @@ function SpatialCrossMapLRN:updateOutput(input)
      end
 
      local batchSize   = input:size(1)
-     local channels    = input:size(2) 
-     local inputHeight = input:size(3) 
-     local inputWidth  = input:size(4) 
+     local channels    = input:size(2)
+     local inputHeight = input:size(3)
+     local inputWidth  = input:size(4)
 
      self.output:resizeAs(input)
      self.scale:resizeAs(input)
@@ -43,7 +43,7 @@ function SpatialCrossMapLRN:updateOutput(input)
      -- use output storage as temporary buffer
      local inputSquare = self.output
      inputSquare:pow(input, 2)
-       
+
      local prePad = (self.size - 1)/2 + 1
      local prePadCrop = prePad > channels and channels or prePad
 
@@ -86,8 +86,8 @@ end
 function SpatialCrossMapLRN:updateGradInput(input, gradOutput)
   assert(input:dim() == 3 or input:dim() == 4,
          'Input must be 3D or 4D')
- 
-  if torch.type(input) == 'torch.CudaTensor' then
+
+  if torch.typename(input):find('torch%.Cuda.*Tensor') then
      input.THNN.SpatialCrossMapLRN_updateGradInput(
         input:cdata(),
         gradOutput:cdata(),
@@ -109,9 +109,9 @@ function SpatialCrossMapLRN:updateGradInput(input, gradOutput)
      end
 
      local batchSize   = input:size(1)
-     local channels    = input:size(2) 
-     local inputHeight = input:size(3) 
-     local inputWidth  = input:size(4) 
+     local channels    = input:size(2)
+     local inputHeight = input:size(3)
+     local inputWidth  = input:size(4)
 
      self.paddedRatio = self.paddedRatio or input.new()
      self.accumRatio = self.accumRatio or input.new()
