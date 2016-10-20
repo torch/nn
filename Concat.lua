@@ -1,4 +1,4 @@
-local Concat, parent = torch.class('iis.Concat', 'nn.Container')
+local Concat, parent = torch.class('nn.Concat', 'nn.Container')
 
 function Concat:__init(dimension)
    parent.__init(self)
