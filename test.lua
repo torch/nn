@@ -311,8 +311,39 @@ function nntest.CAdd()
       testModuleIO(module, input)
    end
 
+
+   function testCAddWithLessDimsThanInput()
+      local input = torch.rand(4,5)
+      local module = nn.CAdd(5)
+      params, gradParams = module:getParameters()
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      local output = module:forward(input)
+      local expandedBias = module.bias:view(1,5):expand(4,5):clone()
+      mytester:assert(output:isSameSizeAs(input))
+      mytester:assertTensorEq(expandedBias, output, precision)
+
+      testModuleIO(module, input)
+
+      input = torch.rand(4,5,6)
+      module = nn.CAdd(5,6)
+      params, gradParams = module:getParameters()
+      testBackwardPass(module, input, params, gradParams)
+
+      input:zero()
+      local output = module:forward(input)
+      expandedBias = module.bias:view(1,5,6):expand(4,5,6):clone()
+      mytester:assert(output:isSameSizeAs(input))
+      mytester:assertTensorEq(expandedBias, output, precision)
+
+      testModuleIO(module, input)
+   end
+
+
    testCAddWithNonBatchedInput()
    testCAddWithBatchedInput()
+   testCAddWithLessDimsThanInput()
 end
 
 function nntest.CMul()
