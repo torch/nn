@@ -64,7 +64,7 @@ end
 function VolumetricConvolution:updateOutput(input)
    self.finput = self.finput or input.new()
    self.fgradInput = self.fgradInput or input.new()
-   if input:type() == 'torch.CudaTensor' then
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
       input.THNN.VolumetricConvolution_updateOutput(
         input:cdata(),
         self.output:cdata(),
@@ -92,7 +92,7 @@ function VolumetricConvolution:updateOutput(input)
 end
 
 function VolumetricConvolution:updateGradInput(input, gradOutput)
-   if input:type() == 'torch.CudaTensor' then
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
       input.THNN.VolumetricConvolution_updateGradInput(
          input:cdata(),
          gradOutput:cdata(),
@@ -123,7 +123,7 @@ function VolumetricConvolution:updateGradInput(input, gradOutput)
 end
 
 function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
-   if input:type() == 'torch.CudaTensor' then
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
       input.THNN.VolumetricConvolution_accGradParameters(
          input:cdata(),
          gradOutput:cdata(),
