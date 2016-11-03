@@ -208,3 +208,7 @@ function BN:clearState()
    })
    return parent.clearState(self)
 end
+
+function BN:__tostring__()
+   return string.format('%s (%dD) (%d)', torch.type(self), self.nDim, self.running_mean:nElement())
+end
