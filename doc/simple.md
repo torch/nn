@@ -1300,11 +1300,11 @@ print(B)  -- output
 ## Normalize ##
 
 ```lua
-module = nn.Normalize(p, [eps])
+module = nn.Normalize(p, [dim], [eps])
 ```
-Normalizes the input Tensor to have unit `L_p` norm. The smoothing parameter `eps` prevents division by zero when the input contains all zero elements (default = `1e-10`).
+Normalizes the input Tensor to have unit `L_p` norm over dimension `dim` (by default -1, i.e., the last dimension). The smoothing parameter `eps` prevents division by zero when the input contains all zero elements (default = `1e-10`).
 
-Input can be 1D or 2D (in which case it's considered as in batch mode)
+The `dim` parameter can take both positive and negative values (in which case it is counted from the end). Negative dimensions are specially useful if one wants to be invariant to batch-mode.
 
 ```lua
 A = torch.randn(3, 5)
@@ -1312,6 +1312,14 @@ m = nn.Normalize(2)
 B = m:forward(A) -- B is also 3 x 5
 -- take the L2 norm over the second axis:
 print(torch.norm(B, 2, 2)) -- norms is [1, 1, 1]
+```
+
+Here is an example of normalizing the feature maps of an image
+```lua
+I = torch.randn(2, 3, 2, 2)
+m = nn.Normalize(1, -3) -- the third from the last element
+B = m:forward(I)
+print(torch.norm(B, 1, 2))
 ```
 
 `Normalize` has a specialized implementation for the `inf` norm, which corresponds to the maximum norm.
