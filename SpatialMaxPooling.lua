@@ -15,7 +15,7 @@ function SpatialMaxPooling:__init(kW, kH, dW, dH, padW, padH)
    self.padH = padH or 0
 
    self.ceil_mode = false
-   self.indices = torch.Tensor()
+   self.indices = torch.LongTensor()
 end
 
 function SpatialMaxPooling:ceil()
@@ -29,7 +29,12 @@ function SpatialMaxPooling:floor()
 end
 
 function SpatialMaxPooling:updateOutput(input)
-   self.indices = self.indices or input.new()
+   self.indices = self.indices or torch.LongTensor()
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+      self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
+   else
+      self.indices = self.indices:long()
+   end
 
    local dims = input:dim()
    self.iheight = input:size(dims-1)

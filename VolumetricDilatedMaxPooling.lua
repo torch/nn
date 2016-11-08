@@ -16,7 +16,12 @@ function VolumetricDilatedMaxPooling:updateOutput(input)
    self.iheight = input:size(dims-1)
    self.iwidth = input:size(dims)
 
-   self.indices = self.indices or input.new()
+   self.indices = self.indices or torch.LongTensor()
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+      self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
+   else
+      self.indices = self.indices:long()
+   end
    input.THNN.VolumetricDilatedMaxPooling_updateOutput(
       input:cdata(),
       self.output:cdata(),
@@ -44,8 +49,8 @@ function VolumetricDilatedMaxPooling:updateGradInput(input, gradOutput)
 end
 
 function VolumetricDilatedMaxPooling:clearState()
-   if self.indices then 
-      self.indices:set() 
+   if self.indices then
+      self.indices:set()
    end
    return parent.clearState(self)
 end

@@ -10,7 +10,12 @@ function TemporalMaxPooling:__init(kW, dW)
 end
 
 function TemporalMaxPooling:updateOutput(input)
-   self.indices = self.indices or input.new()
+   self.indices = self.indices or torch.LongTensor()
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+       self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
+   else
+       self.indices = self.indices:long()
+   end
    input.THNN.TemporalMaxPooling_updateOutput(
        input:cdata(), self.output:cdata(),
        self.indices:cdata(), self.kW, self.dW

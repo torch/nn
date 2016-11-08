@@ -146,7 +146,7 @@ end
 function LookupTable:type(type, tensorCache)
    parent.type(self, type, tensorCache)
 
-   if type == 'torch.CudaTensor' then
+   if type and type:find('torch%.Cuda.*Tensor') then
       -- CUDA uses _sorted and _indices temporary tensors
       self._sorted = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
       self._indices = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
