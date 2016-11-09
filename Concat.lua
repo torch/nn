@@ -30,24 +30,85 @@ function Concat:updateOutput(input)
    return self.output
 end
 
-function Concat:updateGradInput(input, gradOutput)
-   self.gradInput:resizeAs(input)
-
-   local offset = 1
-   for i,module in ipairs(self.modules) do
-      local currentOutput = module.output
-      local currentGradInput = self:rethrowErrors(module, i, 'updateGradInput', input, gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)))
-
-      if currentGradInput then -- if the module does not produce a gradInput (for example first layer), then ignore it and move on.
-         if i==1 then
-            self.gradInput:copy(currentGradInput)
-         else
-            self.gradInput:add(currentGradInput)
-         end
+local function retable(t1, t2, f)
+   for k, v in ipairs(t2) do
+      if (torch.type(v) == "table") then
+         t1[k] = retable(t1[k] or {}, t2[k], f)
+      else
+         f(t1, k, v)
       end
-      offset = offset + currentOutput:size(self.dimension)
+   end
+   for i=#t2+1, #t1 do
+      t1[i] = nil
+   end
+   return t1
+end
+
+local function backward(self, method, input, gradOutput, scale)
+   local isTable = torch.type(input) == 'table'
+   local wasTable = torch.type(self.gradInput) == 'table'
+   scale = scale or 1
+
+   if isTable then
+      local offset = 1
+      for i,module in ipairs(self.modules) do
+         local currentOutput = module.output
+         local currentGradInput = self:rethrowErrors(module, i, method, input, 
+                                                     gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)), scale)
+         if torch.type(currentGradInput) ~= 'table' then
+            error"currentGradInput is not a table!"
+         end
+         if #input ~= #currentGradInput then
+            error("table size mismatch: "..#input.." ~= "..#currentGradInput)
+         end
+         if i == 1 then
+            self.gradInput = wasTable and self.gradInput or {}
+            retable(self.gradInput, currentGradInput,
+                    function(t, k, v)
+                       t[k] = t[k] or v:clone()
+                       t[k]:resizeAs(v)
+                       t[k]:copy(v)
+                    end
+            )
+         else
+            retable(self.gradInput, currentGradInput,
+                    function(t, k, v)
+                       if t[k] then
+                          t[k]:add(v)
+                       else
+                          t[k] = v:clone()
+                       end
+                    end
+            )
+         end
+         offset = offset + currentOutput:size(self.dimension)
+      end
+   else
+      self.gradInput = (not wasTable) and self.gradInput:resizeAs(input) or input:clone()
+      local offset = 1
+      for i,module in ipairs(self.modules) do
+         local currentOutput = module.output
+         local currentGradInput = self:rethrowErrors(module, i, method, input, 
+                                                     gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)), scale)
+         if currentGradInput then -- if the module does not produce a gradInput (for example first layer), then ignore it and move on.
+            if i==1 then
+               self.gradInput:copy(currentGradInput)
+            else
+               self.gradInput:add(currentGradInput)
+            end
+         end
+         offset = offset + currentOutput:size(self.dimension)
+      end
    end
    return self.gradInput
+end
+
+function Concat:updateGradInput(input, gradOutput)
+   return backward(self, 'updateGradInput', input, gradOutput)
+end
+
+function Concat:backward(input, gradOutput, scale)
+   return backward(self, 'backward', input, gradOutput, scale)
 end
 
 function Concat:accGradParameters(input, gradOutput, scale)
@@ -55,31 +116,11 @@ function Concat:accGradParameters(input, gradOutput, scale)
    local offset = 1
    for i,module in ipairs(self.modules) do
       local currentOutput = module.output
-      self:rethrowErrors(module, i, 'accGradParameters',
-          input,
+      self:rethrowErrors(module, i, 'accGradParameters', input,
           gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)),
           scale)
       offset = offset + currentOutput:size(self.dimension)
    end
-end
-
-function Concat:backward(input, gradOutput, scale)
-   self.gradInput:resizeAs(input)
-   scale = scale or 1
-   local offset = 1
-   for i,module in ipairs(self.modules) do
-      local currentOutput = module.output
-      local currentGradInput = self:rethrowErrors(module, i, 'backward', input, gradOutput:narrow(self.dimension, offset, currentOutput:size(self.dimension)), scale)
-      if currentGradInput then -- if the module does not produce a gradInput (for example first layer), then ignore it and move on.
-         if i==1 then
-            self.gradInput:copy(currentGradInput)
-         else
-            self.gradInput:add(currentGradInput)
-         end
-      end
-      offset = offset + currentOutput:size(self.dimension)
-   end
-   return self.gradInput
 end
 
 function Concat:accUpdateGradParameters(input, gradOutput, lr)
