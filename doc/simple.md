@@ -630,7 +630,7 @@ gives the output:
 [torch.Tensor of dimension 5x2]
 ```
 
-Here is a more useful example, where one can implement a network which also computes a Criterion using this module:
+Here is a more useful example, where one can implement a network which also computes a `Criterion` using this module:
 
 ```lua
 pred_mlp = nn.Sequential()  -- A network that makes predictions given x.
@@ -667,8 +667,10 @@ end
 module = nn.Copy(inputType, outputType, [forceCopy, dontCast])
 ```
 
-This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transferred as the output. The default `forceCopy` is false.
-When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module's `output` and `gradInput` Tensors to the new type. The default is false.
+This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transferred as the output.
+The default `forceCopy` is false.
+When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module's `output` and `gradInput` `Tensor`s to the new type.
+The default is false.
 
 <a name="nn.Narrow"></a>
 ## Narrow ##
@@ -677,7 +679,8 @@ When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module
 module = nn.Narrow(dimension, offset, length)
 ```
 
-Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module. The module further supports a negative `length` in order to handle inputs with an unknown size.
+Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module.
+The module further supports a negative `length` in order to handle inputs with an unknown size.
 
 ```lua
 > x = torch.rand(4, 5)
@@ -779,9 +782,12 @@ module = nn.Reshape(dimension1, dimension2, ... [, batchMode])
 ```
 
 
-Reshapes an `nxpxqx..`  Tensor into a `dimension1xdimension2x...` Tensor, taking the elements row-wise.
+Reshapes an `nxpxqx..` `Tensor` into a `dimension1xdimension2x...` `Tensor`, taking the elements row-wise.
 
-The optional last argument `batchMode`, when `true` forces the first dimension of the input to be considered the batch dimension, and thus keep its size fixed. This is necessary when dealing with batch sizes of one. When `false`, it forces the entire input (including the first dimension) to be reshaped to the input size. Default `batchMode=nil`, which means that the module considers inputs with more elements than the produce of provided sizes, i.e. `dimension1xdimension2x...`, to be batches.
+The optional last argument `batchMode`, when `true` forces the first dimension of the input to be considered the batch dimension, and thus keep its size fixed.
+This is necessary when dealing with batch sizes of one.
+When `false`, it forces the entire input (including the first dimension) to be reshaped to the input size.
+Default `batchMode=nil`, which means that the module considers inputs with more elements than the produce of provided sizes, i.e. `dimension1xdimension2x...`, to be batches.
 
 Example:
 
@@ -867,7 +873,8 @@ module = nn.View(sizes)
 ```
 
 This module creates a new view of the input tensor using the `sizes` passed to the constructor. The parameter `sizes` can either be a `LongStorage` or numbers.
-The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules. This makes it possible to use minibatch inputs when using a size `-1` for one of the dimensions.
+The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules.
+This makes it possible to use minibatch inputs when using a size `-1` for one of the dimensions.
 The method `resetSize(sizes)` allows to reset the view size of the module after initialization.
 
 Example 1:
@@ -946,9 +953,12 @@ Example 2:
 <a name="nn.Contiguous"></a>
 ## Contiguous ##
 
-Is used to make `input`, `gradOutput` or both contiguous, corresponds to
-`torch.contiguous` function. Only does copy and allocation if `input` or
-`gradOutput` is not contiguous, otherwise passes the same tensor.
+```lua
+module = nn.Contiguous()
+```
+
+Is used to make `input`, `gradOutput` or both contiguous, corresponds to `torch.contiguous` function.
+Only does copy and allocation if `input` or `gradOutput` is not contiguous, otherwise passes the same `Tensor`.
 
 <a name="nn.Select"></a>
 ## Select ##
@@ -957,7 +967,7 @@ Is used to make `input`, `gradOutput` or both contiguous, corresponds to
 module = nn.Select(dim, index)
 ```
 
-Selects a dimension and index of a  `nxpxqx..`  Tensor.
+Selects a dimension and index of a  `nxpxqx..`  `Tensor`.
 
 Example:
 
@@ -1032,7 +1042,8 @@ end
 module = nn.MaskedSelect()
 ```
 
-Performs a [torch.MaskedSelect](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselectmask) on a Tensor.  The mask is supplied as a tabular argument with the input on the forward and backward passes.
+Performs a [torch.MaskedSelect](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselectmask) on a `Tensor`.
+The mask is supplied as a tabular argument with the input on the forward and backward passes.
 
 Example:
 
@@ -1075,7 +1086,7 @@ Gives the output:
 module = nn.Index(dim)
 ```
 
-Applies the Tensor [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) operation along the given dimension. So
+Applies the `Tensor` [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) operation along the given dimension. So
 
 ```lua
 nn.Index(dim):forward{t,i}
@@ -1091,7 +1102,7 @@ t:index(dim, i)
 ```lua
 module = nn.Squeeze([dim, numInputDims])
 ```
-Applies the Tensor [squeeze](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) operation. So
+Applies the `Tensor` [squeeze](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) operation. So
 
 ```lua
 nn.Squeeze():forward(t)
@@ -1110,7 +1121,7 @@ module = nn.Unsqueeze(pos [, numInputDims])
 ```
 Insert singleton dim (i.e., dimension 1) at position `pos`.
 For an `input` with `dim = input:dim()`, there are `dim + 1` possible positions to insert the singleton dimension.
-For example, if `input` is `3` dimensional tensor in size `p x q x r`, then the singleton dim can be inserted at the following `4` positions
+For example, if `input` is `3` dimensional `Tensor` in size `p x q x r`, then the singleton dim can be inserted at the following `4` positions
 ```
 pos = 1: 1 x p x q x r
 pos = 2: p x 1 x q x r
@@ -1180,7 +1191,7 @@ t:transpose(dim3, dim4)
 module = nn.Exp()
 ```
 
-Applies the `exp` function element-wise to the input Tensor, thus outputting a Tensor of the same dimension.
+Applies the `exp` function element-wise to the input `Tensor`, thus outputting a `Tensor` of the same dimension.
 
 ```lua
 ii = torch.linspace(-2, 2)
@@ -1202,7 +1213,7 @@ gnuplot.grid(true)
 module = nn.Log()
 ```
 
-Applies the `log` function element-wise to the input Tensor, thus outputting a Tensor of the same dimension.
+Applies the `log` function element-wise to the input `Tensor`, thus outputting a Tensor of the same dimension.
 
 
 <a name="nn.Square"></a>
@@ -1302,7 +1313,7 @@ print(B)  -- output
 ```lua
 module = nn.Normalize(p, [eps])
 ```
-Normalizes the input Tensor to have unit `L_p` norm. The smoothing parameter `eps` prevents division by zero when the input contains all zero elements (default = `1e-10`).
+Normalizes the input `Tensor` to have unit `L_p` norm. The smoothing parameter `eps` prevents division by zero when the input contains all zero elements (default = `1e-10`).
 
 Input can be 1D or 2D (in which case it's considered as in batch mode)
 
