@@ -19,7 +19,7 @@ end
 
 function CMaxTable:updateGradInput(input, gradOutput)
    for i=1,#input do
-      self.gradInput[i] = torch.Tensor()
+      self.gradInput[i] = input[i].new()
       self.gradInput[i]:resizeAs(input[i]):fill(0.0)
       local mask = torch.eq(self.maxIdx, i)
       self.gradInput[i]:maskedCopy(mask, gradOutput[mask])
