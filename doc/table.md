@@ -7,6 +7,7 @@ This allows one to build very rich architectures:
   * `table` Container Modules encapsulate sub-Modules:
     * [`ConcatTable`](#nn.ConcatTable): applies each member module to the same input     [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor) and outputs a `table`;
     * [`ParallelTable`](#nn.ParallelTable): applies the `i`-th member module to the `i`-th input and outputs a `table`;
+    * [`MapTable`](#nn.MapTable): applies a single module to every input and outputs a `table`;
   * Table Conversion Modules convert between `table`s and `Tensor`s or `table`s:
     * [`SplitTable`](#nn.SplitTable): splits a `Tensor` into a `table` of `Tensor`s;
     * [`JoinTable`](#nn.JoinTable): joins a `table` of `Tensor`s into a `Tensor`;
@@ -23,6 +24,8 @@ This allows one to build very rich architectures:
     * [`CSubTable`](#nn.CSubTable): substraction of input `Tensor`s;
     * [`CMulTable`](#nn.CMulTable): multiplication of input `Tensor`s;
     * [`CDivTable`](#nn.CDivTable): division of input `Tensor`s;
+    * [`CMaxTable`](#nn.CMaxTable): max of input `Tensor`s;
+    * [`CMinTable`](#nn.CMinTable): min of input `Tensor`s;
   * `Table` of Criteria:
     * [`CriterionTable`](#nn.CriterionTable): wraps a [Criterion](criterion.md#nn.Criterion) so that it can accept a `table` of inputs.
 
@@ -162,6 +165,57 @@ which gives the output:
 -0.1657
 -0.7383
 [torch.Tensor of dimension 3]
+```
+
+
+<a name="nn.MapTable"></a>
+## MapTable ##
+
+```lua
+module = nn.MapTable(m, share)
+```
+
+`MapTable` is a container for a single module which will be applied to all input elements. The member module is cloned as necessary to process all input elements. Call `resize(n)` to set the number of clones manually or call `clearState()` to discard all clones.
+
+Optionally, the module can be initialized with the contained module and with a list of parameters that are shared across all clones. By default, these parameters are `weight`, `bias`, `gradWeight` and `gradBias`.
+
+```
++----------+         +-----------+
+| {input1, +---------> {member,  |
+|          |         |           |
+|  input2, +--------->  clone,   |
+|          |         |           |
+|  input3} +--------->  clone}   |
++----------+         +-----------+
+```
+
+### Example
+
+```lua
+map = nn.MapTable()
+map:add(nn.Linear(10, 3))
+
+x1 = torch.rand(10)
+x2 = torch.rand(10)
+y = map:forward{x1, x2}
+
+for i, k in pairs(y) do print(i, k) end
+```
+
+which gives the output:
+
+```lua
+1
+ 0.0345
+ 0.8695
+ 0.6502
+[torch.DoubleTensor of size 3]
+
+2
+ 0.0269
+ 0.4953
+ 0.2691
+[torch.DoubleTensor of size 3]
 ```
 
 
@@ -1212,3 +1266,30 @@ m = nn.CDivTable()
 [torch.DoubleTensor of dimension 5]
 ```
 
+<a name="nn.CMaxTable"></a>
+## CMaxTable ##
+
+Takes a `table` of `Tensor`s and outputs the max of all of them.
+
+```lua
+m = nn.CMaxTable()
+=m:forward({{torch.Tensor{1,2,3}, torch.Tensor{3,2,1}})
+ 3
+ 2
+ 3
+[torch.DoubleTensor of size 3]
+```
+
+<a name="nn.CMinTable"></a>
+## CMinTable ##
+
+Takes a `table` of `Tensor`s and outputs the min of all of them.
+
+```lua
+m = nn.CMinTable()
+=m:forward({{torch.Tensor{1,2,3}, torch.Tensor{3,2,1}})
+ 1
+ 2
+ 1
+[torch.DoubleTensor of size 3]
+```

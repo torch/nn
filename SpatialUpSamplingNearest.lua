@@ -24,7 +24,6 @@ function SpatialUpSamplingNearest:__init(scale)
    end
    self.inputSize = torch.LongStorage(4)
    self.outputSize = torch.LongStorage(4)
-   self.usage = nil
 end
 
 function SpatialUpSamplingNearest:updateOutput(input)

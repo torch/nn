@@ -37,8 +37,8 @@ void THNN_(HardTanh_updateOutput)(
   {
     real* ptr_input  = THTensor_(data)(input);
     real* ptr_output = THTensor_(data)(output);
-    long i;
-    long n = THTensor_(nElement)(input);
+    ptrdiff_t i;
+    ptrdiff_t n = THTensor_(nElement)(input);
 
     if (inplace)
 #pragma omp parallel for private(i)
@@ -72,6 +72,7 @@ void THNN_(HardTanh_updateGradInput)(
           real max_val,
           bool inplace)
 {
+  THNN_CHECK_NELEMENT(input, gradOutput);
   if (inplace)
     THTensor_(set)(gradInput, gradOutput);
   else
@@ -85,7 +86,7 @@ void THNN_(HardTanh_updateGradInput)(
     if (inplace)
     {
       TH_TENSOR_APPLY2(real, gradOutput, real, input,
-        if (*input_data < min_val || *input_data > max_val)
+        if (*input_data <= min_val || *input_data >= max_val)
           *gradOutput_data = 0;
       );
     }
@@ -102,8 +103,8 @@ void THNN_(HardTanh_updateGradInput)(
     real* ptr_gradOutput = THTensor_(data)(gradOutput);
     real* ptr_gradInput  = THTensor_(data)(gradInput);
     real* ptr_input      = THTensor_(data)(input);
-    long i;
-    long n = THTensor_(nElement)(input);
+    ptrdiff_t i;
+    ptrdiff_t n = THTensor_(nElement)(input);
 
     if (inplace)
 #pragma omp parallel for private(i)

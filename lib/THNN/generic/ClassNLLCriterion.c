@@ -11,6 +11,8 @@ void THNN_(ClassNLLCriterion_updateOutput)(
           THTensor *weights,
           THTensor *total_weight)
 {
+  THNN_CHECK_DIM_SIZE(output, 1, 0, 1);
+  THNN_CHECK_DIM_SIZE(total_weight, 1, 0, 1);
   int n_dims = THTensor_(nDimension)(input);
   int n_classes = THTensor_(size)(input, n_dims - 1);
 
@@ -19,6 +21,11 @@ void THNN_(ClassNLLCriterion_updateOutput)(
   }
   if (THTensor_(nDimension)(input) > 2) {
     THError("input tensor should be 1D or 2D");
+  }
+  if (weights && THTensor_(nElement)(weights) != n_classes) {
+    THDescBuff s1 = THTensor_(sizeDesc)(weights);
+    THError("weight tensor should be defined either for all %d classes or no classes"
+	    " but got weight tensor of shape: %s", n_classes, s1.str);
   }
 
   input = THTensor_(newContiguous)(input);
@@ -34,7 +41,7 @@ void THNN_(ClassNLLCriterion_updateOutput)(
   output_data[0] = total_weight_data[0] = 0.0;
 
   if (THTensor_(nDimension)(input) == 1) {
-    int cur_target = target_data[0] - 1;
+    int cur_target = target_data[0] - TH_INDEX_BASE;
     THAssert(cur_target >= 0 && cur_target < n_classes);
     total_weight_data[0] = weights ? weights_data[cur_target] : 1.0f;
     output_data[0] = -input_data[cur_target] * total_weight_data[0];
@@ -46,7 +53,7 @@ void THNN_(ClassNLLCriterion_updateOutput)(
 
     int i;
     for (i = 0; i < batch_size; i++) {
-      int cur_target = target_data[i] - 1;
+      int cur_target = target_data[i] - TH_INDEX_BASE;
       THAssert(cur_target >= 0 && cur_target < n_classes);
 
       real cur_weight = weights ? weights_data[cur_target] : 1.0f;
@@ -95,6 +102,10 @@ void THNN_(ClassNLLCriterion_updateGradInput)(
   if (THTensor_(nDimension)(input) > 2) {
     THError("input tensor should be 1D or 2D");
   }
+  
+  if (weights && THTensor_(nElement)(weights) != n_classes) {
+    THError("weight tensor should be defined either for all or no classes");
+  }
 
   target = THIndexTensor_(newContiguous)(target);
   weights = weights ? THTensor_(newContiguous)(weights) : NULL;
@@ -104,7 +115,7 @@ void THNN_(ClassNLLCriterion_updateGradInput)(
   real *gradInput_data = THTensor_(data)(gradInput);
 
   if (THTensor_(nDimension)(input) == 1) {
-    int cur_target = target_data[0] - 1;
+    int cur_target = target_data[0] - TH_INDEX_BASE;
     THAssert(cur_target >= 0 && cur_target < n_classes);
 
     gradInput_data[cur_target] =
@@ -118,7 +129,7 @@ void THNN_(ClassNLLCriterion_updateGradInput)(
 
     int i;
     for (i = 0; i < batch_size; i++){
-      int cur_target = target_data[i] - 1;
+      int cur_target = target_data[i] - TH_INDEX_BASE;
 
       THAssert(cur_target >= 0 && cur_target < n_classes);
 

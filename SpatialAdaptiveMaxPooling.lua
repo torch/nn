@@ -2,13 +2,18 @@ local SpatialAdaptiveMaxPooling, parent = torch.class('nn.SpatialAdaptiveMaxPool
 
 function SpatialAdaptiveMaxPooling:__init(W, H)
    parent.__init(self)
-   
+
    self.W = W
    self.H = H
 end
 
 function SpatialAdaptiveMaxPooling:updateOutput(input)
-   self.indices = self.indices or input.new()
+   self.indices = self.indices or torch.LongTensor()
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+      self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
+   else
+      self.indices = self.indices:long()
+   end
    input.THNN.SpatialAdaptiveMaxPooling_updateOutput(
       input:cdata(),
       self.output:cdata(),

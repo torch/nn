@@ -64,7 +64,7 @@ function ClassSimplexCriterion:__init(nClasses)
 end
 
 -- handle target being both 1D tensor, and
--- target being 2D tensor (2D tensor means dont do anything)
+-- target being 2D tensor (2D tensor means don't do anything)
 local function transformTarget(self, target)
     if torch.type(target) == 'number' then
         self._target:resize(self.nClasses)
