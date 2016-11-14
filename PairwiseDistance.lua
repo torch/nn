@@ -6,7 +6,7 @@ function PairwiseDistance:__init(p)
    -- state
    self.gradInput = {}
    self.diff = torch.Tensor()
-   self.norm = p
+   self.norm = p or 2 -- Default using Euclidean distance
 end 
   
 function PairwiseDistance:updateOutput(input)
