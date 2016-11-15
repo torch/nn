@@ -45,22 +45,6 @@ function VolumetricConvolution:reset(stdv)
    end
 end
 
-local function makeContiguous(self, input, gradOutput)
-   if not input:isContiguous() then
-      self._input = self._input or input.new()
-      self._input:resizeAs(input):copy(input)
-      input = self._input
-   end
-   if gradOutput then
-      if not gradOutput:isContiguous() then
-         self._gradOutput = self._gradOutput or gradOutput.new()
-         self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-         gradOutput = self._gradOutput
-      end
-   end
-   return input, gradOutput
-end
-
 function VolumetricConvolution:updateOutput(input)
    self.finput = self.finput or input.new()
    self.fgradInput = self.fgradInput or input.new()
@@ -76,7 +60,6 @@ function VolumetricConvolution:updateOutput(input)
         self.padT, self.padW, self.padH
       )
    else
-      input = makeContiguous(self, input)
       input.THNN.VolumetricConvolutionMM_updateOutput(
          input:cdata(),
          self.output:cdata(),
@@ -105,7 +88,6 @@ function VolumetricConvolution:updateGradInput(input, gradOutput)
       return self.gradInput
    else
       if self.gradInput then
-         input, gradOutput = makeContiguous(self, input, gradOutput)
          input.THNN.VolumetricConvolutionMM_updateGradInput(
             input:cdata(),
             gradOutput:cdata(),
@@ -136,7 +118,6 @@ function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
          scale or 1
       )
    else
-      input, gradOutput = makeContiguous(self, input, gradOutput)
       input.THNN.VolumetricConvolutionMM_accGradParameters(
          input:cdata(),
          gradOutput:cdata(),
