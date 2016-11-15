@@ -70,12 +70,12 @@ end
 function SpatialUpSamplingBilinear:updateOutput(input)
    assert(input:dim() == 4 or input:dim()==3,
             'SpatialUpSamplingBilinear only supports 3D or 4D tensors' )
+   input = makeContiguous(self, input)
    local inputwas3D = false
    if input:dim() == 3 then
       input=input:view(-1, input:size(1), input:size(2), input:size(3))
       inputwas3D = true
    end
-   input = makeContiguous(self, input)
    local xdim = input:dim()
    local ydim = xdim - 1
    self:setSize(input)
@@ -98,6 +98,7 @@ function SpatialUpSamplingBilinear:updateGradInput(input, gradOutput)
             'SpatialUpSamplingBilinear only support 3D or 4D tensors' )
    assert(input:dim() == gradOutput:dim(),
 	  'Input and gradOutput should be of same dimension' )
+   input, gradOutput = makeContiguous(self, input, gradOutput)
    local inputwas3D = false
    if input:dim() == 3 then
       input = input:view(-1, input:size(1), input:size(2), input:size(3))
