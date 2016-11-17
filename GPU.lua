@@ -20,8 +20,8 @@ function GPU:__init(module, device, outdevice)
    assert(torch.isTypeOf(module, 'nn.Module'))
    self.modules[1] = module
    
-   if module:type() == 'torch.CudaTensor' then
-      self:cuda()
+   if module:type():find('torch%.Cuda.*Tensor') then
+      self:type(module:type())
    end
 end
 
@@ -86,7 +86,7 @@ function GPU.recursiveSetDevice(dst, src, proto)
 end
 
 function GPU:updateOutput(input)
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       self._input = self.recursiveSetDevice(self._input, input, self.device)
       
       local output = cutorch.withDevice(self.device, function()
@@ -106,7 +106,7 @@ function GPU:updateOutput(input)
 end
 
 function GPU:updateGradInput(input, gradOutput)
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       self._gradOutput = self.recursiveSetDevice(self._gradOutput, gradOutput, self.device)
       
       local gradInput = cutorch.withDevice(self.device, function()
@@ -122,7 +122,7 @@ function GPU:updateGradInput(input, gradOutput)
 end
 
 function GPU:accGradParameters(input, gradOutput, scale) 
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function()
          self.modules[1]:accGradParameters(self._input, self._gradOutput, scale)
       end)
@@ -132,7 +132,7 @@ function GPU:accGradParameters(input, gradOutput, scale)
 end
 
 function GPU:apply(callback)
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.apply(self, callback) end)
    else
       parent.apply(self, callback)
@@ -140,7 +140,7 @@ function GPU:apply(callback)
 end
 
 function GPU:type(type, typecache)
-   if type and type == 'torch.CudaTensor' then
+   if type and type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.type(self, type, typecache) end)
       self:setDevice()
    else
@@ -157,7 +157,7 @@ function GPU:clearState()
    nn.utils.clear(self, 'output', 'gradInput')
    self._input = nil
    self._gradOutput = nil
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.clearState(self) end)
    else
       parent.clearState(self)
@@ -165,7 +165,7 @@ function GPU:clearState()
 end
 
 function GPU:zeroGradParameters()
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.zeroGradParameters(self) end)
    else
       parent.zeroGradParameters(self)
@@ -173,7 +173,7 @@ function GPU:zeroGradParameters()
 end
 
 function GPU:updateParameters(lr)
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.updateParameters(self, lr) end)
    else
       parent.updateParameters(self, lr)
@@ -181,7 +181,7 @@ function GPU:updateParameters(lr)
 end
 
 function GPU:training()
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.training(self) end)
    else
       parent.training(self)
@@ -189,7 +189,7 @@ function GPU:training()
 end
 
 function GPU:evaluate()
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.evaluate(self) end)
    else
       parent.evaluate(self)
@@ -198,7 +198,7 @@ end
 
 function GPU:share(mlp, ...)
    local args = {...}
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.share(self, mlp, unpack(args)) end)
    else
       parent.share(self, mlp, unpack(args))
@@ -208,7 +208,7 @@ end
 
 function GPU:reset(...)
    local args = {...}
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       cutorch.withDevice(self.device, function() parent.reset(self, unpack(args)) end)
    else
       parent.reset(self, unpack(args))
@@ -218,7 +218,7 @@ end
 
 function GPU:clone(...)
    local args = {...}
-   if self._type == 'torch.CudaTensor' then
+   if self._type:find('torch%.Cuda.*Tensor') then
       return cutorch.withDevice(self.device, function() parent.clone(self, unpack(args)) end)
    else
       return parent.clone(self, unpack(args))
@@ -239,7 +239,7 @@ end
 function GPU:read(file)
    local header = file:readObject()
    local object
-   if header[1] == 'torch.CudaTensor' then
+   if header[1] and header[1]:find('torch%.Cuda.*Tensor') then
       local device = header[2] 
       if device > cutorch.getDeviceCount() then
          print"Warning : model was saved with more devices than available on current host."
