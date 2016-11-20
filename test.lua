@@ -7190,6 +7190,10 @@ function nntest.Cosine()
    mytester:assertTensorEq(cosine.gradWeight, cosine2.gradWeight, 0.000001, "Cosine gradWeight 2D err")
 end
 
+function nntest.DistanceRatioCriterion()
+   local crit = nn.DistanceRatioCriterion()
+end
+
 function nntest.ErrorHandling()
    local l = nn.Linear(1, 1)
    local p = nn.Parallel(1, 1):add(l)
