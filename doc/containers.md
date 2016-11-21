@@ -104,15 +104,15 @@ on dimension `inputDimension`. It concatenates the results of its contained modu
 
 Example:
 ```lua
- mlp = nn.Parallel(2,1);   -- Parallel container will associate a module to each slice of dimension 2
+mlp = nn.Parallel(2,1);   -- Parallel container will associate a module to each slice of dimension 2
                            -- (column space), and concatenate the outputs over the 1st dimension.
                            
- mlp:add(nn.Linear(10,3)); -- Linear module (input 10, output 3), applied on 1st slice of dimension 2
- mlp:add(nn.Linear(10,2))  -- Linear module (input 10, output 2), applied on 2nd slice of dimension 2
+mlp:add(nn.Linear(10,3)); -- Linear module (input 10, output 3), applied on 1st slice of dimension 2
+mlp:add(nn.Linear(10,2))  -- Linear module (input 10, output 2), applied on 2nd slice of dimension 2
  
                                   -- After going through the Linear module the outputs are
                                   -- concatenated along the unique dimension, to form 1D Tensor
- > mlp:forward(torch.randn(10,2)) -- of size 5.
+> mlp:forward(torch.randn(10,2)) -- of size 5.
 -0.5300
 -1.1015
  0.7764
