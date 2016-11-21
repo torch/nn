@@ -41,14 +41,19 @@ E.g.
 creating a one hidden-layer multi-layer perceptron is thus just as easy as:
 ```lua
 mlp = nn.Sequential()
-mlp:add( nn.Linear(10, 25) ) -- 10 input, 25 hidden units
-mlp:add( nn.Tanh() ) -- some hyperbolic tangent transfer function
-mlp:add( nn.Linear(25, 1) ) -- 1 output
+mlp:add(nn.Linear(10, 25)) -- Linear module (10 inputs, 25 hidden units)
+mlp:add(nn.Tanh())         -- apply hyperbolic tangent transfer function on each hidden units
+mlp:add(nn.Linear(25, 1))  -- Linear module (25 inputs, 1 output)
 
-print(mlp:forward(torch.randn(10)))
-```
-which gives the output:
-```lua
+> mlp
+nn.Sequential {
+  [input -> (1) -> (2) -> (3) -> output]
+  (1): nn.Linear(10 -> 25)
+  (2): nn.Tanh
+  (3): nn.Linear(25 -> 1)
+}
+
+> print(mlp:forward(torch.randn(10)))
 -0.1815
 [torch.Tensor of dimension 1]
 ```
@@ -177,13 +182,11 @@ Concat concatenates the output of one layer of "parallel" modules along the
 provided dimension `dim`: they take the same inputs, and their output is
 concatenated.
 ```lua
-mlp=nn.Concat(1);
+mlp = nn.Concat(1);
 mlp:add(nn.Linear(5,3))
 mlp:add(nn.Linear(5,7))
-print(mlp:forward(torch.randn(5)))
-```
-which gives the output:
-```lua
+
+> print(mlp:forward(torch.randn(5)))
  0.7486
  0.1349
  0.7924
@@ -221,14 +224,13 @@ spatial dimensions and adds zero-padding around the smaller Tensors.
 inputSize = 3
 outputSize = 2
 input = torch.randn(inputSize,7,7)
+
 mlp=nn.DepthConcat(1);
 mlp:add(nn.SpatialConvolutionMM(inputSize, outputSize, 1, 1))
 mlp:add(nn.SpatialConvolutionMM(inputSize, outputSize, 3, 3))
 mlp:add(nn.SpatialConvolutionMM(inputSize, outputSize, 4, 4))
-print(mlp:forward(input))
-```
-which gives the output:
-```lua
+
+> print(mlp:forward(input))
 (1,.,.) = 
  -0.2874  0.6255  1.1122  0.4768  0.9863 -0.2201 -0.1516
   0.2779  0.9295  1.1944  0.4457  1.1470  0.9693  0.1654
@@ -303,18 +305,17 @@ Bottle allows varying dimensionality input to be forwarded through any module th
 Bottle can be used to forward a 4D input of varying sizes through a 2D module `b x n`. The module `Bottle(module, 2)` will accept input of shape `p x q x r x n` and outputs with the shape `p x q x r x m`. Internally Bottle will view the input of `module` as `p*q*r x n`, and view the output as `p x q x r x m`. The numbers `p x q x r` are inferred from the input and can change for every forward/backward pass.
 
 ```lua
-input=torch.Tensor(4, 5, 3, 10)
-mlp=nn.Bottle(nn.Linear(10, 2))
-print(input:size())
-print(mlp:forward(input):size())
-```
-which gives the output:
-```lua
+input = torch.Tensor(4, 5, 3, 10)
+mlp = nn.Bottle(nn.Linear(10, 2))
+
+> print(input:size())
   4
   5
   3
  10
 [torch.LongStorage of size 4]
+
+> print(mlp:forward(input):size())
  4
  5
  3
