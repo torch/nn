@@ -7191,7 +7191,14 @@ function nntest.Cosine()
 end
 
 function nntest.DistanceRatioCriterion()
-   local crit = nn.DistanceRatioCriterion()
+   local sizeAverage = true
+   local crit = nn.DistanceRatioCriterion(sizeAverage)
+   local X = torch.rand(32,1):fill(1)
+   local Y = torch.rand(32,1):fill(1)
+   local loss = crit:forward({X, Y})
+   print(loss, 1 + math.log(math.exp(-1) + math.exp(-1)))
+   assert(loss == (1 + math.log(math.exp(-1) + math.exp(-1))),
+                   "DistanceRatioCriterion forward incorrect output")
 end
 
 function nntest.ErrorHandling()
