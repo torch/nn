@@ -7191,14 +7191,37 @@ function nntest.Cosine()
 end
 
 function nntest.DistanceRatioCriterion()
+   local hasCuda = pcall(function() require 'cunn' end)
+   local useCudas = {false, hasCuda}
+
    local sizeAverage = true
    local crit = nn.DistanceRatioCriterion(sizeAverage)
    local X = torch.rand(32,1):fill(1)
    local Y = torch.rand(32,1):fill(1)
-   local loss = crit:forward({X, Y})
-   print(loss, 1 + math.log(math.exp(-1) + math.exp(-1)))
-   assert(loss == (1 + math.log(math.exp(-1) + math.exp(-1))),
-                   "DistanceRatioCriterion forward incorrect output")
+
+   for _, useCuda in pairs(useCudas) do
+   
+      if useCuda then
+         crit:cuda()
+         X = X:cuda()
+         Y = Y:cuda()
+      end
+
+      -- Unit Test updateOutput
+      local loss = crit:forward({X, Y})
+      local trueLoss = 1 + math.log(math.exp(-1) + math.exp(-1))
+      assert(math.abs(loss - trueLoss) < 0.000001,
+                      "DistanceRatioCriterion forward incorrect output")
+
+      -- Unit Test updateGradInput
+      local dxdy = crit:backward({X, Y})
+      local dx = dxdy[1]
+      local dy = dxdy[2]
+      assert(math.abs(dx:sum() - 0.5) < 0.000001,
+                      "DistanceRatioCriterion backward (dx) incorrect output")
+      assert(math.abs(dy:sum() + 0.5) < 0.000001,
+                      "DistanceRatioCriterion backward (dy) incorrect output")
+   end
 end
 
 function nntest.ErrorHandling()
