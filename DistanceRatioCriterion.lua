@@ -1,6 +1,6 @@
 --[[
    Probabilistic Criterion for Triplet Siamese Model for learning embedding.
-   Ref: https://arxiv.org/pdf/1412.6622v3.pdf
+   Ref: https://arxiv.org/pdf/1610.00243.pdf
 
    loss = -log( exp(-X) / ( exp(-X) + exp(-Y) ) )
    where

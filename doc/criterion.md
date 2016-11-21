@@ -712,7 +712,7 @@ By default, the losses are averaged over observations for each minibatch. Howeve
 
 <a name="nn.DistanceRatioCriterion"></a>
 ## DistanceRatioCriterion ##
-Ref A. [Deep Metric Learning Using Triplet Model](https://arxiv.org/pdf/1412.6622v3.pdf)
+Ref A. [Unsupervised Learning through Spatial Contrasting](https://arxiv.org/pdf/1610.00243.pdf)
 
 ```lua
 criterion = nn.DistanceRatioCriterion(sizeAverage)
