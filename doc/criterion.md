@@ -718,10 +718,52 @@ Ref A. [Unsupervised Learning through Spatial Contrasting](https://arxiv.org/pdf
 criterion = nn.DistanceRatioCriterion(sizeAverage)
 ```
 
-This criterion is probabilistic treatment of margin cost. The model is trainied using sample triplets `{Xs, Xa, Xd}` where `Xa` is anchor sample, `Xs` is sample similar to anchor sample and `Xd` is a sample not similar to anchor sample. Let `Ds` be distance between embeddings of `{Xs, Xa}` and `Dd` be distance between embeddings of `{Xa, Xd}` then the loss is defined as follow
+This criterion is probabilistic treatment of margin cost. The model is trained using sample triplets `{Xs, Xa, Xd}` where `Xa` is anchor sample, `Xs` is sample similar to anchor sample and `Xd` is a sample not similar to anchor sample. Let `Ds` be distance between embeddings of `{Xs, Xa}` and `Dd` be distance between embeddings of `{Xa, Xd}` then the loss is defined as follow
 
 ```lua
    loss = -log( exp(-Ds) / ( exp(-Ds) + exp(-Dd) ) )
+```
+
+Sample example
+```lua
+   torch.setdefaulttensortype("torch.FloatTensor")
+
+   require 'nn'
+
+   -- triplet : with batchSize of 32 and dimensionality 512
+   sample = {torch.rand(32, 512), torch.rand(32, 512), torch.rand(32, 512)}
+
+   embeddingModel = nn.Sequential()
+   embeddingModel:add(nn.Linear(512, 96)):add(nn.ReLU())
+
+   tripleModel = nn.ParallelTable()
+   tripleModel:add(embeddingModel)
+   tripleModel:add(embeddingModel:clone('weight', 'bias', 
+                                        'gradWeight', 'gradBias'))
+   tripleModel:add(embeddingModel:clone('weight', 'bias',
+                                        'gradWeight', 'gradBias'))
+
+   -- Similar sample distance w.r.t anchor sample
+   posDistModel = nn.Sequential()
+   posDistModel:add(nn.NarrowTable(1,2)):add(nn.PairwiseDistance())
+
+   -- Different sample distance w.r.t anchor sample
+   negDistModel = nn.Sequential()
+   negDistModel:add(nn.NarrowTable(2,2)):add(nn.PairwiseDistance())
+
+   distanceModel = nn.ConcatTable():add(posDistModel):add(negDistModel)
+
+   -- Complete Model
+   model = nn.Sequential():add(tripleModel):add(distanceModel)
+
+   -- DistanceRatioCriterion
+   criterion = nn.DistanceRatioCriterion(true)
+
+   -- Forward & Backward
+   output = model:forward(sample)
+   loss   = criterion:forward(output)
+   dLoss  = criterion:backward(output)
+   model:backward(sample, dLoss)
 ```
 
 <a name="nn.MarginRankingCriterion"></a>
