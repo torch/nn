@@ -104,13 +104,15 @@ on dimension `inputDimension`. It concatenates the results of its contained modu
 
 Example:
 ```lua
- mlp=nn.Parallel(2,1);     -- iterate over dimension 2 of input
- mlp:add(nn.Linear(10,3)); -- apply to first slice
- mlp:add(nn.Linear(10,2))  -- apply to first second slice
- print(mlp:forward(torch.randn(10,2)))
-```
-gives the output:
-```lua
+ mlp = nn.Parallel(2,1);   -- Parallel container will associate a module to each slice of dimension 2
+                           -- (column space), and concatenate the outputs over the 1st dimension.
+                           
+ mlp:add(nn.Linear(10,3)); -- Linear module (input 10, output 3), applied on 1st slice of dimension 2
+ mlp:add(nn.Linear(10,2))  -- Linear module (input 10, output 2), applied on 2nd slice of dimension 2
+ 
+                                  -- After going through the Linear module the outputs are
+                                  -- concatenated along the unique dimension, to form 1D Tensor
+ > mlp:forward(torch.randn(10,2)) -- of size 5.
 -0.5300
 -1.1015
  0.7764
@@ -122,26 +124,40 @@ gives the output:
 A more complicated example:
 ```lua
 
-mlp=nn.Sequential();
-c=nn.Parallel(1,2)
-for i=1,10 do
+mlp = nn.Sequential();
+c = nn.Parallel(1,2)     -- Parallel container will associate a module to each slice of dimension 1
+                         -- (row space), and concatenate the outputs over the 2nd dimension.           
+                         
+for i=1,10 do            -- Add 10 Linear+Reshape modules in parallel (input = 3, output = 2x1)
  local t=nn.Sequential()
- t:add(nn.Linear(3,2))
- t:add(nn.Reshape(2,1))
+ t:add(nn.Linear(3,2))   -- Linear module (input = 3, output = 2)
+ t:add(nn.Reshape(2,1))  -- Reshape 1D Tensor of size 2 to 2D Tensor of size 2x1
  c:add(t)
 end
-mlp:add(c)
 
-pred=mlp:forward(torch.randn(10,3))
-print(pred)
+mlp:add(c)               -- Add the Parallel container in the Sequential container
 
-for i=1,10000 do     -- Train for a few iterations
- x=torch.randn(10,3);
- y=torch.ones(2,10);
- pred=mlp:forward(x)
+pred = mlp:forward(torch.randn(10,3)) -- 2D Tensor of size 10x3 goes through the Sequential container
+                                      -- which contains a Parallel container of 10 Linear+Reshape.
+                                      -- Each Linear+Reshape module receives a slice of dimension 1
+                                      -- which corresponds to a 1D Tensor of size 3.
+                                      -- Eventually all the Linear+Reshape modules' outputs of size 2x1
+                                      -- are concatenated alond the 2nd dimension (column space)
+                                      -- to form pred, a 2D Tensor of size 2x10.
 
- criterion= nn.MSECriterion()
- local err=criterion:forward(pred,y)
+> pred
+-0.7987 -0.4677 -0.1602 -0.8060  1.1337 -0.4781  0.1990  0.2665 -0.1364  0.8109
+-0.2135 -0.3815  0.3964 -0.4078  0.0516 -0.5029 -0.9783 -0.5826  0.4474  0.6092
+[torch.DoubleTensor of size 2x10]
+
+
+for i = 1, 10000 do     -- Train for a few iterations
+ x = torch.randn(10,3);
+ y = torch.ones(2,10);
+ pred = mlp:forward(x)
+
+ criterion = nn.MSECriterion()
+ local err = criterion:forward(pred,y)
  local gradCriterion = criterion:backward(pred,y);
  mlp:zeroGradParameters();
  mlp:backward(x, gradCriterion); 
