@@ -23,6 +23,7 @@ target, they compute a gradient according to a given loss function.
     * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
     * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
     * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
+    * [`DistanceRatioCriterion`](#nn.DistanceRatioCriterion): Probabilistic criterion for training siamese model with triplets.
   * Miscelaneus criterions:
     * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
     * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
@@ -709,6 +710,19 @@ For batched inputs, if the internal variable `sizeAverage` is equal to `true`, t
 
 By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
 
+<a name="nn.DistanceRatioCriterion"></a>
+## DistanceRatioCriterion ##
+Ref A. [Deep Metric Learning Using Triplet Model](https://arxiv.org/pdf/1412.6622v3.pdf)
+
+```lua
+criterion = nn.DistanceRatioCriterion(sizeAverage)
+```
+
+This criterion is probabilistic treatment of margin cost. The model is trainied using sample triplets `{Xs, Xa, Xd}` where `Xa` is anchor sample, `Xs` is sample similar to anchor sample and `Xd` is a sample not similar to anchor sample. Let `Ds` be distance between embeddings of `{Xs, Xa}` and `Dd` be distance between embeddings of `{Xa, Xd}` then the loss is defined as follow
+
+```lua
+   loss = -log( exp(-Ds) / ( exp(-Ds) + exp(-Dd) ) )
+```
 
 <a name="nn.MarginRankingCriterion"></a>
 ## MarginRankingCriterion ##
