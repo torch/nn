@@ -65,8 +65,10 @@ function VolumetricMaxPooling:updateGradInput(input, gradOutput)
       gradOutput:cdata(),
       self.gradInput:cdata(),
       self.indices:cdata(),
+      self.kT, self.kW, self.kH,
       self.dT, self.dW, self.dH,
-      self.padT, self.padW, self.padH
+      self.padT, self.padW, self.padH,
+      self.ceil_mode
    )
    return self.gradInput
 end
