@@ -73,26 +73,9 @@ local function backCompatibility(self)
    end
 end
 
-local function makeContiguous(self, input, gradOutput)
-   if not input:isContiguous() then
-      self._input = self._input or input.new()
-      self._input:resizeAs(input):copy(input)
-      input = self._input
-   end
-   if gradOutput then
-      if not gradOutput:isContiguous() then
-	 self._gradOutput = self._gradOutput or gradOutput.new()
-	 self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-	 gradOutput = self._gradOutput
-      end
-   end
-   return input, gradOutput
-end
-
 function SpatialConvolution:updateOutput(input)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    backCompatibility(self)
-   input = makeContiguous(self, input)
    input.THNN.SpatialConvolutionMM_updateOutput(
       input:cdata(),
       self.output:cdata(),
@@ -111,7 +94,6 @@ function SpatialConvolution:updateGradInput(input, gradOutput)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    if self.gradInput then
       backCompatibility(self)
-      input, gradOutput = makeContiguous(self, input, gradOutput)
       input.THNN.SpatialConvolutionMM_updateGradInput(
          input:cdata(),
          gradOutput:cdata(),
@@ -131,7 +113,6 @@ function SpatialConvolution:accGradParameters(input, gradOutput, scale)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    scale = scale or 1
    backCompatibility(self)
-   input, gradOutput = makeContiguous(self, input, gradOutput)
    input.THNN.SpatialConvolutionMM_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),

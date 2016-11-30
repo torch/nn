@@ -50,22 +50,6 @@ function SpatialConvolutionMM:reset(stdv)
    end
 end
 
-local function makeContiguous(self, input, gradOutput)
-   if not input:isContiguous() then
-      self._input = self._input or input.new()
-      self._input:resizeAs(input):copy(input)
-      input = self._input
-   end
-   if gradOutput then
-      if not gradOutput:isContiguous() then
-	 self._gradOutput = self._gradOutput or gradOutput.new()
-	 self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-	 gradOutput = self._gradOutput
-      end
-   end
-   return input, gradOutput
-end
-
 function SpatialConvolutionMM:updateOutput(input)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    self.finput = self.finput or input.new()
@@ -76,7 +60,6 @@ function SpatialConvolutionMM:updateOutput(input)
       self.padH = self.padding
       self.padding = nil
    end
-   input = makeContiguous(self, input)
    input.THNN.SpatialConvolutionMM_updateOutput(
       input:cdata(),
       self.output:cdata(),
@@ -94,7 +77,6 @@ end
 function SpatialConvolutionMM:updateGradInput(input, gradOutput)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    if self.gradInput then
-      input, gradOutput = makeContiguous(self, input, gradOutput)
       input.THNN.SpatialConvolutionMM_updateGradInput(
          input:cdata(),
          gradOutput:cdata(),
@@ -113,7 +95,6 @@ end
 function SpatialConvolutionMM:accGradParameters(input, gradOutput, scale)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    scale = scale or 1
-   input, gradOutput = makeContiguous(self, input, gradOutput)
    assert((self.bias and self.gradBias) or (self.bias == nil and self.gradBias == nil))
    input.THNN.SpatialConvolutionMM_accGradParameters(
       input:cdata(),

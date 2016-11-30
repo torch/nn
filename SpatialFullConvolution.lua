@@ -55,22 +55,6 @@ function SpatialFullConvolution:reset(stdv)
    end
 end
 
-local function makeContiguous(self, input, gradOutput)
-  if not input:isContiguous() then
-    self._input = self._input or input.new()
-    self._input:resizeAs(input):copy(input)
-    input = self._input
-  end
-  if gradOutput then
-    if not gradOutput:isContiguous() then
-      self._gradOutput = self._gradOutput or gradOutput.new()
-      self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-      gradOutput = self._gradOutput
-    end
-  end
-  return input, gradOutput
-end
-
 local function calculateAdj(targetSize, ker, pad, stride)
   return (targetSize + 2 * pad - ker) % stride
 end
@@ -103,7 +87,6 @@ function SpatialFullConvolution:updateOutput(input)
     self.fgradInput = self.fgradInput or input.new()
   end
 
-  inputTensor = makeContiguous(self, inputTensor)
   inputTensor.THNN.SpatialFullConvolution_updateOutput(
     inputTensor:cdata(),
     self.output:cdata(),
@@ -144,7 +127,6 @@ function SpatialFullConvolution:updateGradInput(input, gradOutput)
       end
     end
 
-    inputTensor, gradOutput = makeContiguous(self, inputTensor, gradOutput)
     inputTensor.THNN.SpatialFullConvolution_updateGradInput(
       inputTensor:cdata(),
       gradOutput:cdata(),
@@ -190,7 +172,6 @@ function SpatialFullConvolution:accGradParameters(input, gradOutput, scale)
     adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
   end
 
-  inputTensor, gradOutput = makeContiguous(self, inputTensor, gradOutput)
   inputTensor.THNN.SpatialFullConvolution_accGradParameters(
     inputTensor:cdata(),
     gradOutput:cdata(),
