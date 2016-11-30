@@ -116,7 +116,6 @@ function BN:updateOutput(input)
    input = makeContiguous(self, input)
    input = makeBatch(self, input)
 
-   self.output:resizeAs(input)
    self.save_mean = self.save_mean or input.new()
    self.save_mean:resizeAs(self.running_mean)
    self.save_std = self.save_std or input.new()
