@@ -83,14 +83,14 @@ If the input sequence is a 3D tensor of dimension `nBatchFrame x nInputFrame x i
 `nBatchFrame x nOutputFrame x outputFrameSize`.
 
 The parameters of the convolution can be found in `self.weight` (Tensor of
-size `outputFrameSize x (inputFrameSize x kW) `) and `self.bias` (Tensor of
+size `outputFrameSize x (kW x inputFrameSize) `) and `self.bias` (Tensor of
 size `outputFrameSize`). The corresponding gradients can be found in
 `self.gradWeight` and `self.gradBias`.
 
 For a 2D input, the output value of the layer can be precisely described as:
 ```lua
 output[t][i] = bias[i]
-  + sum_j sum_{k=1}^kW weight[i][j][k]
+  + sum_j sum_{k=1}^kW weight[i][k][j]
                                 * input[dW*(t-1)+k)][j]
 ```
 
