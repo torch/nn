@@ -102,12 +102,6 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
       error("input must be a vector or matrix")
    end
 
-   if not gradOutput:isContiguous() then
-      self._gradOutput = self._gradOutput or gradOutput.new()
-      self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-      gradOutput = self._gradOutput
-   end
-
    self.gradWeight.THNN.LookupTable_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),
@@ -162,7 +156,7 @@ function LookupTable:type(type, tensorCache)
 end
 
 function LookupTable:clearState()
-   nn.utils.clear(self, '_count', '_input', '_gradOutput')
+   nn.utils.clear(self, '_count', '_input')
    return parent.clearState(self)
 end
 
