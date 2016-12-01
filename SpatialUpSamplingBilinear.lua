@@ -79,7 +79,6 @@ function SpatialUpSamplingBilinear:updateOutput(input)
    local xdim = input:dim()
    local ydim = xdim - 1
    self:setSize(input)
-   self.output:resize(self.outputSize)
    input.THNN.SpatialUpSamplingBilinear_updateOutput(
       input:cdata(),
       self.output:cdata(),
