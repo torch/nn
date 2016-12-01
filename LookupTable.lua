@@ -17,7 +17,7 @@ end
 
 function LookupTable:backCompatibility()
    self._count = self._count or torch.IntTensor()
-   self._input = self._input or torch.LongTensor()
+   self._input = self._input and self._input:long() or torch.LongTensor()
 
    if not self.shouldScaleGradByFreq then
       self.shouldScaleGradByFreq = false
@@ -108,6 +108,10 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
       gradOutput = self._gradOutput
    end
 
+   if gradOutput:type() == 'torch.CudaTensor' then
+      input = input:cuda()
+      self._count = self._count:cuda()
+   end
    self.gradWeight.THNN.LookupTable_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),
