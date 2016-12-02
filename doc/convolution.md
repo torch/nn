@@ -926,7 +926,7 @@ The parameters are the following:
   * `padT`: Additional zeros added to the input plane data on both sides of time axis. Default is `0`. `(kT-1)/2` is often used here.
   * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
   * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
-  
+
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
 add proper padding in images.
@@ -948,7 +948,7 @@ size `nOutputPlane`). The corresponding gradients can be found in
 ### VolumetricFullConvolution ###
 
 ```lua
-module = nn.VolumetricFullConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH])
+module = nn.VolumetricFullConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH], [adjT], [adjW], [adjH])
 ```
 
 Applies a 3D full convolution over an input image composed of several input planes. The `input` tensor in
@@ -969,13 +969,16 @@ The parameters are the following:
 * `padT`: Additional zeros added to the input plane data on both sides of time (depth) axis. Default is `0`. `(kT-1)/2` is often used here.
 * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
 * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
+* `adjT`: Extra depth to add to the output image. Default is `0`.  Cannot be greater than dT-1.
+* `adjW`: Extra width to add to the output image. Default is `0`. Cannot be greater than dW-1.
+* `adjH`: Extra height to add to the output image. Default is `0`. Cannot be greater than dH-1.
 
 If the input image is a 3D tensor `nInputPlane x depth x height x width`, the output image size
 will be `nOutputPlane x odepth x oheight x owidth` where
 ```lua
-odepth  = (depth  - 1) * dT - 2*padT + kT
-owidth  = (width  - 1) * dW - 2*padW + kW
-oheight = (height - 1) * dH - 2*padH + kH
+odepth  = (depth  - 1) * dT - 2*padT + kT + adjT
+owidth  = (width  - 1) * dW - 2*padW + kW + adjW
+oheight = (height - 1) * dH - 2*padH + kH + adjH
 ```
 
 <a name="nn.VolumetricDilatedConvolution"></a>
