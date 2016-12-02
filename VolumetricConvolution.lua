@@ -124,6 +124,9 @@ function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
          self.gradWeight:cdata(),
          self.gradBias:cdata(),
          self.finput:cdata(),
+         self.kT, self.kW, self.kH,
+         self.dT, self.dW, self.dH,
+         self.padT, self.padW, self.padH,
          scale or 1
       )
    end
