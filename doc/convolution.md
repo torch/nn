@@ -190,7 +190,7 @@ size `inputFrameSize`). The corresponding gradients can be found in
 
 The output value of the layer can be precisely described as:
 ```lua
-output[i][t] = bias[i] + weight[i] * sum_{k=1}^kW input[i][dW*(t-1)+k)]
+output[t][i] = bias[i] + weight[i] * sum_{k=1}^kW input[dW*(t-1)+k][i]
 ```
 
 <a name="nn.LookupTable"></a>
