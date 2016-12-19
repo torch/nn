@@ -1,4 +1,5 @@
 local Linear, parent = torch.class('nn.Linear', 'nn.Module')
+
 function Linear:__init(inputSize, outputSize, bias)
    parent.__init(self)
    local bias = ((bias == nil) and true) or bias
