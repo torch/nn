@@ -1,5 +1,4 @@
 local Linear, parent = torch.class('nn.Linear', 'nn.Module')
-
 function Linear:__init(inputSize, outputSize, bias)
    parent.__init(self)
    local bias = ((bias == nil) and true) or bias
@@ -16,6 +15,19 @@ function Linear:noBias()
    self.bias = nil
    self.gradBias = nil
    return self
+end
+
+function Linear:setMask(mask)
+   if self.weight:isSameSizeAs(mask) then
+      self.mask = mask
+      self.weight:cmul(self.mask)
+   else
+      error('Size of Mask must be same as the weight tensor')
+   end
+end
+
+function Linear:removeMask(mask)
+      self.mask = nil
 end
 
 function Linear:reset(stdv)
@@ -85,7 +97,6 @@ function Linear:updateGradInput(input, gradOutput)
       elseif input:dim() == 2 then
          self.gradInput:addmm(0, 1, gradOutput, self.weight)
       end
-
       return self.gradInput
    end
 end
@@ -102,6 +113,9 @@ function Linear:accGradParameters(input, gradOutput, scale)
          updateAddBuffer(self, input)
          self.gradBias:addmv(scale, gradOutput:t(), self.addBuffer)
       end
+   end
+   if self.mask ~= nil then
+      self.gradWeight:cmul(self.mask)
    end
 end
 

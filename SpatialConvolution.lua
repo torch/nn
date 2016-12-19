@@ -31,6 +31,20 @@ function SpatialConvolution:noBias()
    return self
 end
 
+function SpatialConvolution:setMask(mask)
+   if self.weight:isSameSizeAs(mask) then
+      self.mask = mask
+      self.weight:cmul(self.mask)
+   else
+      error('Size of Mask must be same as the weight tensor')
+   end
+end
+
+function SpatialConvolution:removeMask(mask)
+      self.mask = nil
+end
+
+
 function SpatialConvolution:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
@@ -125,6 +139,9 @@ function SpatialConvolution:accGradParameters(input, gradOutput, scale)
       self.padW, self.padH,
       scale
    )
+   if self.mask ~= nil then
+      self.gradWeight:cmul(self.mask)
+   end
 end
 
 function SpatialConvolution:type(type,tensorCache)
