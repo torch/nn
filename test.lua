@@ -6707,6 +6707,40 @@ function nntest.VolumetricBatchNormalization()
    testBatchNormalization('VolumetricBatchNormalization', 3, 4)
 end
 
+local function testBatchCentering(moduleName, dim, k)
+   local planes = torch.random(1,k)
+   local size = { torch.random(2, k), planes }
+   for i=1,dim do
+      table.insert(size, torch.random(1,k))
+   end
+   local input = torch.zeros(table.unpack(size)):uniform()
+
+   local function jacTests(module, input)
+      local err = jac.testJacobian(module,input)
+      mytester:assertlt(err, precision,
+                        'error on state ')
+
+      -- IO
+      local ferr,berr = jac.testIO(module,input)
+      mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
+      mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
+   end
+
+   module = nn[moduleName](planes, 0.1)
+   module:training()
+   jacTests(module, input)
+   module:evaluate()
+   jacTests(module, input)
+end
+
+function nntest.BatchCentering()
+   testBatchCentering('BatchCentering', 0, 20)
+end
+
+function nntest.SpatialBatchCentering()
+   testBatchCentering('SpatialBatchCentering', 2, 6)
+end
+
 function nntest.GradientReversal()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
