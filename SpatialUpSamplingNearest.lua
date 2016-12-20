@@ -24,7 +24,6 @@ function SpatialUpSamplingNearest:__init(scale)
    end
    self.inputSize = torch.LongStorage(4)
    self.outputSize = torch.LongStorage(4)
-   self.usage = nil
 end
 
 function SpatialUpSamplingNearest:updateOutput(input)
@@ -40,13 +39,6 @@ function SpatialUpSamplingNearest:updateOutput(input)
    end
    self.outputSize[ydim] = self.outputSize[ydim] * self.scale_factor
    self.outputSize[xdim] = self.outputSize[xdim] * self.scale_factor
-   -- Resize the output if needed
-   if input:dim() == 3 then
-     self.output:resize(self.outputSize[1], self.outputSize[2],
-       self.outputSize[3])
-   else
-     self.output:resize(self.outputSize)
-   end
    input.THNN.SpatialUpSamplingNearest_updateOutput(
       input:cdata(),
       self.output:cdata(),

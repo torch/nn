@@ -81,7 +81,7 @@ function LookupTable:updateOutput(input)
 end
 
 function LookupTable:updateGradInput(input, gradOutput)
-   -- the input can be of any type (as in the forward it's 
+   -- the input can be of any type (as in the forward it's
    -- converted anyway to LongTensor) thus, need to allocate
    -- new memory each time the user changes the input type
    if torch.type(self.gradInput) ~= torch.type(input) then
@@ -102,12 +102,6 @@ function LookupTable:accGradParameters(input, gradOutput, scale)
       error("input must be a vector or matrix")
    end
 
-   if not gradOutput:isContiguous() then
-      self._gradOutput = self._gradOutput or gradOutput.new()
-      self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-      gradOutput = self._gradOutput
-   end
-
    self.gradWeight.THNN.LookupTable_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),
@@ -125,7 +119,7 @@ function LookupTable:renorm(input)
    if not self.maxNorm then
       return
    end
-   -- copy input into _input, so _input is continous.
+   -- copy input into _input, so _input is continuous.
    -- The copied _input will be modified in the C code.
    self._input:resize(input:size()):copy(input)
    local row_idx = self._input
@@ -146,12 +140,12 @@ end
 function LookupTable:type(type, tensorCache)
    parent.type(self, type, tensorCache)
 
-   if type == 'torch.CudaTensor' then
+   if type and type:find('torch%.Cuda.*Tensor') then
       -- CUDA uses _sorted and _indices temporary tensors
-      self._sorted = self.weight.new()
-      self._indices = self.weight.new()
-      self._count = self.weight.new()
-      self._input = self.weight.new()
+      self._sorted = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
+      self._indices = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
+      self._count = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
+      self._input = torch.CudaLongTensor and torch.CudaLongTensor.new() or torch.CudaTensor.new()
    else
       -- self._count and self._input should only be converted if using Cuda
       self._count = torch.IntTensor()
@@ -162,7 +156,7 @@ function LookupTable:type(type, tensorCache)
 end
 
 function LookupTable:clearState()
-   nn.utils.clear(self, '_count', '_input', '_gradOutput')
+   nn.utils.clear(self, '_count', '_input')
    return parent.clearState(self)
 end
 

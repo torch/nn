@@ -23,9 +23,13 @@ function Normalize:updateOutput(input)
 
   if self.p == math.huge then
     -- specialization for the infinity norm
-    self._indices = self._indices or
-      (torch.type(self.output) == 'torch.CudaTensor' and
-       torch.CudaTensor() or torch.LongTensor())
+    if not self._indices then
+      if torch.type(self.output) == 'torch.CudaTensor' then
+        self._indices = torch.CudaLongTensor and torch.CudaLongTensor() or torch.CudaTensor()
+      else
+        self._indices = torch.LongTensor()
+      end
+    end
 
     self.buffer:abs(input)
     torch.max(self.norm, self._indices, self.buffer, 2)
@@ -127,18 +131,9 @@ function Normalize:__tostring__()
 end
 
 function Normalize:type(type, tensorCache)
-  -- torch.max expects a LongTensor as indices, whereas cutorch.max expects a CudaTensor.
-  if type == 'torch.CudaTensor' then
+    self._indices = nil
     parent.type(self, type, tensorCache)
-  else
-    -- self._indices must be a LongTensor. Setting it to nil temporarily avoids
-    -- unnecessary memory allocations.
-    local indices
-    indices, self._indices = self._indices, nil
-    parent.type(self, type, tensorCache)
-    self._indices = indices and indices:long() or nil
-  end
-  return self
+    return self
 end
 
 function Normalize:clearState()

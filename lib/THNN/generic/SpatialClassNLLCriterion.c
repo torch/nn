@@ -4,9 +4,15 @@
 
 #define INITIAL_CHECK                                                            \
   THArgCheck(THIndexTensor_(nDimension)(target) == 3, 3,                         \
-              "only batches of spatial targets supported (3D tensors)");         \
-  THArgCheck(THTensor_(nDimension)(input) == 4, 2,                               \
-              "only batches of spatial inputs supported (4D tensors)");          \
+    "only batches of spatial targets supported (3D tensors)"		         \
+	     " but got targets of dimension: %d",			         \
+	     THIndexTensor_(nDimension)(target));			         \
+  THArgCheck(THTensor_(nDimension)(input) == 4, 2,			         \
+	     "only batches of spatial inputs supported (4D tensors), "	         \
+	     "but got input of dimension: %d", THTensor_(nDimension)(input));    \
+  if (weights && THTensor_(nElement)(weights) != THTensor_(size)(input, 1)) {    \
+    THError("weight tensor should be defined either for all or no classes");     \
+  }                                                                              \
                                                                                  \
   {                                                                              \
     long input0 = THTensor_(size)(input, 0);                                     \
@@ -51,7 +57,7 @@ void THNN_(SpatialClassNLLCriterion_updateOutput)(
   real output_acc = 0;
   for (int b = 0; b < batch_size; b++) {
     for (int elem = 0; elem < map_size; elem++) {
-      int cur_target = target_data[b * map_size + elem] - 1;
+      int cur_target = target_data[b * map_size + elem] - TH_INDEX_BASE;
       THAssert(cur_target >= 0 && cur_target < n_classes);
 
       real cur_weight = weights ? weights_data[cur_target] : 1.0f;
@@ -102,11 +108,12 @@ void THNN_(SpatialClassNLLCriterion_updateGradInput)(
 
   real normalize = sizeAverage ? *total_weight_data : 1.0f;
 
-  int b,elem;
-#pragma omp parallel for
+  int b;
+  #pragma omp parallel for
   for (b = 0; b < batch_size; b++) {
+    int elem;
     for (elem = 0; elem < map_size; elem++) {
-      int cur_target = target_data[b * map_size + elem] - 1;
+      int cur_target = target_data[b * map_size + elem] - TH_INDEX_BASE;
       THAssert(cur_target >= 0 && cur_target < n_classes);
 
       gradInput_data[b * sample_size + cur_target * map_size + elem] =

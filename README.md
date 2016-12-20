@@ -16,6 +16,6 @@ This package provides an easy and modular way to build and train simple or compl
    * [`ClassNLLCriterion`](doc/criterion.md#nn.ClassNLLCriterion): the Negative Log Likelihood criterion used for classification;
  * Additional documentation:
    * [Overview](doc/overview.md#nn.overview.dok) of the package essentials including modules, containers and training;
-   * [Training](doc/training.md#nn.traningneuralnet.dok): how to train a neural network using [optim](https://github.com/torch/optim);
+   * [Training](doc/training.md#nn.traningneuralnet.dok): how to train a neural network using [`StochasticGradient`](doc/training.md#nn.StochasticGradient);
    * [Testing](doc/testing.md): how to test your modules.
    * [Experimental Modules](https://github.com/clementfarabet/lua---nnx/blob/master/README.md): a package containing experimental modules and criteria.

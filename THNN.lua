@@ -2,6 +2,7 @@ local ffi = require 'ffi'
 
 local THNN = {}
 
+
 local generic_THNN_h = require 'nn.THNN_h'
 -- strip all lines starting with #
 -- to remove preprocessor directives originally present

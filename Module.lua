@@ -102,12 +102,38 @@ function Module:share(mlp, ...)
    return self
 end
 
+local function sharedWrite(...)
+   local arg = {...}
+   local shared = {}
+   for i,v in ipairs(arg) do
+       shared[v] = true
+   end
+   return function(self, file)
+      local object = {}
+      for k, v in pairs(self) do
+         if shared[k] then
+            assert(torch.isTensor(v), 'Shared parameters have to be Tensors')
+            object[k] = v.new()
+         else
+            object[k] = v
+         end
+      end
+      file:writeObject(object)
+   end
+end
+
 function Module:clone(...)
+   local oldWrite = nn.Module.write
+   nn.Module.write = sharedWrite(...)
+
    local f = torch.MemoryFile("rw"):binary()
    f:writeObject(self)
    f:seek(1)
    local clone = f:readObject()
    f:close()
+
+   nn.Module.write = oldWrite
+
    if select('#',...) > 0 then
       clone:share(self,...)
    end

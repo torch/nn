@@ -28,12 +28,14 @@ end
 
 function SpatialClassNLLCriterion:updateOutput(input, target)
    if type(target) == 'number' then
-      if input:type() ~= 'torch.CudaTensor' then
-         self.target = self.target:long()
+      if torch.typename(input):find('torch%.Cuda.*Tensor') then
+          self.target = torch.CudaLongTensor and self.target:cudaLong() or self.target:cuda()
+      else
+          self.target = self.target:long()
       end
       self.target[1] = target
-   elseif target:type() == 'torch.CudaTensor' then
-      self.target = target
+   elseif torch.typename(input):find('torch%.Cuda.*Tensor') then
+      self.target = torch.CudaLongTensor and target:cudaLong() or target
    else
       self.target = target:long()
    end
@@ -52,9 +54,14 @@ end
 
 function SpatialClassNLLCriterion:updateGradInput(input, target)
    if type(target) == 'number' then
+      if torch.typename(input):find('torch%.Cuda.*Tensor') then
+          self.target = torch.CudaLongTensor and self.target:cudaLong() or self.target:cuda()
+      else
+          self.target = self.target:long()
+      end
       self.target[1] = target
-   elseif target:type() == 'torch.CudaTensor' then
-      self.target = target
+   elseif torch.typename(input):find('torch%.Cuda.*Tensor') then
+      self.target = torch.CudaLongTensor and target:cudaLong() or target
    else
       self.target = target:long()
    end

@@ -22,7 +22,7 @@ function VolumetricMaxPooling:__init(kT, kW, kH, dT, dW, dH, padT, padW, padH)
 
 
    self.ceil_mode = false
-   self.indices = torch.Tensor()
+   self.indices = torch.LongTensor()
 end
 
 function VolumetricMaxPooling:ceil()
@@ -41,7 +41,12 @@ function VolumetricMaxPooling:updateOutput(input)
    self.iheight = input:size(dims-1)
    self.iwidth = input:size(dims)
 
-   self.indices = self.indices or input.new()
+   self.indices = self.indices or torch.LongTensor()
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+      self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
+   else
+      self.indices = self.indices:long()
+   end
    input.THNN.VolumetricMaxPooling_updateOutput(
       input:cdata(),
       self.output:cdata(),
@@ -60,8 +65,10 @@ function VolumetricMaxPooling:updateGradInput(input, gradOutput)
       gradOutput:cdata(),
       self.gradInput:cdata(),
       self.indices:cdata(),
+      self.kT, self.kW, self.kH,
       self.dT, self.dW, self.dH,
-      self.padT, self.padW, self.padH
+      self.padT, self.padW, self.padH,
+      self.ceil_mode
    )
    return self.gradInput
 end

@@ -137,7 +137,7 @@ function gradUpdate(mlp, x, y, criterion, learningRate)
   mlp:updateParameters(learningRate)
 end
 ```
-For example, if you wish to use your own criterion you can simple replace 
+For example, if you wish to use your own criterion you can simply replace 
 `gradCriterion` with the gradient vector of your criterion of choice.
 
 <a name="nn.overview.sharedparams"></a>
@@ -145,7 +145,7 @@ For example, if you wish to use your own criterion you can simple replace
 
 By using `:share(...)` and the Container Modules, one can easily create very
 complex architectures. In order to make sure that the network is going to
-train properly, one need to pay attention to the way the sharing is applied,
+train properly, one needs to pay attention to the way the sharing is applied,
 because it might depend on the optimization procedure.
 
 * If you are using an optimization algorithm that iterates over the modules

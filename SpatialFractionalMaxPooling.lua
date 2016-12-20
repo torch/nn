@@ -114,7 +114,12 @@ function SpatialFractionalMaxPooling:fixPoolingRegions(val)
 end
 
 function SpatialFractionalMaxPooling:updateOutput(input)
-   self.indices = self.indices or input.new()
+   self.indices = self.indices or torch.LongTensor()
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+      self.indices = torch.CudaLongTensor and self.indices:cudaLong() or self.indices
+   else
+      self.indices = self.indices:long()
+   end
    self:initSampleBuffer_(input)
    local outW, outH = self:getOutputSizes_(input)
 

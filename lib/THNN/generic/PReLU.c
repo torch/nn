@@ -21,6 +21,7 @@ void THNN_(PReLU_updateOutput)(
   }
   else
   {
+    input = THTensor_(newContiguous)(input);
     long bs, ks;
     {
       long input_ndim = THTensor_(nDimension)(input);
@@ -65,6 +66,7 @@ void THNN_(PReLU_updateOutput)(
         n_output_data += ks;
       }
     }
+    THTensor_(free)(input);
   }
 }
 
@@ -76,6 +78,7 @@ void THNN_(PReLU_updateGradInput)(
           THTensor *weight,
           THIndex_t nOutputPlane)
 {
+  THNN_CHECK_NELEMENT(input, gradOutput);
   THTensor_(resizeAs)(gradInput, input);
 
   if (nOutputPlane == 0)
@@ -90,6 +93,8 @@ void THNN_(PReLU_updateGradInput)(
   }
   else
   {
+    input = THTensor_(newContiguous)(input);
+    gradOutput = THTensor_(newContiguous)(gradOutput);
     const real *input_data = THTensor_(data)(input);
     const real *gradOutput_data = THTensor_(data)(gradOutput);
     const real *weight_data = THTensor_(data)(weight);
@@ -145,6 +150,8 @@ void THNN_(PReLU_updateGradInput)(
         n_gradOutput_data += ks;
       }
     }
+    THTensor_(free)(input);
+    THTensor_(free)(gradOutput);
   }
 }
 
@@ -160,6 +167,7 @@ void THNN_(PReLU_accGradParameters)(
           THIndex_t nOutputPlane,
           real scale)
 {
+  THNN_CHECK_NELEMENT(input, gradOutput);
   real *gradWeight_data = THTensor_(data)(gradWeight);
 
   if (nOutputPlane == 0)
@@ -173,6 +181,8 @@ void THNN_(PReLU_accGradParameters)(
   }
   else
   {
+    input = THTensor_(newContiguous)(input);
+    gradOutput = THTensor_(newContiguous)(gradOutput);
     long bs, ks;
     {
       long input_ndim = THTensor_(nDimension)(input);
@@ -222,6 +232,8 @@ void THNN_(PReLU_accGradParameters)(
         n_gradOutput_data += ks;
       }
     }
+    THTensor_(free)(input);
+    THTensor_(free)(gradOutput);
   }
 }
 

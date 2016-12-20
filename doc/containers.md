@@ -7,6 +7,7 @@ Complex neural networks are easily built using container classes:
     * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
     * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
       * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
+    * [Bottle](#nn.Bottle) : allows any dimensionality input be forwarded through a module ;
  
 See also the [Table Containers](#nn.TableContainers) for manipulating tables of [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
@@ -40,14 +41,19 @@ E.g.
 creating a one hidden-layer multi-layer perceptron is thus just as easy as:
 ```lua
 mlp = nn.Sequential()
-mlp:add( nn.Linear(10, 25) ) -- 10 input, 25 hidden units
-mlp:add( nn.Tanh() ) -- some hyperbolic tangent transfer function
-mlp:add( nn.Linear(25, 1) ) -- 1 output
+mlp:add(nn.Linear(10, 25)) -- Linear module (10 inputs, 25 hidden units)
+mlp:add(nn.Tanh())         -- apply hyperbolic tangent transfer function on each hidden units
+mlp:add(nn.Linear(25, 1))  -- Linear module (25 inputs, 1 output)
 
-print(mlp:forward(torch.randn(10)))
-```
-which gives the output:
-```lua
+> mlp
+nn.Sequential {
+  [input -> (1) -> (2) -> (3) -> output]
+  (1): nn.Linear(10 -> 25)
+  (2): nn.Tanh
+  (3): nn.Linear(25 -> 1)
+}
+
+> print(mlp:forward(torch.randn(10)))
 -0.1815
 [torch.Tensor of dimension 1]
 ```
@@ -103,13 +109,15 @@ on dimension `inputDimension`. It concatenates the results of its contained modu
 
 Example:
 ```lua
- mlp=nn.Parallel(2,1);     -- iterate over dimension 2 of input
- mlp:add(nn.Linear(10,3)); -- apply to first slice
- mlp:add(nn.Linear(10,2))  -- apply to first second slice
- print(mlp:forward(torch.randn(10,2)))
-```
-gives the output:
-```lua
+mlp = nn.Parallel(2,1);   -- Parallel container will associate a module to each slice of dimension 2
+                           -- (column space), and concatenate the outputs over the 1st dimension.
+                           
+mlp:add(nn.Linear(10,3)); -- Linear module (input 10, output 3), applied on 1st slice of dimension 2
+mlp:add(nn.Linear(10,2))  -- Linear module (input 10, output 2), applied on 2nd slice of dimension 2
+ 
+                                  -- After going through the Linear module the outputs are
+                                  -- concatenated along the unique dimension, to form 1D Tensor
+> mlp:forward(torch.randn(10,2)) -- of size 5.
 -0.5300
 -1.1015
  0.7764
@@ -121,26 +129,40 @@ gives the output:
 A more complicated example:
 ```lua
 
-mlp=nn.Sequential();
-c=nn.Parallel(1,2)
-for i=1,10 do
+mlp = nn.Sequential();
+c = nn.Parallel(1,2)     -- Parallel container will associate a module to each slice of dimension 1
+                         -- (row space), and concatenate the outputs over the 2nd dimension.           
+                         
+for i=1,10 do            -- Add 10 Linear+Reshape modules in parallel (input = 3, output = 2x1)
  local t=nn.Sequential()
- t:add(nn.Linear(3,2))
- t:add(nn.Reshape(2,1))
+ t:add(nn.Linear(3,2))   -- Linear module (input = 3, output = 2)
+ t:add(nn.Reshape(2,1))  -- Reshape 1D Tensor of size 2 to 2D Tensor of size 2x1
  c:add(t)
 end
-mlp:add(c)
 
-pred=mlp:forward(torch.randn(10,3))
-print(pred)
+mlp:add(c)               -- Add the Parallel container in the Sequential container
 
-for i=1,10000 do     -- Train for a few iterations
- x=torch.randn(10,3);
- y=torch.ones(2,10);
- pred=mlp:forward(x)
+pred = mlp:forward(torch.randn(10,3)) -- 2D Tensor of size 10x3 goes through the Sequential container
+                                      -- which contains a Parallel container of 10 Linear+Reshape.
+                                      -- Each Linear+Reshape module receives a slice of dimension 1
+                                      -- which corresponds to a 1D Tensor of size 3.
+                                      -- Eventually all the Linear+Reshape modules' outputs of size 2x1
+                                      -- are concatenated alond the 2nd dimension (column space)
+                                      -- to form pred, a 2D Tensor of size 2x10.
 
- criterion= nn.MSECriterion()
- local err=criterion:forward(pred,y)
+> pred
+-0.7987 -0.4677 -0.1602 -0.8060  1.1337 -0.4781  0.1990  0.2665 -0.1364  0.8109
+-0.2135 -0.3815  0.3964 -0.4078  0.0516 -0.5029 -0.9783 -0.5826  0.4474  0.6092
+[torch.DoubleTensor of size 2x10]
+
+
+for i = 1, 10000 do     -- Train for a few iterations
+ x = torch.randn(10,3);
+ y = torch.ones(2,10);
+ pred = mlp:forward(x)
+
+ criterion = nn.MSECriterion()
+ local err = criterion:forward(pred,y)
  local gradCriterion = criterion:backward(pred,y);
  mlp:zeroGradParameters();
  mlp:backward(x, gradCriterion); 
@@ -160,13 +182,11 @@ Concat concatenates the output of one layer of "parallel" modules along the
 provided dimension `dim`: they take the same inputs, and their output is
 concatenated.
 ```lua
-mlp=nn.Concat(1);
+mlp = nn.Concat(1);
 mlp:add(nn.Linear(5,3))
 mlp:add(nn.Linear(5,7))
-print(mlp:forward(torch.randn(5)))
-```
-which gives the output:
-```lua
+
+> print(mlp:forward(torch.randn(5)))
  0.7486
  0.1349
  0.7924
@@ -204,14 +224,13 @@ spatial dimensions and adds zero-padding around the smaller Tensors.
 inputSize = 3
 outputSize = 2
 input = torch.randn(inputSize,7,7)
+
 mlp=nn.DepthConcat(1);
 mlp:add(nn.SpatialConvolutionMM(inputSize, outputSize, 1, 1))
 mlp:add(nn.SpatialConvolutionMM(inputSize, outputSize, 3, 3))
 mlp:add(nn.SpatialConvolutionMM(inputSize, outputSize, 4, 4))
-print(mlp:forward(input))
-```
-which gives the output:
-```lua
+
+> print(mlp:forward(input))
 (1,.,.) = 
  -0.2874  0.6255  1.1122  0.4768  0.9863 -0.2201 -0.1516
   0.2779  0.9295  1.1944  0.4457  1.1470  0.9693  0.1654
@@ -273,6 +292,36 @@ This is inevitable when the component
 module output tensors non-`dim` sizes aren't all odd or even. 
 Such that in order to keep the mappings aligned, one need 
 only ensure that these be all odd (or even).
+
+<a name="nn.Bottle"></a>
+## Bottle
+
+
+```lua
+module = nn.Bottle(module, [nInputDim], [nOutputDim])
+```
+Bottle allows varying dimensionality input to be forwarded through any module that accepts input of `nInputDim` dimensions, and generates output of `nOutputDim` dimensions.
+
+Bottle can be used to forward a 4D input of varying sizes through a 2D module `b x n`. The module `Bottle(module, 2)` will accept input of shape `p x q x r x n` and outputs with the shape `p x q x r x m`. Internally Bottle will view the input of `module` as `p*q*r x n`, and view the output as `p x q x r x m`. The numbers `p x q x r` are inferred from the input and can change for every forward/backward pass.
+
+```lua
+input = torch.Tensor(4, 5, 3, 10)
+mlp = nn.Bottle(nn.Linear(10, 2))
+
+> print(input:size())
+  4
+  5
+  3
+ 10
+[torch.LongStorage of size 4]
+
+> print(mlp:forward(input):size())
+ 4
+ 5
+ 3
+ 2
+[torch.LongStorage of size 4]
+```
 
 <a name="nn.TableContainers"></a>
 ## Table Containers ##

@@ -16,9 +16,14 @@ end
 function MultiMarginCriterion:updateOutput(input, target)
    -- backward compatibility
    if not torch.isTensor(target) then
-     self.target_tensor = self.target_tensor or input.new(1)
+     self.target_tensor = self.target_tensor or torch.LongTensor(1)
      self.target_tensor[1] = target
      target = self.target_tensor
+   end
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+     target = torch.CudaLongTensor and target:cudaLong() or target
+   else
+     target = target:long()
    end
    self.p = self.p or 1
    self.output_tensor = self.output_tensor or input.new(1)
@@ -37,9 +42,14 @@ end
 
 function MultiMarginCriterion:updateGradInput(input, target)
    if not torch.isTensor(target) then
-     self.target_tensor = self.target_tensor or input.new(1)
+     self.target_tensor = self.target_tensor or torch.LongTensor(1)
      self.target_tensor[1] = target
      target = self.target_tensor
+   end
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
+     target = torch.CudaLongTensor and target:cudaLong() or target
+   else
+     target = target:long()
    end
    input.THNN.MultiMarginCriterion_updateGradInput(
       input:cdata(),

@@ -45,41 +45,10 @@ function VolumetricConvolution:reset(stdv)
    end
 end
 
-local function makeContiguous(self, input, gradOutput)
-   if not input:isContiguous() then
-      self._input = self._input or input.new()
-      self._input:resizeAs(input):copy(input)
-      input = self._input
-   end
-   if gradOutput then
-      if not gradOutput:isContiguous() then
-         self._gradOutput = self._gradOutput or gradOutput.new()
-         self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-         gradOutput = self._gradOutput
-      end
-   end
-   return input, gradOutput
-end
-
--- function to re-view the weight layout in a way that would make the MM ops happy
-local function viewWeight(self)
-   self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane * self.kT * self.kH * self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then
-      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane * self.kT * self.kH * self.kW)
-   end
-end
-
-local function unviewWeight(self)
-   self.weight = self.weight:view(self.nOutputPlane, self.nInputPlane, self.kT, self.kH, self.kW)
-   if self.gradWeight and self.gradWeight:dim() > 0 then
-      self.gradWeight = self.gradWeight:view(self.nOutputPlane, self.nInputPlane, self.kT, self.kH, self.kW)
-   end
-end
-
 function VolumetricConvolution:updateOutput(input)
    self.finput = self.finput or input.new()
    self.fgradInput = self.fgradInput or input.new()
-   if input:type() == 'torch.CudaTensor' then
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
       input.THNN.VolumetricConvolution_updateOutput(
         input:cdata(),
         self.output:cdata(),
@@ -91,8 +60,6 @@ function VolumetricConvolution:updateOutput(input)
         self.padT, self.padW, self.padH
       )
    else
-      viewWeight(self)
-      input = makeContiguous(self, input)
       input.THNN.VolumetricConvolutionMM_updateOutput(
          input:cdata(),
          self.output:cdata(),
@@ -103,13 +70,12 @@ function VolumetricConvolution:updateOutput(input)
          self.dT, self.dW, self.dH,
          self.padT, self.padW, self.padH
       )
-      unviewWeight(self)
    end
    return self.output
 end
 
 function VolumetricConvolution:updateGradInput(input, gradOutput)
-   if input:type() == 'torch.CudaTensor' then
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
       input.THNN.VolumetricConvolution_updateGradInput(
          input:cdata(),
          gradOutput:cdata(),
@@ -122,8 +88,6 @@ function VolumetricConvolution:updateGradInput(input, gradOutput)
       return self.gradInput
    else
       if self.gradInput then
-         viewWeight(self)
-         input, gradOutput = makeContiguous(self, input, gradOutput)
          input.THNN.VolumetricConvolutionMM_updateGradInput(
             input:cdata(),
             gradOutput:cdata(),
@@ -135,14 +99,13 @@ function VolumetricConvolution:updateGradInput(input, gradOutput)
             self.dT, self.dW, self.dH,
             self.padT, self.padW, self.padH
          )
-         unviewWeight(self)
          return self.gradInput
       end
    end
 end
 
 function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
-   if input:type() == 'torch.CudaTensor' then
+   if torch.typename(input):find('torch%.Cuda.*Tensor') then
       input.THNN.VolumetricConvolution_accGradParameters(
          input:cdata(),
          gradOutput:cdata(),
@@ -155,17 +118,17 @@ function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
          scale or 1
       )
    else
-      input, gradOutput = makeContiguous(self, input, gradOutput)
-      viewWeight(self)
       input.THNN.VolumetricConvolutionMM_accGradParameters(
          input:cdata(),
          gradOutput:cdata(),
          self.gradWeight:cdata(),
          self.gradBias:cdata(),
          self.finput:cdata(),
+         self.kT, self.kW, self.kH,
+         self.dT, self.dW, self.dH,
+         self.padT, self.padW, self.padH,
          scale or 1
       )
-      unviewWeight(self)
    end
 end
 
