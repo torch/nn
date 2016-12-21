@@ -465,6 +465,42 @@ gnuplot.grid(true)
 
 ![](image/rrelu.png)
 
+<a name="nn.CReLU"></a>
+## CReLU ##
+```
+f = nn.CReLU(nInputDims, [inplace])
+```
+
+Applies the Concatenated Rectified Linear Unit (`CReLU`) function to the input Tensor, outputting a `Tensor` with twice as many channels.  The parameter `nInputDim` is the number of non-batched dimensions,  larger than that value will be considered batches.
+`CReLU` is defined as:
+
+```
+f(x) = concat(max(0, x), max(0, -x))
+```
+
+i.e. `CReLU` applies `ReLU` to the input, `x`, and the negated input, `-x`, and concatenates the output along the 1st non-batched dimension.
+
+```
+crelu = nn.CReLU(3)
+input = torch.Tensor(2, 3, 20, 20):uniform(-1, 1)
+output = crelu:forward(input)
+output:size()
+2
+6
+20
+20
+[torch.LongStorage of size 4]
+
+input = torch.Tensor(3, 20, 20):uniform(-1, 1)
+output = crelu:forward(input)
+output:size()
+6
+20
+20
+[torch.LongStorage of size 3]
+```
+
+For reference see [Understanding and Improving Convolutional Neural Networks via Concatenated Rectified Linear Units](https://arxiv.org/abs/1603.05201).
 
 <a name="nn.ELU"></a>
 ## ELU ##
