@@ -94,6 +94,7 @@ require('nn.SpatialSoftMax')
 require('nn.SpatialLogSoftMax')
 require('nn.RReLU')
 require('nn.ELU')
+require('nn.GatedLinearUnit')
 
 require('nn.LookupTable')
 require('nn.SpatialConvolution')

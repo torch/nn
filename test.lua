@@ -562,6 +562,49 @@ function nntest.ReLU6()
    end
 end
 
+function nntest.GatedLinearUnit()
+   local model = nn.GatedLinearUnit()
+   local t = torch.Tensor({{1, 1}, {2, 2}, {3, 3}})
+   local thalf = torch.Tensor():resizeAs(t):copy(t):narrow(2, 1, 1)
+   mytester:assertTensorEq(
+      thalf:cmul(torch.sigmoid(thalf)),
+      model:forward(t):resizeAs(thalf),
+      0.000001,
+      'Gated Linear output'
+   )
+   t = torch.Tensor({{1, 1, 1, 1}, {2, 2, 2, 2}, {3, 3, 3, 3}})
+   thalf = torch.Tensor():resizeAs(t):copy(t):narrow(2, 1, 2)
+   mytester:assertTensorEq(
+      thalf:cmul(torch.sigmoid(thalf)),
+      model:forward(t),
+      0.000001,
+      'Gated Linear Unit output'
+   )
+
+   local input = torch.rand(1, 10)
+   local err = jac.testJacobian(model, input)
+   mytester:assert(err < precision, 'Gated Linear gradient')
+
+   input = torch.rand(5, 10, 6)
+   model = nn.GatedLinearUnit(2)
+   err = jac.testJacobian(model, input)
+   mytester:assert(err < precision, 'Gated Linear gradient, non-default dim')
+
+   input = torch.rand(5, 10, 6)
+   model = nn.GatedLinearUnit(3)
+   err = jac.testJacobian(model, input)
+   mytester:assert(err < precision, 'Gated Linear gradient, non-default dim')
+
+   input = torch.rand(5, 10)
+   model = nn.Sequential()
+   model:add(nn.Linear(10, 10))
+   model:add(nn.GatedLinearUnit())
+   model:add(nn.ReLU())
+   model:add(nn.LogSoftMax())
+   err = jac.testJacobian(model, input)
+   mytester:assert(err < precision, 'Gated Linear gradient with other layers')
+end
+
 function nntest.Exp()
    local ini = math.random(3,5)
    local inj = math.random(3,5)
