@@ -1620,6 +1620,13 @@ function nntest.MSECriterion()
    criterionJacobianTest(cri, input, target)
 end
 
+function nntest.DICECriterion()
+   local input = torch.rand(10)
+   local target = input:clone():add(torch.rand(10))
+   local cri = nn.DICECriterion()
+   criterionJacobianTest(cri, input, target)
+end
+
 function nntest.ClassSimplexCriterion()
    local nClasses = torch.random(3,15)
    local input = torch.rand(nClasses)
