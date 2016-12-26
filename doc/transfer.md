@@ -522,6 +522,16 @@ Can optionally do its operation in-place without using extra state memory:
 f = nn.LeakyReLU(negval, true) -- true = in-place, false = keeping separate state.
 ```
 
+<a name="nn.GatedLinearUnit"></a>
+## GatedLinearUnit ##
+
+Applies a Gated Linear unit activation function, which halves the input dimension as follows:
+
+`GatedLinearUnit` is defined as `f([x1, x2])` = `x1 * sigmoid(x2)`
+
+where x1 is the first half of the input vector and x2 is the second half. The multiplication is component-wise, and the input vector must have an even number of elements.
+
+The GatedLinearUnit optionally takes a `dim` parameter, which is the dimension of the input tensor to operate over. It defaults to the last dimension.
 
 <a name="nn.SpatialSoftMax"></a>
 ## SpatialSoftMax ##
