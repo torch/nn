@@ -7250,6 +7250,28 @@ function nntest.Cosine()
    mytester:assertTensorEq(cosine.gradWeight, cosine2.gradWeight, 0.000001, "Cosine gradWeight 2D err")
 end
 
+function nntest.DistanceRatioCriterion()
+   local sizeAverage = true
+   local crit = nn.DistanceRatioCriterion(sizeAverage)
+   local X = torch.rand(32,1):fill(1)
+   local Y = torch.rand(32,1):fill(1)
+
+   -- Unit Test updateOutput
+   local loss = crit:forward({X, Y})
+   local trueLoss = 1 + math.log(math.exp(-1) + math.exp(-1))
+   assert(math.abs(loss - trueLoss) < 0.000001,
+          "DistanceRatioCriterion forward incorrect output")
+
+   -- Unit Test updateGradInput
+   local dxdy = crit:backward({X, Y})
+   local dx = dxdy[1]
+   local dy = dxdy[2]
+   assert(math.abs(dx:sum() - 0.5) < 0.000001,
+          "DistanceRatioCriterion backward (dx) incorrect output")
+   assert(math.abs(dy:sum() + 0.5) < 0.000001,
+          "DistanceRatioCriterion backward (dy) incorrect output")
+end
+
 function nntest.ErrorHandling()
    local l = nn.Linear(1, 1)
    local p = nn.Parallel(1, 1):add(l)
