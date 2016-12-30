@@ -312,10 +312,10 @@ function nntest.CAdd()
    end
 
 
-   function testCAddWithLessDimsThanInput()
+   local function testCAddWithLessDimsThanInput()
       local input = torch.rand(4,5)
       local module = nn.CAdd(5)
-      params, gradParams = module:getParameters()
+      local params, gradParams = module:getParameters()
       testBackwardPass(module, input, params, gradParams)
 
       input:zero()
@@ -1627,8 +1627,8 @@ function nntest.SpatialAutoCropMSECriterion()
       for _, average in pairs({true, false}) do
          local sMSE = nn.SpatialAutoCropMSECriterion(average)
 
-         input = torch.Tensor(3, 3, 3)
-         target = torch.Tensor(4, 3, 3)
+         local input = torch.Tensor(3, 3, 3)
+         local target = torch.Tensor(4, 3, 3)
          mytester:assertError(function() sMSE:forward(input, target) end,
                           "Target and input must have same number of channels")
 
@@ -1656,7 +1656,7 @@ function nntest.SpatialAutoCropMSECriterion()
 
    -- Tests that the forward pass of nn.SpatialAutoCropMSECriterion
    -- is equivalent to the forward pass of nn.MSECriterion with a pre-cropped target
-   function testSpatialAutoCropMSECriterionBatched()
+   local function testSpatialAutoCropMSECriterionBatched()
       for _, average in pairs({true, false}) do
          local sMSE = nn.SpatialAutoCropMSECriterion(average)
          local MSE = nn.MSECriterion(average)
@@ -1690,7 +1690,7 @@ function nntest.SpatialAutoCropMSECriterion()
       end
    end
 
-   function testSpatialAutoCropMSECriterionNonBatched()
+   local function testSpatialAutoCropMSECriterionNonBatched()
       for _, average in pairs({true, false}) do
          local sMSE = nn.SpatialAutoCropMSECriterion(average)
          local MSE = nn.MSECriterion(average)
@@ -7050,7 +7050,7 @@ function nntest.PixelShuffle()
    -- Sub-Pixel Convolutional Neural Network", Shi et al.
    -- This function tests for multip batch sizes, multiple channels and multiple input dimensions (square)
    -- It also tests for normal tensors (un-batched)
-   function testPixelShuffleUpdateOutput()
+   local function testPixelShuffleUpdateOutput()
       --Test with batched input
       for h = 1, 3 do
          local batchSize = torch.round(torch.uniform(1, 3))
@@ -7098,7 +7098,7 @@ function nntest.PixelShuffle()
    -- Sub-Pixel Convolutional Neural Network", Shi et al.
    -- This function tests for multip batch sizes, multiple channels and multiple input dimensions (square)
    -- It also tests for normal tensors (un-batched)
-   function testPixelShuffleUpdateGradInput()
+   local function testPixelShuffleUpdateGradInput()
       --Test with batched input
       for h = 1, 3 do
          local batchSize = torch.round(torch.uniform(1, 3))
@@ -7139,7 +7139,7 @@ function nntest.PixelShuffle()
       mytester:assertlt(err,precision, "error computing gradiens w.r.t. inputs")
    end
 
-   function testModuleIO()
+   local function testModuleIO()
       --Test with non-batched input
       local inputDim = torch.round(torch.uniform(5, 10))
       local channels = torch.round(torch.uniform(1, 4))

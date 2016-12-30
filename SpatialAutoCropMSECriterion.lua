@@ -38,8 +38,8 @@ local function centerCrop(input, cropSize)
 end
 
 local function getTensorHeightAndWidth(tensor)
-   heightIdx = 2
-   widthIdx = 3
+   local heightIdx = 2
+   local widthIdx = 3
    if tensor:dim() == 4 then
       heightIdx = 3
       widthIdx = 4
@@ -48,8 +48,8 @@ local function getTensorHeightAndWidth(tensor)
 end
 
 local function inputResolutionIsSmallerThanTargetResolution(input, target)
-   inputHeight, inputWidth = getTensorHeightAndWidth(input)
-   targetHeight, targetWidth = getTensorHeightAndWidth(target)
+   local inputHeight, inputWidth = getTensorHeightAndWidth(input)
+   local targetHeight, targetWidth = getTensorHeightAndWidth(target)
    return inputHeight <= targetHeight and inputWidth <= targetWidth
 end
 
@@ -59,7 +59,7 @@ function SpatialAutoCropMSECriterion:updateOutput(input, target)
    assert(inputResolutionIsSmallerThanTargetResolution(input, target),
    "Spatial resolution of input should be less than or equal to the spatial resolution of the target")
 
-   inputHeight, inputWidth = getTensorHeightAndWidth(input)
+   local inputHeight, inputWidth = getTensorHeightAndWidth(input)
    local targetCropped = centerCrop(target, {inputHeight, inputWidth})
    return parent.updateOutput(self, input, targetCropped)
 end
