@@ -96,6 +96,7 @@ function Container:share(mlp, ...)
     for i=1,#self.modules do
         self.modules[i]:share(mlp.modules[i], ...);
     end
+    return self
 end
 
 function Container:reset(stdv)
