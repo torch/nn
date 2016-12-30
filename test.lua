@@ -1620,6 +1620,114 @@ function nntest.MSECriterion()
    criterionJacobianTest(cri, input, target)
 end
 
+function nntest.SpatialAutoCropMSECriterion()
+   -- Tests the assumptions on input and target dimensions for the
+   -- nn.SpatialAutoCropMSECriterion criterion
+   local function testInputBounds()
+      for _, average in pairs({true, false}) do
+         local sMSE = nn.SpatialAutoCropMSECriterion(average)
+
+         input = torch.Tensor(3, 3, 3)
+         target = torch.Tensor(4, 3, 3)
+         mytester:assertError(function() sMSE:forward(input, target) end,
+                          "Target and input must have same number of channels")
+
+         input = torch.Tensor(2, 4, 3, 3)
+         target = torch.Tensor(2, 3, 3, 3)
+         mytester:assertError(function() sMSE:forward(input, target) end,
+                        "Target and input must have same number of channels")
+
+         input = torch.Tensor(2, 3, 3, 3)
+         target = torch.Tensor(1, 3, 3, 3)
+         mytester:assertError(function() sMSE:forward(input, target) end,
+                         "Target and input must have same batch size")
+
+         input = torch.Tensor(2, 5, 5)
+         target = torch.Tensor(2, 5, 4)
+         mytester:assertError(function() sMSE:forward(input, target) end,
+                         "input resolution must be smaller or equal to the spatial resolution of the target")
+
+         input = torch.Tensor(1, 2, 5, 5)
+         target = torch.Tensor(1, 2, 4, 5)
+         mytester:assertError(function() sMSE:forward(input, target) end,
+                         "input resolution must be smaller or equal to the spatial resolution of the target")
+      end
+   end
+
+   -- Tests that the forward pass of nn.SpatialAutoCropMSECriterion
+   -- is equivalent to the forward pass of nn.MSECriterion with a pre-cropped target
+   function testSpatialAutoCropMSECriterionBatched()
+      for _, average in pairs({true, false}) do
+         local sMSE = nn.SpatialAutoCropMSECriterion(average)
+         local MSE = nn.MSECriterion(average)
+
+         local batchSize = math.random(1,10)
+         local channels = math.random(1,10)
+         local inputHeight = math.random(1, 50)
+         local inputWidth = math.random(1, 50)
+         local targetHeight = inputHeight + math.random(0,5)
+         local targetWidth = inputWidth + math.random(0,5)
+
+         local input = torch.Tensor(batchSize, channels, inputHeight, inputWidth):uniform()
+         local target = torch.Tensor(batchSize, channels, targetHeight, targetWidth):uniform()
+
+         local heightStartIdx = 1 + math.floor((targetHeight - inputHeight)/2.0)
+         local heightEndIdx = heightStartIdx + inputHeight - 1
+         local widthStartIdx = 1 +  math.floor((targetWidth - inputWidth)/2.0)
+         local widthEndIdx = widthStartIdx + inputWidth - 1
+
+         local croppedTarget = target[{{}, {}, {heightStartIdx, heightEndIdx}, {widthStartIdx, widthEndIdx}}]
+
+         local sMSEOut = nn.SpatialAutoCropMSECriterion(average):forward(input, target)
+         local MSEOut = MSE:forward(input, croppedTarget)
+         mytester:asserteq(sMSEOut, MSEOut)
+
+         local gradOutput = torch.Tensor():resizeAs(croppedTarget):uniform()
+         local sMSEGradInput = sMSE:backward(input, gradOutput)
+         local MSEGradInput = MSE:backward(input, gradOutput)
+         mytester:assertTensorEq(sMSEGradInput, MSEGradInput, 1e-7)
+         criterionJacobianTest(sMSE, input, gradOutput)
+      end
+   end
+
+   function testSpatialAutoCropMSECriterionNonBatched()
+      for _, average in pairs({true, false}) do
+         local sMSE = nn.SpatialAutoCropMSECriterion(average)
+         local MSE = nn.MSECriterion(average)
+
+         local channels = math.random(1,10)
+         local inputHeight = math.random(1, 50)
+         local inputWidth = math.random(1, 50)
+         local targetHeight = inputHeight + math.random(0,5)
+         local targetWidth = inputWidth + math.random(0,5)
+
+         local input = torch.Tensor(channels, inputHeight, inputWidth):uniform()
+         local target = torch.Tensor(channels, targetHeight, targetWidth):uniform()
+
+         local heightStartIdx = 1 + math.floor((targetHeight - inputHeight)/2.0)
+         local heightEndIdx = heightStartIdx + inputHeight - 1
+         local widthStartIdx = 1 +  math.floor((targetWidth - inputWidth)/2.0)
+         local widthEndIdx = widthStartIdx + inputWidth - 1
+
+         local croppedTarget = target[{{}, {heightStartIdx, heightEndIdx}, {widthStartIdx, widthEndIdx}}]
+
+         local sMSEOut = nn.SpatialAutoCropMSECriterion(average):forward(input, target)
+         local MSEOut = MSE:forward(input, croppedTarget)
+         mytester:asserteq(sMSEOut, MSEOut)
+
+         local gradOutput = torch.Tensor():resizeAs(croppedTarget):uniform()
+         local sMSEGradInput = sMSE:backward(input, gradOutput)
+         local MSEGradInput = MSE:backward(input, gradOutput)
+         mytester:assertTensorEq(sMSEGradInput, MSEGradInput, 1e-7)
+         criterionJacobianTest(sMSE, input, gradOutput)
+      end
+   end
+
+   testInputBounds()
+   testSpatialAutoCropMSECriterionBatched()
+   testSpatialAutoCropMSECriterionNonBatched()
+end
+
 function nntest.ClassSimplexCriterion()
    local nClasses = torch.random(3,15)
    local input = torch.rand(nClasses)

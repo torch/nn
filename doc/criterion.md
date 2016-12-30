@@ -18,6 +18,7 @@ target, they compute a gradient according to a given loss function.
     * [`AbsCriterion`](#nn.AbsCriterion): measures the mean absolute value of the element-wise difference between input;
     * [`SmoothL1Criterion`](#nn.SmoothL1Criterion): a smooth version of the AbsCriterion;
     * [`MSECriterion`](#nn.MSECriterion): mean square error (a classic);
+    * [`SpatialAutoCropMSECriterion`](#nn.SpatialAutoCropMSECriterion): Spatial mean square error when the input is spatially smaller than the target, by only comparing their spatial overlap;
     * [`DistKLDivCriterion`](#nn.DistKLDivCriterion): Kullback–Leibler divergence (for fitting continuous probability distributions);
   * Embedding criterions (measuring whether two inputs are similar or dissimilar):
     * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
@@ -501,6 +502,25 @@ criterion.sizeAverage = false
 ```
 
 By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed.
+
+
+<a name="nn.SpatialAutoCropMSECriterion"></a>
+## SpatialAutoCropMSECriterion ##
+
+```lua
+criterion = nn.SpatialAutoCropMSECriterion()
+```
+
+Creates a criterion that measures the mean squared error between the input and target, even if the target is spatially larger than the input. It achieves this by center-cropping the target to the same spatial resolution as the input, the mean squared error is then calculated between the input and this cropped target.
+
+If the input and cropped target tensors are `d`-dimensional `Tensor`s with a total of `n` elements, the sum operation operates over all the elements, and divides by `n`.
+
+The division by `n` can be avoided if one sets the internal variable `sizeAverage` to `false`:
+
+```lua
+criterion = nn.SpatialAutoCropMSECriterion()
+criterion.sizeAverage = false
+```
 
 
 <a name="nn.MultiCriterion"></a>
