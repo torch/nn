@@ -692,7 +692,7 @@ Forwarding a batch of 2 examples gives us something like this:
 
 `module` = `SelectTable(index)`
 
-Creates a module that takes a `table` as input and outputs the element at index `index` (positive or negative). 
+Creates a module that takes a (nested) `table` as input and outputs the element at index `index`. `index` can be strings or integers (positive or negative). 
 This can be either a `table` or a [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
 
 The gradients of the non-`index` elements are zeroed `Tensor`s of the same size. This is true regardless of the
@@ -719,10 +719,36 @@ Example 1:
 0
 0
 [torch.DoubleTensor of dimension 2x1]
-
 ```
 
-Example 2:
+Exmaple 2:
+```lua
+> input = { A=torch.randn(2, 3), B=torch.randn(2, 1) }
+> =nn.SelectTable("A"):forward(input)
+-0.3060  0.1398  0.2707
+ 0.0576  1.5455  0.0610
+[torch.DoubleTensor of dimension 2x3]
+
+> gradInput = nn.SelectTable("A"):backward(input, torch.randn(2, 3))
+
+> gradInput 
+{
+  A : DoubleTensor - size: 2x3
+  B : DoubleTensor - size: 2x1
+}
+
+> gradInput["A"]
+-0.4891 -0.3495 -0.3182
+-2.0999  0.7381 -0.5312
+[torch.DoubleTensor of dimension 2x3]
+
+> gradInput["B"]
+0
+0
+[torch.DoubleTensor of dimension 2x1]
+```
+
+Example 3:
 ```lua
 > input = {torch.randn(2, 3), {torch.randn(2, 1), {torch.randn(2, 2)}}}
 
