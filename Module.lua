@@ -47,13 +47,17 @@ function Module:accGradParameters(input, gradOutput, scale)
 end
 
 function Module:accUpdateGradParameters(input, gradOutput, lr)
-   local gradWeight = self.gradWeight
-   local gradBias = self.gradBias
-   self.gradWeight = self.weight
-   self.gradBias = self.bias
-   self:accGradParameters(input, gradOutput, -lr)
-   self.gradWeight = gradWeight
-   self.gradBias = gradBias
+   if self.shared then
+      self:sharedAccUpdateGradParameters(input, gradOutput, lr)
+   else
+      local gradWeight = self.gradWeight
+      local gradBias = self.gradBias
+      self.gradWeight = self.weight
+      self.gradBias = self.bias
+      self:accGradParameters(input, gradOutput, -lr)
+      self.gradWeight = gradWeight
+      self.gradBias = gradBias
+   end
 end
 
 function Module:sharedAccUpdateGradParameters(input, gradOutput, lr)
@@ -95,8 +99,8 @@ function Module:share(mlp, ...)
    for i,v in ipairs(arg) do
       if self[v] ~= nil then
          self[v]:set(mlp[v])
-         self.accUpdateGradParameters = self.sharedAccUpdateGradParameters
-         mlp.accUpdateGradParameters = mlp.sharedAccUpdateGradParameters
+         self.shared = true
+         mlp.shared = true
       end
    end
    return self
