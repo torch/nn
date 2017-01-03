@@ -79,8 +79,10 @@ function LinearTHNN:accGradParameters(input, gradOutput, scale)
    return self.gradWeight
 end
 
--- we do not need to accumulate parameters when sharing
-LinearTHNN.sharedAccUpdateGradParameters = LinearTHNN.accUpdateGradParameters
+function LinearTHNN:sharedAccUpdateGradParameters(input, gradOutput, lr)
+   -- we do not need to accumulate parameters when sharing:
+   self:defaultAccUpdateGradParameters(input, gradOutput, lr)
+end
 
 function LinearTHNN:clearState()
    if self.addBuffer then self.addBuffer:set() end

@@ -50,14 +50,18 @@ function Module:accUpdateGradParameters(input, gradOutput, lr)
    if self.shared then
       self:sharedAccUpdateGradParameters(input, gradOutput, lr)
    else
-      local gradWeight = self.gradWeight
-      local gradBias = self.gradBias
-      self.gradWeight = self.weight
-      self.gradBias = self.bias
-      self:accGradParameters(input, gradOutput, -lr)
-      self.gradWeight = gradWeight
-      self.gradBias = gradBias
+      self:defaultAccUpdateGradParameters(input, gradOutput, lr)
    end
+end
+
+function Module:defaultAccUpdateGradParameters(input, gradOutput, lr)
+   local gradWeight = self.gradWeight
+   local gradBias = self.gradBias
+   self.gradWeight = self.weight
+   self.gradBias = self.bias
+   self:accGradParameters(input, gradOutput, -lr)
+   self.gradWeight = gradWeight
+   self.gradBias = gradBias
 end
 
 function Module:sharedAccUpdateGradParameters(input, gradOutput, lr)

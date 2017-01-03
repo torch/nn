@@ -142,8 +142,10 @@ function Bilinear:accGradParameters(input, gradOutput, scale)
    if self.bias then self.gradBias:add(scale, gradOutput:sum(1)) end
 end
 
--- we do not need to accumulate parameters when sharing:
-Bilinear.sharedAccUpdateGradParameters = Bilinear.accUpdateGradParameters
+function Bilinear:sharedAccUpdateGradParameters(input, gradOutput, lr)
+   -- we do not need to accumulate parameters when sharing:
+   self:defaultAccUpdateGradParameters(input, gradOutput, lr)
+end
 
 function Bilinear:__tostring__()
   return torch.type(self) ..
