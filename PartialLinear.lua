@@ -102,9 +102,10 @@ function PartialLinear:updateParameters(learningRate)
    self.bias:add(-learningRate, self.gradBias)
 end
 
--- we do not need to accumulate parameters when sharing
-PartialLinear.sharedAccUpdateGradParameters =
-   PartialLinear.accUpdateGradParameters
+function PartialLinear:sharedAccUpdateGradParameters(input, gradOutput, lr)
+   -- we do not need to accumulate parameters when sharing:
+   self:defaultAccUpdateGradParameters(input, gradOutput, lr)
+end
 
 function PartialLinear:__tostring__()
    return torch.type(self) ..
