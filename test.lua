@@ -4465,10 +4465,10 @@ function nntest.Sum()
    local input     = torch.Tensor({{1, 2, 3},{4, 5, 6}})
    local expected  = torch.Tensor({5, 7, 9}):view(1, 3)
    local output    = module:forward(input)
-   
+
    mytester:assertlt(torch.norm(output-expected), precision, 'error on forward ')
    mytester:assert(output:isSameSizeAs(expected), 'sizes mismatch')
-   
+
    local err       = jac.testJacobian(module, input)
    mytester:assertlt(err,precision, 'error on state ')
 
@@ -8298,6 +8298,67 @@ function nntest.DontCast()
    local gradInput = mlp:backward(input, gradOutput)
    mytester:assertTensorEq(output3[1], output[1]:float(), 0.000001)
    mytester:assertTensorEq(gradInput3[1], gradInput[1]:float(), 0.000001)
+end
+
+function nntest.SpatialDepthWiseConvolution()
+   local epsilon = 0.00001
+
+   local SC = nn.SpatialConvolution
+   local SDWC = nn.SpatialDepthWiseConvolution
+
+   local function spatialDepthWiseConv(
+         nInputPlane, multiplier, kernel, stride, padding, inputSize, weight, bias
+      )
+      local conv = SDWC(nInputPlane, multiplier, kernel, kernel, stride, stride, padding, padding)
+      conv.weight = weight
+      conv.bias = bias
+      return conv
+   end
+
+   -- Utility spatialDepthWiseConv_util() function --------------------------------
+   -- By Alfredo Canziani, alfredo.canziani@gmail.com -----------------------------
+   local function spatialDepthWiseConv_util(
+         nInputPlane, multiplier, kernel, stride, padding, inputSize, weight, bias
+      )
+
+      local conv = nn.Sequential()
+      conv:add(nn.Contiguous())
+      conv:add(nn.View(-1, 1, inputSize, inputSize))
+      conv:add(SC(1, multiplier, kernel, kernel, stride, stride, padding, padding))
+
+      local depthWiseConv = nn.Parallel(2, 2)
+      for channel = 1, nInputPlane do
+         local tempConv = conv:clone()
+         tempConv:get(3).weight = weight:narrow(2, channel, 1):clone()
+         tempConv:get(3).bias = bias:select(2, channel):clone()
+        depthWiseConv:add(tempConv)
+      end
+      depthWiseConv:add(nn.Contiguous())
+      return depthWiseConv
+   end
+
+   local n = 3 -- nInputPlane
+   local s = 28 -- input height and width
+   local b = 3 -- batch size
+   local m = 4 -- multiplier
+   local k = 3 -- kernel size
+   local p = 1 -- padding
+   local st = 1 -- stride
+
+   local testBatch = 1e3 -- number of repetition
+
+   local X = torch.rand(b, n, s, s) -- 1x3x299x299 images
+   local weight = torch.rand(m, n, k, k) -- weight
+   local bias = torch.rand(m, n) -- bias
+
+   local model = spatialDepthWiseConv(n, m, k, st, p, s, weight, bias)
+   local model_util = spatialDepthWiseConv_util(n, m, k, st, p, s, weight, bias)
+
+   local Y_util = model_util:forward(X)
+   local Y = model:forward(X)
+
+   local abs_diff = Y_util:clone():csub(Y):abs()
+   mytester:assert(torch.all(abs_diff:lt(epsilon)))
 end
 
 mytester:add(nntest)
