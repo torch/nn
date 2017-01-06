@@ -179,6 +179,10 @@
 #include "generic/SpatialConvolutionMM.c"
 #include "THGenerateFloatTypes.h"
 
+//DepthWiseConv
+#include "generic/SpatialDepthWiseConvolution.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/SpatialConvolutionLocal.c"
 #include "THGenerateFloatTypes.h"
 
