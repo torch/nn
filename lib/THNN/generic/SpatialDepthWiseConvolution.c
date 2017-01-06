@@ -111,20 +111,21 @@ void THNN_(SpatialDepthWiseConvolution_updateOutput)(
           int padW,
           int padH)
 {
-  int freeWeight = 0;
-
-  if (weight->nDimension == 4) {
-    long s1 = weight->size[0];
-    long s2 = weight->size[1] * weight->size[2] * weight->size[3];
-    weight = THTensor_(newWithStorage2d)(weight->storage, weight->storageOffset,
-					 s1, -1, s2, -1);
-    freeWeight = 1;
-  }
-
   THNN_(SpatialDepthWiseConvolution_shapeCheck)
     (input, NULL, weight, bias, kH, kW, dH, dW, padH, padW);
 
+  weight = THTensor_(newTranspose)(weight, 0, 1);
+
+  if (weight->nDimension == 4) {
+    long s1 = weight->size[0];
+    long s2 = weight->size[1];
+    long s3 = weight->size[2] * weight->size[3];
+    weight = THTensor_(newWithStorage3d)(weight->storage, weight->storageOffset,
+					 s1, -1, s2, -1, s3, -1);
+  }
+
   input = THTensor_(newContiguous)(input);
+  
   int ndim = input->nDimension;
   int dimf = 0;
   int dimh = 1;
@@ -139,20 +140,36 @@ void THNN_(SpatialDepthWiseConvolution_updateOutput)(
   long nInputPlane = input->size[dimf];
   long inputHeight  = input->size[dimh];
   long inputWidth   = input->size[dimw];
-  long nOutputPlane = weight->size[0];
+  long nOutputPlane = weight->size[1];
   long outputHeight = (inputHeight + 2*padH - kH) / dH + 1;
   long outputWidth  = (inputWidth + 2*padW - kW) / dW + 1;
 
   if(input->nDimension == 3)
   {
-    THTensor_(resize2d)(finput, kW*kH*nInputPlane, outputHeight*outputWidth);
-    THTensor_(resize3d)(output, nOutputPlane, outputHeight, outputWidth);
+    long i;
 
-    THNN_(SpatialDepthWiseConvolution_updateOutput_frame)
-      (input, output, weight, bias, finput,
-       kW, kH, dW, dH, padW, padH,
-       nInputPlane, inputWidth, inputHeight,
-       nOutputPlane, outputWidth, outputHeight);
+    THTensor_(resize3d)(finput, nInputPlane, kW*kH, outputHeight*outputWidth);
+    THTensor_(resize4d)(output, nInputPlane, nOutputPlane, outputHeight, outputWidth);
+
+#pragma omp parallel for private(i)
+    for(i = 0; i < nInputPlane; i++)
+    {
+      THTensor *weight_i = THTensor_(newSelect)(weight, 0, i);
+      THTensor *input_i = THTensor_(newNarrow)(input, 0, i, 1);
+      THTensor *output_i = THTensor_(newSelect)(output, 0, i);
+      THTensor *finput_i = THTensor_(newSelect)(finput, 0, i);
+
+      THNN_(SpatialDepthWiseConvolution_updateOutput_frame)
+	(input_i, output_i, weight_i, bias, finput_i,
+	 kW, kH, dW, dH, padW, padH,
+	 1, inputWidth, inputHeight,
+	 nOutputPlane, outputWidth, outputHeight);
+
+      THTensor_(free)(input_i);
+      THTensor_(free)(weight_i);
+      THTensor_(free)(output_i);
+      THTensor_(free)(finput_i);
+    }
   }
   else
   {
@@ -182,8 +199,7 @@ void THNN_(SpatialDepthWiseConvolution_updateOutput)(
   }
 
   THTensor_(free)(input);
-  if (freeWeight)
-    THTensor_(free)(weight);
+  THTensor_(free)(weight);
 }
 
 static void THNN_(SpatialDepthWiseConvolution_updateGradInput_frame)(
@@ -213,7 +229,7 @@ static void THNN_(SpatialDepthWiseConvolution_updateGradInput_frame)(
 		      gradOutput->size[2], gradOutput->size[1]);
 }
 
-void THNN_(SpatialDepthWiseConvolution_updateGradInput)(
+void THNN_(SpatialDepthWiseConvolution_updateGradInput_depth)(
           THNNState *state,
           THTensor *input,
           THTensor *gradOutput,
@@ -282,12 +298,34 @@ void THNN_(SpatialDepthWiseConvolution_updateGradInput)(
     }
   }
 
+
+  
+
   THTensor_(transpose)(weight, weight, 0, 1);
 
   THTensor_(free)(input);
   THTensor_(free)(gradOutput);
   if (freeWeight)
     THTensor_(free)(weight);
+}
+
+void THNN_(SpatialDepthWiseConvolution_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *weight,
+          THTensor *finput,
+          THTensor *fgradInput,
+          int kW,
+          int kH,
+          int dW,
+          int dH,
+          int padW,
+          int padH)
+{
+  THNN_(SpatialDepthWiseConvolution_updateGradInput_depth)(state, input, gradOutput, gradInput, weight, finput, fgradInput,
+          kW, kH, dW, dH, padW, padH);
 }
 
 static void THNN_(SpatialDepthWiseConvolution_accGradParameters_frame)(

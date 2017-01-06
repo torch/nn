@@ -672,7 +672,7 @@ TH_API void THNN_(SpatialConvolutionMM_accGradParameters)(
           int dW, int dH,
           int padW, int padH,
           real scale);
-//SpatialDepthWiseConvolution
+
 TH_API void THNN_(SpatialDepthWiseConvolution_updateOutput)(
           THNNState *state,
           THTensor *input,
@@ -707,7 +707,6 @@ TH_API void THNN_(SpatialDepthWiseConvolution_accGradParameters)(
           int dW, int dH,
           int padW, int padH,
           real scale);
-//SpatialDepthWiseConvolution
 
 TH_API void THNN_(SpatialConvolutionLocal_updateOutput)(
           THNNState *state,

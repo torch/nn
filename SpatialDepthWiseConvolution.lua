@@ -18,9 +18,9 @@ function SpatialDepthWiseConvolution:__init(nInputPlane, nOutputPlane, kW, kH, d
    self.padH = padH or self.padW
 
    self.weight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
-   self.bias = torch.Tensor(nOutputPlane)
+   self.bias = torch.Tensor(nOutputPlane, nInputPlane)
    self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
-   self.gradBias = torch.Tensor(nOutputPlane)
+   self.gradBias = torch.Tensor(nOutputPlane, nInputPlane)
 
    self:reset()
 end
