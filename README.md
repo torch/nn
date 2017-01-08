@@ -90,24 +90,25 @@ Structure
 {
   1 : 
     {
+      padW : 0
+      nInputPlane : 2
+      output : DoubleTensor - size: 3x2x7x7
+      gradInput : DoubleTensor - size: 2x9x9
+      _type : "torch.DoubleTensor"
       dH : 1
       dW : 1
-      nInputPlane : 2
-      output : DoubleTensor - empty
-      kH : 3
-      gradBias : DoubleTensor - size: 3x2
-      padH : 0
-      bias : DoubleTensor - size: 3x2
-      weight : DoubleTensor - size: 3x2x3x3
-      _type : "torch.DoubleTensor"
-      gradWeight : DoubleTensor - size: 3x18
-      padW : 0
       nOutputPlane : 3
+      padH : 0
+      kH : 3
+      finput : DoubleTensor - size: 2x9x49
+      weight : DoubleTensor - size: 3x2x3x3
+      gradWeight : DoubleTensor - size: 3x2x3x3
+      fgradInput : DoubleTensor - size: 2x9x49
       kW : 3
-      gradInput : DoubleTensor - empty
+      bias : DoubleTensor - size: 3x2
+      gradBias : DoubleTensor - size: 3x2
     }
 }
-
 ```
 
 ## To use 'nn' package
