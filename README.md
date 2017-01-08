@@ -56,6 +56,8 @@ output[i][j] = input[j] * weight[i][j] + b[i][j], i = 1, ..., nOutputPlane, j = 
 
 ## Example
 
+Forward / Backward
+
 ```lua
 require 'cutorch'
 require 'nn'
@@ -80,6 +82,32 @@ local gradOutput = torch.rand(nop, nip, iW - kW + 1, iH - kH + 1)
 
 local output = model:forward(input)
 local gradInput = model:backward((input, gradOutput)
+```
+
+Structure
+```bash
+> print({model:get(1)})
+{
+  1 : 
+    {
+      dH : 1
+      dW : 1
+      nInputPlane : 2
+      output : DoubleTensor - empty
+      kH : 3
+      gradBias : DoubleTensor - size: 3x2
+      padH : 0
+      bias : DoubleTensor - size: 3x2
+      weight : DoubleTensor - size: 3x2x3x3
+      _type : "torch.DoubleTensor"
+      gradWeight : DoubleTensor - size: 3x18
+      padW : 0
+      nOutputPlane : 3
+      kW : 3
+      gradInput : DoubleTensor - empty
+    }
+}
+
 ```
 
 ## To use 'nn' package
