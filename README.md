@@ -10,7 +10,7 @@ CUDA implementation for this nn package: [cunn](https://github.com/stooloveu/cun
 ```bash
 git clone https://github.com/stooloveu/nn
 cd nn
-luarocks make rocks/cunn-scm-1.rockspec
+luarocks make rocks/nn-scm-1.rockspec
 ```
 
 ## To use 'SpatialDepthWiseConvolution'
