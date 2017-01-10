@@ -167,6 +167,9 @@
 #include "generic/TemporalMaxPooling.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/TemporalRowConvolutionMM.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/BatchNormalization.c"
 #include "THGenerateFloatTypes.h"
 
