@@ -441,8 +441,8 @@ void THNN_(TemporalRowConvolutionMM_accGradParameters)(
 	real scale) {
 
 	THNN_(TemporalRowConvolutionMM_shapeCheck)(state, input, gradOutput,
-	                                           gradWeight,
-	                                           gradBias, kW, dW, padW);
+	                                           gradWeight, gradBias,
+											   kW, dW, padW);
 
 	int freeWeight = THNN_(view_weight_rowconv)(&gradWeight);
 
