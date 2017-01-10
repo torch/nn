@@ -440,7 +440,7 @@ void THNN_(TemporalRowConvolutionMM_accGradParameters)(
 	int dimS = 0;
 	int dimF = 1;
 
-	if (ndim = 3) {
+	if (ndim == 3) {
 		++dimS;
 		++dimF;
 	}
@@ -454,7 +454,7 @@ void THNN_(TemporalRowConvolutionMM_accGradParameters)(
 	input = THTensor_(newContiguous)(tinput);
 	gradOutput = THTensor_(newContiguous)(gradOutput);
 
-	long inputFrameSize = weight->size[0];
+	long inputFrameSize = gradWeight->size[0];
 	long nInputFrame = input->size[dimS];
 	long nOutputFrame = (nInputFrame + 2 * padW - kW) / dW + 1;
 
