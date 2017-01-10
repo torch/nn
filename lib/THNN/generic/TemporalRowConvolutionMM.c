@@ -217,6 +217,7 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 		THTensor_(resize2d)(output, inputFrameSize, nOutputFrame);
 
 		THTensor_(zero)(finput);
+		THTensor_(zero)(output);
 
 		THNN_(TemporalRowConvolutionMM_updateOutput_frame)(
 			input, output,
@@ -233,6 +234,8 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 		THTensor_(resize3d)(output, T, inputFrameSize, nOutputFrame);
 
 		THTensor_(zero)(finput);
+		THTensor_(zero)(output);
+
 #pragma omp parallel for private(t)
 		for (t = 0; t < T; ++t) {
 			THTensor *input_t = THTensor_(newSelect)(input, 0, t);
@@ -438,8 +441,8 @@ void THNN_(TemporalRowConvolutionMM_accGradParameters)(
 	real scale) {
 
 	THNN_(TemporalRowConvolutionMM_shapeCheck)(state, input, gradOutput,
-	                                           gradWeight,
-	                                           gradBias, kW, dW, padW);
+	                                           gradWeight, gradBias,
+											   kW, dW, padW);
 
 	int freeWeight = THNN_(view_weight_rowconv)(&gradWeight);
 
