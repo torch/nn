@@ -217,6 +217,7 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 		THTensor_(resize2d)(output, inputFrameSize, nOutputFrame);
 
 		THTensor_(zero)(finput);
+		THTensor_(zero)(output);
 
 		THNN_(TemporalRowConvolutionMM_updateOutput_frame)(
 			input, output,
@@ -233,6 +234,8 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 		THTensor_(resize3d)(output, T, inputFrameSize, nOutputFrame);
 
 		THTensor_(zero)(finput);
+		THTensor_(zero)(output);
+
 #pragma omp parallel for private(t)
 		for (t = 0; t < T; ++t) {
 			THTensor *input_t = THTensor_(newSelect)(input, 0, t);
