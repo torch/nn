@@ -171,7 +171,7 @@ static void THNN_(TemporalRowConvolutionMM_updateOutput_frame)(
 		nOutputFrame, -1);
 
 	// weight:		inputFrameSize x 1 x kW
-	// finput:	inputFrameSize x kW x nOutputFrame
+	// finput:		inputFrameSize x kW x nOutputFrame
 	THTensor_(baddbmm)(output3d, 1, output3d, 1, weight, finput);
 	// output3d:	inputFrameSize x 1 x nOutputFrame
 
@@ -216,6 +216,8 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 		THTensor_(resize3d)(finput, inputFrameSize, kW, nOutputFrame);
 		THTensor_(resize2d)(output, inputFrameSize, nOutputFrame);
 
+		THTensor_(zero)(finput);
+
 		THNN_(TemporalRowConvolutionMM_updateOutput_frame)(
 			input, output,
 			weight, bias,
@@ -229,6 +231,8 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 
 		THTensor_(resize4d)(finput, T, inputFrameSize, kW, nOutputFrame);
 		THTensor_(resize3d)(output, T, inputFrameSize, nOutputFrame);
+
+		THTensor_(zero)(finput);
 #pragma omp parallel for private(t)
 		for (t = 0; t < T; ++t) {
 			THTensor *input_t = THTensor_(newSelect)(input, 0, t);
@@ -267,7 +271,7 @@ static void THNN_(TemporalRowConvolutionMM_updateGradInput_frame)(
 	int kW, int dW, int padW,
 	long inputFrameSize, long nInputFrame, long nOutputFrame) {
 
-	THTensor *gradOutput3d, *fgradInput3d;
+	THTensor *gradOutput3d;
 
 	gradOutput3d = THTensor_(newWithStorage3d)(
 		gradOutput->storage, gradOutput->storageOffset,
@@ -278,7 +282,8 @@ static void THNN_(TemporalRowConvolutionMM_updateGradInput_frame)(
 	// weight:			inputFrameSize x kW x 1
 	// gradOutput3d:	inputFrameSize x 1 x nOutputFrame
 	THTensor_(baddbmm)(fgradInput, 0, fgradInput, 1, weight, gradOutput3d);
-	// fgradInput3d:	inputFrameSize x kW x nOutputFrame
+	// fgradInput:		inputFrameSize x kW x nOutputFrame
+
 	THTensor_(free)(gradOutput3d);
 
 	THTensor_(zero)(gradInput);
@@ -323,7 +328,9 @@ void THNN_(TemporalRowConvolutionMM_updateGradInput)(
 
 	THTensor_(resizeAs)(gradInput, input);
 	THTensor_(resizeAs)(fgradInput, finput);
+
 	THTensor_(zero)(fgradInput);
+
 	THTensor_(transpose)(weight, weight, 1, 2);
 
 	long inputFrameSize = weight->size[0];
@@ -430,7 +437,8 @@ void THNN_(TemporalRowConvolutionMM_accGradParameters)(
 	int padW,
 	real scale) {
 
-	THNN_(TemporalRowConvolutionMM_shapeCheck)(state, input, gradOutput, gradWeight,
+	THNN_(TemporalRowConvolutionMM_shapeCheck)(state, input, gradOutput,
+	                                           gradWeight,
 	                                           gradBias, kW, dW, padW);
 
 	int freeWeight = THNN_(view_weight_rowconv)(&gradWeight);
