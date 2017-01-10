@@ -9,6 +9,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [TemporalSubSampling](#nn.TemporalSubSampling) : a 1D sub-sampling over an input sequence ;
     * [TemporalMaxPooling](#nn.TemporalMaxPooling) : a 1D max-pooling operation over an input sequence ;
     * [LookupTable](#nn.LookupTable) : a convolution of width `1`, commonly used for word embeddings ;
+    * [TemporalRowConvolutionMM](#nn.TemporalRowConvolutionMM) : a row-oriented 1D convolution over an input sequence ;
   * [Spatial Modules](#nn.SpatialModules) apply to inputs with two-dimensional relationships (e.g. images):
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
     * [SpatialFullConvolution](#nn.SpatialFullConvolution) : a 2D full convolution over an input image ;
@@ -321,6 +322,64 @@ Outputs something like:
 ```
 Note that the 1st, 2nd and 10th rows of the module.weight are updated to
 obey the max-norm constraint, since their indices appear in the "input".
+
+<a name="nn.TemporalRowConvolutionMM"></a>
+### TemporalRowConvolutionMM ###
+
+```lua
+module = nn.TemporalRowConvolutionMM(inputFrameSize, kW, [dW])
+```
+
+Applies a 1D row-oriented convolution over an input sequence composed of `nInputFrame` frames. The input tensor in `forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`). The layer can be used without a bias by `module:noBias()`.
+
+The parameters are the following:
+  * `inputFrameSize`: The input frame size expected in sequences given into `forward()`.
+  * `kW`: The kernel width of the convolution.
+  * `dW`: The step of the convolution Default is `1`.
+
+  If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be `nOutputFrame x inputFrameSize` where
+
+  ```lua
+  nOutputFrame = (nInputFrame - kW) / dW + 1
+  ```
+
+  If the input sequence is a 3D tensor of dimension `nBatchFrame x nInputFrame x inputFrameSize`, the output sequence will be `nBatch x nOutputFrame x outputFrameSize`.
+
+  The parameters are the convolution can be found in `self.weight` (Tensor of size `inputFrameSize x kW`) and `self.bias` (Tensor of size `inputFrameSize`). The corresponding gradients can be found in `self.gradWeight` and `self.gradBias`.
+
+  For a 2D input, the output value of the layer can be precisely described as:
+
+  ```lua
+  output[t][i] = bias[i] + sum_{k=1}^kW weight[i][k] * input[dW(t-1)+k][i]
+  ```
+
+  Here is a simple example:
+  ```lua
+  inp = 5;
+  kw = 3;
+  dw = 1;
+
+  -- row convolution with a kernel width of 3 (future context of 2)
+  module = nn.TemporalRowConvolutionMM(inp, kw, dw)
+
+  x = torch.rand(8, inp)
+  print(module:forward(x))
+  ```
+
+  which gives
+
+  ```lua
+  0.1188  0.1945  0.1065 -0.0077 -0.3433
+  0.0630  0.4354  0.1954 -0.2103 -0.3506
+  0.0340  0.2222  0.3039 -0.2012 -0.3814
+  0.0820  0.3489  0.2533 -0.0940 -0.3298
+  0.1964  0.1533  0.1750 -0.1493 -0.3059
+  0.2651  0.2474  0.0521 -0.1134 -0.4024
+  [torch.Tensor of dimension 8x5]
+  ```
+
+  More information about the layer can be found [here](http://www.cs.cmu.edu/~dyogatam/papers/wang+etal.iclrworkshop2016.pdf).
+
 
 <a name="nn.SpatialModules"></a>
 ## Spatial Modules ##
