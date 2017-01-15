@@ -48,8 +48,8 @@ static inline void THNN_(SpatialDepthWiseConvolution_shapeCheck)(
   THNN_CHECK_DIM_SIZE(input, ndim, dimf, nInputPlane);
   
   if (gradOutput != NULL) {
-    THNN_CHECK_DIM_SIZE(gradOutput, ndim + 1, dimf, nOutputPlane);
-    THNN_CHECK_DIM_SIZE(gradOutput, ndim + 1, dimh, nInputPlane);
+    THNN_CHECK_DIM_SIZE(gradOutput, ndim + 1, dimf, nInputPlane);
+    THNN_CHECK_DIM_SIZE(gradOutput, ndim + 1, dimh, nOutputPlane);
     THNN_CHECK_DIM_SIZE(gradOutput, ndim + 1, dimw, outputHeight);
     THNN_CHECK_DIM_SIZE(gradOutput, ndim + 1, dimw + 1, outputWidth);
   }
@@ -127,6 +127,7 @@ void THNN_(SpatialDepthWiseConvolution_updateOutput)(
   THTensor *_bias = THTensor_(newTranspose)(bias, 0, 1);
   bias = THTensor_(newContiguous)(_bias);
 
+
   // resize weight
   long s1 = weight->size[0];
   long s2 = weight->size[1];
@@ -195,7 +196,7 @@ void THNN_(SpatialDepthWiseConvolution_updateOutput)(
   THTensor_(free)(bias);
   THTensor_(free)(_bias);
 
-  THTensor_(transpose)(output, NULL, 1, 2);
+  THTensor_(resize4d)(output, T, nInputPlane * nOutputPlane, outputWidth, outputHeight);
   
   if (batch == 0) {
     THTensor_(select)(output, NULL, 0, 0);
@@ -252,6 +253,20 @@ void THNN_(SpatialDepthWiseConvolution_updateGradInput)(
   if (weight->nDimension == 2) {
     THTensor_(resize4d)(weight, nOutputPlane, nInputPlane, kH, kW);
   }
+  gradOutput = THTensor_(newWithTensor)(gradOutput);
+
+  if (input->nDimension == 3) {
+    if (gradOutput->nDimension == 3) {
+      THTensor_(resize4d)(gradOutput, nInputPlane, nOutputPlane, gradOutput->size[1], gradOutput->size[2]);
+    }
+  }
+  else
+  {
+    if (gradOutput->nDimension == 4) {
+      THTensor_(resize5d)(gradOutput, gradOutput->size[0], nInputPlane, nOutputPlane, gradOutput->size[2], gradOutput->size[3]);
+    }
+  }
+  
 
   THNN_(SpatialDepthWiseConvolution_shapeCheck)
     (input, gradOutput, weight, NULL, kH, kW, dH, dW, padH, padW);
@@ -268,12 +283,6 @@ void THNN_(SpatialDepthWiseConvolution_updateGradInput)(
           s1, -1, s2, -1, s3, -1);
   
   input = THTensor_(newContiguous)(input);
-  THTensor *_gradOutput = NULL;
-  if (input->nDimension == 3)
-    _gradOutput = THTensor_(newTranspose)(gradOutput, 0, 1);
-  else
-    _gradOutput = THTensor_(newTranspose)(gradOutput, 1, 2);
-  gradOutput = THTensor_(newContiguous)(_gradOutput);
 
   int batch = 1;
   if (input->nDimension == 3) {
@@ -343,8 +352,7 @@ void THNN_(SpatialDepthWiseConvolution_updateGradInput)(
   }
   
   THTensor_(free)(input);
-  THTensor_(free)(gradOutput);
-  THTensor_(free)(_gradOutput);      
+  THTensor_(free)(gradOutput);   
   THTensor_(free)(weight);
   THTensor_(free)(_weight);
 }
@@ -403,6 +411,20 @@ void THNN_(SpatialDepthWiseConvolution_accGradParameters)(
     THTensor_(resize4d)(gradWeight, nOutputPlane, nInputPlane, kH, kW);
   }
 
+  gradOutput = THTensor_(newWithTensor)(gradOutput);
+  if (input->nDimension == 3) {
+    if (gradOutput->nDimension == 3) {
+      THTensor_(resize4d)(gradOutput, nInputPlane, nOutputPlane, gradOutput->size[1], gradOutput->size[2]);
+    }
+  }
+  else
+  {
+    if (gradOutput->nDimension == 4) {
+      THTensor_(resize5d)(gradOutput, gradOutput->size[0], nInputPlane, nOutputPlane, gradOutput->size[2], gradOutput->size[3]);
+    }
+  }
+  
+
   THNN_(SpatialDepthWiseConvolution_shapeCheck)
     (input, gradOutput, gradWeight, gradBias, kH, kW, dH, dW, padH, padW);
 
@@ -426,12 +448,7 @@ void THNN_(SpatialDepthWiseConvolution_accGradParameters)(
           s1, -1, s2, -1, s3, -1);
 
   input = THTensor_(newContiguous)(input);
-  THTensor *_gradOutput = NULL;
-  if (input->nDimension == 3)
-    _gradOutput = THTensor_(newTranspose)(gradOutput, 0, 1);
-  else
-    _gradOutput = THTensor_(newTranspose)(gradOutput, 1, 2);
-  gradOutput = THTensor_(newContiguous)(_gradOutput);
+
 
   int batch = 1;
   if (input->nDimension == 3) {
