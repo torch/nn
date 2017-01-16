@@ -45,6 +45,12 @@ function VolumetricConvolution:reset(stdv)
    end
 end
 
+function VolumetricConvolution:noBias()
+   self.bias = nil
+   self.gradBias = nil
+   return self
+end
+
 function VolumetricConvolution:updateOutput(input)
    self.finput = self.finput or input.new()
    self.fgradInput = self.fgradInput or input.new()

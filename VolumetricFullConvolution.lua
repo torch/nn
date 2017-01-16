@@ -77,6 +77,13 @@ function VolumetricFullConvolution:backCompatibility()
    self.adjT = self.adjT or 0
 end
 
+
+function VolumetricFullConvolution:noBias()
+   self.bias = nil
+   self.gradBias = nil
+   return self
+end
+
 function VolumetricFullConvolution:updateOutput(input)
    self:backCompatibility()
 
