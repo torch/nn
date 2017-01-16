@@ -4479,6 +4479,7 @@ function nntest.VolumetricConvolution()
         mytester:assertlt(err, precision, string.format(
                            'error on weight [%s]', t))
      end
+
      if module.bias then
        for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
          mytester:assertlt(err, precision, string.format(
