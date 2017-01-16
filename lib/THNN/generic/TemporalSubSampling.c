@@ -3,37 +3,45 @@
 #else
 
 static inline void THNN_(TemporalSubSampling_shapeCheck)(
-                         THNNState *state,
-                         THTensor *input,
-                         THTensor *gradOutput,
-                         int kW,
-                         int dW,
-                         int *inputFrameSize) {
-  int nInputFrame, nOutputFrame;
-
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          int kW,
+          int dW,
+          int *inputFrameSize) {
+  
   THArgCheck(kW > 0, 6,
              "kernel size should be greater than zero, but got kW: %d", kW);
   THArgCheck(dW > 0, 7,
              "stride should be greater than zero, but got dW: %d", dW);
 
-  THNN_ARGCHECK(input->nDimension == 2, 2, input,
+  THNN_ARGCHECK(input->nDimension == 2 || input->nDimension == 3, 2, input,
                   "2D or 3D (batch mode) tensor expected for input, but got: %s");
-  if (inputFrameSize != NULL) {
-    THArgCheck( input->size[1] == *inputFrameSize, 2,
-                "invalid input frame size.  Got: %d, Expected: %d",
-                input->size[1], *inputFrameSize);
+  
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
+  
+  if (input->nDimension == 3) {
+    ++dimS;
+    ++dimF;
   }
-  THArgCheck( input->size[0] >= kW, 2,
+  
+  if (inputFrameSize != NULL) {
+    THArgCheck( input->size[dimF] == *inputFrameSize, 2,
+                "invalid input frame size.  Got: %d, Expected: %d",
+                input->size[dimF], *inputFrameSize);
+  }
+  THArgCheck( input->size[dimS] >= kW, 2,
               "input sequence smaller than kernel size.  Got %d, Expected: %d",
-              input->size[0], kW);
+              input->size[dimS], kW);
 
-  nInputFrame = input->size[0];
-  nOutputFrame = (nInputFrame - kW) / dW + 1;
+  long nInputFrame = input->size[dimS];
+  long nOutputFrame = (nInputFrame - kW) / dW + 1;
 
   if (gradOutput != NULL) {
-    THNN_CHECK_DIM_SIZE(gradOutput, input->nDimension, 0, nOutputFrame);
+    THNN_CHECK_DIM_SIZE(gradOutput, input->nDimension, dimS, nOutputFrame);
     if (inputFrameSize != NULL) {
-      THNN_CHECK_DIM_SIZE(gradOutput, input->nDimension, 1, *inputFrameSize);
+      THNN_CHECK_DIM_SIZE(gradOutput, input->nDimension, dimF, *inputFrameSize);
     }
   }
 }
@@ -48,33 +56,63 @@ void THNN_(TemporalSubSampling_updateOutput)(
           int dW,
           int inputFrameSize)
 {
-  THTensor *outputFrame, *inputWindow;
-  int nInputFrame, nOutputFrame;
-  long k;
-  
-  THNN_(TemporalSubSampling_shapeCheck)(state, input, NULL, kW, dW, &inputFrameSize);
+	THTensor *outputFrame, *inputWindow;
+	long nInputFrame, nOutputFrame;
+	long k;
 
-  outputFrame = THTensor_(new)();
-  inputWindow = THTensor_(new)();
+	THNN_(TemporalSubSampling_shapeCheck)(state, input, NULL, kW, dW, &inputFrameSize);
 
-  nInputFrame = input->size[0];
-  nOutputFrame = (nInputFrame - kW) / dW + 1;
+	outputFrame = THTensor_(new)();
+	inputWindow = THTensor_(new)();
 
-  THTensor_(resize2d)(output,
-                      nOutputFrame,
-                      inputFrameSize);
-  
-  for(k = 0; k < nOutputFrame; k++)
-  {
-    THTensor_(narrow)(inputWindow, input, 0, k*dW, kW);
-    THTensor_(select)(outputFrame, output, 0, k);
-    THTensor_(sum)(outputFrame, inputWindow, 0);
-    THTensor_(cmul)(outputFrame, outputFrame, weight);
-    THTensor_(cadd)(outputFrame, outputFrame, 1, bias);
-  }
+	int dimS = 0; // sequence dimension
+	int dimF = 1; // feature dimension
 
-  THTensor_(free)(outputFrame);
-  THTensor_(free)(inputWindow);
+	if (input->nDimension == 3)
+	{
+		++dimS;
+		++dimF;
+	}
+
+	nInputFrame = input->size[dimS];
+	nOutputFrame = (nInputFrame - kW) / dW + 1;
+
+	if (input->nDimension == 2)
+	{
+		THTensor_(resize2d)(output, nOutputFrame, inputFrameSize);
+
+		for(k = 0; k < nOutputFrame; k++)
+		{
+			THTensor_(narrow)(inputWindow, input, 0, k*dW, kW);
+			THTensor_(select)(outputFrame, output, 0, k);
+			THTensor_(sum)(outputFrame, inputWindow, 0);
+			THTensor_(cmul)(outputFrame, outputFrame, weight);
+			THTensor_(cadd)(outputFrame, outputFrame, 1, bias);
+		}
+	} else
+	{
+		THTensor *inputSample = THTensor_(new)();
+		THTensor *outputSample = THTensor_(new)();
+    long nBatchFrame = input->size[0];
+    THTensor_(resize3d)(output, nBatchFrame, nOutputFrame, inputFrameSize);
+		for (long i = 0; i < nBatchFrame; ++i)
+		{
+			THTensor_(select)(inputSample, input, 0, i);
+			THTensor_(select)(outputSample, output, 0, i);
+
+			for (k = 0; k < nOutputFrame; ++k)
+			{
+				THTensor_(narrow)(inputWindow, inputSample, 0, k*dW, kW);
+				THTensor_(select)(outputFrame, outputSample, 0, k);
+				THTensor_(sum)(outputFrame, inputWindow, 0);
+				THTensor_(cmul)(outputFrame, outputFrame, weight);
+			}
+		}
+		THTensor_(free)(inputSample);
+		THTensor_(free)(outputSample);
+	}
+	THTensor_(free)(outputFrame);
+	THTensor_(free)(inputWindow);
 }
 
 void THNN_(TemporalSubSampling_updateGradInput)(
@@ -101,14 +139,48 @@ void THNN_(TemporalSubSampling_updateGradInput)(
   THTensor_(fill)(kwunit, 1);
   THTensor_(resizeAs)(gradInput, input);
   THTensor_(zero)(gradInput);
-
-  for(k = 0; k < gradOutput->size[0]; k++)
-  {
-    THTensor_(narrow)(gradInputWindow, gradInput, 0, k*dW, kW);
-    THTensor_(select)(gradOutputFrame, gradOutput, 0, k);
-    THTensor_(cmul)(buffer, weight, gradOutputFrame);
-    THTensor_(addr)(gradInputWindow, 1, gradInputWindow, 1, kwunit, buffer);
+  
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
+  
+  if (input->nDimension == 3) {
+    ++dimS;
+    ++dimF;
   }
+  
+  long nOutputFrame = gradOutput->size[dimS];
+
+  if (input->nDimension == 2)
+  {
+    for(k = 0; k < nOutputFrame; k++)
+    {
+      THTensor_(narrow)(gradInputWindow, gradInput, 0, k*dW, kW);
+      THTensor_(select)(gradOutputFrame, gradOutput, 0, k);
+      THTensor_(cmul)(buffer, weight, gradOutputFrame);
+      THTensor_(addr)(gradInputWindow, 1, gradInputWindow, 1, kwunit, buffer);
+    }
+  } else
+  {
+    THTensor *inputSample = THTensor_(new)();
+    THTensor *outputSample = THTensor_(new)();
+    long nBatchFrame = input->size[0];
+    
+    for (long i = 0; i < nBatchFrame; ++i)
+    {
+      THTensor_(select)(gradOutputSample, gradOutput, 0, i);
+			THTensor_(select)(gradInputSample, gradInput, 0, i);
+
+			for (k = 0; k < nOutputFrame; ++k)
+      {
+				THTensor_(narrow)(gradInputWindow, gradInputSample, 0, k*dW, kW);
+				THTensor_(select)(gradOutputFrame, gradOutputSample, 0, k);
+				THTensor_(cmul)(buffer, weight, gradOutputFrame);
+				THTensor_(addr)(gradInputWindow, 1, gradInputWindow, 1, kwunit, buffer);
+			}
+		}
+		THTensor_(free)(gradOutputSample);
+		THTensor_(free)(gradInputSample);
+	}
 
   THTensor_(free)(gradOutputFrame);
   THTensor_(free)(gradInputWindow);
@@ -134,14 +206,49 @@ void THNN_(TemporalSubSampling_accGradParameters)(
   gradOutputFrame = THTensor_(new)();
   inputWindow = THTensor_(new)();
   buffer = THTensor_(new)();
+  
+  int dimS = 0; // sequence dimension
+  int dimF = 1; // feature dimension
+  
+  if (input->nDimension == 2) {
+    ++dimS;
+    ++dimF;
+  }
+  
+  long nOutputFrame = gradOutput->size[dimS];
 
-  for(k = 0; k < gradOutput->size[0]; k++)
+  if (input->nDimension == 2)
   {
-    THTensor_(narrow)(inputWindow, input, 0, k*dW, kW);
-    THTensor_(select)(gradOutputFrame, gradOutput, 0, k);
-    THTensor_(sum)(buffer, inputWindow, 0);
-    THTensor_(addcmul)(gradWeight, gradWeight, scale, buffer, gradOutputFrame);
-    THTensor_(cadd)(gradBias, gradBias, scale, gradOutputFrame);
+    for(k = 0; k < nOutputFrame; k++)
+    {
+      THTensor_(narrow)(inputWindow, input, 0, k*dW, kW);
+      THTensor_(select)(gradOutputFrame, gradOutput, 0, k);
+      THTensor_(sum)(buffer, inputWindow, 0);
+      THTensor_(addcmul)(gradWeight, gradWeight, scale, buffer, gradOutputFrame);
+      THTensor_(cadd)(gradBias, gradBias, scale, gradOutputFrame);
+    }
+  } else
+  {
+    THTensor *inputSample = THTensor_(new)();
+		THTensor *gradOutputSample = THTensor_(new)();
+    long nBatchFrame = input->size[0];
+    
+    for (long i = 0; i < nBatchFrame; ++i)
+    {
+      THTensor_(select)(inputSample, input, 0, i);
+			THTensor_(select)(gradOutputSample, gradOutput, 0, i);
+      
+      for (k = 0; k < nOutputFrame; ++k)
+      {
+        THTensor_(narrow)(inputWindow, inputSample, 0, k*dW, kW);
+				THTensor_(select)(gradOutputFrame, gradOutputSample, 0, k);
+				THTensor_(sum)(buffer, inputWindow, 0);
+				THTensor_(addcmul)(gradWeight, gradWeight, scale, buffer, gradOutputFrame);
+        THTensor_(cadd)(gradBias, gradBias, scale, gradOutputFrame);
+      }
+    }
+    THTensor_(free)(inputSample);
+    THTensor_(free)(gradOutputSample);
   }
 
   THTensor_(free)(gradOutputFrame);
