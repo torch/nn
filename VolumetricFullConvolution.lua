@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local VolumetricFullConvolution, parent = torch.class('nn.VolumetricFullConvolution','nn.Module')
 
 function VolumetricFullConvolution:__init(nInputPlane, nOutputPlane,
@@ -108,7 +109,7 @@ function VolumetricFullConvolution:updateOutput(input)
       inputTensor:cdata(),
       self.output:cdata(),
       self.weight:cdata(),
-      self.bias:cdata(),
+      THNN.optionalTensor(self.bias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
@@ -192,7 +193,7 @@ function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
       inputTensor:cdata(),
       gradOutput:cdata(),
       self.gradWeight:cdata(),
-      self.gradBias:cdata(),
+      THNN.optionalTensor(self.gradBias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
