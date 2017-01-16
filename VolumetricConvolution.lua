@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local VolumetricConvolution, parent = torch.class('nn.VolumetricConvolution', 'nn.Module')
 
 function VolumetricConvolution:__init(nInputPlane, nOutputPlane, kT, kW, kH, dT, dW, dH, padT, padW, padH)
@@ -36,13 +37,23 @@ function VolumetricConvolution:reset(stdv)
       self.weight:apply(function()
          return torch.uniform(-stdv, stdv)
       end)
-      self.bias:apply(function()
-         return torch.uniform(-stdv, stdv)
-      end)
+      if self.bias then
+         self.bias:apply(function()
+            return torch.uniform(-stdv, stdv)
+         end)
+      end
    else
       self.weight:uniform(-stdv, stdv)
-      self.bias:uniform(-stdv, stdv)
+      if self.bias then
+         self.bias:uniform(-stdv, stdv)
+      end
    end
+end
+
+function VolumetricConvolution:noBias()
+   self.bias = nil
+   self.gradBias = nil
+   return self
 end
 
 function VolumetricConvolution:updateOutput(input)
@@ -53,7 +64,7 @@ function VolumetricConvolution:updateOutput(input)
         input:cdata(),
         self.output:cdata(),
         self.weight:cdata(),
-        self.bias:cdata(),
+        THNN.optionalTensor(self.bias),
         self.finput:cdata(),
         self.fgradInput:cdata(),
         self.dT, self.dW, self.dH,
@@ -64,7 +75,7 @@ function VolumetricConvolution:updateOutput(input)
          input:cdata(),
          self.output:cdata(),
          self.weight:cdata(),
-         self.bias:cdata(),
+         THNN.optionalTensor(self.bias),
          self.finput:cdata(),
          self.kT, self.kW, self.kH,
          self.dT, self.dW, self.dH,
@@ -110,7 +121,7 @@ function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
          input:cdata(),
          gradOutput:cdata(),
          self.gradWeight:cdata(),
-         self.gradBias:cdata(),
+         THNN.optionalTensor(self.gradBias),
          self.finput:cdata(),
          self.fgradInput:cdata(),
          self.dT, self.dW, self.dH,
@@ -122,7 +133,7 @@ function VolumetricConvolution:accGradParameters(input, gradOutput, scale)
          input:cdata(),
          gradOutput:cdata(),
          self.gradWeight:cdata(),
-         self.gradBias:cdata(),
+         THNN.optionalTensor(self.gradBias),
          self.finput:cdata(),
          self.kT, self.kW, self.kH,
          self.dT, self.dW, self.dH,

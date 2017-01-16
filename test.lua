@@ -4371,18 +4371,30 @@ function nntest.VolumetricFullConvolution()
 
     local input = torch.Tensor(bs, from, int, ini, inj):zero()
 
-    local err = jac.testJacobian(module, input)
-    mytester:assertlt(err, precision, 'error on state ')
+    local function jacTests(module)
+      local err = jac.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error on state ')
 
-    local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
-    mytester:assertlt(err , precision, 'error on weight ')
+      local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+      mytester:assertlt(err , precision, 'error on weight ')
 
-    local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
-    mytester:assertlt(err , precision, 'error on bias ')
+      if module.bias then
+        local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+        mytester:assertlt(err , precision, 'error on bias ')
+      end
 
-    local ferr, berr = jac.testIO(module, input)
-    mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
-    mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
+      local ferr, berr = jac.testIO(module, input)
+      mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+      mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
+    end
+
+    jacTests(module)
+    module:noBias()
+    jacTests(module)
+    module.bias = torch.Tensor(module.nOutputPlane):zero()
+    module.gradBias = torch.Tensor(module.nOutputPlane):zero()
+    module:reset()
+    jacTests(module)
 end
 
 function nntest.VolumetricFullConvolutionDualInput()
@@ -4455,34 +4467,50 @@ function nntest.VolumetricConvolution()
    local module = nn.VolumetricConvolution(from, to, kt, ki, kj, st, si, sj, padT, padW, padH)
    local input = torch.Tensor(from, int, inj, ini):zero()
 
-   local err = jac.testJacobian(module, input)
-   mytester:assertlt(err, precision, 'error on state ')
+   local function jacTests(module)
+     local err = jac.testJacobian(module, input)
+     mytester:assertlt(err, precision, 'error on state ')
 
-   local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
-   mytester:assertlt(err , precision, 'error on weight ')
+     local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+     mytester:assertlt(err , precision, 'error on weight ')
 
-   local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
-   mytester:assertlt(err , precision, 'error on bias ')
+     if module.bias then
+       local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+       mytester:assertlt(err , precision, 'error on bias ')
+     end
 
-   local err = jac.testJacobianUpdateParameters(module, input, module.weight)
-   mytester:assertlt(err , precision, 'error on weight [direct update] ')
+     local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+     mytester:assertlt(err , precision, 'error on weight [direct update] ')
 
-   local err = jac.testJacobianUpdateParameters(module, input, module.bias)
-   mytester:assertlt(err , precision, 'error on bias [direct update] ')
+     if module.bias then
+       local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+       mytester:assertlt(err , precision, 'error on bias [direct update] ')
+     end
 
-   for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
-      mytester:assertlt(err, precision, string.format(
-                         'error on weight [%s]', t))
+     for t,err in pairs(jac.testAllUpdate(module, input, 'weight', 'gradWeight')) do
+        mytester:assertlt(err, precision, string.format(
+                           'error on weight [%s]', t))
+     end
+
+     if module.bias then
+       for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+         mytester:assertlt(err, precision, string.format(
+                            'error on bias [%s]', t))
+       end
+     end
+
+     local ferr, berr = jac.testIO(module, input)
+     mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
+     mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
    end
 
-   for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
-      mytester:assertlt(err, precision, string.format(
-                         'error on bias [%s]', t))
-   end
-
-   local ferr, berr = jac.testIO(module, input)
-   mytester:eq(0, ferr, torch.typename(module) .. ' - i/o forward err ', precision)
-   mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
+   jacTests(module)
+   module:noBias()
+   jacTests(module)
+   module.bias = torch.Tensor(module.nOutputPlane):zero()
+   module.gradBias = torch.Tensor(module.nOutputPlane):zero()
+   module:reset()
+   jacTests(module)
 end
 
 function nntest.VolumetricDilatedConvolution()
