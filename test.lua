@@ -2116,6 +2116,20 @@ function nntest.CrossEntropyCriterion()
    weights = weights / weights:sum()
    cri = nn.CrossEntropyCriterion(weights)
    criterionJacobianTest(cri, input, target)
+
+   -- verify nll.sizeAverage preservation
+   cri = nn.CrossEntropyCriterion(weights)
+   cri.nll.sizeAverage = false
+   criterionJacobianTest(cri, input, target)
+   mytester:eq(cri.nll.sizeAverage, false,
+      "ClassNLLCriterion.sizeAverage overwritten")
+
+   -- verify nll.sizeAverage propagation
+   cri = nn.CrossEntropyCriterion(weights)
+   cri.sizeAverage = false
+   criterionJacobianTest(cri, input, target)
+   mytester:eq(cri.nll.sizeAverage, false,
+      "ClassNLLCriterion.sizeAverage not propagated")
 end
 
 function nntest.LogSigmoid()
