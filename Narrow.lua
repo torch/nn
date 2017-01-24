@@ -13,14 +13,16 @@ end
 function Narrow:updateOutput(input)
    local dim = self.dimension < 0 and input:dim() + self.dimension + 1 or self.dimension
    local length = self.length
-   if length < 0 then
-      length = input:size(dim) - self.index + self.length + 2
-   end
    local index = self.index
-   if self.index < 0 then
-      index = 1
-      length = input:size(dim) - length
+
+   if index < 0 then
+      index = input:size(dim) + self.index + 1
    end
+
+   if length < 0 then
+      length = input:size(dim) - index + 1 - torch.abs(length)
+   end
+
    local output=input:narrow(dim, index, length)
    self.output = self.output:typeAs(output)
    self.output:resizeAs(output):copy(output)
@@ -30,14 +32,16 @@ end
 function Narrow:updateGradInput(input, gradOutput)
    local dim = self.dimension < 0 and input:dim() + self.dimension + 1 or self.dimension
    local length = self.length
-   if length < 0 then
-      length = input:size(dim) - self.index + self.length + 2
-   end
    local index = self.index
-   if self.index < 0 then
-      index = 1
-      length = input:size(dim) - length
+
+   if index < 0 then
+      index = input:size(dim) + self.index + 1
    end
+
+   if length < 0 then
+      length = input:size(dim) - index + 1 - torch.abs(length)
+   end
+
    self.gradInput = self.gradInput:typeAs(input)
    self.gradInput:resizeAs(input):zero()
    self.gradInput:narrow(dim,index,length):copy(gradOutput)
