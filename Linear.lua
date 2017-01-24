@@ -56,14 +56,9 @@ function Linear:updateOutput(input)
       if self.bias then self.output:copy(self.bias) else self.output:zero() end
       self.output:addmv(1, self.weight, input)
    elseif input:dim() == 2 then
-      local nframe = input:size(1)
-      local nElement = self.output:nElement()
-      self.output:resize(nframe, self.weight:size(1))
-      if self.output:nElement() ~= nElement then
-         self.output:zero()
-      end
+      self.output:resize(input:size(1), self.weight:size(1))
       updateAddBuffer(self, input)
-      self.output:addmm(0, self.output, 1, input, self.weight:t())
+      self.output:addmm(0, 1, input, self.weight:t())
       if self.bias then self.output:addr(1, self.addBuffer, self.bias) end
    else
       error('input must be vector or matrix')
@@ -75,11 +70,7 @@ end
 function Linear:updateGradInput(input, gradOutput)
    if self.gradInput then
 
-      local nElement = self.gradInput:nElement()
       self.gradInput:resizeAs(input)
-      if self.gradInput:nElement() ~= nElement then
-         self.gradInput:zero()
-      end
       if input:dim() == 1 then
          self.gradInput:addmv(0, 1, self.weight:t(), gradOutput)
       elseif input:dim() == 2 then
