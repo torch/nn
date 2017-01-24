@@ -73,6 +73,13 @@ local replacements =
     }
 }
 
+-- gsub(s, 'real', 'float') changes accreal to accfloat.
+-- typedef accfloat ahead of time.
+ffi.cdef("typedef double accfloat;")
+-- gsub(s, 'real', 'double') changes accreal to accfloat.
+-- typedef accdouble ahead of time
+ffi.cdef("typedef double accdouble;")
+
 for i=1,#replacements do
    local r = replacements[i]
    local s = preprocessed
