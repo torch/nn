@@ -1,11 +1,17 @@
 local Sum, parent = torch.class('nn.Sum', 'nn.Module')
 
-function Sum:__init(dimension, nInputDims, sizeAverage)
+function Sum:__init(dimension, nInputDims, sizeAverage, squeeze)
    parent.__init(self)
    self.dimension   = dimension or 1
    -- do not assign default value to nInputDims or it will break backward compatibility
    self.nInputDims  = nInputDims
    self.sizeAverage = sizeAverage or false
+   if squeeze ~= nil then
+      assert(type(squeeze) == 'boolean', 'squeeze has to be true/false')
+      self.squeeze = squeeze
+   else
+      self.squeeze = true
+   end
 end
 
 function Sum:_getPositiveDimension(input)
@@ -28,7 +34,7 @@ function Sum:updateOutput(input)
     if self.sizeAverage then
         self.output:div(input:size(dimension))
     end
-    if self.output:nDimension() > 1 then
+    if self.squeeze and self.output:nDimension() > 1 then
         self.output:set(self.output:select(dimension, 1))
     end
     return self.output
