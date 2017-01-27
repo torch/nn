@@ -2106,11 +2106,26 @@ function nntest.CrossEntropyCriterion()
   local cri = nn.CrossEntropyCriterion()
   criterionJacobianTest(cri, input, target)
 
-  -- with weights
-  local weights = torch.rand(numLabels)
-  weights = weights / weights:sum()
-  cri = nn.CrossEntropyCriterion(weights)
-  criterionJacobianTest(cri, input, target)
+
+   -- with weights
+   local weights = torch.rand(numLabels)
+   weights = weights / weights:sum()
+   cri = nn.CrossEntropyCriterion(weights)
+   criterionJacobianTest(cri, input, target)
+
+   -- verify nll.sizeAverage preservation
+   cri = nn.CrossEntropyCriterion(weights)
+   cri.nll.sizeAverage = false
+   criterionJacobianTest(cri, input, target)
+   mytester:eq(cri.nll.sizeAverage, false,
+      "ClassNLLCriterion.sizeAverage overwritten")
+
+   -- verify nll.sizeAverage propagation
+   cri = nn.CrossEntropyCriterion(weights)
+   cri.sizeAverage = false
+   criterionJacobianTest(cri, input, target)
+   mytester:eq(cri.nll.sizeAverage, false,
+      "ClassNLLCriterion.sizeAverage not propagated")
 end
 
 function nntest.LogSigmoid()
@@ -5937,45 +5952,6 @@ function nntest.MixtureTable()
 end
 
 function nntest.Narrow()
-  -- check basic narrow functionality #1
-  local input = torch.rand(9, 4, 14)
-  local output = input:narrow(1, 3, 5)
-  local gradOutput = torch.rand(5, 4, 14)
-  local gradInput = torch.zeros(9, 4, 14)
-  gradInput:narrow(1, 3, 5):copy(gradOutput)
-  local module1 = nn.Narrow(1, 3, 5)
-  local output1 = module1:forward(input)
-  local gradInput1 = module1:backward(input, gradOutput)
-  local module2 = nn.Narrow(1, 3, -3)
-  local output2 = module2:forward(input)
-  local gradInput2 = module2:backward(input, gradOutput)
-  mytester:assertTensorEq(output, output1, 0.0000001, "Narrow #1 output err")
-  mytester:assertTensorEq(gradInput, gradInput1, 0.00001, "Narrow #1 gradInput err")
-  mytester:assertTensorEq(output, output2, 0.0000001, "Narrow #1 negative output err")
-  mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "Narrow #1 negative gradInput err")
-
-  -- check basic narrow functionality #2
-  local input = torch.rand(3, 10, 4)
-  local output = input:narrow(2, 5, 3)
-  local gradOutput = torch.rand(3, 3, 4)
-  local gradInput = torch.zeros(3, 10, 4)
-  gradInput:narrow(2, 5, 3):copy(gradOutput)
-  local module1 = nn.Narrow(2, 5, 3)
-  local output1 = module1:forward(input)
-  local gradInput1 = module1:backward(input, gradOutput)
-  local module2 = nn.Narrow(2, 5, -4)
-  local output2 = module2:forward(input)
-  local gradInput2 = module2:backward(input, gradOutput)
-  mytester:assertTensorEq(output, output1, 0.0000001, "Narrow #2 output err")
-  mytester:assertTensorEq(gradInput, gradInput1, 0.00001, "Narrow #2 gradInput err")
-  mytester:assertTensorEq(output, output2, 0.0000001, "Narrow #2 negative output err")
-  mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "Narrow #2 negative gradInput err")
-
-  -- check basic narrow functionality #3
-  local input = torch.rand(6, 11, 7)
-  local output = input:narrow(3, 1, 1)
-  local gradOutput = torch.rand(6, 11, 1)
-  local gradInput = torch.zeros(6, 11, 7)
   gradInput:narrow(3, 1, 1):copy(gradOutput)
   local module1 = nn.Narrow(3, 1, 1)
   local output1 = module1:forward(input)
@@ -6021,6 +5997,98 @@ function nntest.Narrow()
   mytester:assertTensorEq(gradInput, gradInput1, 0.00001, "Narrow #5 gradInput err")
   mytester:assertTensorEq(output, output2, 0.0000001, "Narrow #5 negative output err")
   mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "Narrow #5 negative gradInput err")
+   -- check basic narrow functionality #1
+   local input = torch.rand(9, 4, 14)
+   local output = input:narrow(1, 3, 5)
+   local gradOutput = torch.rand(5, 4, 14)
+   local gradInput = torch.zeros(9, 4, 14)
+   gradInput:narrow(1, 3, 5):copy(gradOutput)
+   local module1 = nn.Narrow(1, 3, 5)
+   local output1 = module1:forward(input)
+   local gradInput1 = module1:backward(input, gradOutput)
+   local module2 = nn.Narrow(1, 3, -2)
+   local output2 = module2:forward(input)
+   local gradInput2 = module2:backward(input, gradOutput)
+
+   mytester:assertTensorEq(output, output1, 0.0000001, "Narrow #1 output err")
+   mytester:assertTensorEq(gradInput, gradInput1, 0.00001, "Narrow #1 gradInput err")
+   mytester:assertTensorEq(output, output2, 0.0000001, "Narrow #1 negative output err")
+   mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "Narrow #1 negative gradInput err")
+
+   -- check basic narrow functionality #2
+   local input = torch.rand(3, 10, 4)
+   local output = input:narrow(2, 5, 3)
+   local gradOutput = torch.rand(3, 3, 4)
+   local gradInput = torch.zeros(3, 10, 4)
+   gradInput:narrow(2, 5, 3):copy(gradOutput)
+   local module1 = nn.Narrow(2, 5, 3)
+   local output1 = module1:forward(input)
+   local gradInput1 = module1:backward(input, gradOutput)
+   local module2 = nn.Narrow(2, 5, -3)
+   local output2 = module2:forward(input)
+   local gradInput2 = module2:backward(input, gradOutput)
+   mytester:assertTensorEq(output, output1, 0.0000001, "Narrow #2 output err")
+   mytester:assertTensorEq(gradInput, gradInput1, 0.00001, "Narrow #2 gradInput err")
+   mytester:assertTensorEq(output, output2, 0.0000001, "Narrow #2 negative output err")
+   mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "Narrow #2 negative gradInput err")
+
+   -- check basic narrow functionality #3
+   local input = torch.rand(6, 11, 7)
+   local output = input:narrow(3, 1, 1)
+   local gradOutput = torch.rand(6, 11, 1)
+   local gradInput = torch.zeros(6, 11, 7)
+   gradInput:narrow(3, 1, 1):copy(gradOutput)
+   local module1 = nn.Narrow(3, 1, 1)
+   local output1 = module1:forward(input)
+   local gradInput1 = module1:backward(input, gradOutput)
+   local module2 = nn.Narrow(3, 1, -6)
+   local output2 = module2:forward(input)
+   local gradInput2 = module2:backward(input, gradOutput)
+   mytester:assertTensorEq(output, output1, 0.0000001, "Narrow #3 output err")
+   mytester:assertTensorEq(gradInput, gradInput1, 0.00001, "Narrow #3 gradInput err")
+   mytester:assertTensorEq(output, output2, 0.0000001, "Narrow #3 negative output err")
+   mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "Narrow #3 negative gradInput err")
+
+   -- check narrow negative offset and negative length
+   local input = torch.Tensor({1, 2, 3, 4, 5})
+
+   local output = torch.Tensor({2})
+   local modelOutput = nn.Narrow(1, 2, 1):forward(input)
+   mytester:assertTensorEq(output, modelOutput, 0.0000001, "Narrow #4.1 output err")
+
+   local output = torch.Tensor({4})
+   local modelOutput = nn.Narrow(1, -2, 1):forward(input)
+   mytester:assertTensorEq(output, modelOutput, 0.0000001, "Narrow #4.2 output err")
+
+   local output = torch.Tensor({5})
+   local modelOutput = nn.Narrow(1, -1, 1):forward(input)
+   mytester:assertTensorEq(output, modelOutput, 0.0000001, "Narrow #4.3 output err")
+
+   local output = torch.Tensor({4})
+   local modelOutput = nn.Narrow(1, -2, -1):forward(input)
+   mytester:assertTensorEq(output, modelOutput, 0.0000001, "Narrow #4.4 output err")
+
+   local output = torch.Tensor({2, 3, 4})
+   local modelOutput = nn.Narrow(1, 2, -1):forward(input)
+   mytester:assertTensorEq(output, modelOutput, 0.0000001, "Narrow #4.5 output err")
+
+   -- check narrow negative offset
+   local input = torch.rand(3, 10, 4)
+   local output = input:narrow(2, 1, 3)
+   local gradOutput = torch.rand(3, 3, 4)
+   local gradInput = torch.zeros(3, 10, 4)
+   gradInput:narrow(2, 1, 3):copy(gradOutput)
+   local module1 = nn.Narrow(2, -10, 3)
+   local output1 = module1:forward(input)
+   local gradInput1 = module1:backward(input, gradOutput)
+   local module2 = nn.Narrow(2, 1, 3)
+   local output2 = module2:forward(input)
+   local gradInput2 = module2:backward(input, gradOutput)
+   mytester:assertTensorEq(output, output1, 0.0000001, "Narrow #5 output err")
+   mytester:assertTensorEq(gradInput, gradInput1, 0.00001, "Narrow #5 gradInput err")
+   mytester:assertTensorEq(output, output2, 0.0000001, "Narrow #5 negative output err")
+   mytester:assertTensorEq(gradInput, gradInput2, 0.00001, "Narrow #5 negative gradInput err")
+
 end
 
 function nntest.NarrowTable()
