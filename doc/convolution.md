@@ -9,7 +9,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [TemporalSubSampling](#nn.TemporalSubSampling) : a 1D sub-sampling over an input sequence ;
     * [TemporalMaxPooling](#nn.TemporalMaxPooling) : a 1D max-pooling operation over an input sequence ;
     * [LookupTable](#nn.LookupTable) : a convolution of width `1`, commonly used for word embeddings ;
-    * [TemporalRowConvolutionMM](#nn.TemporalRowConvolutionMM) : a row-oriented 1D convolution over an input sequence ;
+    * [TemporalRowConvolution](#nn.TemporalRowConvolution) : a row-oriented 1D convolution over an input sequence ;
   * [Spatial Modules](#nn.SpatialModules) apply to inputs with two-dimensional relationships (e.g. images):
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
     * [SpatialFullConvolution](#nn.SpatialFullConvolution) : a 2D full convolution over an input image ;
@@ -323,11 +323,11 @@ Outputs something like:
 Note that the 1st, 2nd and 10th rows of the module.weight are updated to
 obey the max-norm constraint, since their indices appear in the "input".
 
-<a name="nn.TemporalRowConvolutionMM"></a>
-### TemporalRowConvolutionMM ###
+<a name="nn.TemporalRowConvolution"></a>
+### TemporalRowConvolution ###
 
 ```lua
-module = nn.TemporalRowConvolutionMM(inputFrameSize, kW, [dW])
+module = nn.TemporalRowConvolutionMM(inputFrameSize, kW, [dW], [featFirst]))
 ```
 
 Applies a 1D row-oriented convolution over an input sequence composed of `nInputFrame` frames. The input tensor in `forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`). The layer can be used without a bias by `module:noBias()`.
@@ -336,6 +336,7 @@ The parameters are the following:
   * `inputFrameSize`: The input frame size expected in sequences given into `forward()`.
   * `kW`: The kernel width of the convolution.
   * `dW`: The step of the convolution Default is `1`.
+  * `featFirst`: Expects input to be in the form `nBatchFrame x inputFrameSize x nInputFrame` is `true`. Default is `false`.
 
   If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be `nOutputFrame x inputFrameSize` where
 

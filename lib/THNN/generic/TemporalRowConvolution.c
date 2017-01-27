@@ -1,8 +1,8 @@
 #ifndef TH_GENERIC_FILE
-#define TH_GENERIC_FILE "generic/TemporalRowConvolutionMM.c"
+#define TH_GENERIC_FILE "generic/TemporalRowConvolution.c"
 #else
 
-static inline void THNN_(TemporalRowConvolutionMM_shapeCheck)(
+static inline void THNN_(TemporalRowConvolution_shapeCheck)(
 	THNNState *state,
 	THTensor *input, THTensor *gradOutput,
 	THTensor *weight, THTensor *bias,
@@ -12,16 +12,17 @@ static inline void THNN_(TemporalRowConvolutionMM_shapeCheck)(
 	           "kernel size should be greater than zero, but got kW: %d", kW);
 	THArgCheck(dW > 0, 6,
 	           "stride should be greater than zero, but got dW: %d", dW);
-	THNN_ARGCHECK(weight->nDimension == 2 || weight->nDimension == 3, 3, weight,
-	              "2D or 3D weight tensor expected, but got: %s");
+	THNN_ARGCHECK(weight->nDimension == 3, 3, weight,
+	              "3D weight tensor expected, but got: %s");
 
 	if (bias != NULL) {
 		THNN_CHECK_DIM_SIZE(bias, 1, 0, weight->size[0]);
 	}
 
+	// we're always looking at (possibly batch) x feats x seq
 	int ndim = input->nDimension;
-	int dimS = 0; // sequence dimension
-	int dimF = 1; // feature dimension
+	int dimF = 0;
+	int dimS = 1;
 
 	if (ndim == 3) {
 		++dimS;
@@ -32,7 +33,6 @@ static inline void THNN_(TemporalRowConvolutionMM_shapeCheck)(
 	              "2D or 3D (batch mode) input tensor expected, but got :%s");
 
 	long inputFrameSize = weight->size[0];
-
 	long nInputFrame = input->size[dimS];
 	long nOutputFrame = (nInputFrame + 2 * padW - kW) / dW + 1;
 
@@ -48,21 +48,6 @@ static inline void THNN_(TemporalRowConvolutionMM_shapeCheck)(
 		THNN_CHECK_DIM_SIZE(gradOutput, ndim, dimF, inputFrameSize);
 		THNN_CHECK_DIM_SIZE(gradOutput, ndim, dimS, nOutputFrame);
 	}
-}
-
-static int THNN_(view_weight_rowconv)(THTensor **_weight) {
-	THTensor *weight = *_weight;
-	if (weight->nDimension == 2) {
-		long s1 = weight->size[0];
-		long s3 = weight->size[1];
-		*_weight = THTensor_(newWithStorage3d)
-		                   (weight->storage, weight->storageOffset,
-		                   s1, -1,
-		                   1, -1,
-		                   s3, -1);
-		return 1;
-	}
-	return 0;
 }
 
 static void THNN_(unfolded_acc_row)(
@@ -139,7 +124,7 @@ static void THNN_(unfolded_copy_row)(
 	}
 }
 
-static void THNN_(TemporalRowConvolutionMM_updateOutput_frame)(
+static void THNN_(TemporalRowConvolution_updateOutput_frame)(
 	THTensor *input,
 	THTensor *output,
 	THTensor *weight,
@@ -174,13 +159,14 @@ static void THNN_(TemporalRowConvolutionMM_updateOutput_frame)(
 		THTensor_(zero)(output);
 	}
 
+
 	THTensor_(baddbmm)(output3d, 1, output3d, 1, weight, finput);
 
 	THTensor_(free)(output3d);
 }
 
 
-void THNN_(TemporalRowConvolutionMM_updateOutput)(
+void THNN_(TemporalRowConvolution_updateOutput)(
 	THNNState *state,
 	THTensor *input,
 	THTensor *output,
@@ -190,41 +176,35 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 	THTensor *fgradInput,   // unused here but needed for Cuda
 	int kW,
 	int dW,
-	int padW) {
-
-	THNN_(TemporalRowConvolutionMM_shapeCheck)(
-		state, input, NULL, weight, bias, kW, dW, padW);
-
-	int freeWeight = THNN_(view_weight_rowconv)(&weight);
+	int padW,
+	bool featFirst) {
 
 	int ndim = input->nDimension;
-	int dimS = 0;
-	int dimF = 1;
 
-	if (ndim == 3) {
-		++dimS;
-		++dimF;
+	THTensor *tinput;
+	if (!featFirst) {
+		tinput = THTensor_(newTranspose)(input, ndim - 1, ndim - 2);
+		input = THTensor_(newContiguous)(tinput);
+	} else {
+		input = THTensor_(newContiguous)(input);
 	}
 
-	THTensor *tinput = THTensor_(newTranspose)(input, dimS, dimF);
-	// swap dimS and dimF due to transpose
-	int temp = dimS;
-	dimS = dimF;
-	dimF = temp;
-	input = THTensor_(newContiguous)(tinput);
+	THNN_(TemporalRowConvolution_shapeCheck)(
+		state, input, NULL, weight, bias, kW, dW, padW);
 
 	long inputFrameSize = weight->size[0];
-	long nInputFrame = input->size[dimS];
+	long nInputFrame = input->size[ndim - 1];
 	long nOutputFrame = (nInputFrame + 2 * padW - kW) / dW + 1;
 
 	if (ndim == 2) { /* non-batch mode */
 
 		THTensor_(resize2d)(output, inputFrameSize, nOutputFrame);
+		THTensor_(zero)(output);
 
 		THTensor_(resize3d)(finput, inputFrameSize, kW, nOutputFrame);
 		THTensor_(zero)(finput);
 
-		THNN_(TemporalRowConvolutionMM_updateOutput_frame)
+		THNN_(TemporalRowConvolution_updateOutput_frame)
 		        (input, output, weight, bias, finput,
 		        kW, dW, padW,
 		        inputFrameSize, nInputFrame, nOutputFrame);
@@ -234,6 +214,7 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 		long t;
 
 		THTensor_(resize3d)(output, T, inputFrameSize, nOutputFrame);
+		THTensor_(zero)(output);
 
 		THTensor_(resize4d)(finput, T, inputFrameSize, kW, nOutputFrame);
 		THTensor_(zero)(finput);
@@ -244,7 +225,7 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 			THTensor *output_t = THTensor_(newSelect)(output, 0, t);
 			THTensor *finput_t = THTensor_(newSelect)(finput, 0, t);
 
-			THNN_(TemporalRowConvolutionMM_updateOutput_frame)
+			THNN_(TemporalRowConvolution_updateOutput_frame)
 			        (input_t, output_t, weight, bias, finput_t,
 			        kW, dW, padW, inputFrameSize, nInputFrame, nOutputFrame);
 
@@ -252,20 +233,17 @@ void THNN_(TemporalRowConvolutionMM_updateOutput)(
 			THTensor_(free)(output_t);
 			THTensor_(free)(finput_t);
 		}
-
 	}
 
-	// NOTE: output will NOT be contiguous
-	THTensor_(transpose)(output, output, dimF, dimS);
+	if (!featFirst) { // NOTE: output will NOT be contiguous in this case
+		THTensor_(transpose)(output, output, ndim - 1, ndim - 2);
+		THTensor_(free)(tinput);
+	}
 
 	THTensor_(free)(input);
-	THTensor_(free)(tinput);
-	if (freeWeight)
-		THTensor_(free)(weight);
-
 }
 
-static void THNN_(TemporalRowConvolutionMM_updateGradInput_frame)(
+static void THNN_(TemporalRowConvolution_updateGradInput_frame)(
 	THTensor *gradInput, THTensor *gradOutput,
 	THTensor *weight, THTensor *fgradInput,
 	int kW, int dW, int padW,
@@ -292,7 +270,7 @@ static void THNN_(TemporalRowConvolutionMM_updateGradInput_frame)(
 }
 
 
-void THNN_(TemporalRowConvolutionMM_updateGradInput)(
+void THNN_(TemporalRowConvolution_updateGradInput)(
 	THNNState *state,
 	THTensor *input,
 	THTensor *gradOutput,
@@ -302,36 +280,36 @@ void THNN_(TemporalRowConvolutionMM_updateGradInput)(
 	THTensor *fgradInput,
 	int kW,
 	int dW,
-	int padW) {
+	int padW,
+	bool featFirst) {
 
-	THNN_(TemporalRowConvolutionMM_shapeCheck)(state, input, gradOutput, weight,
-	                                           NULL, kW, dW, padW);
 
-	int freeWeight = THNN_(view_weight_rowconv)(&weight);
 
 	int ndim = input->nDimension;
-	int dimS = 0;
-	int dimF = 1;
 
-	if (ndim == 3) {
-		++dimS;
-		++dimF;
+	THTensor *tinput, *tgradOutput;
+
+	if (!featFirst) {
+		tinput = THTensor_(newTranspose)(input, ndim - 1, ndim - 2);
+		tgradOutput = THTensor_(newTranspose)(gradOutput, ndim - 1, ndim - 2);
+
+		input = THTensor_(newContiguous)(tinput);
+		gradOutput = THTensor_(newContiguous)(tgradOutput);
+
+	} else {
+		input = THTensor_(newContiguous)(input);
+		gradOutput = THTensor_(newContiguous)(gradOutput);
 	}
 
-	THTensor *tinput = THTensor_(newTranspose)(input, dimS, dimF);
-	THTensor *tgradOutput = THTensor_(newTranspose)(gradOutput, dimS, dimF);
-	// swap dimS and dimF due to transpose
-	int temp = dimS;
-	dimS = dimF;
-	dimF = temp;
-	input = THTensor_(newContiguous)(tinput);
-	gradOutput = THTensor_(newContiguous)(tgradOutput);
+	THNN_(TemporalRowConvolution_shapeCheck)(state, input, gradOutput, weight,
+	                                         NULL, kW, dW, padW);
 
 	long inputFrameSize = weight->size[0];
-	long nInputFrame = input->size[dimS];
+	long nInputFrame = input->size[ndim - 1];
 	long nOutputFrame = (nInputFrame + 2 * padW - kW) / dW + 1;
 
 	THTensor_(resizeAs)(gradInput, input);
+	THTensor_(zero)(gradInput);
 
 	THTensor_(resizeAs)(fgradInput, finput);
 	THTensor_(zero)(fgradInput);
@@ -339,7 +317,7 @@ void THNN_(TemporalRowConvolutionMM_updateGradInput)(
 	THTensor_(transpose)(weight, weight, 1, 2);
 
 	if (ndim == 2) {
-		THNN_(TemporalRowConvolutionMM_updateGradInput_frame)
+		THNN_(TemporalRowConvolution_updateGradInput_frame)
 		        (gradInput, gradOutput, weight, fgradInput,
 		        kW, dW, padW,
 		        inputFrameSize, nInputFrame, nOutputFrame);
@@ -354,7 +332,7 @@ void THNN_(TemporalRowConvolutionMM_updateGradInput)(
 			THTensor *gradOutput_t = THTensor_(newSelect)(gradOutput, 0, t);
 			THTensor *fgradInput_t = THTensor_(newSelect)(fgradInput, 0, t);
 
-			THNN_(TemporalRowConvolutionMM_updateGradInput_frame)
+			THNN_(TemporalRowConvolution_updateGradInput_frame)
 			        (gradInput_t, gradOutput_t, weight, fgradInput_t,
 			        kW, dW, padW,
 			        inputFrameSize, nInputFrame, nOutputFrame);
@@ -363,23 +341,24 @@ void THNN_(TemporalRowConvolutionMM_updateGradInput)(
 			THTensor_(free)(gradOutput_t);
 			THTensor_(free)(fgradInput_t);
 		}
-
 	}
 
 	THTensor_(transpose)(weight, weight, 1, 2);
 
-	// NOTE: gradInput will NOT be contiguous
-	THTensor_(transpose)(gradInput, gradInput, dimF, dimS);
+	if (!featFirst) { // NOTE: gradInput will NOT be contiguous in this case
+
+		THTensor_(free)(tinput);
+		THTensor_(free)(tgradOutput);
+
+		THTensor_(transpose)(gradInput, gradInput, ndim - 1, ndim - 2);
+	}
 
 	THTensor_(free)(input);
-	THTensor_(free)(tinput);
 	THTensor_(free)(gradOutput);
-	THTensor_(free)(tgradOutput);
-	if (freeWeight)
-		THTensor_(free)(weight);
+
 }
 
-static void THNN_(TemporalRowConvolutionMM_accGradParameters_frame)(
+static void THNN_(TemporalRowConvolution_accGradParameters_frame)(
 	THTensor *gradOutput, THTensor *gradWeight, THTensor *gradBias,
 	THTensor *finput, real scale) {
 
@@ -418,7 +397,7 @@ static void THNN_(TemporalRowConvolutionMM_accGradParameters_frame)(
 
 }
 
-void THNN_(TemporalRowConvolutionMM_accGradParameters)(
+void THNN_(TemporalRowConvolution_accGradParameters)(
 	THNNState *state,
 	THTensor *input,
 	THTensor *gradOutput,
@@ -429,37 +408,35 @@ void THNN_(TemporalRowConvolutionMM_accGradParameters)(
 	int kW,
 	int dW,
 	int padW,
+	bool featFirst,
 	real scale) {
 
-	THNN_(TemporalRowConvolutionMM_shapeCheck)
-	        (state, input, gradOutput, gradWeight, gradBias, kW, dW, padW);
 
-	int freeWeight = THNN_(view_weight_rowconv)(&gradWeight);
 
 	int ndim = input->nDimension;
-	int dimS = 0;
-	int dimF = 1;
 
-	if (ndim == 3) {
-		++dimS;
-		++dimF;
+	THTensor *tinput, *tgradOutput;
+
+	if (!featFirst) {
+		tinput = THTensor_(newTranspose)(input, ndim - 1, ndim - 2);
+		tgradOutput = THTensor_(newTranspose)(gradOutput, ndim - 1, ndim - 2);
+
+		input = THTensor_(newContiguous)(tinput);
+		gradOutput = THTensor_(newContiguous)(tgradOutput);
+	} else {
+		input = THTensor_(newContiguous)(input);
+		gradOutput = THTensor_(newContiguous)(gradOutput);
 	}
 
-	THTensor *tinput = THTensor_(newTranspose)(input, dimS, dimF);
-	THTensor *tgradOutput = THTensor_(newTranspose)(gradOutput, dimS, dimF);
-	// swap dimS and dimF due to transpose
-	int temp = dimS;
-	dimS = dimF;
-	dimF = temp;
-	input = THTensor_(newContiguous)(tinput);
-	gradOutput = THTensor_(newContiguous)(tgradOutput);
+	THNN_(TemporalRowConvolution_shapeCheck)
+	        (state, input, gradOutput, gradWeight, gradBias, kW, dW, padW);
 
 	long inputFrameSize = gradWeight->size[0];
-	long nInputFrame = input->size[dimS];
+	long nInputFrame = input->size[ndim - 1];
 	long nOutputFrame = (nInputFrame + 2 * padW - kW) / dW + 1;
 
 	if (ndim == 2) {
-		THNN_(TemporalRowConvolutionMM_accGradParameters_frame)(
+		THNN_(TemporalRowConvolution_accGradParameters_frame)(
 			gradOutput, gradWeight, gradBias, finput, scale);
 	} else {
 		long T = input->size[0];
@@ -469,7 +446,7 @@ void THNN_(TemporalRowConvolutionMM_accGradParameters)(
 			THTensor *gradOutput_t = THTensor_(newSelect)(gradOutput, 0, t);
 			THTensor *finput_t = THTensor_(newSelect)(finput, 0, t);
 
-			THNN_(TemporalRowConvolutionMM_accGradParameters_frame)(
+			THNN_(TemporalRowConvolution_accGradParameters_frame)(
 				gradOutput_t, gradWeight, gradBias, finput_t, scale);
 
 			THTensor_(free)(gradOutput_t);
@@ -477,12 +454,13 @@ void THNN_(TemporalRowConvolutionMM_accGradParameters)(
 		}
 	}
 
+	if (!featFirst) {
+		THTensor_(free)(tinput);
+		THTensor_(free)(tgradOutput);
+	}
+
 	THTensor_(free)(input);
-	THTensor_(free)(tinput);
 	THTensor_(free)(gradOutput);
-	THTensor_(free)(tgradOutput);
-	if (freeWeight)
-		THTensor_(free)(gradWeight);
 }
 
 #endif

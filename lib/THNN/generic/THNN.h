@@ -576,7 +576,7 @@ TH_API void THNN_(TemporalSubSampling_accGradParameters)(
           int kW, int dW,
           real scale);
 
-TH_API void THNN_(TemporalRowConvolutionMM_updateOutput)(
+TH_API void THNN_(TemporalRowConvolution_updateOutput)(
           THNNState *state,
           THTensor *input,
           THTensor *output,
@@ -586,8 +586,9 @@ TH_API void THNN_(TemporalRowConvolutionMM_updateOutput)(
           THTensor *fgradInput,
           int kW,
           int dW,
-          int padW);
-TH_API void THNN_(TemporalRowConvolutionMM_updateGradInput)(
+          int padW,
+          bool featFirst);
+TH_API void THNN_(TemporalRowConvolution_updateGradInput)(
           THNNState *state,
           THTensor *input,
           THTensor *gradOutput,
@@ -597,8 +598,9 @@ TH_API void THNN_(TemporalRowConvolutionMM_updateGradInput)(
           THTensor *fgradInput,
           int kW,
           int dW,
-          int padW);
-TH_API void THNN_(TemporalRowConvolutionMM_accGradParameters)(
+          int padW,
+          bool featFirst);
+TH_API void THNN_(TemporalRowConvolution_accGradParameters)(
           THNNState *state,
           THTensor *input,
           THTensor *gradOutput,
@@ -609,6 +611,7 @@ TH_API void THNN_(TemporalRowConvolutionMM_accGradParameters)(
           int kW,
           int dW,
           int padW,
+          bool featFirst,
           real scale);
 
 TH_API void THNN_(BatchNormalization_updateOutput)(

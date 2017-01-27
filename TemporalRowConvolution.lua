@@ -1,29 +1,41 @@
 local THNN = require "nn.THNN"
 
-local TemporalRowConvolutionMM, parent = torch.class("nn.TemporalRowConvolutionMM", "nn.Module")
+local TemporalRowConvolution, parent = torch.class("nn.TemporalRowConvolution", "nn.Module")
 
-function TemporalRowConvolutionMM:__init(inputFrameSize, kW, dW)
+function TemporalRowConvolution:__init(inputFrameSize, kW, dW, featFirst)
   parent.__init(self)
 
   self.inputFrameSize = inputFrameSize
   self.kW = kW
   self.dW = dW or 1
 
-  self.weight = torch.Tensor(inputFrameSize, kW)
+  self.weight = torch.Tensor(inputFrameSize, 1, kW)
   self.bias = torch.Tensor(inputFrameSize)
-  self.gradWeight = torch.Tensor(inputFrameSize, kW)
+  self.gradWeight = torch.Tensor(inputFrameSize, 1, kW)
   self.gradBias = torch.Tensor(inputFrameSize)
 
+  -- Set to true for batch x inputFrameSize x nInputFrame
+  self.featFirst = featFirst and true or false
   self:reset()
 end
+--
+-- function TemporalRowConvolution:featFirst()
+--   self.featFirst = true
+--   return true
+-- end
+--
+-- function TemporalRowConvolution:seqFirst()
+--   self.featFirst = false
+--   return false
+-- end
 
-function TemporalRowConvolutionMM:noBias()
+function TemporalRowConvolution:noBias()
   self.bias = nil
   self.gradBias = nil
   return self
 end
 
-function TemporalRowConvolutionMM:reset(stdv)
+function TemporalRowConvolution:reset(stdv)
   if stdv then
     stdv = stdv * math.sqrt(3)
   else
@@ -42,12 +54,12 @@ function TemporalRowConvolutionMM:reset(stdv)
   end
 end
 
-function TemporalRowConvolutionMM:updateOutput(input)
+function TemporalRowConvolution:updateOutput(input)
   assert(input.THNN, torch.type(input)..".THNN backend not imported")
   self.finput = self.finput or input.new()
   self.fgradInput = self.fgradInput or input.new()
 
-  input.THNN.TemporalRowConvolutionMM_updateOutput(
+  input.THNN.TemporalRowConvolution_updateOutput(
     input:cdata(),
     self.output:cdata(),
     self.weight:cdata(),
@@ -56,17 +68,18 @@ function TemporalRowConvolutionMM:updateOutput(input)
     self.fgradInput:cdata(),
     self.kW,
     self.dW,
-    0 -- would be self.padW
+    0, -- would be self.padW
+    self.featFirst
   )
 
   return self.output
 end
 
-function TemporalRowConvolutionMM:updateGradInput(input, gradOutput)
+function TemporalRowConvolution:updateGradInput(input, gradOutput)
   assert(input.THNN, torch.type(input)..".THNN backend not imported")
 
   if self.gradInput then
-    input.THNN.TemporalRowConvolutionMM_updateGradInput(
+    input.THNN.TemporalRowConvolution_updateGradInput(
       input:cdata(),
       gradOutput:cdata(),
       self.gradInput:cdata(),
@@ -75,16 +88,17 @@ function TemporalRowConvolutionMM:updateGradInput(input, gradOutput)
       self.fgradInput:cdata(),
       self.kW,
       self.dW,
-      0 -- would be self.padW
+      0, -- would be self.padW
+      self.featFirst
     )
     return self.gradInput
   end
 end
 
-function TemporalRowConvolutionMM:accGradParameters(input, gradOutput, scale)
+function TemporalRowConvolution:accGradParameters(input, gradOutput, scale)
   assert(input.THNN, torch.type(input)..".THNN backend not imported")
 
-  input.THNN.TemporalRowConvolutionMM_accGradParameters(
+  input.THNN.TemporalRowConvolution_accGradParameters(
     input:cdata(),
     gradOutput:cdata(),
     self.gradWeight:cdata(),
@@ -94,16 +108,17 @@ function TemporalRowConvolutionMM:accGradParameters(input, gradOutput, scale)
     self.kW,
     self.dW,
     0, -- would be self.padW
+    self.featFirst,
     scale or 1)
 end
 
-function TemporalRowConvolutionMM:type(type, tensorCache)
+function TemporalRowConvolution:type(type, tensorCache)
   if self.finput then self.finput:set() end
   if self.fgradInput then self.fgradInput:set() end
   return parent.type(self, type, tensorCache)
 end
 
-function TemporalRowConvolutionMM:__tostring__()
+function TemporalRowConvolution:__tostring__()
   local s = string.format("%s(%d, %d", torch.type(self), self.inputFrameSize, self.kW)
   if self.dW ~= 1 then
     s = s .. string.format(", %d", self.dW)
@@ -118,7 +133,7 @@ function TemporalRowConvolutionMM:__tostring__()
   end
 end
 
-function TemporalRowConvolutionMM:clearState()
+function TemporalRowConvolution:clearState()
   nn.utils.clear(self, "finput", "fgradInput", "_input", "_gradOutput")
   return parent.clearState(self)
 end
