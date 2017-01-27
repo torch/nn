@@ -327,7 +327,7 @@ obey the max-norm constraint, since their indices appear in the "input".
 ### TemporalRowConvolution ###
 
 ```lua
-module = nn.TemporalRowConvolutionMM(inputFrameSize, kW, [dW], [featFirst]))
+module = nn.TemporalRowConvolution(inputFrameSize, kW, [dW], [featFirst]))
 ```
 
 Applies a 1D row-oriented convolution over an input sequence composed of `nInputFrame` frames. The input tensor in `forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`). The layer can be used without a bias by `module:noBias()`.
@@ -361,7 +361,7 @@ The parameters are the following:
   dw = 1;
 
   -- row convolution with a kernel width of 3 (future context of 2)
-  module = nn.TemporalRowConvolutionMM(inp, kw, dw)
+  module = nn.TemporalRowConvolution(inp, kw, dw)
 
   x = torch.rand(8, inp)
   print(module:forward(x))
