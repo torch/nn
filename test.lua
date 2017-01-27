@@ -4279,6 +4279,129 @@ function nntest.TemporalSubSampling()
    mytester:eq(0, berr, torch.typename(module) .. ' - i/o backward err ', precision)
 end
 
+
+function nntest.TemporalRowConvolution()
+
+  local from = math.random(1,5)
+  local ki = math.random(1,5)
+  local si = math.random(1,2)
+  local outi = math.random(5,7)
+  local ini = (outi-1)*si+ki
+
+  local function jacTest(module)
+
+    local input
+    if module.featFirst then
+      input = torch.Tensor(from, ini):zero()
+    else
+      input = torch.Tensor(ini, from):zero()
+    end
+
+    -- 1D
+    local err = jac.testJacobian(module, input)
+    mytester:assertlt(err, precision, "error on state" )
+
+    local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+    mytester:assertlt(err, precision, "error on weight ")
+
+    if module.bias then
+      local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+      mytester:assertlt(err, precision, "error on bias ")
+    end
+
+    local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+    mytester:assertlt(err, precision, "error on weight [direct update] ")
+
+    if module.bias then
+      local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+      mytester:assertlt(err, precision, "error on bias [direct update] ")
+    end
+
+    for t, err in pairs(jac.testAllUpdate(module, input, "weight", "gradWeight")) do
+      mytester:assertlt(err, precision, string.format(
+          "error on weight [%s] ", t))
+    end
+
+    if module.bias then
+      for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+        mytester:assertlt(err, precision, string.format(
+            "error on bias [%s] ", t))
+      end
+    end
+
+    -- 2D
+    local nBatchFrame = 4
+    if module.featFirst then
+      input = torch.Tensor(nBatchFrame, from, ini):zero()
+    else
+      input = torch.Tensor(nBatchFrame, ini, from):zero()
+    end
+
+
+    local err = jac.testJacobian(module, input)
+    mytester:assertlt(err, precision, "error on state" )
+
+    local err = jac.testJacobianParameters(module, input, module.weight, module.gradWeight)
+    mytester:assertlt(err, precision, "error on weight ")
+
+    if module.bias then
+      local err = jac.testJacobianParameters(module, input, module.bias, module.gradBias)
+      mytester:assertlt(err, precision, "error on bias ")
+    end
+
+    local err = jac.testJacobianUpdateParameters(module, input, module.weight)
+    mytester:assertlt(err, precision, "error on weight [direct update] ")
+
+    if module.bias then
+      local err = jac.testJacobianUpdateParameters(module, input, module.bias)
+      mytester:assertlt(err, precision, "error on bias [direct update] ")
+    end
+
+    for t, err in pairs(jac.testAllUpdate(module, input, "weight", "gradWeight")) do
+      mytester:assertlt(err, precision, string.format(
+          "error on weight [%s] ", t))
+    end
+
+    if module.bias then
+      for t,err in pairs(jac.testAllUpdate(module, input, 'bias', 'gradBias')) do
+        mytester:assertlt(err, precision, string.format(
+            "error on bias [%s] ", t))
+      end
+    end
+
+    local ferr, berr = jac.testIO(module, input)
+    mytester:eq(0, ferr, torch.typename(module) .. " - i/o forward err ", precision)
+    mytester:eq(0, berr, torch.typename(module) .. " - i/o forward err ", precision)
+
+    -- 2D matches 1D
+    local output = module:forward(input):clone()
+    local outputGrad = torch.randn(output:size())
+    local inputGrad = module:backward(input, outputGrad):clone()
+
+    local input1D = input:select(1, 2)
+    local output1D = module:forward(input1D)
+    local outputGrad1D = outputGrad:select(1, 2)
+    local inputGrad1D = module:backward(input1D, outputGrad1D)
+
+    mytester:assertTensorEq(output:select(1,2), output1D, 0.000001,
+    "error on 2D vs 1D forward")
+    mytester:assertTensorEq(inputGrad:select(1,2), inputGrad1D, 0.000001,
+    "error on 2D vs 1D backward")
+  end
+
+  local module = nn.TemporalRowConvolution(from, ki, si)
+  jacTest(module)
+  module:noBias()
+  jacTest(module)
+  module.bias = torch.Tensor(module.inputFrameSize):zero()
+  module.gradBias = torch.Tensor(module.inputFrameSize):zero()
+  module:reset()
+  module.featFirst = true
+  jacTest(module)
+  module:noBias()
+  jacTest(module, true)
+end
+
 function nntest.TemporalMaxPooling()
    local from = math.random(2,4)
    local ki = math.random(5,7)
