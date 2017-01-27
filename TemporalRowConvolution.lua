@@ -31,17 +31,8 @@ function TemporalRowConvolution:reset(stdv)
   else
     stdv = 1 / math.sqrt(self.kW * self.inputFrameSize)
   end
-  if nn.oldseed then
-    self.weight:apply(function()
-        return torch.uniform(-stdv, stdv)
-      end)
-    self.bias:apply(function()
-        return torch.uniform(-stdv, stdv)
-      end)
-  else
-    self.weight:uniform(-stdv, stdv)
-    self.bias:uniform(-stdv, stdv)
-  end
+  self.weight:uniform(-stdv, stdv)
+  self.bias:uniform(-stdv, stdv)
 end
 
 function TemporalRowConvolution:updateOutput(input)
