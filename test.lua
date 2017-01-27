@@ -4260,8 +4260,6 @@ function nntest.TemporalMaxPooling()
   local module = nn.TemporalMaxPooling(ki, si)
   local input = torch.Tensor(ini, from):zero()
 
-  print(from, ki, si, outi, ini)
-
   -- 1D
   local err = jac.testJacobian(module, input)
   mytester:assertlt(err, precision, 'error on state ')
