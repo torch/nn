@@ -18,16 +18,6 @@ function TemporalRowConvolution:__init(inputFrameSize, kW, dW, featFirst)
   self.featFirst = featFirst and true or false
   self:reset()
 end
---
--- function TemporalRowConvolution:featFirst()
---   self.featFirst = true
---   return true
--- end
---
--- function TemporalRowConvolution:seqFirst()
---   self.featFirst = false
---   return false
--- end
 
 function TemporalRowConvolution:noBias()
   self.bias = nil
