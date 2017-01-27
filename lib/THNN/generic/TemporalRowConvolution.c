@@ -262,7 +262,7 @@ static void THNN_(TemporalRowConvolution_updateGradInput_frame)(
 
 	THTensor_(free)(gradOutput3d);
 
-	// THTensor_(zero)(gragdInput);
+	THTensor_(zero)(gradInput);
 
 	THNN_(unfolded_acc_row)(fgradInput, gradInput,
 	                        kW, dW, padW,
