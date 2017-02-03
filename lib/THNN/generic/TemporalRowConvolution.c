@@ -3,10 +3,14 @@
 #else
 
 static inline void THNN_(TemporalRowConvolution_shapeCheck)(
-	THNNState *state,
-	THTensor *input, THTensor *gradOutput,
-	THTensor *weight, THTensor *bias,
-	int kW, int dW, int padW) {
+          THNNState *state,
+          THTensor *input,
+		  THTensor *gradOutput,
+		  THTensor *weight,
+		  THTensor *bias,
+          int kW,
+		  int dW,
+		  int padW) {
 
 	THArgCheck(kW > 0, 5,
 	           "kernel size should be greater than zero, but got kW: %d", kW);
@@ -51,25 +55,25 @@ static inline void THNN_(TemporalRowConvolution_shapeCheck)(
 }
 
 static void THNN_(unfolded_acc_row)(
-	THTensor *finput,
-	THTensor *input,
-	int kW,
-	int dW,
-	int padW,
-	long inputFrameSize,
-	long nInputFrame,
-	long nOutputFrame) {
+          THTensor *finput,
+          THTensor *input,
+          int kW,
+          int dW,
+          int padW,
+          long inputFrameSize,
+          long nInputFrame,
+          long nOutputFrame) {
 
 	size_t c;
 	real *input_data = THTensor_(data)(input);
 	real *finput_data = THTensor_(data)(finput);
 
 #pragma omp parallel for private(c)
-	for (c = 0; c < inputFrameSize; ++c) {
+	for (c = 0; c < inputFrameSize; c++) {
 		size_t kw, x;
 		long long ix = 0;
 
-		for (kw = 0; kw < kW; ++kw) {
+		for (kw = 0; kw < kW; kw++) {
 			real *src = finput_data
 			            + c * (kW * nOutputFrame)
 			            + kw * (nOutputFrame);
@@ -79,7 +83,7 @@ static void THNN_(unfolded_acc_row)(
 			if (dW == 1) {
 				THVector_(add)(dst + (size_t)(ix), src, 1, nOutputFrame);
 			} else {
-				for (x = 0; x < nOutputFrame; ++x) {
+				for (x = 0; x < nOutputFrame; x++) {
 					THVector_(add)(dst + (size_t)(ix + x * dW),
 					               src + (size_t)(x), 1, 1);
 				}
@@ -89,21 +93,21 @@ static void THNN_(unfolded_acc_row)(
 }
 
 static void THNN_(unfolded_copy_row)(
-	THTensor *finput,
-	THTensor *input,
-	int kW,
-	int dW,
-	int padW,
-	long inputFrameSize,
-	long nInputFrame,
-	long nOutputFrame) {
+          THTensor *finput,
+          THTensor *input,
+          int kW,
+          int dW,
+          int padW,
+          long inputFrameSize,
+          long nInputFrame,
+          long nOutputFrame) {
 
 	long k;
 	real *input_data = THTensor_(data)(input);
 	real *finput_data = THTensor_(data)(finput);
 
 #pragma omp parallel for private(k)
-	for (k = 0; k < inputFrameSize * kW; ++k) {
+	for (k = 0; k < inputFrameSize * kW; k++) {
 		size_t c = k / kW;
 		size_t rest = k % kW;
 		size_t kw = rest % kW;
@@ -116,7 +120,7 @@ static void THNN_(unfolded_copy_row)(
 		if (dW == 1) {
 			memcpy(dst, src+(size_t)(ix), sizeof(real) * (nOutputFrame));
 		} else {
-			for (x = 0; x < nOutputFrame; ++x) {
+			for (x = 0; x < nOutputFrame; x++) {
 				memcpy(dst + (size_t)(x), src + (size_t)(ix + x * dW),
 				       sizeof(real) * 1);
 			}
@@ -125,17 +129,17 @@ static void THNN_(unfolded_copy_row)(
 }
 
 static void THNN_(TemporalRowConvolution_updateOutput_frame)(
-	THTensor *input,
-	THTensor *output,
-	THTensor *weight,
-	THTensor *bias,
-	THTensor *finput,
-	int kW,
-	int dW,
-	int padW,
-	long inputFrameSize,
-	long nInputFrame,
-	long nOutputFrame) {
+          THTensor *input,
+          THTensor *output,
+          THTensor *weight,
+          THTensor *bias,
+          THTensor *finput,
+          int kW,
+          int dW,
+          int padW,
+          long inputFrameSize,
+          long nInputFrame,
+          long nOutputFrame) {
 
 	long i;
 	THTensor *output3d;
@@ -150,7 +154,7 @@ static void THNN_(TemporalRowConvolution_updateOutput_frame)(
 		nOutputFrame, -1);
 
 	if (bias != NULL) {
-		for (i = 0; i < inputFrameSize; ++i)
+		for (i = 0; i < inputFrameSize; i++)
 			THVector_(fill)
 			        (output->storage->data + output->storageOffset
 			        + output->stride[0] * i,
@@ -159,25 +163,23 @@ static void THNN_(TemporalRowConvolution_updateOutput_frame)(
 		THTensor_(zero)(output);
 	}
 
-
 	THTensor_(baddbmm)(output3d, 1, output3d, 1, weight, finput);
 
 	THTensor_(free)(output3d);
 }
 
-
 void THNN_(TemporalRowConvolution_updateOutput)(
-	THNNState *state,
-	THTensor *input,
-	THTensor *output,
-	THTensor *weight,
-	THTensor *bias,
-	THTensor *finput,
-	THTensor *fgradInput,   // unused here but needed for Cuda
-	int kW,
-	int dW,
-	int padW,
-	bool featFirst) {
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THTensor *weight,
+          THTensor *bias,
+          THTensor *finput,
+          THTensor *fgradInput,   // unused here but needed for Cuda
+          int kW,
+          int dW,
+          int padW,
+          bool featFirst) {
 
 	int ndim = input->nDimension;
 
@@ -198,11 +200,11 @@ void THNN_(TemporalRowConvolution_updateOutput)(
 
 	if (ndim == 2) { /* non-batch mode */
 
-		THTensor_(resize2d)(output, inputFrameSize, nOutputFrame);
-		THTensor_(zero)(output);
-
 		THTensor_(resize3d)(finput, inputFrameSize, kW, nOutputFrame);
-		THTensor_(zero)(finput);
+		THTensor_(resize2d)(output, inputFrameSize, nOutputFrame);
+
+		// THTensor_(zero)(output);
+		// THTensor_(zero)(finput);
 
 		THNN_(TemporalRowConvolution_updateOutput_frame)
 		        (input, output, weight, bias, finput,
@@ -213,14 +215,14 @@ void THNN_(TemporalRowConvolution_updateOutput)(
 		long T = input->size[0];
 		long t;
 
-		THTensor_(resize3d)(output, T, inputFrameSize, nOutputFrame);
-		THTensor_(zero)(output);
-
 		THTensor_(resize4d)(finput, T, inputFrameSize, kW, nOutputFrame);
-		THTensor_(zero)(finput);
+		THTensor_(resize3d)(output, T, inputFrameSize, nOutputFrame);
+
+		// THTensor_(zero)(output);
+		// THTensor_(zero)(finput);
 
 #pragma omp parallel for private(t)
-		for (t = 0; t < T; ++t) {
+		for (t = 0; t < T; t++) {
 			THTensor *input_t = THTensor_(newSelect)(input, 0, t);
 			THTensor *output_t = THTensor_(newSelect)(output, 0, t);
 			THTensor *finput_t = THTensor_(newSelect)(finput, 0, t);
@@ -244,10 +246,16 @@ void THNN_(TemporalRowConvolution_updateOutput)(
 }
 
 static void THNN_(TemporalRowConvolution_updateGradInput_frame)(
-	THTensor *gradInput, THTensor *gradOutput,
-	THTensor *weight, THTensor *fgradInput,
-	int kW, int dW, int padW,
-	long inputFrameSize, long nInputFrame, long nOutputFrame) {
+          THTensor *gradInput,
+          THTensor *gradOutput,
+          THTensor *weight,
+          THTensor *fgradInput,
+          int kW,
+          int dW,
+          int padW,
+          long inputFrameSize,
+          long nInputFrame,
+          long nOutputFrame) {
 
 	THTensor *gradOutput3d = THTensor_(newWithStorage3d)(
 		gradOutput->storage, gradOutput->storageOffset,
@@ -259,7 +267,6 @@ static void THNN_(TemporalRowConvolution_updateGradInput_frame)(
 	// gradOutput3d:	inputFrameSize x 1 x nOutputFrame
 	THTensor_(baddbmm)(fgradInput, 0, fgradInput, 1, weight, gradOutput3d);
 	// fgradInput:		inputFrameSize x kW x nOutputFrame
-
 	THTensor_(free)(gradOutput3d);
 
 	THTensor_(zero)(gradInput);
@@ -268,7 +275,6 @@ static void THNN_(TemporalRowConvolution_updateGradInput_frame)(
 	                        kW, dW, padW,
 	                        inputFrameSize, nInputFrame, nOutputFrame);
 }
-
 
 void THNN_(TemporalRowConvolution_updateGradInput)(
 	THNNState *state,
@@ -282,8 +288,6 @@ void THNN_(TemporalRowConvolution_updateGradInput)(
 	int dW,
 	int padW,
 	bool featFirst) {
-
-
 
 	int ndim = input->nDimension;
 
@@ -309,9 +313,9 @@ void THNN_(TemporalRowConvolution_updateGradInput)(
 	long nOutputFrame = (nInputFrame + 2 * padW - kW) / dW + 1;
 
 	THTensor_(resizeAs)(gradInput, input);
-	THTensor_(zero)(gradInput);
-
 	THTensor_(resizeAs)(fgradInput, finput);
+
+	// THTensor_(zero)(gradInput);
 	THTensor_(zero)(fgradInput);
 
 	THTensor_(transpose)(weight, weight, 1, 2);
@@ -326,7 +330,7 @@ void THNN_(TemporalRowConvolution_updateGradInput)(
 		long t;
 
 #pragma omp parallel for private(t)
-		for (t = 0; t < T; ++t) {
+		for (t = 0; t < T; t++) {
 
 			THTensor *gradInput_t = THTensor_(newSelect)(gradInput, 0, t);
 			THTensor *gradOutput_t = THTensor_(newSelect)(gradOutput, 0, t);
@@ -370,22 +374,20 @@ static void THNN_(TemporalRowConvolution_accGradParameters_frame)(
 		gradOutput->size[1], -1);
 
 	THTensor_(transpose)(finput, finput, 1, 2);
-
 	// gradOutput3d:	inputFrameSize x 1 x nOutputFrame
 	// finput:			inputFrameSize x nOutputFrame x kW
 	THTensor_(baddbmm)(gradWeight, 1, gradWeight, scale, gradOutput3d, finput);
 	// gradWeight:		inputFrameSize x 1 x kW
-
 	THTensor_(transpose)(finput, finput, 1, 2);
 
 	if (gradBias != NULL) {
-		for (i = 0; i < gradBias->size[0]; ++i) {
+		for (i = 0; i < gradBias->size[0]; i++) {
 			long k;
 			real sum = 0;
 			real *data = gradOutput3d->storage->data
 			             + gradOutput3d->storageOffset
 			             + i * gradOutput3d->stride[0];
-			for (k = 0; k < gradOutput3d->size[2]; ++k) {
+			for (k = 0; k < gradOutput3d->size[2]; k++) {
 				sum += data[k];
 			}
 			(gradBias->storage->data + gradBias->storageOffset)[i]
@@ -398,20 +400,18 @@ static void THNN_(TemporalRowConvolution_accGradParameters_frame)(
 }
 
 void THNN_(TemporalRowConvolution_accGradParameters)(
-	THNNState *state,
-	THTensor *input,
-	THTensor *gradOutput,
-	THTensor *gradWeight,
-	THTensor *gradBias,
-	THTensor *finput,
-	THTensor *fgradInput,
-	int kW,
-	int dW,
-	int padW,
-	bool featFirst,
-	real scale) {
-
-
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradWeight,
+          THTensor *gradBias,
+          THTensor *finput,
+          THTensor *fgradInput,
+          int kW,
+          int dW,
+          int padW,
+          bool featFirst,
+          real scale) {
 
 	int ndim = input->nDimension;
 
@@ -442,7 +442,7 @@ void THNN_(TemporalRowConvolution_accGradParameters)(
 		long T = input->size[0];
 		long t;
 
-		for (t = 0; t < T; ++t) {
+		for (t = 0; t < T; t++) {
 			THTensor *gradOutput_t = THTensor_(newSelect)(gradOutput, 0, t);
 			THTensor *finput_t = THTensor_(newSelect)(finput, 0, t);
 
