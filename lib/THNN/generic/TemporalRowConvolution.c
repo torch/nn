@@ -142,16 +142,9 @@ static void THNN_(TemporalRowConvolution_updateOutput_frame)(
           long nOutputFrame) {
 
 	long i;
-	THTensor *output3d;
 
 	THNN_(unfolded_copy_row)(finput, input, kW, dW, padW,
 	                         inputFrameSize, nInputFrame, nOutputFrame);
-
-	output3d = THTensor_(newWithStorage3d)(
-		output->storage, output->storageOffset,
-		inputFrameSize, -1,
-		1, -1,
-		nOutputFrame, -1);
 
 	if (bias != NULL) {
 		for (i = 0; i < inputFrameSize; i++)
@@ -162,6 +155,12 @@ static void THNN_(TemporalRowConvolution_updateOutput_frame)(
 	} else {
 		THTensor_(zero)(output);
 	}
+
+	THTensor *output3d = THTensor_(newWithStorage3d)(
+		output->storage, output->storageOffset,
+		inputFrameSize, -1,
+		1, -1,
+		nOutputFrame, -1);
 
 	THTensor_(baddbmm)(output3d, 1, output3d, 1, weight, finput);
 
