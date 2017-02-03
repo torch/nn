@@ -21,7 +21,7 @@ end
 function Max:_lazyInit()
    self._output = self._output or self.output.new()
    if not self._indices then
-      if torch.type(self.output) == 'torch.CudaTensor' then
+      if torch.typename(self.output):find('torch%.Cuda.*Tensor') then
          self._indices = torch.CudaLongTensor and torch.CudaLongTensor() or torch.CudaTensor()
       else
          self._indices = torch.LongTensor()

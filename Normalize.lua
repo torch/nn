@@ -24,7 +24,7 @@ function Normalize:updateOutput(input)
   if self.p == math.huge then
     -- specialization for the infinity norm
     if not self._indices then
-      if torch.type(self.output) == 'torch.CudaTensor' then
+      if torch.typename(self.output):find('torch%.Cuda.*Tensor') then
         self._indices = torch.CudaLongTensor and torch.CudaLongTensor() or torch.CudaTensor()
       else
         self._indices = torch.LongTensor()
