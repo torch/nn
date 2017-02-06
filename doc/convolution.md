@@ -1147,7 +1147,7 @@ image size will be `nOutputPlane x oheight x owidth x otime`
  where
 
 ```lua
-otime  = floor(width * ratioT)
+otime  = floor(time * ratioT)
 owidth  = floor(width * ratioW)
 oheight = floor(height * ratioH)
 ```

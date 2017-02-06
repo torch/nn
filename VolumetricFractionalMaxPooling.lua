@@ -20,7 +20,7 @@ function VolumetricFractionalMaxPooling:__init(poolSizeT, poolSizeW, poolSizeH, 
 
    -- Random samples are drawn for all
    -- batch * plane * (time, height, width; i.e., 3) points. This determines
-   -- the 2d "pseudorandom" overlapping pooling regions for each
+   -- the 3d "pseudorandom" overlapping pooling regions for each
    -- (batch element x input plane). A new set of random samples is
    -- drawn every updateOutput call, unless we disable it via
    -- :fixPoolingRegions().
@@ -167,7 +167,7 @@ function VolumetricFractionalMaxPooling:clearState()
 end
 
 function VolumetricFractionalMaxPooling:__tostring__()
-   return string.format('%s(%dx%d, %d,%d)', torch.type(self),
+   return string.format('%s(%dx%dx%d, %d,%d,%d)', torch.type(self),
                         self.outT and self.outT or self.ratioT,
                         self.outW and self.outW or self.ratioW,
                         self.outH and self.outH or self.ratioH,
