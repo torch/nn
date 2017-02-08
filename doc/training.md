@@ -3,8 +3,8 @@
 
 Training a neural network is easy with a [simple `for` loop](#nn.DoItYourself).  Typically however we would
 use the `optim` optimizer, which implements some cool functionalities, like Nesterov momentum,
-[adagrad](https://github.com/torch/optim/blob/master/doc/index.md#x-adagradopfunc-x-config-state) and
-[adam](https://github.com/torch/optim/blob/master/doc/index.md#x-adamopfunc-x-config-state).
+[adagrad](https://github.com/torch/optim/blob/master/doc/algos.md#optim.adagrad) and
+[adam](https://github.com/torch/optim/blob/master/doc/algos.md#optim.adam).
 
 We will demonstrate using a for-loop first, to show the low-level view of what happens in training.  [StochasticGradient](#nn.StochasticGradient), a simple class
 which does the job for you, is provided as standard.  Finally, [`optim`](https://github.com/torch/optim) is a powerful module,
