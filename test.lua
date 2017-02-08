@@ -5585,6 +5585,15 @@ function nntest.AddConstant()
   local err = (input1-input2):abs():max()
   mytester:asserteq(err, 0, torch.typename(module1) ..
                           ' - inplace input change err ')
+
+  local module3 = nn.AddConstant(torch.Tensor{1,2,3})
+  local out3 = module3:forward(torch.Tensor{-1,-2,-3})
+  mytester:asserteq(0, out3:abs():max(), torch.typename(module3) ..
+                      ' - tensor constant forward err ')
+  local module4 = nn.AddConstant(torch.Tensor{1,2,3})
+  local out4 = module3:forward(torch.Tensor{{-1,-2,-3},{-1,-2,-3}})
+  mytester:asserteq(0, out4:abs():max(), torch.typename(module4) ..
+                      ' - batch tensor constant forward err ') 
 end
 
 function nntest.MulConstant()
