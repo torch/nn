@@ -4,7 +4,7 @@ function AddConstant:__init(constant_scalar,ip)
    parent.__init(self)
    self.constant_scalar = constant_scalar
    if type(self.constant_scalar) == 'userdata' then
-      self.tmp = torch.Tensor()
+      self.tmp = constant_scalar.new()
    end
 
   -- default for inplace is false
@@ -16,7 +16,7 @@ end
 
 function AddConstant:updateOutput(input)
    assert(type(self.constant_scalar) == 'number' or
-      (type(self.constant_scalar) == 'userdata' and input:nDimension() <= 2 and
+      (torch.isTensor(self.constant_scalar) and input:nDimension() <= 2 and
       input:size(input:nDimension()) == self.constant_scalar:size(1)),
       'input is not scalar or doesn\'t match with the dimension of constant!')
    if type(self.constant_scalar) == 'userdata' and input:nDimension() == 2 then
