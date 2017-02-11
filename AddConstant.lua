@@ -3,7 +3,7 @@ local AddConstant, parent = torch.class('nn.AddConstant', 'nn.Module')
 function AddConstant:__init(constant_scalar,ip)
    parent.__init(self)
    self.constant_scalar = constant_scalar
-   if type(self.constant_scalar) == 'userdata' then
+   if torch.isTensor(self.constant_scalar) then
       self.tmp = constant_scalar.new()
    end
 
