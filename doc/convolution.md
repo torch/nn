@@ -989,7 +989,7 @@ The parameters are the following:
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
-add proper padding in images.
+add proper padding in images. This layer can be used without a bias by module:noBias().
 
 If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
 will be `nOutputPlane x otime x oheight x owidth` where
@@ -1015,7 +1015,7 @@ Applies a 3D full convolution over an input image composed of several input plan
 `forward(input)` is expected to be a 4D or 5D tensor. Note that instead of setting `adjT`, `adjW` and `adjH`, VolumetricFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
 will ignore the `adjT`, `adjW` and `adjH` values used to construct the module.
 
-This can be used as 3D deconvolution, or 3D upsampling. So that the 3D FCN can be easly implemented.
+This can be used as 3D deconvolution, or 3D upsampling. So that the 3D FCN can be easly implemented. This layer can be used without a bias by module:noBias().
 
 The parameters are the following:
 * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
