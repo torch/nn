@@ -3,9 +3,6 @@ local AddConstant, parent = torch.class('nn.AddConstant', 'nn.Module')
 function AddConstant:__init(constant_scalar,ip)
    parent.__init(self)
    self.constant_scalar = constant_scalar
-   if torch.isTensor(self.constant_scalar) then
-      self.tmp = constant_scalar.new()
-   end
 
   -- default for inplace is false
    self.inplace = ip or false
@@ -19,21 +16,23 @@ function AddConstant:updateOutput(input)
       (torch.isTensor(self.constant_scalar) and input:nDimension() <= 2 and
       input:size(input:nDimension()) == self.constant_scalar:size(1)),
       'input is not scalar or doesn\'t match with the dimension of constant!')
-   if type(self.constant_scalar) == 'userdata' and input:nDimension() == 2 then
+   local tmp
+   if torch.isTensor(self.constant_scalar) and input:nDimension() == 2 then
       local nOutput = self.constant_scalar:size(1)
-      self.tmp:resize(1,nOutput)
-      self.tmp:copy(self.constant_scalar)
-      self.tmp = self.tmp:expand(input:size(1),nOutput)
+      tmp = self.constant_scalar.new()
+      tmp:resize(1,nOutput)
+      tmp:copy(self.constant_scalar)
+      tmp = tmp:expand(input:size(1),nOutput)
    else
-      self.tmp = self.constant_scalar
+      tmp = self.constant_scalar
    end
    if self.inplace then
-      input:add(self.tmp)
+      input:add(tmp)
       self.output:set(input)
    else
       self.output:resizeAs(input)
       self.output:copy(input)
-      self.output:add(self.tmp)
+      self.output:add(tmp)
    end
    return self.output
 end
