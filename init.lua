@@ -16,6 +16,7 @@ require('nn.Parallel')
 require('nn.Sequential')
 require('nn.DepthConcat')
 require('nn.Bottle')
+require('nn.WeightNorm')
 
 require('nn.Linear')
 require('nn.Bilinear')
