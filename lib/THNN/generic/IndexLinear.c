@@ -100,7 +100,7 @@ void THNN_(IndexLinear_updateOutput)(
         real* loutputData = outputData + j;
         real val = 0;
         real absVal = 0;
-        long offset = cumSumSizesData[j];
+        long offset = j == 0 ? 0 : cumSumSizesData[j - 1];
 
         for (i = 0; i < sizesData[j]; i++)
         {
@@ -142,7 +142,7 @@ void THNN_(IndexLinear_updateOutput)(
     if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
       for (j = 0; j < batchSize; j++)
       {
-        long offset = cumSumSizesData[j];
+        long offset = j == 0 ? 0 : cumSumSizesData[j - 1];
         real* loutputData = outputData + j;
         real val = 0;
 
@@ -166,7 +166,7 @@ void THNN_(IndexLinear_updateOutput)(
     if(keysSize*outDim > THNN_SPARSE_OMP_THRESHOLD && batchSize > 1)
     for (j = 0; j < batchSize; j++)
     {
-      long offset = cumSumSizesData[j];
+      long offset = j == 0 ? 0 : cumSumSizesData[j -  1];
       real val = 0;
       real* loutputData = outputData + j*outDim;
       real* lweightData = weightData;
