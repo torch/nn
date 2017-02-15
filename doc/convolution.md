@@ -538,8 +538,8 @@ The parameters are the following:
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
 will be `nOutputPlane x oheight x owidth` where
 ```lua
-owidth  = floor(width + 2 * padW - dilationW * (kW-1) - 1) / dW + 1
-oheight = floor(height + 2 * padH - dilationH * (kH-1) - 1) / dH + 1
+owidth  = floor((width + 2 * padW - dilationW * (kW-1) - 1) / dW) + 1
+oheight = floor((height + 2 * padH - dilationH * (kH-1) - 1) / dH) + 1
 ```
 
 Further information about the dilated convolution can be found in the following paper: [Multi-Scale Context Aggregation by Dilated Convolutions](http://arxiv.org/abs/1511.07122).
@@ -1070,9 +1070,9 @@ The parameters are the following:
 If the input image is a 4D tensor `nInputPlane x depth x height x width`, the output image size
 will be `nOutputPlane x odepth x oheight x owidth` where
 ```lua
-odepth  = floor(depth + 2 * padT - dilationT * (kT-1) + 1) / dT + 1
-owidth  = floor(width + 2 * padW - dilationW * (kW-1) + 1) / dW + 1
-oheight = floor(height + 2 * padH - dilationH * (kH-1) + 1) / dH + 1
+odepth  = floor((depth + 2 * padT - dilationT * (kT-1) + 1) / dT) + 1
+owidth  = floor((width + 2 * padW - dilationW * (kW-1) + 1) / dW) + 1
+oheight = floor((height + 2 * padH - dilationH * (kH-1) + 1) / dH) + 1
 ```
 
 Further information about the dilated convolution can be found in the following paper: [Multi-Scale Context Aggregation by Dilated Convolutions](http://arxiv.org/abs/1511.07122).
