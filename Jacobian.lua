@@ -293,12 +293,12 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
    minval = minval or -2
    maxval = maxval or 2
    local inrange = maxval - minval
-   inputclone = input:clone()
+   local inputclone = input:clone()
 
    -- run module
    module:forward(input)
    local go = module.output:clone():copy(torch.rand(module.output:nElement()):mul(inrange):add(minval))
-   goclone = go:clone()
+   local goclone = go:clone()
    module:zeroGradParameters()
    module:updateGradInput(input,go)
    module:accGradParameters(input,go)
