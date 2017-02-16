@@ -109,7 +109,7 @@ function MultiModalMarginRankingCriterion:updateGradInput(input, y)
 
       self.gradInput[1]:copy(mask1)
       self.gradInput[1]:mul(-1):cmul(y)
-      self.gradInput[2]:copy(mask2)
+      self.gradInput[2]:copy(mask1)
       self.gradInput[2]:cmul(y)
 
       local gradInput_ = self.gradInput[1]:clone()
