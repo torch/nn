@@ -2074,23 +2074,39 @@ function nntest.SpatialClassNLLCriterion()
 end
 
 function nntest.MultiLabelSoftMarginCriterion()
-    local cri = nn.MultiLabelSoftMarginCriterion()
+   -- test w/o weights
 
-    -- stochastic
-    local numLabels = math.random(5, 10)
-    local input = torch.randn(numLabels)
-    local target = torch.round(torch.rand(numLabels))
+   local cri = nn.MultiLabelSoftMarginCriterion()
 
-    criterionJacobianTest(cri, input, target)
+   -- stochastic
+   local numLabels = math.random(5, 10)
+   local input = torch.randn(numLabels)
+   local target = torch.round(torch.rand(numLabels))
+   criterionJacobianTest(cri, input, target)
 
-    -- batch
-    local numLabels = math.random(5, 10)
-    local bsz = math.random(3, 7)
-    local input = torch.randn(bsz, numLabels)
-    local target = torch.round(torch.rand(bsz, numLabels))
+   -- batch
+   local numLabels = math.random(5, 10)
+   local bsz = math.random(3, 7)
+   local input = torch.randn(bsz, numLabels)
+   local target = torch.round(torch.rand(bsz, numLabels))
+   criterionJacobianTest(cri, input, target)
 
-    criterionJacobianTest(cri, input, target)
+   -- test weights
 
+   local numLabels = math.random(5, 10)
+   local weights = torch.randn(numLabels)
+   local cri = nn.MultiLabelSoftMarginCriterion(weights)
+
+   -- stochastic
+   local input = torch.randn(numLabels)
+   local target = torch.round(torch.rand(numLabels))
+   criterionJacobianTest(cri, input, target)
+
+   -- batch
+   local bsz = math.random(3, 7)
+   local input = torch.randn(bsz, numLabels)
+   local target = torch.round(torch.rand(bsz, numLabels))
+   criterionJacobianTest(cri, input, target)
 end
 
 function nntest.CrossEntropyCriterion()
@@ -5763,7 +5779,7 @@ function nntest.AddConstant()
   local module4 = nn.AddConstant(torch.Tensor{1,2,3})
   local out4 = module3:forward(torch.Tensor{{-1,-2,-3},{-1,-2,-3}})
   mytester:asserteq(0, out4:abs():max(), torch.typename(module4) ..
-                      ' - batch tensor constant forward err ') 
+                      ' - batch tensor constant forward err ')
 end
 
 function nntest.MulConstant()

@@ -12,73 +12,75 @@
 --]]
 
 
-local MultiLabelSoftMarginCriterion, parent =
-torch.class('nn.MultiLabelSoftMarginCriterion', 'nn.Criterion')
+local MultiLabelSoftMarginCriterion, parent = torch.class('nn.MultiLabelSoftMarginCriterion', 'nn.Criterion')
 
 
 function MultiLabelSoftMarginCriterion:__init(weights, sizeAverage)
-    parent.__init(self)
-    if sizeAverage ~= nil then
-        self.sizeAverage = sizeAverage
-    else
-        self.sizeAverage = true
-    end
-    if weights ~= nil then
-        assert(weights:dim() == 1, "weights input should be 1-D Tensor")
-        self.weights = weights
-    end
-    self.sigmoid = nn.Sigmoid()
+   parent.__init(self)
+   if sizeAverage ~= nil then
+      self.sizeAverage = sizeAverage
+   else
+      self.sizeAverage = true
+   end
+   if weights ~= nil then
+      assert(weights:dim() == 1, "weights input should be 1-D Tensor")
+      self.weights = weights
+   end
+   self.sigmoid = nn.Sigmoid()
 end
 
 function MultiLabelSoftMarginCriterion:updateOutput(input, target)
-    local input_size = input:size()
-    local weights = self.weights
-    if weights ~= nil and target:dim() ~= 1 then
-        weights = self.weights:view(1, target:size(2)):expandAs(target)
-    end
+   local weights = self.weights
+   if weights ~= nil and target:dim() ~= 1 then
+      weights = self.weights:view(1, target:size(2)):expandAs(target)
+   end
 
-    local x = input:view(input:nElement())
-    local t = target:view(target:nElement())
-    
-    self.sigmoid:updateOutput(x)
+   local x = input:view(input:nElement())
+   local t = target:view(target:nElement())
 
-    local indicator = x:ge(0):typeAs(x)
-    local buffer = torch.log(1 + torch.exp(x - torch.cmul(x, indicator):mul(2))) 
-        - torch.cmul(x, t - indicator)
+   self.sigmoid:updateOutput(x)
 
-    if weights ~= nil then
-        buffer:cmul(weights:resize(weights:nElement()))
-    end
+   self._buffer1 = self._buffer1 or input.new()
+   self._buffer2 = self._buffer2 or input.new()
 
-    self.output = torch.sum(buffer)
+   self._buffer1:ge(x, 0) -- indicator
 
-    if self.sizeAverage then
-        self.output = self.output / input:nElement()
-    end
-    
-    return self.output
+   -- log(1 + exp(x - cmul(x, indicator):mul(2)))
+   self._buffer2:cmul(x, self._buffer1):mul(-2):add(x):exp():add(1):log()
+   -- cmul(x, t - indicator)
+   self._buffer1:mul(-1):add(t):cmul(x)
+   -- log(1 + exp(x - cmul(x, indicator):mul(2))) - cmul(x, t - indicator)
+   self._buffer2:add(-1, self._buffer1)
+
+   if weights ~= nil then
+      self._buffer2:cmul(weights)
+   end
+
+   self.output = self._buffer2:sum()
+
+   if self.sizeAverage then
+      self.output = self.output / input:nElement()
+   end
+
+   return self.output
 end
 
 function MultiLabelSoftMarginCriterion:updateGradInput(input, target)
-    local weights = self.weights
-    if weights ~= nil and target:dim() ~= 1 then
-        weights = self.weights:view(1, target:size(2)):expandAs(target)
-    end
+   local weights = self.weights
+   if weights ~= nil and target:dim() ~= 1 then
+      weights = self.weights:view(1, target:size(2)):expandAs(target)
+   end
 
-    local t = target:view(target:nElement())
+   self.gradInput:resizeAs(input):copy(self.sigmoid.output)
+   self.gradInput:add(-1, target)
 
-    self.gradInput = self.sigmoid.output - t
-    self.gradInput:resizeAs(input)
+   if weights ~= nil then
+      self.gradInput:cmul(weights)
+   end
 
-    if weights ~= nil then
-        self.gradInput:cmul(weights)
-    end
+   if self.sizeAverage then
+      self.gradInput:div(target:nElement())
+   end
 
-    if self.sizeAverage then
-        self.gradInput:div(target:nElement())
-    end
-    
-    return self.gradInput
+   return self.gradInput
 end
-
- return nn.MultiLabelSoftMarginCriterion
