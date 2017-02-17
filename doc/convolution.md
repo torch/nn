@@ -21,6 +21,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
     * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
     * [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling) : a 2D max-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
+    * [SpatialAdaptiveAveragePooling](#nn.SpatialAdaptiveAveragePooling) : a 2D average-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
     * [SpatialMaxUnpooling](#nn.SpatialMaxUnpooling) : a 2D max-unpooling operation ;
     * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
     * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
@@ -722,6 +723,19 @@ x_j_end   = ceil(((j+1)/owidth)  * iwidth)
 y_i_start = floor((i   /oheight) * iheight)
 y_i_end   = ceil(((i+1)/oheight) * iheight)
 ```
+
+<a name="nn.SpatialAdaptiveAveragePooling"></a>
+### SpatialAdaptiveAveragePooling ###
+
+```lua
+module = nn.SpatialAdaptiveAveragePooling(W, H)
+```
+
+Applies 2D average-pooling operation in an image such that the output is of
+size `WxH`, for any input size. The number of output features is equal
+to the number of input planes.
+
+The pooling region algorithm is the same as that in [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling).
 
 <a name="nn.SpatialMaxUnpooling"></a>
 ### SpatialMaxUnpooling ###
