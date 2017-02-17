@@ -4906,6 +4906,92 @@ function nntest.VolumetricDilatedMaxPooling()
   end
 end
 
+function nntest.VolumetricFractionalMaxPooling()
+   local batch = math.random(1, 3)
+   local plane = math.random(1, 3)
+   local outT = math.random(1, 7)
+   local outW = math.random(1, 7)
+   local outH = math.random(1, 7)
+   local poolSizeT = math.random(2, 4)
+   local poolSizeW = math.random(2, 4)
+   local poolSizeH = math.random(2, 4)
+
+   local minInT = outT + poolSizeT
+   local minInW = outW + poolSizeW
+   local minInH = outH + poolSizeH
+
+   local inT = math.random(minInT, minInT + 6)
+   local inW = math.random(minInW, minInW + 6)
+   local inH = math.random(minInH, minInH + 6)
+
+   -- fix the pooling regions so they aren't regenerated with every
+   -- forward(), so testJacobian can work properly
+   local module =
+      nn.VolumetricFractionalMaxPooling(poolSizeT, poolSizeW, poolSizeH, outT, outW, outH)
+      :fixPoolingRegions()
+   local input = nil
+   if batch == 1 then
+      input = torch.Tensor(plane, inH, inW, inT):zero()
+   else
+      input = torch.Tensor(batch, plane, inH, inW, inT):zero()
+   end
+
+   local err = nn.Jacobian.testJacobian(module, input)
+   mytester:assertlt(err, precision, 'error on state')
+end
+
+function nntest.VolumetricFractionalMaxPooling_Ratio()
+   -- Fix a reduction ratio, and test with two different input sizes
+   local reductionRatioT = torch.uniform(0.4, 0.74)
+   local reductionRatioW = torch.uniform(0.4, 0.74)
+   local reductionRatioH = torch.uniform(0.4, 0.74)
+
+   for tries = 1, 2 do
+      local batch = math.random(1, 3)
+      local plane = math.random(1, 3)
+      local poolSizeT = math.random(2, 3)
+      local poolSizeW = math.random(2, 3)
+      local poolSizeH = math.random(2, 3)
+
+      local minInT = math.random(5, 8) + poolSizeT
+      local minInW = math.random(5, 8) + poolSizeW
+      local minInH = math.random(5, 8) + poolSizeH
+
+      local inT = math.random(minInT, minInT + 6)
+      local inW = math.random(minInW, minInW + 6)
+      local inH = math.random(minInH, minInH + 6)
+
+      -- fix the pooling regions so they aren't regenerated with every
+      -- forward(), so testJacobian can work properly
+      local module =
+         nn.VolumetricFractionalMaxPooling(poolSizeT, poolSizeW, poolSizeH,
+                                        reductionRatioT, reductionRatioW,
+                                        reductionRatioH)
+         :fixPoolingRegions()
+      local input = nil
+      if batch == 1 then
+         input = torch.Tensor(plane, inH, inW, inT):zero()
+      else
+         input = torch.Tensor(batch, plane, inH, inW, inT):zero()
+      end
+
+      -- Make sure that the output size is based on our ratio
+      local output = module:updateOutput(input)
+      if batch == 1 then
+         mytester:asserteq(output:size(4), math.floor(reductionRatioT * inT))
+         mytester:asserteq(output:size(3), math.floor(reductionRatioW * inW))
+         mytester:asserteq(output:size(2), math.floor(reductionRatioH * inH))
+      else
+         mytester:asserteq(output:size(5), math.floor(reductionRatioT * inT))
+         mytester:asserteq(output:size(4), math.floor(reductionRatioW * inW))
+         mytester:asserteq(output:size(3), math.floor(reductionRatioH * inH))
+      end
+
+      local err = nn.Jacobian.testJacobian(module, input)
+      mytester:assertlt(err, precision, 'error on state')
+   end
+end
+
 function nntest.VolumetricMaxUnpooling()
    local from = math.random(2,3)
    local kt = math.random(3,4)

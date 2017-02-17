@@ -39,6 +39,7 @@ a kernel for computing the weighted average in a neighborhood ;
     * [VolumetricDilatedConvolution](#nn.VolumetricDilatedConvolution) : a 3D dilated convolution over an input image ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
     * [VolumetricDilatedMaxPooling](#nn.VolumetricDilatedMaxPooling) : a 3D dilated max-pooling operation over an input video ;
+    * [VolumetricFractionalMaxPooling](#nn.VolumetricFractionalMaxPooling) : a 3D fractional max-pooling operation over an input image ;
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
     * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation.
     * [VolumetricReplicationPadding](#nn.VolumetricReplicationPadding) : Pads a volumetric feature map with the value at the edge of the input borders. ;
@@ -1111,6 +1112,46 @@ oheight = op((height - (dilationH * (kH - 1) + 1) + 2*padH) / dH + 1)
 
 `op` is a rounding operator. By default, it is `floor`. It can be changed
 by calling `:ceil()` or `:floor()` methods.
+
+<a name="nn.VolumetricFractionalMaxPooling"></a>
+### VolumetricFractionalMaxPooling ###
+
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, outT, outW, outH)
+--   the output should be the exact size (outH x outW x outT)
+OR
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, ratioT, ratioW, ratioH)
+--   the output should be the size (floor(inH x ratioH) x floor(inW x ratioW) x floor(inT x ratioT))
+--   ratios are numbers between (0, 1) exclusive
+```
+
+Applies 3D Fractional max-pooling operation in the "pseudorandom" mode, analogous to [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling).
+
+The max-pooling operation is applied in `kTxkWxkH` regions by a stochastic step size determined by the target output size.
+The number of output features is equal to the number of input planes.
+
+There are two constructors available.
+
+Constructor 1:
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, outT, outW, outH)
+```
+
+Constructor 2:
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, ratioT, ratioW, ratioH)
+```
+If the input image is a 4D tensor `nInputPlane x height x width x time`, the output
+image size will be `nOutputPlane x oheight x owidth x otime`
+
+ where
+
+```lua
+otime  = floor(time * ratioT)
+owidth  = floor(width * ratioW)
+oheight = floor(height * ratioH)
+```
+ratios are numbers between (0, 1) exclusive
 
 <a name="nn.VolumetricAveragePooling"></a>
 ### VolumetricAveragePooling ###
