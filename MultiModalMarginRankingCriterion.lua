@@ -122,7 +122,6 @@ function MultiModalMarginRankingCriterion:updateGradInput(input, y)
 
       if self.sizeAverage then
          self.gradInput[1]:div(y:size(1))
-         self.gradInput[1]:div(2)
          self.gradInput[2]:div(y:size(1))
          self.gradInput[3]:div(y:size(1))
       end
