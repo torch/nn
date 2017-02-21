@@ -121,6 +121,55 @@ function nntest.Bottle()
    mytester:eq(gradOutput1, gradOutput2, 0.0001, 'Bottle gradOutput not the same as Module')
 end
 
+function nntest.WeightNorm()
+   local input = torch.rand(10, 5)
+
+   -- temporal convolution
+   local model = nn.WeightNorm(nn.TemporalConvolution(5, 20, 2, 1))
+   local err = nn.Jacobian.testJacobianParameters(model, input,
+                                                model.bias, model.gradBias)
+   mytester:assert(err < precision, 'Temporal Convolution bias')
+   err = nn.Jacobian.testJacobianParameters(model, input,
+                                                model.g, model.gradG)
+   mytester:assert(err < precision, 'Temporal Convolution g')
+   err = nn.Jacobian.testJacobianParameters(model, input,
+                                                model.v, model.gradV)
+   mytester:assert(err < precision, 'Temporal Convolution v')
+
+    -- linear
+   model = nn.WeightNorm(nn.Linear(5, 20))
+   err = nn.Jacobian.testJacobianParameters(model, input,
+                                                model.bias, model.gradBias)
+   mytester:assert(err < precision, 'Linear bias')
+   err = nn.Jacobian.testJacobianParameters(model, input, model.g, model.gradG)
+   mytester:assert(err < precision, 'Linear g')
+   err = nn.Jacobian.testJacobianParameters(model, input,
+                                                model.v, model.gradV)
+   mytester:assert(err < precision, 'Linear v')
+
+   -- euclidean with weight but no bias
+   input = torch.rand(10, 5)
+   model = nn.WeightNorm(nn.Euclidean(5, 20))
+   err = nn.Jacobian.testJacobianParameters(model, input, model.g, model.gradG)
+   mytester:assert(err < precision, 'Euclidean g')
+   err = nn.Jacobian.testJacobianParameters(model, input,
+                                                    model.v, model.gradV)
+   mytester:assert(err < precision, 'Euclidean v')
+
+   -- spatial convolution with 4D weights
+   input = torch.rand(5, 10, 10)
+   model = nn.WeightNorm(nn.SpatialConvolution(5, 20, 2, 2, 3, 3, 1, 1), 2)
+   err = nn.Jacobian.testJacobianParameters(model, input,
+                                                model.bias, model.gradBias)
+   mytester:assert(err < precision, 'Spatial Convolution bias')
+   err = nn.Jacobian.testJacobianParameters(model, input,
+                                                model.g, model.gradG)
+   mytester:assert(err < precision, 'Spatial Convolution g')
+   err = nn.Jacobian.testJacobianParameters(model, input,
+                                                model.v, model.gradV)
+   mytester:assert(err < precision, 'Spatial Convolution v')
+end
+
 function nntest.CAdd()
    local function testBackwardPass(module, input, params, dparams)
       local err = jac.testJacobian(module,input)
