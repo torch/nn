@@ -55,7 +55,7 @@ local replacements =
 {
    {
       ['TYPE'] = 'Double',
-      ['real'] = 'double',
+      ['accreal'] = 'double',
       ['THTensor'] = 'THDoubleTensor',
       ['THIndexTensor'] = 'THLongTensor',
       ['THIntegerTensor'] = 'THIntTensor',
@@ -64,7 +64,7 @@ local replacements =
    },
    {
       ['TYPE'] = 'Float',
-      ['real'] = 'float',
+      ['accreal'] = 'double',
       ['THTensor'] = 'THFloatTensor',
       ['THIndexTensor'] = 'THLongTensor',
       ['THIntegerTensor'] = 'THIntTensor',
@@ -72,13 +72,6 @@ local replacements =
       ['THInteger_t'] = 'int'
     }
 }
-
--- gsub(s, 'real', 'float') changes accreal to accfloat.
--- typedef accfloat ahead of time.
-ffi.cdef("typedef double accfloat;")
--- gsub(s, 'real', 'double') changes accreal to accfloat.
--- typedef accdouble ahead of time
-ffi.cdef("typedef double accdouble;")
 
 for i=1,#replacements do
    local r = replacements[i]
