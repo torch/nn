@@ -84,6 +84,13 @@ function MixtureTable:updateGradInput(input, gradOutput)
       end
       gaterGradInput:resizeAs(gaterInput)
       
+      -- Clear invalid gradients
+      if #expertGradInputs > #expertInputs then 
+         for i=#expertInputs+1, #expertGradInputs do
+            expertGradInputs[i] = nil
+         end
+      end
+      
       -- like CMulTable, but with broadcasting
       for i,expertGradInput in ipairs(expertGradInputs) do
          -- gater updateGradInput
