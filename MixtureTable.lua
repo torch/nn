@@ -34,16 +34,13 @@ function MixtureTable:updateOutput(input)
          error"Should be one gater output per expert"
       end
       local expertInput = expertInputs[1]
-      if self.batchSize ~= batchSize then
-         self.size:resize(expertInput:dim()+1):fill(1)
-         if self.dimG > 1 then 
-            self.size[1] = gaterInput:size(1)
-         end
-         self.size[self.dim] = gaterInput:size(self.dimG)
-         self.output:resizeAs(expertInput)
-         self.backwardSetup = false
-         self.batchSize = batchSize
+      self.size:resize(expertInput:dim()+1):fill(1)
+      if self.dimG > 1 then 
+         self.size[1] = gaterInput:size(1)
       end
+      self.size[self.dim] = gaterInput:size(self.dimG)
+      self.output:resizeAs(expertInput)
+      self.batchSize = batchSize
       self._gaterView:view(gaterInput, self.size)
       self.output:zero()
       -- multiply accumulate gater outputs by their commensurate expert
@@ -53,16 +50,13 @@ function MixtureTable:updateOutput(input)
       end
    else
       -- expertInputs is a Tensor :
-      if self.batchSize ~= batchSize then
-         self.size:resize(expertInputs:dim()):fill(1)
-         if self.dimG > 1 then
-            self.size[1] = gaterInput:size(1)
-         end
-         self.size[self.dim] = gaterInput:size(self.dimG)
-         self.output:resizeAs(expertInputs:select(self.dim, 1))
-         self.batchSize = batchSize
-         self.backwardSetup = false
+      self.size:resize(expertInputs:dim()):fill(1)
+      if self.dimG > 1 then
+         self.size[1] = gaterInput:size(1)
       end
+      self.size[self.dim] = gaterInput:size(self.dimG)
+      self.output:resizeAs(expertInputs:select(self.dim, 1))
+      self.batchSize = batchSize
       self._gaterView:view(gaterInput, self.size)
       self._expert:cmul(self._gaterView:expandAs(expertInputs), expertInputs)
       self.output:sum(self._expert, self.dim)
@@ -83,15 +77,12 @@ function MixtureTable:updateGradInput(input, gradOutput)
    self._expert2 = self._expert2 or input[1].new()
       
    if self.table then
-      if not self.backwardSetup then
-         for i,expertInput in ipairs(expertInputs) do
-            local expertGradInput = expertGradInputs[i] or expertInput:clone()
-            expertGradInput:resizeAs(expertInput)
-            expertGradInputs[i] = expertGradInput
-         end
-         gaterGradInput:resizeAs(gaterInput)
-         self.backwardSetup = true
+      for i,expertInput in ipairs(expertInputs) do
+         local expertGradInput = expertGradInputs[i] or expertInput:clone()
+         expertGradInput:resizeAs(expertInput)
+         expertGradInputs[i] = expertGradInput
       end
+      gaterGradInput:resizeAs(gaterInput)
       
       -- like CMulTable, but with broadcasting
       for i,expertGradInput in ipairs(expertGradInputs) do
@@ -114,13 +105,10 @@ function MixtureTable:updateGradInput(input, gradOutput)
          expertGradInput:cmul(gate, gradOutput)     
       end
    else
-      if not self.backwardSetup then
-         self.size2:resize(expertInputs:dim())
-         self.size2:copy(expertInputs:size())
-         self.size2[self.dim] = 1
-         gaterGradInput:resizeAs(gaterInput)
-         self.backwardSetup = true
-      end
+      self.size2:resize(expertInputs:dim())
+      self.size2:copy(expertInputs:size())
+      self.size2[self.dim] = 1
+      gaterGradInput:resizeAs(gaterInput)
       
       -- gater updateGradInput
       self._expertView:view(gradOutput, self.size2)
