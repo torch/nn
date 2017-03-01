@@ -49,9 +49,17 @@ function Bottle:updateGradInput(input, gradOutput)
       local input_ = input:view(unpack(self.inShape:totable()))
       local gradOutput_ = gradOutput:view(unpack(self.outShape:totable()))
       self.modules[1]:updateGradInput(input_, gradOutput_)
-      self.gradInput:set(self.modules[1].gradInput:viewAs(input))
+      if self.modules[1].gradInput then
+         self.gradInput:set(self.modules[1].gradInput:viewAs(input))
+      else
+         self.gradInput = nil
+      end
    else
-      self.gradInput:set(self.modules[1]:updateGradInput(input))
+      if self.modules[1].gradInput then
+         self.gradInput:set(self.modules[1]:updateGradInput(input))
+      else
+         self.gradInput = nil
+      end
    end
    return self.gradInput
 end
