@@ -33,6 +33,7 @@ function ClassNLLCriterion:updateOutput(input, target)
       else
           self.target = self.target:long()
       end
+      self.target:resize(1)
       self.target[1] = target
    elseif torch.typename(input):find('torch%.Cuda.*Tensor') then
       self.target = torch.CudaLongTensor and target:cudaLong() or target
@@ -59,6 +60,7 @@ function ClassNLLCriterion:updateGradInput(input, target)
       else
           self.target = self.target:long()
       end
+      self.target:resize(1)
       self.target[1] = target
    elseif torch.typename(input):find('torch%.Cuda.*Tensor') then
       self.target = torch.CudaLongTensor and target:cudaLong() or target

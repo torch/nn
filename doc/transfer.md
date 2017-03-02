@@ -465,6 +465,42 @@ gnuplot.grid(true)
 
 ![](image/rrelu.png)
 
+<a name="nn.CReLU"></a>
+## CReLU ##
+```
+f = nn.CReLU(nInputDims, [inplace])
+```
+
+Applies the Concatenated Rectified Linear Unit (`CReLU`) function to the input Tensor, outputting a `Tensor` with twice as many channels.  The parameter `nInputDim` is the number of non-batched dimensions,  larger than that value will be considered batches.
+`CReLU` is defined as:
+
+```
+f(x) = concat(max(0, x), max(0, -x))
+```
+
+i.e. `CReLU` applies `ReLU` to the input, `x`, and the negated input, `-x`, and concatenates the output along the 1st non-batched dimension.
+
+```
+crelu = nn.CReLU(3)
+input = torch.Tensor(2, 3, 20, 20):uniform(-1, 1)
+output = crelu:forward(input)
+output:size()
+2
+6
+20
+20
+[torch.LongStorage of size 4]
+
+input = torch.Tensor(3, 20, 20):uniform(-1, 1)
+output = crelu:forward(input)
+output:size()
+6
+20
+20
+[torch.LongStorage of size 3]
+```
+
+For reference see [Understanding and Improving Convolutional Neural Networks via Concatenated Rectified Linear Units](https://arxiv.org/abs/1603.05201).
 
 <a name="nn.ELU"></a>
 ## ELU ##
@@ -522,6 +558,16 @@ Can optionally do its operation in-place without using extra state memory:
 f = nn.LeakyReLU(negval, true) -- true = in-place, false = keeping separate state.
 ```
 
+<a name="nn.GatedLinearUnit"></a>
+## GatedLinearUnit ##
+
+Applies a Gated Linear unit activation function, which halves the input dimension as follows:
+
+`GatedLinearUnit` is defined as `f([x1, x2])` = `x1 * sigmoid(x2)`
+
+where x1 is the first half of the input vector and x2 is the second half. The multiplication is component-wise, and the input vector must have an even number of elements.
+
+The GatedLinearUnit optionally takes a `dim` parameter, which is the dimension of the input tensor to operate over. It defaults to the last dimension.
 
 <a name="nn.SpatialSoftMax"></a>
 ## SpatialSoftMax ##

@@ -160,5 +160,7 @@ function LookupTable:clearState()
    return parent.clearState(self)
 end
 
--- we do not need to accumulate parameters when sharing
-LookupTable.sharedAccUpdateGradParameters = LookupTable.accUpdateGradParameters
+function LookupTable:sharedAccUpdateGradParameters(input, gradOutput, lr)
+   -- we do not need to accumulate parameters when sharing:
+   self:defaultAccUpdateGradParameters(input, gradOutput, lr)
+end

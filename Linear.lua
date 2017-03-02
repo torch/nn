@@ -105,8 +105,10 @@ function Linear:accGradParameters(input, gradOutput, scale)
    end
 end
 
--- we do not need to accumulate parameters when sharing
-Linear.sharedAccUpdateGradParameters = Linear.accUpdateGradParameters
+function Linear:sharedAccUpdateGradParameters(input, gradOutput, lr)
+   -- we do not need to accumulate parameters when sharing:
+   self:defaultAccUpdateGradParameters(input, gradOutput, lr)
+end
 
 function Linear:clearState()
    if self.addBuffer then self.addBuffer:set() end
