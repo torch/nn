@@ -19,6 +19,7 @@ require('nn.Bottle')
 require('nn.WeightNorm')
 
 require('nn.Linear')
+require('nn.LinearWeightNorm')
 require('nn.Bilinear')
 require('nn.PartialLinear')
 require('nn.SparseLinear')

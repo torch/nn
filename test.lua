@@ -169,6 +169,18 @@ function nntest.WeightNorm()
    mytester:assert(err < precision, 'Spatial Convolution v')
 end
 
+function nntest.LinearWeightNorm()
+   local input = torch.rand(10, 5)
+   local model = nn.LinearWeightNorm(5, 20)
+
+   local err = nn.Jacobian.testJacobianParameters(model, input, model.bias, model.gradBias)
+   mytester:assert(err < precision, 'bias')
+   err = nn.Jacobian.testJacobianParameters(model, input, model.g, model.gradG)
+   mytester:assert(err < precision, 'g')
+   err = nn.Jacobian.testJacobianParameters(model, input, model.v, model.gradV)
+   mytester:assert(err < precision, 'v')
+end
+
 function nntest.CAdd()
    local function testBackwardPass(module, input, params, dparams)
       local err = jac.testJacobian(module,input)

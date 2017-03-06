@@ -6,8 +6,9 @@ Complex neural networks are easily built using container classes:
     * [Sequential](#nn.Sequential) : plugs layers in a feed-forward fully connected manner ;
     * [Parallel](#nn.Parallel) : applies its `ith` child module to the  `ith` slice of the input Tensor ;
     * [Concat](#nn.Concat) : concatenates in one layer several modules along dimension `dim` ;
-      * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match;
-    * [Bottle](#nn.Bottle) : allows any dimensionality input be forwarded through a module ;
+      * [DepthConcat](#nn.DepthConcat) : like Concat, but adds zero-padding when non-`dim` sizes don't match ;
+    * [Bottle](#nn.Bottle) : allows any dimensionality input to be forwarded through a module ;
+    * [WeightNorm](#nn.WeightNorm) : decouples a module's weight matrix into direction and magnitude components ;
 
 See also the [Table Containers](#nn.TableContainers) for manipulating tables of [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md).
 
@@ -330,9 +331,12 @@ mlp = nn.Bottle(nn.Linear(10, 2))
 module = nn.WeightNorm(module)
 ```
 
-WeightNorm implements the reparametrization presented in [Weight Normalization](https://arxiv.org/pdf/1602.07868v3.pdf), which decouples the length of neural network weight vectors from their direction. The weight vectors `w` is determined instead by parameters `g` and `v` such that `w = g * v / ||v||`, where `||v||` is the euclidean norm of vector v. This container can wrap nn layers with weights.
+WeightNorm implements the reparametrization presented in [Weight Normalization](https://arxiv.org/pdf/1602.07868v3.pdf), which decouples the length of neural network weight vectors from their direction. The weight vector `w` is determined instead by parameters `g` and `v` such that `w = g * v / ||v||`, where `||v||` is the euclidean norm of vector `v`. This container can wrap nn layers with weights.
 
-It accepts a parameter ``outputDim`` that represents the output dimension of the module weight it wraps, which defaults to 1. If the outputDim is not 1, the container will transpose the weight appropriately. If the module weight is not 2D, the container will view the weight into an appropriate 2D shape based on the outputDim specified by the user.
+It accepts a parameter ``outputDim`` that represents the output dimension of the module weight it wraps, which defaults to 1. If the outputDim is not 1 the container will transpose the weight appropriately. If the module weight is not 2D, e.g. in the case of convolutional layers, the container will view the weight into an appropriate 2D shape based on the `outputDim` specified by the user.
+
+An optimised version of `nn.WeightNorm(nn.Linear(inputDimension, outputDimension))` is available as `nn.LinearWeightNorm(inputDimension, outputDimension, [bias = true])`. This layer occupies less memory and is faster through the use of fewer tensor copy operations, it also stores and updates a dirty flag to avoid unnecessary computation of the weight matrix.
+
 
 <a name="nn.TableContainers"></a>
 ## Table Containers ##

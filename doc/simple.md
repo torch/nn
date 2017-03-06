@@ -4,6 +4,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
 
   * Parameterized Modules :
     * [Linear](#nn.Linear) : a linear transformation ;
+    * [LinearWeightNorm](#nn.LinearWeightNorm) : a weight normalized linear transformation ;
     * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
     * [Bilinear](#nn.Bilinear) : a bilinear transformation with sparse inputs ;
     * [PartialLinear](#nn.PartialLinear) : a linear transformation with sparse inputs with the option of only computing a subset ;
@@ -98,6 +99,17 @@ As usual with `nn` modules, applying the linear transformation is performed with
 x = torch.Tensor(10) -- 10 inputs
 y = module:forward(x)
 ```
+
+<a name="nn.LinearWeightNorm"></a>
+## LinearWeightNorm ##
+
+```lua
+module = nn.LinearWeightNorm(inputDimension, outputDimension, [bias = true])
+```
+
+LinearWeightNorm implements the reparametrization presented in [Weight Normalization](https://arxiv.org/pdf/1602.07868v3.pdf), which decouples the length of neural network weight vectors from their direction. The weight vector `w` is determined instead by parameters `g` and `v` such that `w = g * v / ||v||`, where `||v||` is the euclidean norm of vector `v`. In all other respects this layer behaves like `nn.Linear`.
+
+Other layer types can make use of weight normalization through the [nn.WeightNorm](https://github.com/torch/nn/blob/master/doc/containers.md#nn.WeightNorm) container.
 
 <a name="nn.SparseLinear"></a>
 ## SparseLinear ##
