@@ -37,7 +37,6 @@ for test_name, component in pairs(tostringTestModules) do
     end
 end
 
-
 function nntest.Add()
    local inj_vals = {math.random(3,5), 1}  -- Also test the inj = 1 spatial case
    local ini = math.random(3,5)
@@ -495,6 +494,22 @@ function nntest.CMul()
    local ferr,berr = jac.testIO(module,input)
    mytester:eq(ferr, 0, torch.typename(module) .. ' - i/o forward err ', precision)
    mytester:eq(berr, 0, torch.typename(module) .. ' - i/o backward err ', precision)
+end
+
+function nntest.Contiguous()
+   local module = nn.Contiguous()
+
+   -- Contiguous input
+   local input = torch.rand(30,20,10)
+   local output = module:forward(input)
+
+   mytester:assert(output:ne(input):sum() == 0, 'output not equal to input')
+
+   -- Make input non-contiguous
+   local input2 = output:transpose(1,2)
+   local output2 = module:forward(input2)
+
+   mytester:assert(output2:ne(output:contiguous()):sum() == 0, 'output not equal to input')
 end
 
 function nntest.Dropout()
