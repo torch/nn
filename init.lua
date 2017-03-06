@@ -24,6 +24,7 @@ require('nn.NaN')
 require('nn.Profile')
 
 require('nn.Linear')
+require('nn.LinearWeightNorm')
 require('nn.Bilinear')
 require('nn.PartialLinear')
 require('nn.SparseLinear')

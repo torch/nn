@@ -346,9 +346,12 @@ mlp = nn.Bottle(nn.Linear(10, 2))
 module = nn.WeightNorm(module)
 ```
 
-WeightNorm implements the reparametrization presented in [Weight Normalization](https://arxiv.org/pdf/1602.07868v3.pdf), which decouples the length of neural network weight vectors from their direction. The weight vectors `w` is determined instead by parameters `g` and `v` such that `w = g * v / ||v||`, where `||v||` is the euclidean norm of vector v. This container can wrap nn layers with weights.
+WeightNorm implements the reparametrization presented in [Weight Normalization](https://arxiv.org/pdf/1602.07868v3.pdf), which decouples the length of neural network weight vectors from their direction. The weight vector `w` is determined instead by parameters `g` and `v` such that `w = g * v / ||v||`, where `||v||` is the euclidean norm of vector `v`. This container can wrap nn layers with weights.
 
-It accepts a parameter ``outputDim`` that represents the output dimension of the module weight it wraps, which defaults to 1. If the outputDim is not 1, the container will transpose the weight appropriately. If the module weight is not 2D, the container will view the weight into an appropriate 2D shape based on the outputDim specified by the user.
+It accepts a parameter ``outputDim`` that represents the output dimension of the module weight it wraps, which defaults to 1. If the outputDim is not 1 the container will transpose the weight appropriately. If the module weight is not 2D, e.g. in the case of convolutional layers, the container will view the weight into an appropriate 2D shape based on the `outputDim` specified by the user.
+
+An optimised version of `nn.WeightNorm(nn.Linear(inputDimension, outputDimension))` is available as `nn.LinearWeightNorm(inputDimension, outputDimension, [bias = true])`. This layer occupies less memory and is faster through the use of fewer tensor copy operations, it also stores and updates a dirty flag to avoid unnecessary computation of the weight matrix.
+
 
 <a name='nn.DontCast'></a>
 ## DontCast ##
