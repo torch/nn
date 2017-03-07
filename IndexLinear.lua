@@ -4,6 +4,13 @@ local IndexLinear, parent = torch.class('nn.IndexLinear', 'nn.Module')
 function IndexLinear:__init(inputSize, outputSize, doGradInput, keysOffset, weight, bias, normalize)
    parent.__init(self)
 
+   -- We need for 3 extra parameters per feature
+   -- if we normalize:
+   -- * The max-abs value
+   -- * The inverse of the max-abs value
+   -- * The per-feature bias
+   -- We keep an extra placeholder for further per learning rate feature manipulation.
+   -- So it's 4 total.
    self.normalize = normalize and 4 or 0
 
    -- This is important to keep the possibility of sharing a weight
@@ -47,6 +54,8 @@ function IndexLinear:__init(inputSize, outputSize, doGradInput, keysOffset, weig
    self.runningCter = 1
 end
 
+-- Reset all the parameters needed
+-- for normalization to 0
 function IndexLinear:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
@@ -70,6 +79,12 @@ function IndexLinear:reshapeInput(input)
 
    assert(ninputs == 2 or ninputs == 3)
 
+   -- If format is:
+   -- {
+   --   torch.LongTensor(size1+size2+...+sizeN), -- concatenated batch of keys
+   --   torch.Tensor(size1+size2+...+sizeN), -- concatenated batch of values
+   --   torch.LongTensor(N), -- keys/values sizes (values are {size1, ..., sizeN})
+   -- }
    if ninputs == 3 then
       local fkeys = input[1]
       local fvals = input[2]
@@ -84,11 +99,25 @@ function IndexLinear:reshapeInput(input)
    local keys = input[1]
    local values = input[2]
    local lkeys, lvalues
+
+   -- If format is:
+   -- {
+   --   { torch.LongTensor(size1), torch.LongTensor(size2), ..., torch.LongTensor(sizeN) }, -- batch of keys
+   --   { torch.Tensor(size1), torch.Tensor(size2), ..., torch.Tensor(sizeN) }, -- batch of values,
+   -- }
    if type(keys) == 'table' and type(values) == 'table' then
       lkeys, lvalues = keys, values
+      self.isFlat = false
       self.noBatch = false
+
+   -- If format is not a batch:
+   -- {
+   --   torch.LongTensor(size1), -- keys
+   --   torch.Tensor(size1), -- values,
+   -- }
    elseif torch.isTensor(keys) and torch.isTensor(values) then
       lkeys, lvalues = {keys}, {values}
+      self.isFlat = false
       self.noBatch = true
    else
       error('Wrong input format.')

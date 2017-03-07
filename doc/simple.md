@@ -133,6 +133,83 @@ x = torch.Tensor({ {1, 0.1}, {2, 0.3}, {10, 0.3}, {31, 0.2} })
 
 The first column contains indices, the second column contains values in a a vector where all other elements are zeros. The indices should not exceed the stated dimensions of the input to the layer (10000 in the example).
 
+<a name="nn.IndexLinear"></a>
+## IndexLinear ##
+
+```lua
+module = nn.IndexLinear(inputSize, outputSize, doGradInput, keysOffset, weight, bias, normalize)
+```
+
+Applies the following transformation to the incoming (optionally) normalized sparse input data:
+`z = A y + b`, where `y_i = x_i * (normalize and (1 / x_i_max) or 1) + b_i`, where `x` is the input data, `b_i` is a per-feature bias,
+and `x_i_max` is the maximum absolute value seen so far during training for the specific feature `i`.
+`inputSize` is the maximum number of features and `outputSize` the number of output neurons. If `doGradInput` is `false` (the default), then the gradInput will not be computed.
+`keysOffset` (defaults to `0`) lets you specifies input keys are in the `[1+keysOffset,N+keysOffset]` range.
+As an additional perk, you can pass existing `weight` and `bias`, in order to avoid useless memory allocation.
+Doing this will overwrite the values for `inputSize` and `outputSize`. Note that the layout of `weight` and `bias` is different for [SparseLinear](#nn.SparseLinear) for performance reasons.
+Finally, `normalize` (false by default) will activate the normalization of the input feature values.
+The normalization is very useful to avoid explosions during training if sparse input values are really high, and also to ditinguish between the presence and the absence of a feature.
+
+NOTE: To speed up computation a lot by falicitating memory access, the gradWeight that is computed when doing
+non in-place updates is a sparse representation of the whole gradWeight matrix, and its size changes from one
+backward pass to another.
+
+
+The `input` tensor given in `forward(input)` must be either:
+- an array of size 2 with the following format:
+```lua
+input = {
+          1 = {torch.LongTensor(size1), ..., torch.LongTensor(sizeN)}, -- batch of keys
+          2 = {torch.Tensor(size1), ..., torch.Tensor(sizeN)} -- batch of values
+    }
+```
+- an array of size 3 with the following format (pre-concatenated batch of sparse tensors):
+```lua
+input = {
+          1 = torch.LongTensor(size1+size2+...+sizeN), -- contatenated batch of keys
+          2 = torch.Tensor(size1+size2+...+sizeN)}, -- contatenated batch of values
+          3 = torch.LongTensor(N) -- sizes (== torch.LongTensor({size1, ..., sizeN}))
+    }
+```
+- For convenience, when there is only a single key/value set, an array of size 2 with the following format:
+```lua
+input = {
+          1 = torch.LongTensor(size1), -- keys
+          2 = torch.Tensor(size1) -- values
+        }
+```
+
+Note that this format differs from the [SparseLinear](#nn.SparseLinear) input format. The reason for that is, in case we use float values,
+the largest consecutive integer is 16777216, which seriously limits the number of keys values that could be used.
+
+You can create an index linear layer the following way:
+
+```lua
+module = nn.IndexLinear(10000, 2, nil, 0, nil, nil, true)  -- 10000 inputs, 2 outputs, no grad input, no offset, no input weight/bias, max-norm on
+```
+
+A sparse input batch may be created as so:
+
+```lua
+x = {
+      { torch.LongTensor({ 1,2 }), torch.LongTensor({ 100,2000 }) },
+      { torch.Tensor({ 1, 0.1 }), torch.Tensor({ 10,.5 }) }
+}
+
+or equivalently
+
+x = {
+      torch.LongTensor({ 1,2, 100,2000 }),
+      torch.Tensor({ 1, 0.1, 10,.5 }),
+      torch.LongTensor(2):fill(2),
+}
+
+one can them pass them as:
+
+module:forward(x)
+
+```
+
 <a name="nn.Bilinear"></a>
 ## Bilinear ##
 
