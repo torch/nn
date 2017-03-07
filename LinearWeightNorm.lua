@@ -63,12 +63,13 @@ end
 
 function LinearWeightNorm:updateOutput(input)
     if self.dirty or self.training then
+        if self.norm:dim() == 0 then self.norm:resizeAs(self.g) end
         self.norm:norm(self.v,2,2)
+
+        if self.scale:dim() == 0 then self.scale:resizeAs(self.g) end
         self.scale:copy(self.g):cdiv(self.norm)
 
-        if self.weight:dim() == 0 then
-            self.weight:resizeAs(self.v)
-        end
+        if self.weight:dim() == 0 then self.weight:resizeAs(self.v) end
         self.weight:copy(self.v):cmul(self.scale:expandAs(self.v))
 
         self.dirty = false
@@ -128,10 +129,6 @@ function LinearWeightNorm:accGradParameters(input, gradOutput, scale)
 
     local scale = self.scale:expandAs(self.v)
     local norm = self.norm:expandAs(self.v)
-
-    if self.weight:dim() == 0 then
-        self.weight:resizeAs(self.gradV)
-    end
 
     self.weight:copy(self.gradV):cmul(self.v):cdiv(norm) -- reuse the weight tensor, avoid unnecessary alloc
     self.gradG:sum(self.weight,2)
