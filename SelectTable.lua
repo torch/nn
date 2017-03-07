@@ -24,13 +24,15 @@ local function zeroTableCopy(t1, t2)
    for k, v in pairs(t2) do
       if (torch.type(v) == "table") then
          t1[k] = zeroTableCopy(t1[k] or {}, t2[k])
-      else
+      elseif torch.isTensor(v) then
          if not t1[k] then
             t1[k] = v:clone():zero()
          else
             t1[k]:resizeAs(v)
             t1[k]:zero()
          end
+      else
+        t1[k] = nil
       end
    end
    for k, v in pairs(t1) do
