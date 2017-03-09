@@ -173,9 +173,42 @@ function nntest.LinearWeightNorm()
    local input = torch.rand(10, 5)
    local model = nn.LinearWeightNorm(5, 20)
 
+   -- check gradient
    local err = nn.Jacobian.testJacobianParameters(model, input, model.bias, model.gradBias)
    mytester:assert(err < precision, 'bias')
    err = nn.Jacobian.testJacobianParameters(model, input, model.g, model.gradG)
+   mytester:assert(err < precision, 'g')
+   err = nn.Jacobian.testJacobianParameters(model, input, model.v, model.gradV)
+   mytester:assert(err < precision, 'v')
+
+   -- check conversion functions
+   local linear = nn.Linear(5,20)   
+   local wnFromLin = nn.LinearWeightNorm.fromLinear(linear)
+   local linFromWn = wnFromLin:toLinear()
+
+   local linOut = linear:forward(input)
+   local wnOut = wnFromLin:forward(input)
+   local linFromWnOut = linFromWn:forward(input)
+
+   assert((linOut - wnOut):sum() < precision, "outputs are not equivalent")
+   assert((wnOut - linFromWnOut):sum() < precision, "outputs are not equivalent")
+
+   -- check conversion with nobias
+   linear = nn.Linear(5,20,false)   
+   wnFromLin = nn.LinearWeightNorm.fromLinear(linear)
+   linFromWn = wnFromLin:toLinear()
+
+   linOut = linear:forward(input)
+   wnOut = wnFromLin:forward(input)
+   linFromWnOut = linFromWn:forward(input)
+
+   assert((linOut - wnOut):sum() < precision, "outputs are not equivalent")
+   assert((wnOut - linFromWnOut):sum() < precision, "outputs are not equivalent")   
+
+   -- check gradient with nobias
+   model = wnFromLin
+
+   local err = nn.Jacobian.testJacobianParameters(model, input, model.g, model.gradG)
    mytester:assert(err < precision, 'g')
    err = nn.Jacobian.testJacobianParameters(model, input, model.v, model.gradV)
    mytester:assert(err < precision, 'v')

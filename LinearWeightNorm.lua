@@ -28,6 +28,32 @@ function LinearWeightNorm:__init(inputSize, outputSize, bias)
     self:reset() 
 end
 
+function LinearWeightNorm.fromLinear(linear)
+    local module = nn.LinearWeightNorm(linear.weight:size(2), linear.weight:size(1), linear.bias ~= nil)
+    
+    module.g = linear.weight:norm(2,2)
+    module.v = torch.cdiv(linear.weight, module.g:expandAs(linear.weight))
+
+    if linear.bias then
+        module.bias:copy(linear.bias)
+    end
+
+    return module
+end
+
+function LinearWeightNorm:toLinear()
+    self:updateWeightMatrix()
+
+    local module = nn.Linear(self.inputSize, self.outputSize, self.bias ~= nil)
+    
+    module.weight:copy(self.weight)
+    if self.bias ~= nil then
+        module.bias:copy(self.bias)
+    end
+    
+    return module
+end
+
 function LinearWeightNorm:parameters()
     if self.bias then
         return {self.v, self.g, self.bias}, {self.gradV, self.gradG, self.gradBias}
@@ -61,19 +87,22 @@ local function updateAddBuffer(self, input)
     end   
 end
 
-function LinearWeightNorm:updateOutput(input)
+function LinearWeightNorm:updateWeightMatrix()
     if self.dirty or self.training then
         if self.norm:dim() == 0 then self.norm:resizeAs(self.g) end
-        self.norm:norm(self.v,2,2)
-
         if self.scale:dim() == 0 then self.scale:resizeAs(self.g) end
-        self.scale:copy(self.g):cdiv(self.norm)
-
         if self.weight:dim() == 0 then self.weight:resizeAs(self.v) end
-        self.weight:copy(self.v):cmul(self.scale:expandAs(self.v))
 
+        self.norm:norm(self.v,2,2)
+        self.scale:copy(self.g):cdiv(self.norm)
+        self.weight:copy(self.v):cmul(self.scale:expandAs(self.v))
+        
         self.dirty = false
     end
+end
+
+function LinearWeightNorm:updateOutput(input)
+    self:updateWeightMatrix()
     
     if input:dim() == 1 then
         self.output:resize(self.weight:size(1))
