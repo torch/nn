@@ -14,7 +14,7 @@ function LinearWeightNorm:__init(inputSize, outputSize, bias)
     self.weight = torch.Tensor(outputSize, inputSize)
     self.dirty = true
     
-    self.g = torch.Tensor(outputSize,1):zero()
+    self.g = torch.Tensor(outputSize,1)
     self.gradG = torch.Tensor(outputSize,1)
 
     self.norm = torch.Tensor(outputSize,1)
@@ -69,7 +69,7 @@ function LinearWeightNorm:reset(stdv)
         stdv = 1 / math.sqrt(self.inputSize)
     end
 
-    self.v:normal(0,stdv)
+    self.v:uniform(-stdv,stdv)
     self.g:norm(self.v,2,2)
 
     if self.bias then 
