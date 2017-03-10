@@ -87,7 +87,7 @@ local function updateAddBuffer(self, input)
 end
 
 function LinearWeightNorm:updateWeightMatrix()
-    if self.dirty or self.training then
+    if self.dirty or self.train then
         if self.norm:dim() == 0 then self.norm:resizeAs(self.g) end
         if self.scale:dim() == 0 then self.scale:resizeAs(self.g) end
         if self.weight:dim() == 0 then self.weight:resizeAs(self.v) end
