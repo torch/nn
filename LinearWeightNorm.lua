@@ -28,7 +28,7 @@ function LinearWeightNorm:__init(inputSize, outputSize, bias)
 end
 
 function LinearWeightNorm.fromLinear(linear)
-    local module = nn.LinearWeightNorm(linear.weight:size(2), linear.weight:size(1), linear.bias ~= nil)
+    local module = nn.LinearWeightNorm(linear.weight:size(2), linear.weight:size(1), linear.bias)
     
     module.g = linear.weight:norm(2,2)
     module.v = torch.cdiv(linear.weight, module.g:expandAs(linear.weight))
@@ -43,10 +43,10 @@ end
 function LinearWeightNorm:toLinear()
     self:updateWeightMatrix()
 
-    local module = nn.Linear(self.inputSize, self.outputSize, self.bias ~= nil)
+    local module = nn.Linear(self.inputSize, self.outputSize, self.bias)
     
     module.weight:copy(self.weight)
-    if self.bias ~= nil then
+    if self.bias then
         module.bias:copy(self.bias)
     end
     
