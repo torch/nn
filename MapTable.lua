@@ -75,13 +75,21 @@ end
 
 function MapTable:zeroGradParameters()
     if self.module then
-        self.module:zeroGradParameters()
+        if self.shared then
+          self.module:zeroGradParameters()
+        else
+          parent.zeroGradParameters(self)
+        end
     end
 end
 
 function MapTable:updateParameters(learningRate)
     if self.module then
-        self.module:updateParameters(learningRate)
+        if self.shared then
+          self.module:updateParameters(learningRate)
+        else
+          parent.updateParameters(self, learningRate)
+        end
     end
 end
 

@@ -6646,6 +6646,24 @@ function nntest.MapTable()
       == torch.pointer(map:get(1).weight:storage()))
    map:clearState()
    mytester:assert(map:size() == 1)
+
+  -- check if gradients are correctly reset
+  -- share weights and gradients
+  map = nn.MapTable(nn.Linear(10,5))
+  map:forward(input)
+  _, gradParams = map:getParameters()
+  gradParams:uniform()
+  map:zeroGradParameters()
+  mytester:assertlt(gradParams:sum(),precision)
+
+  -- check if gradients are correctly reset
+  -- do not share weights and gradients
+  map = nn.MapTable(nn.Linear(10,5),false)
+  map:forward(input)
+  _, gradParams = map:getParameters()
+  gradParams:uniform()
+  map:zeroGradParameters()
+  mytester:assertlt(gradParams:sum(),precision)
 end
 
 function nntest.FlattenTable()
