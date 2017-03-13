@@ -2,7 +2,7 @@ local MapTable, parent = torch.class('nn.MapTable', 'nn.Container')
 
 function MapTable:__init(module, shared)
    parent.__init(self)
-   self.shared = shared or true
+   if shared ~= nil then self.shared = shared else self.shared = true end
    self.sharedparams = {'weight', 'bias', 'gradWeight', 'gradBias'}
    self.output = {}
    self.gradInput = {}
