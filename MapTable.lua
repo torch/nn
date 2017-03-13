@@ -16,7 +16,7 @@ function MapTable:_extend(n)
          if shared then
            self.modules[i] = self.module:clone(table.unpack(self.sharedparams))
          else
-           self.modules[i] = self.module:clone(table.unpack(self.sharedparams))
+           self.modules[i] = self.module:clone()
          end
       end
    end
