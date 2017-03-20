@@ -557,7 +557,7 @@ module = nn.SpatialDepthWiseConvolution(nInputPlane, nOutputPlane, kW, kH, [dW],
 Applies a 2D depth-wise convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`).
 
-It is similar to 'SpatialConvolution', but here a spatial convolution is performed independently over each channel of an input. The most noticiable difference is the output dimension of 'SpatialConvolution' is \[nOutputPlane\]\[outputWidth\]\[outputHeight\], while for 'SpatialDepthWiseConvolution' it is  \[nOutputPlane\]\[nInputPlane\]\[outputWidth\]\[outputHeight\]
+It is similar to 'SpatialConvolution', but here a spatial convolution is performed independently over each channel of an input. The most noticiable difference is the output dimension of 'SpatialConvolution' is `nOutputPlane x oheight x owidth`, while for 'SpatialDepthWiseConvolution' it is  `(nOutputPlane x nInputPlane) x oheight x owidth`
 
 The parameters are the following:
   * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
@@ -574,7 +574,7 @@ columns or rows of the input image might be lost. It is up to the user to
 add proper padding in images.
 
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
-will be `nOutputPlane x nInputPlane x oheight x owidth` where
+will be a 3D tensor `(nOutputPlane x nInputPlane) x oheight x owidth` where
 ```lua
 owidth  = floor((width  + 2*padW - kW) / dW + 1)
 oheight = floor((height + 2*padH - kH) / dH + 1)
