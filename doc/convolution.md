@@ -557,7 +557,7 @@ module = nn.SpatialDepthWiseConvolution(nInputPlane, nOutputPlane, kW, kH, [dW],
 Applies a 2D depth-wise convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`).
 
-It is similar to 'SpatialConvolution', but here a spatial convolution is performed independently over each channel of an input. The most noticiable difference is the output dimension of 'SpatialConvolution' is `nOutputPlane x oheight x owidth`, while for 'SpatialDepthWiseConvolution' it is  `(nOutputPlane x nInputPlane) x oheight x owidth`
+It is similar to `SpatialConvolution`, but here a spatial convolution is performed independently over each channel of an input. The most noticiable difference is the output dimension of `SpatialConvolution` is `nOutputPlane x oheight x owidth`, while for `SpatialDepthWiseConvolution` it is  `(nOutputPlane x nInputPlane) x oheight x owidth`.
 
 The parameters are the following:
   * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
