@@ -55,7 +55,7 @@ local replacements =
 {
    {
       ['TYPE'] = 'Double',
-      ['real'] = 'double',
+      ['accreal'] = 'double',
       ['THTensor'] = 'THDoubleTensor',
       ['THIndexTensor'] = 'THLongTensor',
       ['THIntegerTensor'] = 'THIntTensor',
@@ -64,7 +64,7 @@ local replacements =
    },
    {
       ['TYPE'] = 'Float',
-      ['real'] = 'float',
+      ['accreal'] = 'double',
       ['THTensor'] = 'THFloatTensor',
       ['THIndexTensor'] = 'THLongTensor',
       ['THIntegerTensor'] = 'THIntTensor',

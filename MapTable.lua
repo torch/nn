@@ -20,6 +20,9 @@ end
 function MapTable:resize(n)
    self:_extend(n)
    for i = n + 1, #self.modules do
+      -- It's not clear why this clearState call is necessary, but it fixes
+      -- https://github.com/torch/nn/issues/1141 .
+      self.modules[i]:clearState()
       self.modules[i] = nil
    end
 end
@@ -79,6 +82,9 @@ end
 
 function MapTable:clearState()
    for i = 2, #self.modules do
+      -- It's not clear why this clearState call is necessary, but it fixes
+      -- https://github.com/torch/nn/issues/1141 .
+      self.modules[i]:clearState()
       self.modules[i] = nil
    end
    parent.clearState(self)

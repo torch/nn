@@ -9,6 +9,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [TemporalSubSampling](#nn.TemporalSubSampling) : a 1D sub-sampling over an input sequence ;
     * [TemporalMaxPooling](#nn.TemporalMaxPooling) : a 1D max-pooling operation over an input sequence ;
     * [LookupTable](#nn.LookupTable) : a convolution of width `1`, commonly used for word embeddings ;
+    * [TemporalRowConvolution](#nn.TemporalRowConvolution) : a row-oriented 1D convolution over an input sequence ;
   * [Spatial Modules](#nn.SpatialModules) apply to inputs with two-dimensional relationships (e.g. images):
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
     * [SpatialFullConvolution](#nn.SpatialFullConvolution) : a 2D full convolution over an input image ;
@@ -20,6 +21,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
     * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
     * [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling) : a 2D max-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
+    * [SpatialAdaptiveAveragePooling](#nn.SpatialAdaptiveAveragePooling) : a 2D average-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
     * [SpatialMaxUnpooling](#nn.SpatialMaxUnpooling) : a 2D max-unpooling operation ;
     * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
     * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
@@ -30,14 +32,15 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialCrossMapLRN](#nn.SpatialCrossMapLRN) : a spatial local response normalization between feature maps ;
     * [SpatialBatchNormalization](#nn.SpatialBatchNormalization): mean/std normalization over the mini-batch inputs and pixels, with an optional affine transform that follows
 a kernel for computing the weighted average in a neighborhood ;
-    * [SpatialUpsamplingNearest](#nn.SpatialUpSamplingNearest): A simple nearest neighbor upsampler applied to every channel of the feature map.
-    * [SpatialUpsamplingBilinear](#nn.SpatialUpSamplingNearest): A simple bilinear upsampler applied to every channel of the feature map.
+    * [SpatialUpSamplingNearest](#nn.SpatialUpSamplingNearest): A simple nearest neighbor upsampler applied to every channel of the feature map.
+    * [SpatialUpSamplingBilinear](#nn.SpatialUpSamplingBilinear): A simple bilinear upsampler applied to every channel of the feature map.
   * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
     * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
     * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
     * [VolumetricDilatedConvolution](#nn.VolumetricDilatedConvolution) : a 3D dilated convolution over an input image ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
     * [VolumetricDilatedMaxPooling](#nn.VolumetricDilatedMaxPooling) : a 3D dilated max-pooling operation over an input video ;
+    * [VolumetricFractionalMaxPooling](#nn.VolumetricFractionalMaxPooling) : a 3D fractional max-pooling operation over an input image ;
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
     * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation.
     * [VolumetricReplicationPadding](#nn.VolumetricReplicationPadding) : Pads a volumetric feature map with the value at the edge of the input borders. ;
@@ -322,6 +325,65 @@ Outputs something like:
 Note that the 1st, 2nd and 10th rows of the module.weight are updated to
 obey the max-norm constraint, since their indices appear in the "input".
 
+<a name="nn.TemporalRowConvolution"></a>
+### TemporalRowConvolution ###
+
+```lua
+module = nn.TemporalRowConvolution(inputFrameSize, kW, [dW], [featFirst]))
+```
+
+Applies a 1D row-oriented convolution over an input sequence composed of `nInputFrame` frames. The input tensor in `forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`). The layer can be used without a bias by `module:noBias()`.
+
+The parameters are the following:
+  * `inputFrameSize`: The input frame size expected in sequences given into `forward()`.
+  * `kW`: The kernel width of the convolution.
+  * `dW`: The step of the convolution Default is `1`.
+  * `featFirst`: Expects input to be in the form `nBatchFrame x inputFrameSize x nInputFrame` is `true`. Default is `false`.
+
+  If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be `nOutputFrame x inputFrameSize` where
+
+  ```lua
+  nOutputFrame = (nInputFrame - kW) / dW + 1
+  ```
+
+  If the input sequence is a 3D tensor of dimension `nBatchFrame x nInputFrame x inputFrameSize`, the output sequence will be `nBatch x nOutputFrame x outputFrameSize`.
+
+  The parameters are the convolution can be found in `self.weight` (Tensor of size `inputFrameSize x kW`) and `self.bias` (Tensor of size `inputFrameSize`). The corresponding gradients can be found in `self.gradWeight` and `self.gradBias`.
+
+  For a 2D input, the output value of the layer can be precisely described as:
+
+  ```lua
+  output[t][i] = bias[i] + sum_{k=1}^kW weight[i][k] * input[dW(t-1)+k][i]
+  ```
+
+  Here is a simple example:
+  ```lua
+  inp = 5;
+  kw = 3;
+  dw = 1;
+
+  -- row convolution with a kernel width of 3 (future context of 2)
+  module = nn.TemporalRowConvolution(inp, kw, dw)
+
+  x = torch.rand(8, inp)
+  print(module:forward(x))
+  ```
+
+  which gives
+
+  ```lua
+  0.1188  0.1945  0.1065 -0.0077 -0.3433
+  0.0630  0.4354  0.1954 -0.2103 -0.3506
+  0.0340  0.2222  0.3039 -0.2012 -0.3814
+  0.0820  0.3489  0.2533 -0.0940 -0.3298
+  0.1964  0.1533  0.1750 -0.1493 -0.3059
+  0.2651  0.2474  0.0521 -0.1134 -0.4024
+  [torch.Tensor of dimension 8x5]
+  ```
+
+  More information about the layer can be found [here](http://www.cs.cmu.edu/~dyogatam/papers/wang+etal.iclrworkshop2016.pdf).
+
+
 <a name="nn.SpatialModules"></a>
 ## Spatial Modules ##
 Excluding an optional batch dimension, spatial layers expect a 3D Tensor as input. The
@@ -478,8 +540,8 @@ The parameters are the following:
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
 will be `nOutputPlane x oheight x owidth` where
 ```lua
-owidth  = floor(width + 2 * padW - dilationW * (kW-1) - 1) / dW + 1
-oheight = floor(height + 2 * padH - dilationH * (kH-1) - 1) / dH + 1
+owidth  = floor((width + 2 * padW - dilationW * (kW-1) - 1) / dW) + 1
+oheight = floor((height + 2 * padH - dilationH * (kH-1) - 1) / dH) + 1
 ```
 
 Further information about the dilated convolution can be found in the following paper: [Multi-Scale Context Aggregation by Dilated Convolutions](http://arxiv.org/abs/1511.07122).
@@ -661,6 +723,19 @@ x_j_end   = ceil(((j+1)/owidth)  * iwidth)
 y_i_start = floor((i   /oheight) * iheight)
 y_i_end   = ceil(((i+1)/oheight) * iheight)
 ```
+
+<a name="nn.SpatialAdaptiveAveragePooling"></a>
+### SpatialAdaptiveAveragePooling ###
+
+```lua
+module = nn.SpatialAdaptiveAveragePooling(W, H)
+```
+
+Applies 2D average-pooling operation in an image such that the output is of
+size `WxH`, for any input size. The number of output features is equal
+to the number of input planes.
+
+The pooling region algorithm is the same as that in [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling).
 
 <a name="nn.SpatialMaxUnpooling"></a>
 ### SpatialMaxUnpooling ###
@@ -880,7 +955,7 @@ The learning of gamma and beta is optional.
 
    In training time, this layer keeps a running estimate of it's computed mean and std.
    The running sum is kept with a default momentup of 0.1 (unless over-ridden)
-   In test time, this running mean/std is used to normalize.
+   In test time, this running mean/std is used to normalize. (**Note that the running mean/std will not be saved if one only checkpoints a model's parameters. In order to correctly use the calculated running mean/std, one needs to checkpoint the model itself (call [clearState()](https://github.com/torch/nn/blob/master/doc/module.md#clearstate) first to save space).**)
 
 
 
@@ -929,7 +1004,7 @@ The parameters are the following:
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
-add proper padding in images.
+add proper padding in images. This layer can be used without a bias by module:noBias().
 
 If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
 will be `nOutputPlane x otime x oheight x owidth` where
@@ -955,7 +1030,7 @@ Applies a 3D full convolution over an input image composed of several input plan
 `forward(input)` is expected to be a 4D or 5D tensor. Note that instead of setting `adjT`, `adjW` and `adjH`, VolumetricFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
 will ignore the `adjT`, `adjW` and `adjH` values used to construct the module.
 
-This can be used as 3D deconvolution, or 3D upsampling. So that the 3D FCN can be easly implemented.
+This can be used as 3D deconvolution, or 3D upsampling. So that the 3D FCN can be easly implemented. This layer can be used without a bias by module:noBias().
 
 The parameters are the following:
 * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
@@ -1010,9 +1085,9 @@ The parameters are the following:
 If the input image is a 4D tensor `nInputPlane x depth x height x width`, the output image size
 will be `nOutputPlane x odepth x oheight x owidth` where
 ```lua
-odepth  = floor(depth + 2 * padT - dilationT * (kT-1) + 1) / dT + 1
-owidth  = floor(width + 2 * padW - dilationW * (kW-1) + 1) / dW + 1
-oheight = floor(height + 2 * padH - dilationH * (kH-1) + 1) / dH + 1
+odepth  = floor((depth + 2 * padT - dilationT * (kT-1) + 1) / dT) + 1
+owidth  = floor((width + 2 * padW - dilationW * (kW-1) + 1) / dW) + 1
+oheight = floor((height + 2 * padH - dilationH * (kH-1) + 1) / dH) + 1
 ```
 
 Further information about the dilated convolution can be found in the following paper: [Multi-Scale Context Aggregation by Dilated Convolutions](http://arxiv.org/abs/1511.07122).
@@ -1051,6 +1126,46 @@ oheight = op((height - (dilationH * (kH - 1) + 1) + 2*padH) / dH + 1)
 
 `op` is a rounding operator. By default, it is `floor`. It can be changed
 by calling `:ceil()` or `:floor()` methods.
+
+<a name="nn.VolumetricFractionalMaxPooling"></a>
+### VolumetricFractionalMaxPooling ###
+
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, outT, outW, outH)
+--   the output should be the exact size (outH x outW x outT)
+OR
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, ratioT, ratioW, ratioH)
+--   the output should be the size (floor(inH x ratioH) x floor(inW x ratioW) x floor(inT x ratioT))
+--   ratios are numbers between (0, 1) exclusive
+```
+
+Applies 3D Fractional max-pooling operation in the "pseudorandom" mode, analogous to [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling).
+
+The max-pooling operation is applied in `kTxkWxkH` regions by a stochastic step size determined by the target output size.
+The number of output features is equal to the number of input planes.
+
+There are two constructors available.
+
+Constructor 1:
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, outT, outW, outH)
+```
+
+Constructor 2:
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, ratioT, ratioW, ratioH)
+```
+If the input image is a 4D tensor `nInputPlane x height x width x time`, the output
+image size will be `nOutputPlane x oheight x owidth x otime`
+
+ where
+
+```lua
+otime  = floor(time * ratioT)
+owidth  = floor(width * ratioW)
+oheight = floor(height * ratioH)
+```
+ratios are numbers between (0, 1) exclusive
 
 <a name="nn.VolumetricAveragePooling"></a>
 ### VolumetricAveragePooling ###

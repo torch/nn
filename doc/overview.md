@@ -106,10 +106,10 @@ criterion).  The input is usually a Tensor (except if you use special
 kind of gradient modules, like [table layers](table.md#nn.TableLayers)). The
 label type depends on the criterion.  For example, the
 [MSECriterion](criterion.md#nn.MSECriterion) expect a Tensor, but the
-[ClassNLLCriterion](criterion.md#nn.ClassNLLCriterion) except a integer number (the
+[ClassNLLCriterion](criterion.md#nn.ClassNLLCriterion) expect an integer number (the
 class).
 
-Such a dataset is easily constructed by using Lua tables, but it could
+Such a dataset is easily constructed by using Lua tables, but it could be
 any `C` object for example, as long as required operators/methods
 are implemented.  [See an example](containers.md#nn.DoItStochasticGradient).
 
