@@ -419,7 +419,7 @@ Optionally, you can give non-equal weighting on the classes by passing a 1D `wei
 The loss function then becomes:
 
 ```lua
-loss(x, y) = sum_i(max(0, w[y] * (margin - x[y] - x[i]))^p) / x:size(1)
+loss(x, y) = sum_i(max(0, w[y] * (margin - x[y] + x[i]))^p) / x:size(1)
 ```
 
 This criterion is especially useful for classification when used in conjunction with a module ending in the following output layer:
