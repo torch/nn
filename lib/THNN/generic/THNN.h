@@ -446,8 +446,8 @@ TH_API void THNN_(IndexLinear_accGradParameters)(
           THTensor *weight,
           THTensor *bias,
           THTensor* valuesBuffer,
-          real weightDecay,
-          real scale);
+          accreal weightDecay,
+          accreal scale);
 TH_API void THNN_(IndexLinear_accUpdateGradParameters)(
           THNNState *state,
           THLongTensor *keys,
@@ -458,8 +458,8 @@ TH_API void THNN_(IndexLinear_accUpdateGradParameters)(
           THTensor *gradOutput,
           THTensor *weight,
           THTensor *bias,
-          real weightDecay,
-          real scale);
+          accreal weightDecay,
+          accreal scale);
 TH_API void THNN_(IndexLinear_updateParameters)(
           THNNState *state,
           THTensor *gradWeight,
@@ -469,8 +469,8 @@ TH_API void THNN_(IndexLinear_updateParameters)(
           THLongTensor *runningKeys,
           THLongTensor *cumSumSizes,
           long keysOffset,
-          real weightDecay,
-          real learningRate);
+          accreal weightDecay,
+          accreal learningRate);
 
 TH_API void THNN_(SparseLinear_updateOutput)(
           THNNState *state,
