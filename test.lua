@@ -1412,6 +1412,135 @@ function nntest.SparseLinear()
    test_sparse_linear(1000, 1000, 10, 100)
 end
 
+function nntest.IndexLinear()
+   local inb = math.random(5,10)
+   local ini = math.random(50,100)
+   local inj = math.random(5,10)
+   local numNonzero = math.random(3,5)
+
+   local module = nn.IndexLinear(ini,inj, true)
+   local linear = nn.Linear(ini, inj)
+   module.weight = linear.weight:t():clone()
+   module.bias = linear.bias:clone()
+   module:zeroGradParameters()
+   linear:zeroGradParameters()
+
+   -- Create a random sparse vector
+   local input = {{},{}}
+   local nonsparse = torch.zeros(inb, ini)
+   for i=1,inb do
+       local nnz = math.random(1, 3)
+       input[1][i] = torch.randperm(ini)[{{1,nnz}}]:long()
+       input[2][i] = torch.ones(nnz)
+       nonsparse[i]:scatter(1, input[1][i], input[2][i])
+   end
+   local gradOutput = torch.rand(inb, inj)
+   local cmps = {'weight', 'bias', 'gradBias'}
+   -- Check output wrt linear, non-batch
+   local actual = module:forward({input[1][1], input[2][1]})
+   local expected = linear:forward(nonsparse[1])
+   local actualgi = module:backward({input[1][1], input[2][1]}, gradOutput[1])
+   local expectedgi = linear:backward(nonsparse[1], gradOutput[1])
+   module:updateParameters(1)
+   linear:updateParameters(1)
+
+   local err = (expected - actual):abs():max()
+   local gierr = (expectedgi - actualgi[2]):abs():max()
+   mytester:assertle(err, precision, 'error on result')
+   mytester:assertle(gierr, precision, 'error on gradInput')
+
+   for _,var in ipairs(cmps) do
+      local err
+      if var == 'weight' then
+         err = (module[var]:t() - linear[var]):abs():max()
+      else
+         err = (module[var] - linear[var]):abs():max()
+      end
+      mytester:assertle(err, precision, 'error on '..var)
+   end
+   module:zeroGradParameters()
+   linear:zeroGradParameters()
+
+   -- Check output wrt linear, batch
+   -- doing this n times checks for fast last input param updates
+   local test_n_times = function(ntimes)
+      local actual, expected, actualgi, expectedgi
+      for i=1, ntimes do
+         actual = module:forward(input)
+         expected = linear:forward(nonsparse)
+         actualgi = module:backward(input, gradOutput)
+         expectedgi = linear:backward(nonsparse, gradOutput)
+      end
+      module:updateParameters(1)
+      linear:updateParameters(1)
+      local err = (expected - actual):abs():max()
+      local gicheck = torch.Tensor():resizeAs(expectedgi)
+      for i=1,#actualgi[2] do
+         gicheck[i]:copy(actualgi[2][i])
+      end
+      local gierr = (expectedgi - gicheck):abs():max()
+      mytester:assertle(err, precision, 'error on result with ntimes = '..ntimes)
+      mytester:assertle(gierr, precision, 'error on gradInput with ntimes = '..ntimes)
+
+      for _,var in ipairs(cmps) do
+         local err
+         if var == 'weight' then
+            err = (module[var]:t() - linear[var]):abs():max()
+         else
+            err = (module[var] - linear[var]):abs():max()
+         end
+         mytester:assertle(err, precision, 'error on '..var)
+      end
+
+      module:zeroGradParameters()
+      linear:zeroGradParameters()
+      mytester:assertle(module.gradBias:sum(), precision, 'error zeroing gradbias')
+   end
+   test_n_times(1)
+   test_n_times(2)
+   test_n_times(3)
+
+   local sizes = {
+      {osize = 1, isize = 10000, nnz = 10000, bsize = 16},
+      {osize = 10, isize = 10000, nnz = 10000, bsize = 16},
+      {osize = 100, isize = 10000, nnz = 10000, bsize = 16},
+
+      {osize = 1, isize = 10000, nnz = 200000, bsize = 1},
+      {osize = 10, isize = 10000, nnz = 200000, bsize = 1},
+      {osize = 100, isize = 10000, nnz = 200000, bsize = 1},
+
+      {osize = 1, isize = 10000, nnz = 200000, bsize = 2},
+      {osize = 10, isize = 10000, nnz = 200000, bsize = 2},
+      {osize = 100, isize = 10000, nnz = 200000, bsize = 2},
+   }
+
+   for i, lsizes in ipairs(sizes) do
+      -- Test multithreaded updates
+      local isize = lsizes.isize
+      local osize = lsizes.osize
+      local il = nn.IndexLinear(isize, osize)
+      local batch = {{},{}}
+      local idx = 100
+      local nnz = lsizes.nnz
+      local bsize = lsizes.bsize
+      for i=1,bsize do
+         batch[1][i] = torch.LongTensor(nnz):fill(idx)
+         batch[2][i] = torch.DoubleTensor(nnz):fill(1)
+      end
+      local totalSize = bsize*nnz
+      local lr = 0.01
+      -- Update the same index all over
+      local out = il:updateOutput(batch)
+      out:fill(1)
+      il:backwardUpdate(batch, out, lr)
+      il:backward(batch, out, 1)
+      il:updateParameters(lr)
+      for i=1,osize do
+         mytester:assertlt(math.abs(il.weight[idx][i] + totalSize * lr * 2), precision, 'parameters update was wrong.')
+      end
+   end
+end
+
 function nntest.Bilinear()
 
    -- set up data:
