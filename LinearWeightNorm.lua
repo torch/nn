@@ -1,9 +1,11 @@
 local LinearWeightNorm, parent = torch.class('nn.LinearWeightNorm', 'nn.Linear')
 
-function LinearWeightNorm:__init(inputSize, outputSize, bias)
+function LinearWeightNorm:__init(inputSize, outputSize, bias, eps)
     nn.Module.__init(self) -- Skip nn.Linear constructor
 
     local bias = ((bias == nil) and true) or bias
+
+    self.eps = eps or 1e-16
 
     self.outputSize = outputSize
     self.inputSize = inputSize
@@ -30,7 +32,7 @@ end
 function LinearWeightNorm.fromLinear(linear)
     local module = nn.LinearWeightNorm(linear.weight:size(2), linear.weight:size(1), linear.bias)
     
-    module.g = linear.weight:norm(2,2)
+    module.g = linear.weight:norm(2,2):add(self.eps)
     module.v = torch.cdiv(linear.weight, module.g:expandAs(linear.weight))
 
     if linear.bias then
@@ -69,7 +71,7 @@ function LinearWeightNorm:reset(stdv)
     end
 
     self.v:uniform(-stdv,stdv)
-    self.g:norm(self.v,2,2)
+    self.g:norm(self.v,2,2):add(self.eps)
 
     if self.bias then 
         self.bias:uniform(-stdv, stdv)
@@ -92,7 +94,7 @@ function LinearWeightNorm:updateWeightMatrix()
         if self.scale:dim() == 0 then self.scale:resizeAs(self.g) end
         if self.weight:dim() == 0 then self.weight:resizeAs(self.v) end
 
-        self.norm:norm(self.v,2,2)
+        self.norm:norm(self.v,2,2):add(self.eps)
         self.scale:copy(self.g):cdiv(self.norm)
         self.weight:copy(self.v):cmul(self.scale:expandAs(self.v))
         
