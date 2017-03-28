@@ -1,6 +1,8 @@
 local ffi  = require 'ffi'
 local IndexLinear, parent = torch.class('nn.IndexLinear', 'nn.Module')
 
+
+
 function IndexLinear:__init(inputSize, outputSize, doGradInput, keysOffset, weight, bias, normalize)
    parent.__init(self)
 
@@ -27,15 +29,20 @@ function IndexLinear:__init(inputSize, outputSize, doGradInput, keysOffset, weig
 
    -- gradBias still works the same as it's already dense
    self.gradBias = torch.Tensor(self.outputSize):zero()
-   self.gradBiasBuffer = torch.Tensor()
 
    -- Buffers
    self.gradWeightBuffer = torch.Tensor()
    self.valuesBuffer = torch.Tensor()
    self.normalizedValues = torch.Tensor()
-   self.runningCumSumSizes = {}
-   self.runningKeys = {}
-   self.runningGradWeights = {}
+
+   -- That is used to accumulate keys and gradWeight
+   -- when doing gradients accumulations
+   self.running = {
+      cumSumSizes = {},
+      keys = {},
+      gradWeight = {},
+      counter = 1,
+   }
 
    -- self.sizes, self.cumSumSizes are calculated on the CPU even when using CUDA.
    -- These two tables make it easier to resize these buffers instead of re-allocating them.
@@ -48,10 +55,6 @@ function IndexLinear:__init(inputSize, outputSize, doGradInput, keysOffset, weig
    self.weightDecay = 0
    self.doGradInput = doGradInput or false
    self.offset = keysOffset and keysOffset-1 or -1 -- if this adds self.offset to indices
-
-   -- That is used to accumulate keys and gradWeights
-   -- when doing gradients accumulations
-   self.runningCter = 1
 end
 
 -- Reset all the parameters needed
@@ -141,12 +144,12 @@ end
 function IndexLinear:flattenInputs(input)
    local lkeys, lvalues, sizes = self:reshapeInput(input)
 
-   local counter = self.runningCter
+   local counter = self.running.counter
 
    -- Ensure everything is of the right type
    local isCuda = (self:type() == 'torch.CudaTensor')
-   self.runningKeys[counter] = self.runningKeys[counter] or self:longTensor()
-   self.keys = self.runningKeys[counter]
+   self.running.keys[counter] = self.running.keys[counter] or self:longTensor()
+   self.keys = self.running.keys[counter]
 
    if self.isFlat then
       self.values = self.values or lvalues.new()
@@ -194,7 +197,7 @@ function IndexLinear:flattenInputs(input)
          self.cumSumSizes:resize(batchSize):copy(self.cumSumSizesCache[1])
       end
    end
-   self.runningCumSumSizes[counter] = self.cumSumSizes
+   self.running.cumSumSizes[counter] = self.cumSumSizes
 end
 
 function IndexLinear:updateOutput(input)
@@ -237,11 +240,11 @@ end
 
 function IndexLinear:accGradParameters(input, gradOutput, scale)
 
-   local counter = self.runningCter
+   local counter = self.running.counter
 
-   -- Same as the runningKeys in the updateOutput function,
-   -- get a table of dense runningGradWeights
-   self.runningGradWeights[counter] = self.runningGradWeights[counter] or self.values.new()
+   -- Same as the running.keys in the updateOutput function,
+   -- get a table of dense running.gradWeight
+   self.running.gradWeight[counter] = self.running.gradWeight[counter] or self.values.new()
    self.values.THNN.IndexLinear_accGradParameters(
       self.keys:cdata(),
       self.offset,
@@ -249,7 +252,7 @@ function IndexLinear:accGradParameters(input, gradOutput, scale)
       self.sizes:cdata(),
       self.cumSumSizes:cdata(),
       gradOutput:cdata(),
-      self.runningGradWeights[counter]:cdata(),
+      self.running.gradWeight[counter]:cdata(),
       self.gradBias:cdata(),
       self.weight:cdata(),
       self.bias:cdata(),
@@ -260,7 +263,7 @@ function IndexLinear:accGradParameters(input, gradOutput, scale)
 
    -- Increment the running counter to create a new buffer
    -- if we don't flush them in zerogradParamters
-   self.runningCter = self.runningCter + 1
+   self.running.counter = self.running.counter + 1
 end
 
 function IndexLinear:updateGradInput(input, gradOutput)
@@ -283,7 +286,7 @@ function IndexLinear:updateGradInput(input, gradOutput)
          gi:mm(gradOutput, self.weight:t())
       end
 
-      local indices = self.runningKeys[1].new(ini):range(1, ini)
+      local indices = self.running.keys[1].new(ini):range(1, ini)
 
       if self.isFlat then
          self.gradInput[1] = torch.repeatTensor(indices, gi:size(1), 1)
@@ -292,7 +295,7 @@ function IndexLinear:updateGradInput(input, gradOutput)
          self.gradInput[1] = {}
          self.gradInput[2] = {}
          for i = 1,gi:size(1) do
-            self.gradInput[1][i] = self.runningKeys[1].new(ini)
+            self.gradInput[1][i] = self.running.keys[1].new(ini)
             self.gradInput[1][i]:copy(indices)
             self.gradInput[2][i] = gradOutput.new(ini)
             self.gradInput[2][i]:copy(gi[i])
@@ -311,11 +314,11 @@ function IndexLinear:updateGradInput(input, gradOutput)
 end
 
 function IndexLinear:updateParameters(lr)
-   local counter = self.runningCter
+   local counter = self.running.counter
    if counter > 1 then
       if counter == 2 then
-         self.updateKeys = self.runningKeys[1]
-         self.gradWeight = self.runningGradWeights[1]
+         self.updateKeys = self.running.keys[1]
+         self.gradWeight = self.running.gradWeight[1]
       else
          self.updateKeysBuffer = self.updateKeysBuffer or self:longTensor()
          local lkeys = {}
@@ -323,22 +326,14 @@ function IndexLinear:updateParameters(lr)
          local totalSize = 0
          local lCumSumSizes = {}
          for i=1,counter-1 do
-            lkeys[i] = self.runningKeys[i]
+            lkeys[i] = self.running.keys[i]
             -- Change layout to take advantage of the 1-D contiguous torch.cat
-            lgweights[i] = self.runningGradWeights[i]:contiguous()
+            lgweights[i] = self.running.gradWeight[i]:contiguous()
             lgweights[i]:resize(lgweights[i]:nElement())
+            lCumSumSizes[i] = totalSize + self.running.cumSumSizes[i]
             totalSize = totalSize + lkeys[i]:size(1)
-            lCumSumSizes[i] = self.runningCumSumSizes[i]
-            -- runningCumSumSizes[i] is an array of size batchSize + 1
-            -- The last element contains the value lkeys[i]:size(1)
-            -- We need to remove this last element for all entries except the last one
-            local batchSize = lCumSumSizes[i]:nElement()
-            if (i < counter - 1) then
-               lCumSumSizes[i] = lCumSumSizes[i][{{1, batchSize}}]
-            end
-            -- The running total needs to be added to the current entry
-            lCumSumSizes[i] = (i > 1 and totalSize or 0) + lCumSumSizes[i]
          end
+
          self.updateKeysBuffer:cat(lkeys, 1)
          self.gradWeightBuffer:cat(lgweights, 1)
          self.cumSumSizes:cat(lCumSumSizes, 1)
@@ -378,12 +373,16 @@ function IndexLinear:zeroGradParameters()
       w:indexFill(1, self.updateKeysBuffer, 0)
    end
    ]]--
-   self.runningCter = 1
+   self.running.counter = 1
+end
+
+function IndexLinear:parameters()
+   return {self.weight, self.bias}, {self.running, self.gradBias}
 end
 
 function IndexLinear:clearState()
-   self.runningKeys = {}
-   self.runningGradWeights = {}
+   self.running.keys = {}
+   self.running.gradWeight = {}
    self.keys = nil
    self.zerokeys = nil
    self.updateKeys = nil
