@@ -29,11 +29,21 @@ function LinearWeightNorm:__init(inputSize, outputSize, bias, eps)
     self:reset() 
 end
 
+function LinearWeightNorm:initFromWeight(weight)
+    weight = weight or self.weight
+
+    self.g = weight:norm(2,2):add(self.eps)
+    self.v:copy(weight)
+
+    self.dirty = true
+
+    return self
+end
+
 function LinearWeightNorm.fromLinear(linear)
     local module = nn.LinearWeightNorm(linear.weight:size(2), linear.weight:size(1), linear.bias)
     
-    module.g = linear.weight:norm(2,2):add(self.eps)
-    module.v = torch.cdiv(linear.weight, module.g:expandAs(linear.weight))
+    module:initFromWeight(linear.weight)
 
     if linear.bias then
         module.bias:copy(linear.bias)
@@ -70,14 +80,12 @@ function LinearWeightNorm:reset(stdv)
         stdv = 1 / math.sqrt(self.inputSize)
     end
 
-    self.v:uniform(-stdv,stdv)
-    self.g:norm(self.v,2,2):add(self.eps)
-
+    self.weight:uniform(-stdv,stdv)
+    self:initFromWeight()
+    
     if self.bias then 
         self.bias:uniform(-stdv, stdv)
     end
-
-    self.dirty = true
 end
 
 local function updateAddBuffer(self, input)
