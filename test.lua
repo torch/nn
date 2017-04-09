@@ -1412,6 +1412,189 @@ function nntest.SparseLinear()
    test_sparse_linear(1000, 1000, 10, 100)
 end
 
+local function testIndexLinear(bsize, iSize, oSize, nnz)
+   local inb = bsize
+   local ini = iSize
+   local inj = oSize
+
+   local ilinear  = nn.IndexLinear(ini,inj, true, nil, nil, nil, false)
+   local ilinear2 = nn.IndexLinear(ini,inj, true, nil, nil, nil, false)
+   local linear = nn.Linear(ini, inj)
+   ilinear.weight:zero()
+   ilinear.weight:copy(linear.weight:t():clone())
+   ilinear.bias = linear.bias:clone()
+   ilinear:zeroGradParameters()
+
+   ilinear2.weight:zero()
+   ilinear2.weight:copy(linear.weight:t():clone())
+   ilinear2.bias = linear.bias:clone()
+   ilinear2:zeroGradParameters()
+
+   linear:zeroGradParameters()
+
+   -- Create a random sparse vector
+   local input = {{},{}}
+   local flatInput = {torch.LongTensor(), torch.Tensor(), torch.LongTensor()}
+   local nonsparse = torch.zeros(inb, ini)
+   local sizes = flatInput[3]
+   sizes:resize(inb)
+   for i=1,inb do
+      sizes[i] = nnz
+      input[1][i] = torch.randperm(ini)[{{1,nnz}}]:long()
+      input[2][i] = torch.ones(nnz):uniform()
+      nonsparse[i]:scatter(1, input[1][i], input[2][i])
+   end
+   flatInput[1]:cat(input[1])
+   flatInput[2]:cat(input[2])
+
+   local gradOutput = torch.rand(inb, inj)
+   local cmps = {'weight', 'bias', 'gradBias'}
+   -- Check output wrt linear, non-batch
+   local actual = ilinear:forward({input[1][1], input[2][1]})
+   local actual2 = ilinear2:forward({input[1][1], input[2][1], flatInput[3][1]})
+   local expected = linear:forward(nonsparse[1])
+
+   local actualgi = ilinear:backward({input[1][1], input[2][1]}, gradOutput[1])
+   local actualgi2 = ilinear2:backward({input[1][1], input[2][1], flatInput[3][1]}, gradOutput[1])
+   local expectedgi = linear:backward(nonsparse[1], gradOutput[1])
+
+   ilinear:updateParameters(1)
+   ilinear2:updateParameters(1)
+   linear:updateParameters(1)
+
+   local err = (expected - actual):abs():max()
+   local err2 = (expected - actual2):abs():max()
+
+   local gierr = (expectedgi - actualgi[2]):abs():max()
+   local gierr2 = (expectedgi - actualgi2[2]):abs():max()
+
+   mytester:assertle(err, precision, 'error on result for tensor array')
+   mytester:assertle(gierr, precision, 'error on gradInput for tensor array')
+
+   mytester:assertle(err2, precision, 'error on result for batched tensor')
+   mytester:assertle(gierr2, precision, 'error on gradInput for batched tensor')
+
+   for _,var in ipairs(cmps) do
+      local err, err2
+      if var == 'weight' then
+         err = (ilinear[var]:t() - linear[var]):abs():max()
+         err2 = (ilinear2[var]:t() - linear[var]):abs():max()
+      else
+         err = (ilinear[var] - linear[var]):abs():max()
+         err2 = (ilinear2[var] - linear[var]):abs():max()
+      end
+      mytester:assertle(err, precision, 'error on '..var..' for tensor array')
+      mytester:assertle(err2, precision, 'error on '..var..' for batched tensor')
+   end
+   ilinear:zeroGradParameters()
+   ilinear2:zeroGradParameters()
+   linear:zeroGradParameters()
+
+   -- Check output wrt linear, batch
+   -- doing this n times checks for fast last input param updates
+   local test_n_times = function(ntimes)
+      local actual, expected, actualgi, expectedgi
+      for i=1, ntimes do
+         actual = ilinear:forward(input)
+         actual2 = ilinear2:forward(flatInput)
+         expected = linear:forward(nonsparse)
+
+         actualgi = ilinear:backward(input, gradOutput)
+         actualgi2 = ilinear2:backward(flatInput, gradOutput)
+         expectedgi = linear:backward(nonsparse, gradOutput)
+      end
+      ilinear:updateParameters(1)
+      ilinear2:updateParameters(1)
+      linear:updateParameters(1)
+
+      local err = (expected - actual):abs():max()
+      local err2 = (expected - actual2):abs():max()
+
+      local gicheck = torch.Tensor():resizeAs(expectedgi)
+      local gicheck2 = actualgi2[2]
+
+      for i=1,#actualgi[2] do
+         gicheck[i]:copy(actualgi[2][i])
+      end
+      local gierr = (expectedgi - gicheck):abs():max()
+      local gierr2 = (expectedgi - gicheck2):abs():max()
+
+      mytester:assertle(err, precision, 'error on result for tensor array with ntimes = '..ntimes)
+      mytester:assertle(err2, precision, 'error on result for batched tensor with ntimes = '..ntimes)
+
+      mytester:assertle(gierr, precision, 'error on gradInput for tensor array with ntimes = '..ntimes)
+      mytester:assertle(gierr2, precision, 'error on gradInput for batched tensor with ntimes = '..ntimes)
+
+      for _,var in ipairs(cmps) do
+         local err, err2
+         if var == 'weight' then
+            err = (ilinear[var]:t() - linear[var]):abs():max()
+            err2 = (ilinear2[var]:t() - linear[var]):abs():max()
+         else
+            err = (ilinear[var] - linear[var]):abs():max()
+            err2 = (ilinear2[var] - linear[var]):abs():max()
+         end
+         mytester:assertle(err, precision, 'error on '..var..' for tensor array')
+         mytester:assertle(err2, precision, 'error on '..var..' for batched tensor')
+      end
+
+      ilinear:zeroGradParameters()
+      ilinear2:zeroGradParameters()
+      linear:zeroGradParameters()
+      mytester:assertle(ilinear.gradBias:sum(), precision, 'error zeroing gradbias for tensor array')
+      mytester:assertle(ilinear2.gradBias:sum(), precision, 'error zeroing gradbias for batched tensor')
+   end
+   test_n_times(1)
+   test_n_times(2)
+   test_n_times(3)
+end
+
+function nntest.IndexLinear()
+   testIndexLinear(4, 40 , 10, 30)
+   testIndexLinear(4, 40 , 500, 30)
+   testIndexLinear(4, 200000 , 5, 150000)
+
+   local sizes = {
+      {osize = 1, isize = 10000, nnz = 10000, bsize = 16},
+      {osize = 10, isize = 10000, nnz = 10000, bsize = 16},
+      {osize = 100, isize = 10000, nnz = 10000, bsize = 16},
+
+      {osize = 1, isize = 10000, nnz = 200000, bsize = 1},
+      {osize = 10, isize = 10000, nnz = 200000, bsize = 1},
+      {osize = 100, isize = 10000, nnz = 200000, bsize = 1},
+
+      {osize = 1, isize = 10000, nnz = 200000, bsize = 2},
+      {osize = 10, isize = 10000, nnz = 200000, bsize = 2},
+      {osize = 100, isize = 10000, nnz = 200000, bsize = 2},
+   }
+
+   for i, lsizes in ipairs(sizes) do
+      -- Test multithreaded updates
+      local isize = lsizes.isize
+      local osize = lsizes.osize
+      local il = nn.IndexLinear(isize, osize)
+      local batch = {{},{}}
+      local idx = 100
+      local nnz = lsizes.nnz
+      local bsize = lsizes.bsize
+      for i=1,bsize do
+         batch[1][i] = torch.LongTensor(nnz):fill(idx)
+         batch[2][i] = torch.DoubleTensor(nnz):fill(1)
+      end
+      local totalSize = bsize*nnz
+      local lr = 0.01
+      -- Update the same index all over
+      local out = il:updateOutput(batch)
+      out:fill(1)
+      il:backwardUpdate(batch, out, lr)
+      il:backward(batch, out, 1)
+      il:updateParameters(lr)
+      for i=1,osize do
+         mytester:assertlt(math.abs(il.weight[idx][i] + totalSize * lr * 2), precision, 'parameters update was wrong.')
+      end
+   end
+end
+
 function nntest.Bilinear()
 
    -- set up data:
