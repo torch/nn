@@ -13,6 +13,7 @@ static inline void THNN_(SpatialConvolutionMM_shapeCheck)(
 	     "stride should be greater than zero, but got dH: %d dW: %d", dH, dW);
   THNN_ARGCHECK(weight->nDimension == 2 || weight->nDimension == 4, 5, weight,
 		"2D or 4D weight tensor expected, but got: %s");
+  THArgCheck(!bias || THTensor_(isContiguous)(bias), 5, "bias tensor has to be contiguous");
 
   if (bias != NULL) {
     THNN_CHECK_DIM_SIZE(bias, 1, 0, weight->size[0]);
@@ -113,6 +114,7 @@ void THNN_(SpatialConvolutionMM_updateOutput)(
 {
   int freeWeight = 0;
 
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight tensor has to be contiguous");
   if (weight->nDimension == 4) {
     long s1 = weight->size[0];
     long s2 = weight->size[1] * weight->size[2] * weight->size[3];
@@ -230,6 +232,7 @@ void THNN_(SpatialConvolutionMM_updateGradInput)(
 {
   int freeWeight = 0;
 
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight tensor has to be contiguous");
   if (weight->nDimension == 4) {
     long s1 = weight->size[0];
     long s2 = weight->size[1] * weight->size[2] * weight->size[3];
@@ -341,6 +344,7 @@ void THNN_(SpatialConvolutionMM_accGradParameters)(
   real scale = TH_CONVERT_ACCREAL_TO_REAL(scale_);
   int freeWeight = 0;
 
+  THArgCheck(THTensor_(isContiguous)(gradWeight), 4, "gradWeight tensor has to be contiguous");
   if (gradWeight->nDimension == 4) {
     long s1 = gradWeight->size[0];
     long s2 = gradWeight->size[1] * gradWeight->size[2] * gradWeight->size[3];

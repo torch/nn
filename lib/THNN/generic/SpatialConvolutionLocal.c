@@ -14,6 +14,8 @@ static inline void THNN_(SpatialConvolutionLocal_shapeCheck)(
 	       "kernel size should be greater than zero, but got kH: %d kW: %d", kH, kW);
   THArgCheck(dW > 0 && dH > 0, 11,
 	     "stride should be greater than zero, but got dH: %d dW: %d", dH, dW);
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
+  THArgCheck(!bias || THTensor_(isContiguous)(bias), 5, "bias must be contiguous");
 
   int ndim = input->nDimension;
   int dimf = 0;

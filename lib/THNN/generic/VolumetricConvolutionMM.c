@@ -23,6 +23,8 @@ static void inline THNN_(VolumetricConvolutionMM_shapeCheck)(
              "kernel size should be greater than zero, but got kT: %d kH: %d kW: %d", kT, kH, kW);
   THArgCheck(dT > 0 && dW > 0 && dH > 0, 11,
              "stride should be greater than zero, but got dT: %d dH: %d dW: %d", dT, dH, dW);
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
+  THArgCheck(!bias || THTensor_(isContiguous)(bias), 5, "bias must be contiguous");
 
   int ndim = input->nDimension;
   int dimf = 0;

@@ -21,6 +21,8 @@ void THNN_(VolumetricConvolution_updateOutput)(
 
   THNN_ARGCHECK(input->nDimension == 4 || input->nDimension == 5, 2, input,
 		"4D or 5D (batch mode) tensor expected for input, but got: %s");
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
+  THArgCheck(!bias || THTensor_(isContiguous)(bias), 5, "bias must be contiguous");
 
   int dimt = 1;
   int dimh = 2;

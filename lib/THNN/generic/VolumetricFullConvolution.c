@@ -102,6 +102,8 @@ static inline void THNN_(VolumetricFullConvolution_shapeCheck)(
              "output adjustment must be smaller than stride, but got "
              "adjT: %d adjH: %d adjW: %d dT: %d dH: %d dW: %d",
              aT, aH, aW, dT, dH, dW);
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
+  THArgCheck(!bias || THTensor_(isContiguous)(bias), 5, "bias must be contiguous");
 
   int ndim = input->nDimension;
   const int nInputPlane  = (int)weight->size[0];
