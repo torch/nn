@@ -1429,7 +1429,11 @@ where `N` is the dimensionality of input
 `affine` is a boolean. When set to false, the learnable affine transform is disabled. Defaults to true
 
 During training, this layer keeps a running estimate of its computed mean and std.
-The running sum is kept with a default momentum of 0.1 (unless over-ridden)
+The running sum is kept with a default momentum (alpha) of 0.1 (unless over-ridden)
+```lua
+running_mean = (1 - alpha) * running_mean + alpha * batch_mean
+running_inv_std = (1 - alpha) * running_inv_std + alpha * batch_inv_std
+```
 During evaluation, this running mean/std is used for normalization.
 
 Implements Batch Normalization as described in [the paper](http://arxiv.org/pdf/1502.03167v3.pdf): "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift" by Sergey Ioffe, Christian Szegedy.
