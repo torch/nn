@@ -15,7 +15,7 @@ function SelectTable:updateOutput(input)
    end
 
    assert(input[index], "index does not exist in the input table")
-   self.output = input[index]
+   self.output:set(input[index])
 
    return self.output
 end
