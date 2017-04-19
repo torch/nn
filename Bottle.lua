@@ -56,7 +56,7 @@ function Bottle:updateGradInput(input, gradOutput)
       end
    else
       if self.modules[1].gradInput then
-         self.gradInput:set(self.modules[1]:updateGradInput(input))
+         self.gradInput:set(self.modules[1]:updateGradInput(input, gradOutput))
       else
          self.gradInput = nil
       end
