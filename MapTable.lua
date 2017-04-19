@@ -2,7 +2,8 @@ local MapTable, parent = torch.class('nn.MapTable', 'nn.Container')
 
 function MapTable:__init(module, shared)
    parent.__init(self)
-   self.shared = shared or {'weight', 'bias', 'gradWeight', 'gradBias'}
+   self.shared = (shared == nil) and true or shared
+   self.sharedparams = {'weight', 'bias', 'gradWeight', 'gradBias'}
    self.output = {}
    self.gradInput = {}
    self:add(module)
@@ -12,7 +13,11 @@ function MapTable:_extend(n)
    self.modules[1] = self.module
    for i = 2, n do
       if not self.modules[i] then
-         self.modules[i] = self.module:clone(table.unpack(self.shared))
+         if self.shared then
+           self.modules[i] = self.module:clone(table.unpack(self.sharedparams))
+         else
+           self.modules[i] = self.module:clone()
+         end
       end
    end
 end
@@ -70,13 +75,21 @@ end
 
 function MapTable:zeroGradParameters()
     if self.module then
-        self.module:zeroGradParameters()
+        if self.shared then
+          self.module:zeroGradParameters()
+        else
+          parent.zeroGradParameters(self)
+        end
     end
 end
 
 function MapTable:updateParameters(learningRate)
     if self.module then
-        self.module:updateParameters(learningRate)
+        if self.shared then
+          self.module:updateParameters(learningRate)
+        else
+          parent.updateParameters(self, learningRate)
+        end
     end
 end
 
