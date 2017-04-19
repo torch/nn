@@ -1244,6 +1244,19 @@ t:transpose(dim1, dim2)
 t:transpose(dim3, dim4)
 ```
 
+The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules. This makes it possible to use minibatch inputs. Example:
+```lua
+b = 5 -- batch size 5
+input = torch.Tensor(b, 2, 4, 3) -- input: b x 2 x 4 x 3
+
+m = nn.Transpose({1,3})
+m:forward(input) -- output: 4 x 2 x b x 3 x 1
+
+numInputDims = 3 -- input feature map should be the last 3 dims
+m = nn.Transpose({1,3}):setNumInputDims(numInputDims)
+m:forward(input) -- output: b x 3 x 4 x 2
+```
+
 <a name="nn.Exp"></a>
 ## Exp ##
 
