@@ -10,6 +10,7 @@ void THNN_(PReLU_updateOutput)(
           THIndex_t nOutputPlane)
 {
   THTensor_(resizeAs)(output, input);
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
 
   if (nOutputPlane == 0)
   {
@@ -65,6 +66,7 @@ void THNN_(PReLU_updateGradInput)(
           THTensor *weight,
           THIndex_t nOutputPlane)
 {
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
   THNN_CHECK_NELEMENT(input, gradOutput);
   THTensor_(resizeAs)(gradInput, input);
 
@@ -141,6 +143,7 @@ void THNN_(PReLU_accGradParameters)(
           THIndex_t nOutputPlane,
           accreal scale_)
 {
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
   real scale = TH_CONVERT_ACCREAL_TO_REAL(scale_);
   THNN_CHECK_NELEMENT(input, gradOutput);
   real *gradWeight_data = THTensor_(data)(gradWeight);

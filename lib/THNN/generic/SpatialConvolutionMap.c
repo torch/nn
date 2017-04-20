@@ -12,6 +12,8 @@ void THNN_(SpatialConvolutionMap_updateOutput)(
     && connTable != NULL && connTable->size[0] == weight->size[0], 4,
     "3D weight tensor expected (connTable:size(%d) x kH x kW)", TH_INDEX_BASE
   );
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
+  THArgCheck(!bias || THTensor_(isContiguous)(bias), 5, "bias must be contiguous");
 
   real *weight_data = THTensor_(data)(weight);
   real *bias_data = THTensor_(data)(bias);

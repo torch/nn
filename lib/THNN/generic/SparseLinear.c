@@ -55,6 +55,8 @@ void THNN_(SparseLinear_updateOutput)(
 
   THArgCheck(THNN_(checkInput)(input), 2, "input must be in coo format, nnz x 3");
   THArgCheck(THTensor_(isContiguous)(output), 3, "output must be contiguous");
+  THArgCheck(THTensor_(isContiguous)(weight), 4, "weight must be contiguous");
+  THArgCheck(!bias || THTensor_(isContiguous)(bias), 5, "bias must be contiguous");
   THArgCheck(THNN_(checkSize1D)(bias, outDim), 5, "bias size wrong");
 
   long nnz = THTensor_(size)(input, 0);
