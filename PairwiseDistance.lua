@@ -33,11 +33,6 @@ function PairwiseDistance:updateOutput(input)
    return self.output
 end
 
-local function mathsign(x) 
-   if x==0 then return  2*torch.random(2)-3; end
-   if x>0 then return 1; else return -1; end
-end
-
 function PairwiseDistance:updateGradInput(input, gradOutput)
    if input[1]:dim() > 2 then
       error('input must be vector or matrix')
@@ -49,7 +44,7 @@ function PairwiseDistance:updateGradInput(input, gradOutput)
    self.gradInput[1]:add(-1, input[2]) 
    
    if self.norm==1 then
-     self.gradInput[1]:apply(mathsign)
+     self.gradInput[1]:sign() 
    else
      -- Note: derivative of p-norm:
      -- d/dx_k(||x||_p) = (x_k * abs(x_k)^(p-2)) / (||x||_p)^(p-1)
