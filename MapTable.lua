@@ -10,6 +10,7 @@ function MapTable:__init(module, shared)
 end
 
 function MapTable:_extend(n)
+   self.sharedparams = self.sharedparams or {'weight', 'bias', 'gradWeight', 'gradBias'}
    self.modules[1] = self.module
    for i = 2, n do
       if not self.modules[i] then
