@@ -81,7 +81,14 @@ function WeightNorm:resetInit(inputSize, outputSize)
     end
 end
 
-function WeightNorm:updateOutput(input)
+function WeightNorm:evaluate()
+    if not(self.train == false) then
+        self:updateWeight()
+        parent.evaluate(self)
+    end
+end
+
+function WeightNorm:updateWeight()
     -- view to 2D when weight norm container operates
     self.gradV:copy(self:permuteIn(self.weight))
     self.gradV = self.gradV:view(self.viewIn)
@@ -92,12 +99,18 @@ function WeightNorm:updateOutput(input)
     self.gradV:copy(self.v)
     self._scale:copy(self.g):cdiv(self._norm)
     self.gradV:cmul(self._scale:view(self.viewIn[1], 1)
-                                :expand(self.viewIn[1], self.viewIn[2]))
+                               :expand(self.viewIn[1], self.viewIn[2]))
 
     -- otherwise maintain size of original module weight
     self.gradV = self.gradV:view(self.viewOut)
 
     self.weight:copy(self:permuteOut(self.gradV))
+end
+
+function WeightNorm:updateOutput(input)
+    if not(self.train == false) then
+        self:updateWeight()
+    end
     self.output:set(self.modules[1]:updateOutput(input))
     return self.output
 end
@@ -124,7 +137,7 @@ function WeightNorm:accGradParameters(input, gradOutput, scale)
     -- dL / dg * (w * g / ||w||^2)
     self.weight:copy(self.v):cmul(scale):cdiv(norm)
     self.weight:cmul(self.gradG:view(self.viewIn[1], 1)
-                            :expand(self.viewIn[1], self.viewIn[2]))
+                               :expand(self.viewIn[1], self.viewIn[2]))
 
     -- dL / dv update
     self.gradV:add(-1, self.weight)
