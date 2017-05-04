@@ -460,7 +460,7 @@ target = torch.Tensor{{1, 3, 0, 0}, {4, 0, 0, 0}} -- zero-values are ignored
 criterion:forward(input, target)
 ```
 
-<a name="nn.MultiLabelSoftMarginCriterion"/>
+<a name="nn.MultiLabelSoftMarginCriterion"></a>
 ## MultiLabelSoftMarginCriterion ##
 
 ```lua
