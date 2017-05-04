@@ -176,3 +176,33 @@ function WeightNorm:__tostring__()
     local str = 'nn.WeightNorm [' .. tostring(self.modules[1]) .. ']'
     return str
 end
+
+function WeightNorm:write(file)
+    -- Don't save weight and gradWeight since we can easily re-compute it from v
+    -- and g.
+    local weight = self.modules[1].weight
+    local gradWeight = self.modules[1].gradWeight
+    self.weight = nil
+    self.gradWeight = nil
+    self.modules[1].weight = nil
+    self.modules[1].gradWeight = nil
+
+    parent.write(self, file)
+
+    self.modules[1].weight = weight
+    self.modules[1].gradWeight = gradWeight
+    self.weight = weight
+    self.gradWeight = gradWeight
+end
+
+function WeightNorm:read(file)
+    parent.read(self, file)
+
+    -- Re-compute weight and gradWeight
+    self.modules[1].weight = self.v.new(self.viewOut)
+    self.modules[1].gradWeight = self.v.new(self.viewOut)
+    self.weight = self.modules[1].weight
+    self.gradWeight = self.modules[1].gradWeight
+    self:updateWeight()
+    self.gradWeight:copy(self:permuteOut(self.gradV))
+end
