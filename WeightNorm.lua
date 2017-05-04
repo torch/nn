@@ -34,6 +34,7 @@ function WeightNorm:__init(module, outputDim)
 
     -- view size back to original weight
     self.viewOut = self.weight:size()
+    self.weightSize = self.weight:size()
 
     -- bubble outputDim size up to the front
     for i = self.outputDim - 1, 1, -1 do
@@ -186,6 +187,9 @@ function WeightNorm:write(file)
     self.gradWeight = nil
     self.modules[1].weight = nil
     self.modules[1].gradWeight = nil
+    if not self.weightSize then
+        self.weightSize = weight:size()
+    end
 
     parent.write(self, file)
 
@@ -199,10 +203,12 @@ function WeightNorm:read(file)
     parent.read(self, file)
 
     -- Re-compute weight and gradWeight
-    self.modules[1].weight = self.v.new(self.viewOut)
-    self.modules[1].gradWeight = self.v.new(self.viewOut)
-    self.weight = self.modules[1].weight
-    self.gradWeight = self.modules[1].gradWeight
-    self:updateWeight()
-    self.gradWeight:copy(self:permuteOut(self.gradV))
+    if not self.weight then
+        self.modules[1].weight = self.v.new(self.weightSize)
+        self.modules[1].gradWeight = self.v.new(self.weightSize)
+        self.weight = self.modules[1].weight
+        self.gradWeight = self.modules[1].gradWeight
+        self:updateWeight()
+        self.gradWeight:copy(self:permuteOut(self.gradV))
+    end
 end
