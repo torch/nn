@@ -167,6 +167,14 @@ function nntest.WeightNorm()
    err = nn.Jacobian.testJacobianParameters(model, input,
                                                 model.v, model.gradV)
    mytester:assert(err < precision, 'Spatial Convolution v')
+
+   -- linear save/load
+   model = nn.WeightNorm(nn.Linear(5, 20))
+   input = torch.rand(10, 5)
+   local out = model:forward(input)
+   local modelr = torch.deserialize(torch.serialize(model))
+   local outr = modelr:forward(input)
+   mytester:assertTensorEq(out, outr)
 end
 
 function nntest.CAdd()
