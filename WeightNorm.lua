@@ -1,6 +1,6 @@
 -- Weight Normalization
 -- https://arxiv.org/pdf/1602.07868v3.pdf
-local WeightNorm, parent = torch.class("nn.WeightNorm", "nn.Container")
+local WeightNorm, parent = torch.class("nn.WeightNorm", "nn.Decorator")
 
 function WeightNorm:__init(module, outputDim)
     -- this container will apply Weight Normalization to any module it wraps
@@ -9,7 +9,7 @@ function WeightNorm:__init(module, outputDim)
     -- if the weight is not 2D, the container will view the weight into a 2D shape
     -- that is nOut x (nIn x kw x dw x ...)
 
-    parent.__init(self)
+    parent.__init(self, module)
     assert(module.weight)
 
     if module.bias then
@@ -54,7 +54,6 @@ function WeightNorm:__init(module, outputDim)
     -- gradient of v
     self.gradV = torch.Tensor(self.viewIn)
 
-    self.modules[1] = module
     self:resetInit()
 end
 
@@ -171,11 +170,6 @@ function WeightNorm:parameters()
     else
         return {self.v, self.g}, {self.gradV, self.gradG}
     end
-end
-
-function WeightNorm:__tostring__()
-    local str = 'nn.WeightNorm [' .. tostring(self.modules[1]) .. ']'
-    return str
 end
 
 function WeightNorm:write(file)

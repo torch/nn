@@ -8083,6 +8083,166 @@ function nntest.GPU()
    -- is located in cunn package.
 end
 
+function nntest.Profile()
+   -- timing the forward pass introduces some overhead to the module
+   -- We want to make sure this overhead isn't too large
+   local mx_overhead = 0.05
+   local print_every = 1000
+   local net = nn.Profile(nn.Linear(1024,1024), print_every)
+   local inp = torch.randn(1, 1024)
+
+   local timer = torch.Timer()
+   local tot_time = 0
+   for i=1,print_every-1 do
+      timer:reset()
+      net:forward(inp)
+      tot_time = tot_time + timer:time().real
+   end
+   mytester:assert(math.abs(net.summedFwdTime - tot_time) / tot_time < mx_overhead)
+   net:forward(inp)
+   -- Do the same test, now that all the memory has already been allocated
+   local tot_time = 0
+   for i=1,print_every-1 do
+      timer:reset()
+      net:forward(inp)
+      tot_time = tot_time + timer:time().real
+   end
+   mytester:assert(math.abs(net.summedFwdTime - tot_time) / tot_time < mx_overhead)
+end
+
+function nntest.NaN()
+   local _ = require 'moses'
+   local input = torch.randn(2,3)
+   local gradOutput = torch.randn(2,4)
+   local lin = nn.Linear(3,4)
+   lin:zeroGradParameters()
+   local nan = nn.NaN(lin)
+   mytester:assert(nan.id == 1)
+   -- test that it works when no NaNs are present
+   local output = nan:forward(input):clone()
+   local gradInput = nan:backward(input, gradOutput):clone()
+   local gradWeight = lin.gradWeight:clone()
+   local gradBias = lin.gradBias:clone()
+   lin:zeroGradParameters()
+   local output2 = lin:forward(input)
+   local gradInput2 = lin:backward(input, gradOutput)
+   mytester:assertTensorEq(output, output2, 0.000001)
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001)
+   mytester:assertTensorEq(gradWeight, lin.gradWeight, 0.000001)
+   mytester:assertTensorEq(gradBias, lin.gradBias, 0.000001)
+   -- test with some NaNs
+   input:zero():log():log()
+   local sum = input:sum()
+   mytester:assert(_.isNaN(sum))
+   mytester:assert(not pcall(function() nan:forward(input) end))
+   lin.bias:fill(sum)
+   input = torch.randn(2,3)
+   mytester:assert(not pcall(function() nan:forward(input) end))
+   lin.bias:uniform(0,1)
+   gradOutput:fill(sum)
+   mytester:assert(not pcall(function() nan:backward(input, gradOutput) end))
+   gradOutput:uniform(0,1)
+   lin.gradBias:fill(sum)
+   mytester:assert(not pcall(function() nan:backward(input, gradOutput) end))
+end
+
+function nntest.DontCast()
+   local input = torch.randn(3,4)
+   local gradOutput = torch.randn(3,2)
+   local linear = nn.Linear(4,2):float()
+   local mlp = nn.DontCast(linear, true)
+   linear:zeroGradParameters()
+   local linear = linear:clone()
+   local output = mlp:forward(input)
+   local gradInput = mlp:backward(input, gradOutput)
+   mytester:assert(torch.type(output) == 'torch.DoubleTensor')
+   mytester:assert(torch.type(gradInput) == 'torch.DoubleTensor')
+   local output2 = linear:forward(input:float())
+   local gradInput2 = linear:backward(input:float(), gradOutput:float())
+   mytester:assertTensorEq(output:float(), output2, 0.000001)
+   mytester:assertTensorEq(gradInput:float(), gradInput2, 0.000001)
+   local mlp3 = nn.DontCast(linear:clone())
+   mlp3:zeroGradParameters()
+   local output3 = mlp3:forward(input:float())
+   local gradInput3 = mlp3:backward(input:float(), gradOutput:float())
+   mytester:assert(torch.type(output3) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput3) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3, output2, 0.000001)
+   mytester:assertTensorEq(gradInput3, gradInput2, 0.000001)
+
+   mlp:float()
+   local output4 = mlp:forward(input:float())
+   local gradInput4 = mlp:backward(input:float(), gradOutput:float())
+   mytester:assert(torch.type(output4) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput4) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3, output4, 0.000001)
+   mytester:assertTensorEq(gradInput3, gradInput4, 0.000001)
+   mlp:double()
+   mytester:assert(torch.type(linear.output) == 'torch.FloatTensor')
+   local output = mlp:forward(input)
+   local gradInput = mlp:backward(input, gradOutput)
+   mytester:assert(torch.type(output4) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput4) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3, output:float(), 0.000001)
+   mytester:assertTensorEq(gradInput3, gradInput:float(), 0.000001)
+
+   -- test table inputs/outputs
+   local input = {torch.randn(3,4), torch.randn(3,4)}
+   local gradOutput = {torch.randn(3,2), torch.randn(3,2)}
+   local linear = nn.ParallelTable():add(nn.Linear(4,2)):add(nn.Linear(4,2)):float()
+   local mlp = nn.DontCast(linear, true)
+   linear:zeroGradParameters()
+   local linear = linear:clone()
+   local output = mlp:forward(input)
+   local gradInput = mlp:backward(input, gradOutput)
+   mytester:assert(torch.type(output[1]) == 'torch.DoubleTensor')
+   mytester:assert(torch.type(gradInput[1]) == 'torch.DoubleTensor')
+   mytester:assert(torch.type(output[2]) == 'torch.DoubleTensor')
+   mytester:assert(torch.type(gradInput[2]) == 'torch.DoubleTensor')
+   local _ = require 'moses'
+   local finput = _.map(input, function(k,v) return v:float() end)
+   local foutput = _.map(output, function(k,v) return v:float() end)
+   local fgradInput = _.map(gradInput, function(k,v) return v:float() end)
+   local fgradOutput = _.map(gradOutput, function(k,v) return v:float() end)
+   local output2 = linear:forward(finput)
+   local gradInput2 = linear:backward(finput, fgradOutput)
+   mytester:assertTensorEq(foutput[1], output2[1], 0.000001)
+   mytester:assertTensorEq(foutput[2], output2[2], 0.000001)
+   mytester:assertTensorEq(fgradInput[1], gradInput2[1], 0.000001)
+   mytester:assertTensorEq(fgradInput[2], gradInput2[2], 0.000001)
+   local mlp3 = nn.DontCast(linear:clone())
+   mlp3:zeroGradParameters()
+   local output3 = mlp3:forward(finput)
+   local gradInput3 = mlp3:backward(finput, fgradOutput)
+   mytester:assert(torch.type(output3[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput3[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(output3[2]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput3[2]) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3[1], output2[1], 0.000001)
+   mytester:assertTensorEq(gradInput3[1], gradInput2[1], 0.000001)
+   mytester:assertTensorEq(output3[2], output2[2], 0.000001)
+   mytester:assertTensorEq(gradInput3[2], gradInput2[2], 0.000001)
+   mlp:float()
+   local output4 = mlp:forward(finput)
+   local gradInput4 = mlp:backward(finput, fgradOutput)
+   mytester:assert(torch.type(output4[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput4[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(output4[2]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput4[2]) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3[1], output4[1], 0.000001)
+   mytester:assertTensorEq(gradInput3[1], gradInput4[1], 0.000001)
+   mytester:assertTensorEq(output3[2], output4[2], 0.000001)
+   mytester:assertTensorEq(gradInput3[2], gradInput4[2], 0.000001)
+   mlp:double()
+   mytester:assert(torch.type(linear.output) == 'table')
+   mytester:assert(torch.type(linear.output[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(linear.output[2]) == 'torch.FloatTensor')
+   local output = mlp:forward(input)
+   local gradInput = mlp:backward(input, gradOutput)
+   mytester:assertTensorEq(output3[1], output[1]:float(), 0.000001)
+   mytester:assertTensorEq(gradInput3[1], gradInput[1]:float(), 0.000001)
+end
+
 mytester:add(nntest)
 
 jac = nn.Jacobian
