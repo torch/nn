@@ -8084,30 +8084,13 @@ function nntest.GPU()
 end
 
 function nntest.Profile()
-   -- timing the forward pass introduces some overhead to the module
-   -- We want to make sure this overhead isn't too large
    local mx_overhead = 0.05
-   local print_every = 1000
-   local net = nn.Profile(nn.Linear(1024,1024), print_every)
-   local inp = torch.randn(1, 1024)
-
-   local timer = torch.Timer()
-   local tot_time = 0
-   for i=1,print_every-1 do
-      timer:reset()
-      net:forward(inp)
-      tot_time = tot_time + timer:time().real
-   end
-   mytester:assert(math.abs(net.summedFwdTime - tot_time) / tot_time < mx_overhead)
-   net:forward(inp)
-   -- Do the same test, now that all the memory has already been allocated
-   local tot_time = 0
-   for i=1,print_every-1 do
-      timer:reset()
-      net:forward(inp)
-      tot_time = tot_time + timer:time().real
-   end
-   mytester:assert(math.abs(net.summedFwdTime - tot_time) / tot_time < mx_overhead)
+   local print_every = 3
+   local net = nn.Profile(nn.Linear(3,4), print_every)
+   local input, gradOutput = torch.randn(1, 3), torch.randn(1, 4)
+   local output, gradInput = net:forward(input), net:backward(input, gradOutput)
+   mytester:assertTensorEq(net.modules[1].output, output, 0.000001)
+   mytester:assertTensorEq(net.modules[1].gradInput, gradInput, 0.000001)
 end
 
 function nntest.NaN()
