@@ -167,6 +167,14 @@ function nntest.WeightNorm()
    err = nn.Jacobian.testJacobianParameters(model, input,
                                                 model.v, model.gradV)
    mytester:assert(err < precision, 'Spatial Convolution v')
+
+   -- linear save/load
+   model = nn.WeightNorm(nn.Linear(5, 20))
+   input = torch.rand(10, 5)
+   local out = model:forward(input)
+   local modelr = torch.deserialize(torch.serialize(model))
+   local outr = modelr:forward(input)
+   mytester:assertTensorEq(out, outr)
 end
 
 function nntest.LinearWeightNorm()
@@ -1455,6 +1463,189 @@ function nntest.SparseLinear()
    -- Tests OMP parallelism
    test_sparse_linear(1, 50000, 10, 20000)
    test_sparse_linear(1000, 1000, 10, 100)
+end
+
+local function testIndexLinear(bsize, iSize, oSize, nnz)
+   local inb = bsize
+   local ini = iSize
+   local inj = oSize
+
+   local ilinear  = nn.IndexLinear(ini,inj, true, nil, nil, nil, false)
+   local ilinear2 = nn.IndexLinear(ini,inj, true, nil, nil, nil, false)
+   local linear = nn.Linear(ini, inj)
+   ilinear.weight:zero()
+   ilinear.weight:copy(linear.weight:t():clone())
+   ilinear.bias = linear.bias:clone()
+   ilinear:zeroGradParameters()
+
+   ilinear2.weight:zero()
+   ilinear2.weight:copy(linear.weight:t():clone())
+   ilinear2.bias = linear.bias:clone()
+   ilinear2:zeroGradParameters()
+
+   linear:zeroGradParameters()
+
+   -- Create a random sparse vector
+   local input = {{},{}}
+   local flatInput = {torch.LongTensor(), torch.Tensor(), torch.LongTensor()}
+   local nonsparse = torch.zeros(inb, ini)
+   local sizes = flatInput[3]
+   sizes:resize(inb)
+   for i=1,inb do
+      sizes[i] = nnz
+      input[1][i] = torch.randperm(ini)[{{1,nnz}}]:long()
+      input[2][i] = torch.ones(nnz):uniform()
+      nonsparse[i]:scatter(1, input[1][i], input[2][i])
+   end
+   flatInput[1]:cat(input[1])
+   flatInput[2]:cat(input[2])
+
+   local gradOutput = torch.rand(inb, inj)
+   local cmps = {'weight', 'bias', 'gradBias'}
+   -- Check output wrt linear, non-batch
+   local actual = ilinear:forward({input[1][1], input[2][1]})
+   local actual2 = ilinear2:forward({input[1][1], input[2][1], flatInput[3][1]})
+   local expected = linear:forward(nonsparse[1])
+
+   local actualgi = ilinear:backward({input[1][1], input[2][1]}, gradOutput[1])
+   local actualgi2 = ilinear2:backward({input[1][1], input[2][1], flatInput[3][1]}, gradOutput[1])
+   local expectedgi = linear:backward(nonsparse[1], gradOutput[1])
+
+   ilinear:updateParameters(1)
+   ilinear2:updateParameters(1)
+   linear:updateParameters(1)
+
+   local err = (expected - actual):abs():max()
+   local err2 = (expected - actual2):abs():max()
+
+   local gierr = (expectedgi - actualgi[2]):abs():max()
+   local gierr2 = (expectedgi - actualgi2[2]):abs():max()
+
+   mytester:assertle(err, precision, 'error on result for tensor array')
+   mytester:assertle(gierr, precision, 'error on gradInput for tensor array')
+
+   mytester:assertle(err2, precision, 'error on result for batched tensor')
+   mytester:assertle(gierr2, precision, 'error on gradInput for batched tensor')
+
+   for _,var in ipairs(cmps) do
+      local err, err2
+      if var == 'weight' then
+         err = (ilinear[var]:t() - linear[var]):abs():max()
+         err2 = (ilinear2[var]:t() - linear[var]):abs():max()
+      else
+         err = (ilinear[var] - linear[var]):abs():max()
+         err2 = (ilinear2[var] - linear[var]):abs():max()
+      end
+      mytester:assertle(err, precision, 'error on '..var..' for tensor array')
+      mytester:assertle(err2, precision, 'error on '..var..' for batched tensor')
+   end
+   ilinear:zeroGradParameters()
+   ilinear2:zeroGradParameters()
+   linear:zeroGradParameters()
+
+   -- Check output wrt linear, batch
+   -- doing this n times checks for fast last input param updates
+   local test_n_times = function(ntimes)
+      local actual, expected, actualgi, expectedgi
+      for i=1, ntimes do
+         actual = ilinear:forward(input)
+         actual2 = ilinear2:forward(flatInput)
+         expected = linear:forward(nonsparse)
+
+         actualgi = ilinear:backward(input, gradOutput)
+         actualgi2 = ilinear2:backward(flatInput, gradOutput)
+         expectedgi = linear:backward(nonsparse, gradOutput)
+      end
+      ilinear:updateParameters(1)
+      ilinear2:updateParameters(1)
+      linear:updateParameters(1)
+
+      local err = (expected - actual):abs():max()
+      local err2 = (expected - actual2):abs():max()
+
+      local gicheck = torch.Tensor():resizeAs(expectedgi)
+      local gicheck2 = actualgi2[2]
+
+      for i=1,#actualgi[2] do
+         gicheck[i]:copy(actualgi[2][i])
+      end
+      local gierr = (expectedgi - gicheck):abs():max()
+      local gierr2 = (expectedgi - gicheck2):abs():max()
+
+      mytester:assertle(err, precision, 'error on result for tensor array with ntimes = '..ntimes)
+      mytester:assertle(err2, precision, 'error on result for batched tensor with ntimes = '..ntimes)
+
+      mytester:assertle(gierr, precision, 'error on gradInput for tensor array with ntimes = '..ntimes)
+      mytester:assertle(gierr2, precision, 'error on gradInput for batched tensor with ntimes = '..ntimes)
+
+      for _,var in ipairs(cmps) do
+         local err, err2
+         if var == 'weight' then
+            err = (ilinear[var]:t() - linear[var]):abs():max()
+            err2 = (ilinear2[var]:t() - linear[var]):abs():max()
+         else
+            err = (ilinear[var] - linear[var]):abs():max()
+            err2 = (ilinear2[var] - linear[var]):abs():max()
+         end
+         mytester:assertle(err, precision, 'error on '..var..' for tensor array')
+         mytester:assertle(err2, precision, 'error on '..var..' for batched tensor')
+      end
+
+      ilinear:zeroGradParameters()
+      ilinear2:zeroGradParameters()
+      linear:zeroGradParameters()
+      mytester:assertle(ilinear.gradBias:sum(), precision, 'error zeroing gradbias for tensor array')
+      mytester:assertle(ilinear2.gradBias:sum(), precision, 'error zeroing gradbias for batched tensor')
+   end
+   test_n_times(1)
+   test_n_times(2)
+   test_n_times(3)
+end
+
+function nntest.IndexLinear()
+   testIndexLinear(4, 40 , 10, 30)
+   testIndexLinear(4, 40 , 500, 30)
+   testIndexLinear(4, 200000 , 5, 150000)
+
+   local sizes = {
+      {osize = 1, isize = 10000, nnz = 10000, bsize = 16},
+      {osize = 10, isize = 10000, nnz = 10000, bsize = 16},
+      {osize = 100, isize = 10000, nnz = 10000, bsize = 16},
+
+      {osize = 1, isize = 10000, nnz = 200000, bsize = 1},
+      {osize = 10, isize = 10000, nnz = 200000, bsize = 1},
+      {osize = 100, isize = 10000, nnz = 200000, bsize = 1},
+
+      {osize = 1, isize = 10000, nnz = 200000, bsize = 2},
+      {osize = 10, isize = 10000, nnz = 200000, bsize = 2},
+      {osize = 100, isize = 10000, nnz = 200000, bsize = 2},
+   }
+
+   for i, lsizes in ipairs(sizes) do
+      -- Test multithreaded updates
+      local isize = lsizes.isize
+      local osize = lsizes.osize
+      local il = nn.IndexLinear(isize, osize)
+      local batch = {{},{}}
+      local idx = 100
+      local nnz = lsizes.nnz
+      local bsize = lsizes.bsize
+      for i=1,bsize do
+         batch[1][i] = torch.LongTensor(nnz):fill(idx)
+         batch[2][i] = torch.DoubleTensor(nnz):fill(1)
+      end
+      local totalSize = bsize*nnz
+      local lr = 0.01
+      -- Update the same index all over
+      local out = il:updateOutput(batch)
+      out:fill(1)
+      il:backwardUpdate(batch, out, lr)
+      il:backward(batch, out, 1)
+      il:updateParameters(lr)
+      for i=1,osize do
+         mytester:assertlt(math.abs(il.weight[idx][i] + totalSize * lr * 2), precision, 'parameters update was wrong.')
+      end
+   end
 end
 
 function nntest.Bilinear()
@@ -6691,6 +6882,24 @@ function nntest.MapTable()
       == torch.pointer(map:get(1).weight:storage()))
    map:clearState()
    mytester:assert(map:size() == 1)
+
+  -- check if gradients are correctly reset
+  -- share weights and gradients
+  map = nn.MapTable(nn.Linear(10,5))
+  map:forward(input)
+  _, gradParams = map:getParameters()
+  gradParams:uniform()
+  map:zeroGradParameters()
+  mytester:assertlt(gradParams:sum(),precision)
+
+  -- check if gradients are correctly reset
+  -- do not share weights and gradients
+  map = nn.MapTable(nn.Linear(10,5),false)
+  map:forward(input)
+  _, gradParams = map:getParameters()
+  gradParams:uniform()
+  map:zeroGradParameters()
+  mytester:assertlt(gradParams:sum(),precision)
 end
 
 function nntest.FlattenTable()
@@ -7917,6 +8126,149 @@ end
 function nntest.GPU()
    -- this is a placeholder to let you know that the nn.GPU unit test
    -- is located in cunn package.
+end
+
+function nntest.Profile()
+   local mx_overhead = 0.05
+   local print_every = 3
+   local net = nn.Profile(nn.Linear(3,4), print_every)
+   local input, gradOutput = torch.randn(1, 3), torch.randn(1, 4)
+   local output, gradInput = net:forward(input), net:backward(input, gradOutput)
+   mytester:assertTensorEq(net.modules[1].output, output, 0.000001)
+   mytester:assertTensorEq(net.modules[1].gradInput, gradInput, 0.000001)
+end
+
+function nntest.NaN()
+   local _ = require 'moses'
+   local input = torch.randn(2,3)
+   local gradOutput = torch.randn(2,4)
+   local lin = nn.Linear(3,4)
+   lin:zeroGradParameters()
+   local nan = nn.NaN(lin)
+   mytester:assert(nan.id == 1)
+   -- test that it works when no NaNs are present
+   local output = nan:forward(input):clone()
+   local gradInput = nan:backward(input, gradOutput):clone()
+   local gradWeight = lin.gradWeight:clone()
+   local gradBias = lin.gradBias:clone()
+   lin:zeroGradParameters()
+   local output2 = lin:forward(input)
+   local gradInput2 = lin:backward(input, gradOutput)
+   mytester:assertTensorEq(output, output2, 0.000001)
+   mytester:assertTensorEq(gradInput, gradInput2, 0.000001)
+   mytester:assertTensorEq(gradWeight, lin.gradWeight, 0.000001)
+   mytester:assertTensorEq(gradBias, lin.gradBias, 0.000001)
+   -- test with some NaNs
+   input:zero():log():log()
+   local sum = input:sum()
+   mytester:assert(_.isNaN(sum))
+   mytester:assert(not pcall(function() nan:forward(input) end))
+   lin.bias:fill(sum)
+   input = torch.randn(2,3)
+   mytester:assert(not pcall(function() nan:forward(input) end))
+   lin.bias:uniform(0,1)
+   gradOutput:fill(sum)
+   mytester:assert(not pcall(function() nan:backward(input, gradOutput) end))
+   gradOutput:uniform(0,1)
+   lin.gradBias:fill(sum)
+   mytester:assert(not pcall(function() nan:backward(input, gradOutput) end))
+end
+
+function nntest.DontCast()
+   local input = torch.randn(3,4)
+   local gradOutput = torch.randn(3,2)
+   local linear = nn.Linear(4,2):float()
+   local mlp = nn.DontCast(linear, true)
+   linear:zeroGradParameters()
+   local linear = linear:clone()
+   local output = mlp:forward(input)
+   local gradInput = mlp:backward(input, gradOutput)
+   mytester:assert(torch.type(output) == 'torch.DoubleTensor')
+   mytester:assert(torch.type(gradInput) == 'torch.DoubleTensor')
+   local output2 = linear:forward(input:float())
+   local gradInput2 = linear:backward(input:float(), gradOutput:float())
+   mytester:assertTensorEq(output:float(), output2, 0.000001)
+   mytester:assertTensorEq(gradInput:float(), gradInput2, 0.000001)
+   local mlp3 = nn.DontCast(linear:clone())
+   mlp3:zeroGradParameters()
+   local output3 = mlp3:forward(input:float())
+   local gradInput3 = mlp3:backward(input:float(), gradOutput:float())
+   mytester:assert(torch.type(output3) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput3) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3, output2, 0.000001)
+   mytester:assertTensorEq(gradInput3, gradInput2, 0.000001)
+
+   mlp:float()
+   local output4 = mlp:forward(input:float())
+   local gradInput4 = mlp:backward(input:float(), gradOutput:float())
+   mytester:assert(torch.type(output4) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput4) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3, output4, 0.000001)
+   mytester:assertTensorEq(gradInput3, gradInput4, 0.000001)
+   mlp:double()
+   mytester:assert(torch.type(linear.output) == 'torch.FloatTensor')
+   local output = mlp:forward(input)
+   local gradInput = mlp:backward(input, gradOutput)
+   mytester:assert(torch.type(output4) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput4) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3, output:float(), 0.000001)
+   mytester:assertTensorEq(gradInput3, gradInput:float(), 0.000001)
+
+   -- test table inputs/outputs
+   local input = {torch.randn(3,4), torch.randn(3,4)}
+   local gradOutput = {torch.randn(3,2), torch.randn(3,2)}
+   local linear = nn.ParallelTable():add(nn.Linear(4,2)):add(nn.Linear(4,2)):float()
+   local mlp = nn.DontCast(linear, true)
+   linear:zeroGradParameters()
+   local linear = linear:clone()
+   local output = mlp:forward(input)
+   local gradInput = mlp:backward(input, gradOutput)
+   mytester:assert(torch.type(output[1]) == 'torch.DoubleTensor')
+   mytester:assert(torch.type(gradInput[1]) == 'torch.DoubleTensor')
+   mytester:assert(torch.type(output[2]) == 'torch.DoubleTensor')
+   mytester:assert(torch.type(gradInput[2]) == 'torch.DoubleTensor')
+   local _ = require 'moses'
+   local finput = _.map(input, function(k,v) return v:float() end)
+   local foutput = _.map(output, function(k,v) return v:float() end)
+   local fgradInput = _.map(gradInput, function(k,v) return v:float() end)
+   local fgradOutput = _.map(gradOutput, function(k,v) return v:float() end)
+   local output2 = linear:forward(finput)
+   local gradInput2 = linear:backward(finput, fgradOutput)
+   mytester:assertTensorEq(foutput[1], output2[1], 0.000001)
+   mytester:assertTensorEq(foutput[2], output2[2], 0.000001)
+   mytester:assertTensorEq(fgradInput[1], gradInput2[1], 0.000001)
+   mytester:assertTensorEq(fgradInput[2], gradInput2[2], 0.000001)
+   local mlp3 = nn.DontCast(linear:clone())
+   mlp3:zeroGradParameters()
+   local output3 = mlp3:forward(finput)
+   local gradInput3 = mlp3:backward(finput, fgradOutput)
+   mytester:assert(torch.type(output3[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput3[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(output3[2]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput3[2]) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3[1], output2[1], 0.000001)
+   mytester:assertTensorEq(gradInput3[1], gradInput2[1], 0.000001)
+   mytester:assertTensorEq(output3[2], output2[2], 0.000001)
+   mytester:assertTensorEq(gradInput3[2], gradInput2[2], 0.000001)
+   mlp:float()
+   local output4 = mlp:forward(finput)
+   local gradInput4 = mlp:backward(finput, fgradOutput)
+   mytester:assert(torch.type(output4[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput4[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(output4[2]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(gradInput4[2]) == 'torch.FloatTensor')
+   mytester:assertTensorEq(output3[1], output4[1], 0.000001)
+   mytester:assertTensorEq(gradInput3[1], gradInput4[1], 0.000001)
+   mytester:assertTensorEq(output3[2], output4[2], 0.000001)
+   mytester:assertTensorEq(gradInput3[2], gradInput4[2], 0.000001)
+   mlp:double()
+   mytester:assert(torch.type(linear.output) == 'table')
+   mytester:assert(torch.type(linear.output[1]) == 'torch.FloatTensor')
+   mytester:assert(torch.type(linear.output[2]) == 'torch.FloatTensor')
+   local output = mlp:forward(input)
+   local gradInput = mlp:backward(input, gradOutput)
+   mytester:assertTensorEq(output3[1], output[1]:float(), 0.000001)
+   mytester:assertTensorEq(gradInput3[1], gradInput[1]:float(), 0.000001)
 end
 
 mytester:add(nntest)

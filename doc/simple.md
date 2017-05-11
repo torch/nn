@@ -6,6 +6,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Linear](#nn.Linear) : a linear transformation ;
     * [LinearWeightNorm](#nn.LinearWeightNorm) : a weight normalized linear transformation ;
     * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
+    * [IndexLinear](#nn.IndexLinear) : an alternative linear transformation with for sparse inputs and max normalization ;
     * [Bilinear](#nn.Bilinear) : a bilinear transformation with sparse inputs ;
     * [PartialLinear](#nn.PartialLinear) : a linear transformation with sparse inputs with the option of only computing a subset ;
     * [Add](#nn.Add) : adds a bias term to the incoming data ;
@@ -146,6 +147,66 @@ x = torch.Tensor({ {1, 0.1}, {2, 0.3}, {10, 0.3}, {31, 0.2} })
 ```
 
 The first column contains indices, the second column contains values in a a vector where all other elements are zeros. The indices should not exceed the stated dimensions of the input to the layer (10000 in the example).
+
+<a name="nn.IndexLinear"></a>
+## IndexLinear ##
+
+```lua
+module = nn.IndexLinear(inputSize, outputSize, doGradInput, keysOffset, weight, bias, normalize)
+```
+
+Applies the following transformation to the incoming (optionally) normalized sparse input data:
+`z = Weight * y + bias`, where
+- `y_i = normalize and (x_i *  (1 / x_i_max) + b_i) or x_i`
+- `x_i` is the `i'th` feature of the input,
+- `b_i` is a per-feature bias,
+- `x_i_max` is the maximum absolute value seen so far during training for feature `i`.
+
+The normalization of input features is very useful to avoid explosions during training if sparse input values are really high. It also helps ditinguish between the presence and the absence of a given feature.
+
+#### Parameters ####
+- `inputSize` is the maximum number of features.
+- `outputSize` is the number of output neurons.
+- `doGradInput`, if  `false` (the default), the gradInput will not be computed.
+- `keysOffset` lets you specify input keys are in the `[1+keysOffset, N+keysOffset]` range. (defaults to `0`)
+- `weight` and `bias` allow you to create the module with existing weights without using additional memory.
+  When passing `weight` and `bias`, `inputSize` and `outputSize` are inferred from the weights.
+- `normalize` will activate the normalization of the input feature values. (`false` by default)
+
+You can create an `IndexLinear` layer the following way:
+
+```lua
+-- 10000 inputs, 2 outputs, no grad input, no offset, no input weight/bias, max-norm on
+module = nn.IndexLinear(10000, 2, nil, 0, nil, nil, true)
+```
+
+#### Differences from SparseLinear ####
+- The layout of `weight` is transposed compared to `SparseLinear`. This was done for performance considerations.
+- The `gradWeight` that is computed for in-place updates is a sparse representation of the whole gradWeight matrix. Its size changes from one
+backward pass to another. This was done for performance considerations.
+- The input format differs from the [SparseLinear](#nn.SparseLinear) input format by accepting keys and values as a table of tensors. This enables `IndexLinear` to have a larger range for keys than `SparseLinear`.
+
+The `input` tensors must be in one of the following formats.
+
+- An array of size 2 containing a batch of `keys` followed by a batch of `values`.
+```lua
+x = {
+      { torch.LongTensor({ 1, 200 }), torch.LongTensor({ 100, 200, 1000 }) },
+      { torch.Tensor({ 1, 0.1 }), torch.Tensor({ 10, 0.5, -0.5 }) }
+}
+```
+
+- an array of size 3 containing a flattened (pre-concatenated) batch of `keys`, followed by `values`, and `sizes`.
+```lua
+-- Equivalent to the input shown above
+x = {
+      torch.LongTensor({ 1, 200, 100, 200, 1000 }),
+      torch.Tensor({ 1, 0.1, 10, .5, -0.5 }),
+      torch.LongTensor({ 2, 3 })
+}
+```
+
+Note: The tensors representing `keys` and `sizes` must always be of type `LongTensor` / `CudaLongTensor`. The values can be either `FloatTensor`or `DoubleTensor` or their cutorch equivalents.
 
 <a name="nn.Bilinear"></a>
 ## Bilinear ##
@@ -1195,6 +1256,19 @@ gives the same output as
 ```lua
 t:transpose(dim1, dim2)
 t:transpose(dim3, dim4)
+```
+
+The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules. This makes it possible to use minibatch inputs. Example:
+```lua
+b = 5 -- batch size 5
+input = torch.Tensor(b, 2, 4, 3) -- input: b x 2 x 4 x 3
+
+m = nn.Transpose({1,3})
+m:forward(input) -- output: 4 x 2 x b x 3 x 1
+
+numInputDims = 3 -- input feature map should be the last 3 dims
+m = nn.Transpose({1,3}):setNumInputDims(numInputDims)
+m:forward(input) -- output: b x 3 x 4 x 2
 ```
 
 <a name="nn.Exp"></a>

@@ -177,7 +177,7 @@ module = nn.MapTable(m, share)
 
 `MapTable` is a container for a single module which will be applied to all input elements. The member module is cloned as necessary to process all input elements. Call `resize(n)` to set the number of clones manually or call `clearState()` to discard all clones.
 
-Optionally, the module can be initialized with the contained module and with a list of parameters that are shared across all clones. By default, these parameters are `weight`, `bias`, `gradWeight` and `gradBias`.
+Optionally, the module can be initialized with the contained module and a boolean `share`. It indicates whether parameters are shared across all clones or not. By default it is set to true. The shared parameters are `weight`, `bias`, `gradWeight` and `gradBias`.
 
 ```
 +----------+         +-----------+
