@@ -29,20 +29,25 @@ function LinearWeightNorm:__init(inputSize, outputSize, bias, eps)
     self:reset() 
 end
 
+function LinearWeightNorm:evaluate()
+    if self.train ~= false then
+        self:updateWeightMatrix()
+    end
+
+    parent.evaluate(self)
+end
+
 function LinearWeightNorm:initFromWeight(weight)
     weight = weight or self.weight
 
-    self.g = weight:norm(2,2):add(self.eps)
+    self.g:norm(weight,2,2):clamp(self.eps,math.huge)
     self.v:copy(weight)
-
-    self.dirty = true
 
     return self
 end
 
 function LinearWeightNorm.fromLinear(linear)
     local module = nn.LinearWeightNorm(linear.weight:size(2), linear.weight:size(1), linear.bias)
-    
     module:initFromWeight(linear.weight)
 
     if linear.bias then
@@ -84,7 +89,7 @@ function LinearWeightNorm:reset(stdv)
     self:initFromWeight()
     
     if self.bias then 
-        self.bias:uniform(-stdv, stdv)
+        self.bias:uniform(-stdv,stdv)
     end
 end
 
@@ -96,22 +101,20 @@ local function updateAddBuffer(self, input)
     end   
 end
 
-function LinearWeightNorm:updateWeightMatrix()
-    if self.dirty or self.train then
-        if self.norm:dim() == 0 then self.norm:resizeAs(self.g) end
-        if self.scale:dim() == 0 then self.scale:resizeAs(self.g) end
-        if self.weight:dim() == 0 then self.weight:resizeAs(self.v) end
+function LinearWeightNorm:updateWeightMatrix()    
+    if self.norm:dim() == 0 then self.norm:resizeAs(self.g) end
+    if self.scale:dim() == 0 then self.scale:resizeAs(self.g) end
+    if self.weight:dim() == 0 then self.weight:resizeAs(self.v) end
 
-        self.norm:norm(self.v,2,2):add(self.eps)
-        self.scale:copy(self.g):cdiv(self.norm)
-        self.weight:copy(self.v):cmul(self.scale:expandAs(self.v))
-        
-        self.dirty = false
-    end
+    self.norm:norm(self.v,2,2):clamp(self.eps,math.huge)
+    self.scale:cdiv(self.g,self.norm)
+    self.weight:cmul(self.v,self.scale:expandAs(self.v))
 end
 
 function LinearWeightNorm:updateOutput(input)
-    self:updateWeightMatrix()
+    if self.train ~= false then
+        self:updateWeightMatrix()
+    end
     
     if input:dim() == 1 then
         self.output:resize(self.weight:size(1))
@@ -168,26 +171,15 @@ function LinearWeightNorm:accGradParameters(input, gradOutput, scale)
     local scale = self.scale:expandAs(self.v)
     local norm = self.norm:expandAs(self.v)
 
-    self.weight:copy(self.gradV):cmul(self.v):cdiv(norm) -- reuse the weight tensor, avoid unnecessary alloc
+    self.weight:cmul(self.gradV,self.v):cdiv(norm)
     self.gradG:sum(self.weight,2)
     
     self.gradV:cmul(scale)
 
-    self.weight:copy(self.v):cmul(scale):cdiv(norm)
+    self.weight:cmul(self.v,scale):cdiv(norm)
     self.weight:cmul(self.gradG:expandAs(self.weight))
 
     self.gradV:add(-1,self.weight)
-
-    self.dirty = true
-end
-
-function LinearWeightNorm:zeroGradParameters()
-    parent.zeroGradParameters(self)
-end
-
-function LinearWeightNorm:updateParameters(lr)  
-    parent.updateParameters(self,lr)
-    self.dirty = true
 end
 
 function LinearWeightNorm:defaultAccUpdateGradParameters(input, gradOutput, lr)
@@ -208,8 +200,6 @@ end
 
 function LinearWeightNorm:clearState()
     nn.utils.clear(self, 'weight', 'norm', 'scale')
-    self.dirty = true
-
     return parent.clearState(self)
 end
 

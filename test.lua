@@ -216,7 +216,7 @@ function nntest.LinearWeightNorm()
    -- check gradient with nobias
    model = wnFromLin
 
-   local err = nn.Jacobian.testJacobianParameters(model, input, model.g, model.gradG)
+   err = nn.Jacobian.testJacobianParameters(model, input, model.g, model.gradG)
    mytester:assert(err < precision, 'g')
    err = nn.Jacobian.testJacobianParameters(model, input, model.v, model.gradV)
    mytester:assert(err < precision, 'v')
