@@ -4084,6 +4084,32 @@ function nntest.Sum()
    local err       = jac.testJacobian(module, input)
    mytester:assertlt(err,precision, 'error on state ')
 
+   -- squeeze
+   local dimension = 1
+   local module    = nn.Sum(dimension, nil, nil, false)
+   local input     = torch.Tensor({{1, 2, 3},{4, 5, 6}})
+   local expected  = torch.Tensor({5, 7, 9}):view(1, 3)
+   local output    = module:forward(input)
+   
+   mytester:assertlt(torch.norm(output-expected), precision, 'error on forward ')
+   mytester:assert(output:isSameSizeAs(expected), 'sizes mismatch')
+   
+   local err       = jac.testJacobian(module, input)
+   mytester:assertlt(err,precision, 'error on state ')
+
+   -- squeeze + batch
+   local dimension = 1
+   local module    = nn.Sum(dimension, 1, nil, false)
+   local input     = torch.Tensor({{1, 2, 3},{4, 5, 6}})
+   local expected  = torch.Tensor({6, 15}):view(2, 1)
+   local output    = module:forward(input)
+
+   mytester:assertlt(torch.norm(output-expected), precision, 'error on forward ')
+   mytester:assert(output:isSameSizeAs(expected), 'sizes mismatch')
+
+   local err       = jac.testJacobian(module, input)
+   mytester:assertlt(err,precision, 'error on state ')
+
    -- 3D
    local ini = math.random(3,5)
    local inj = math.random(3,5)
