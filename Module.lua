@@ -28,6 +28,9 @@ end
 
 function Module:backward(input, gradOutput, scale)
    scale = scale or 1
+   if self.learningRate ~= nil then
+      scale = scale * self.learningRate
+   end
    self:updateGradInput(input, gradOutput)
    self:accGradParameters(input, gradOutput, scale)
    return self.gradInput
