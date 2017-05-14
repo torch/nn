@@ -57,6 +57,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [GradientReversal](#nn.GradientReversal) : reverses the gradient (to maximize an objective function) ;
     * [GPU](#nn.GPU) : decorates a module so that it can be executed on a specific GPU device.
     * [TemporalDynamicKMaxPooling](#nn.TemporalDynamicKMaxPooling) : selects the k highest values in a sequence. k can be calculated based on sequence length ;
+    * [KSparse](#nn.KSparse) : selects the k largest activations, the error backprop only through these ;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1662,4 +1663,14 @@ Selects the highest `k` values for each feature in the feature map sequence prov
 If `factor` is not provided, `k = minK`, else the value of k is calculated with:
 ```lua
 k = math.max(minK, math.ceil(factor*nInputFrame)))
+```
+
+<a name="nn.KSparse"></a>
+## KSparse ##
+
+```lua
+module = nn.KSparse(k)
+```
+It can be used in K-sparse autoencoders, it implements k-Sparse Autoencoders article (https://arxiv.org/abs/1312.5663)
+Selects `k` neurons with the highest activations, it sets the remaining neurons to zeros and backprop is only done for the k neurons.
 ```
