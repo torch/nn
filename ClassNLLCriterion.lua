@@ -1,10 +1,13 @@
 local THNN = require 'nn.THNN'
 local ClassNLLCriterion, parent = torch.class('nn.ClassNLLCriterion', 'nn.Criterion')
 
-function ClassNLLCriterion:__init(weights, sizeAverage, ignoreIndex)
+function ClassNLLCriterion:__init(weights, sizeAverage)
     parent.__init(self)
-    self.sizeAverage = (sizeAverage == nil) and true or sizeAverage
-    self.ignoreIndex = ignoreIndex or -100 -- this target index will be ignored
+    if sizeAverage ~= nil then
+       self.sizeAverage = sizeAverage
+    else
+       self.sizeAverage = true
+    end
     if weights then
        assert(weights:dim() == 1, "weights input should be 1-D Tensor")
        self.weights = weights
@@ -44,8 +47,7 @@ function ClassNLLCriterion:updateOutput(input, target)
       self.output_tensor:cdata(),
       self.sizeAverage,
       THNN.optionalTensor(self.weights),
-      self.total_weight_tensor:cdata(),
-      self.ignoreIndex
+      self.total_weight_tensor:cdata()
    )
    self.output = self.output_tensor[1]
    return self.output, self.total_weight_tensor[1]
@@ -74,8 +76,7 @@ function ClassNLLCriterion:updateGradInput(input, target)
       self.gradInput:cdata(),
       self.sizeAverage,
       THNN.optionalTensor(self.weights),
-      self.total_weight_tensor:cdata(),
-      self.ignoreIndex
+      self.total_weight_tensor:cdata()
    )
 
    return self.gradInput
