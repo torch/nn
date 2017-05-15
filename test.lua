@@ -2333,45 +2333,19 @@ function nntest.DistKLDivCriterion()
 end
 
 function nntest.ClassNLLCriterion()
-   local batchsize = math.random(2,4)
    local numLabels = math.random(5,10)
+   local input = torch.rand(numLabels)
+   local target = math.random(1,numLabels)
 
-   local function testclassnll(input, target)
-      -- default ClassNLLCriterion
-      local cri = nn.ClassNLLCriterion()
-      criterionJacobianTest(cri, input, target)
+   -- default ClassNLLCriterion
+   local cri = nn.ClassNLLCriterion()
+   criterionJacobianTest(cri, input, target)
 
-      -- ClassNLLCriterion with weights
-      local weights = torch.rand(numLabels)
-      weights = weights / weights:sum()
-      cri = nn.ClassNLLCriterion(weights)
-      criterionJacobianTest(cri, input, target)
-   end
-
-   -- input/target: 1D/number
-   testclassnll(torch.rand(numLabels), math.random(1,numLabels))
-   -- input/target: 1D/1D
-   testclassnll(torch.rand(numLabels), torch.LongTensor(1):random(1, numLabels))
-   -- input/target: 2D/1D
-   testclassnll(torch.rand(batchsize, numLabels), torch.LongTensor(batchsize):random(1,numLabels))
-   -- test ignoreIndex
-   local ignoreIndex = -1
-   local cri = nn.ClassNLLCriterion(nil, nil, ignoreIndex)
-   local input = torch.randn(numLabels)
-   local target = ignoreIndex
-   mytester:assert(cri:forward(input, target) == 0)
-   mytester:assert(cri:backward(input, target):abs():sum() == 0)
-   local input = torch.randn(batchsize, numLabels)
-   local target = torch.LongTensor(batchsize):random(1,numLabels)
-   target[1] = ignoreIndex
-   local output = cri:forward(input, target)
-   local gradInput = cri:backward(input, target):clone()
-   mytester:assert(gradInput[1]:abs():sum() == 0)
-   local input, target = input:sub(2,batchsize), target:sub(2,batchsize)
-   local output2 = cri:forward(input, target)
-   mytester:assert(math.abs(output2 - output) < 0.0000001)
-   local gradInput2 = cri:backward(input, target)
-   mytester:assertTensorEq(gradInput2, gradInput:sub(2,batchsize), 0.0000001)
+   -- ClassNLLCriterion with weights
+   local weights = torch.rand(numLabels)
+   weights = weights / weights:sum()
+   cri = nn.ClassNLLCriterion(weights)
+   criterionJacobianTest(cri, input, target)
 end
 
 function nntest.SpatialClassNLLCriterion()
