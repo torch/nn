@@ -1,6 +1,6 @@
 -- Weight Normalization
 -- https://arxiv.org/pdf/1602.07868v3.pdf
-local WeightNorm, parent = torch.class("nn.WeightNorm", "nn.Container")
+local WeightNorm, parent = torch.class("nn.WeightNorm", "nn.Decorator")
 
 function WeightNorm:__init(module, outputDim)
     -- this container will apply Weight Normalization to any module it wraps
@@ -9,7 +9,7 @@ function WeightNorm:__init(module, outputDim)
     -- if the weight is not 2D, the container will view the weight into a 2D shape
     -- that is nOut x (nIn x kw x dw x ...)
 
-    parent.__init(self)
+    parent.__init(self, module)
     assert(module.weight)
 
     if module.bias then
@@ -34,6 +34,7 @@ function WeightNorm:__init(module, outputDim)
 
     -- view size back to original weight
     self.viewOut = self.weight:size()
+    self.weightSize = self.weight:size()
 
     -- bubble outputDim size up to the front
     for i = self.outputDim - 1, 1, -1 do
@@ -53,7 +54,6 @@ function WeightNorm:__init(module, outputDim)
     -- gradient of v
     self.gradV = torch.Tensor(self.viewIn)
 
-    self.modules[1] = module
     self:resetInit()
 end
 
@@ -81,7 +81,14 @@ function WeightNorm:resetInit(inputSize, outputSize)
     end
 end
 
-function WeightNorm:updateOutput(input)
+function WeightNorm:evaluate()
+    if not(self.train == false) then
+        self:updateWeight()
+        parent.evaluate(self)
+    end
+end
+
+function WeightNorm:updateWeight()
     -- view to 2D when weight norm container operates
     self.gradV:copy(self:permuteIn(self.weight))
     self.gradV = self.gradV:view(self.viewIn)
@@ -92,12 +99,18 @@ function WeightNorm:updateOutput(input)
     self.gradV:copy(self.v)
     self._scale:copy(self.g):cdiv(self._norm)
     self.gradV:cmul(self._scale:view(self.viewIn[1], 1)
-                                :expand(self.viewIn[1], self.viewIn[2]))
+                               :expand(self.viewIn[1], self.viewIn[2]))
 
     -- otherwise maintain size of original module weight
     self.gradV = self.gradV:view(self.viewOut)
 
     self.weight:copy(self:permuteOut(self.gradV))
+end
+
+function WeightNorm:updateOutput(input)
+    if not(self.train == false) then
+        self:updateWeight()
+    end
     self.output:set(self.modules[1]:updateOutput(input))
     return self.output
 end
@@ -124,7 +137,7 @@ function WeightNorm:accGradParameters(input, gradOutput, scale)
     -- dL / dg * (w * g / ||w||^2)
     self.weight:copy(self.v):cmul(scale):cdiv(norm)
     self.weight:cmul(self.gradG:view(self.viewIn[1], 1)
-                            :expand(self.viewIn[1], self.viewIn[2]))
+                               :expand(self.viewIn[1], self.viewIn[2]))
 
     -- dL / dv update
     self.gradV:add(-1, self.weight)
@@ -159,7 +172,37 @@ function WeightNorm:parameters()
     end
 end
 
-function WeightNorm:__tostring__()
-    local str = 'nn.WeightNorm [' .. tostring(self.modules[1]) .. ']'
-    return str
+function WeightNorm:write(file)
+    -- Don't save weight and gradWeight since we can easily re-compute it from v
+    -- and g.
+    local weight = self.modules[1].weight
+    local gradWeight = self.modules[1].gradWeight
+    self.weight = nil
+    self.gradWeight = nil
+    self.modules[1].weight = nil
+    self.modules[1].gradWeight = nil
+    if not self.weightSize then
+        self.weightSize = weight:size()
+    end
+
+    parent.write(self, file)
+
+    self.modules[1].weight = weight
+    self.modules[1].gradWeight = gradWeight
+    self.weight = weight
+    self.gradWeight = gradWeight
+end
+
+function WeightNorm:read(file)
+    parent.read(self, file)
+
+    -- Re-compute weight and gradWeight
+    if not self.weight then
+        self.modules[1].weight = self.v.new(self.weightSize)
+        self.modules[1].gradWeight = self.v.new(self.weightSize)
+        self.weight = self.modules[1].weight
+        self.gradWeight = self.modules[1].gradWeight
+        self:updateWeight()
+        self.gradWeight:copy(self:permuteOut(self.gradV))
+    end
 end

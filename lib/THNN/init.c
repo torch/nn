@@ -98,6 +98,9 @@
 #include "generic/LeakyReLU.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/FusedRNNKernel.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/LogSigmoid.c"
 #include "THGenerateFloatTypes.h"
 
@@ -149,6 +152,9 @@
 #include "generic/SparseLinear.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/IndexLinear.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/Sqrt.c"
 #include "THGenerateFloatTypes.h"
 
@@ -183,6 +189,9 @@
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SpatialConvolutionMM.c"
+#include "THGenerateFloatTypes.h"
+
+#include "generic/SpatialDepthWiseConvolution.c"
 #include "THGenerateFloatTypes.h"
 
 #include "generic/SpatialConvolutionLocal.c"

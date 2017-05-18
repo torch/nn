@@ -14,6 +14,7 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
     * [SpatialFullConvolution](#nn.SpatialFullConvolution) : a 2D full convolution over an input image ;
     * [SpatialDilatedConvolution](#nn.SpatialDilatedConvolution) : a 2D dilated convolution over an input image ;
+    * [SpatialDepthWiseConvolution](#nn.SpatialDepthWiseConvolution) : a 2D depth-wise convolution over an input image ;
     * [SpatialConvolutionLocal](#nn.SpatialConvolutionLocal) : a 2D locally-connected layer over an input image ;
     * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
     * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
@@ -546,6 +547,51 @@ oheight = floor((height + 2 * padH - dilationH * (kH-1) - 1) / dH) + 1
 
 Further information about the dilated convolution can be found in the following paper: [Multi-Scale Context Aggregation by Dilated Convolutions](http://arxiv.org/abs/1511.07122).
 
+<a name="nn.SpatialDepthWiseConvolution"></a>
+### SpatialDepthWiseConvolution ###
+
+```lua
+module = nn.SpatialDepthWiseConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH])
+```
+
+Applies a 2D depth-wise convolution over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`).
+
+It is similar to `SpatialConvolution`, but here a spatial convolution is performed independently over each channel of an input. The most noticiable difference is the output dimension of `SpatialConvolution` is `nOutputPlane x oheight x owidth`, while for `SpatialDepthWiseConvolution` it is  `(nOutputPlane x nInputPlane) x oheight x owidth`.
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `nOutputPlane`: The number of output planes the convolution layer will produce.
+  * `kW`: The kernel width of the convolution
+  * `kH`: The kernel height of the convolution
+  * `dW`: The step of the convolution in the width dimension. Default is `1`.
+  * `dH`: The step of the convolution in the height dimension. Default is `1`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
+
+Note that depending of the size of your kernel, several (of the last)
+columns or rows of the input image might be lost. It is up to the user to
+add proper padding in images.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
+will be a 3D tensor `(nOutputPlane x nInputPlane) x oheight x owidth` where
+```lua
+owidth  = floor((width  + 2*padW - kW) / dW + 1)
+oheight = floor((height + 2*padH - kH) / dH + 1)
+```
+
+The parameters of the convolution can be found in `self.weight` (Tensor of
+size `nOutputPlane x nInputPlane x kH x kW`) and `self.bias` (Tensor of
+size `nOutputPlane x nInputPlane`). The corresponding gradients can be found in
+`self.gradWeight` and `self.gradBias`.
+
+The output value of the layer can be described as:
+```
+output[i][j] = input[j] * weight[i][j] + b[i][j], i = 1, ..., nOutputPlane, j = 1, ..., nInputPlane
+```
+
+Further information about the dilated convolution can be found in the following paper: [Xception: Deep Learning with Depthwise Separable Convolutions](https://arxiv.org/abs/1610.02357).
+
 <a name="nn.SpatialConvolutionLocal"></a>
 ### SpatialConvolutionLocal ###
 
@@ -955,7 +1001,7 @@ The learning of gamma and beta is optional.
 
    In training time, this layer keeps a running estimate of it's computed mean and std.
    The running sum is kept with a default momentup of 0.1 (unless over-ridden)
-   In test time, this running mean/std is used to normalize.
+   In test time, this running mean/std is used to normalize. (**Note that the running mean/std will not be saved if one only checkpoints a model's parameters. In order to correctly use the calculated running mean/std, one needs to checkpoint the model itself (call [clearState()](https://github.com/torch/nn/blob/master/doc/module.md#clearstate) first to save space).**)
 
 
 
