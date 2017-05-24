@@ -24,10 +24,10 @@ function OneHot:updateOutput(input)
    end
    table.insert(size, self.outputSize)
 
-   self.output:resize(unpack(size)):zero()
+   self.output:resize(table.unpack(size)):zero()
 
    size[#size] = 1
-   local input_ = input:view(unpack(size))
+   local input_ = input:view(table.unpack(size))
 
    if torch.type(input) == 'torch.CudaTensor' or torch.type(input) == 'torch.ClTensor' then
       self.output:scatter(self.output:dim(), input_, 1)
