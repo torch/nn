@@ -34,7 +34,7 @@ function Sum:updateOutput(input)
    if self.sizeAverage then
       self.output:div(input:size(dimension))
    end
-   if self.squeeze and self.output:nDimension() > 1 then
+   if (self.squeeze == nil or self.squeeze) and self.output:nDimension() > 1 then
       self.output:set(self.output:select(dimension, 1))
    end
    return self.output
