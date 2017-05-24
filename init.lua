@@ -60,6 +60,7 @@ require('nn.Constant')
 require('nn.Dropout')
 require('nn.SpatialDropout')
 require('nn.VolumetricDropout')
+require('nn.WhiteNoise')
 
 require('nn.CAddTable')
 require('nn.CDivTable')

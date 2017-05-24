@@ -58,6 +58,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [GPU](#nn.GPU) : decorates a module so that it can be executed on a specific GPU device.
     * [TemporalDynamicKMaxPooling](#nn.TemporalDynamicKMaxPooling) : selects the k highest values in a sequence. k can be calculated based on sequence length ;
     * [Constant](#nn.Constant) : outputs a constant value given an input (which is ignored);
+    * [WhiteNoise](#nn.WhiteNoise) : adds isotropic Gaussian noise to the signal when in training mode;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1686,4 +1687,19 @@ nn.ConcatTable():add(nn.Constant(v)):add(nn.Identity())
 ```
 
 This is useful when you want to output a value that is independent of the
-input to the neural network (see [this example](https://github.com/Element-Research/rnn/blob/master/examples/recurrent-visual-attention.lua)).
+input to the neural network.
+
+<a name='nn.WhiteNoise'></a>
+## WhiteNoise ##
+
+```lua
+module = nn.WhiteNoise([mean, stdev])
+```
+
+This module adds isotropic Gaussian noise to the `input`.
+This can be useful for training [Denoising Autoencoders](http://arxiv.org/pdf/1507.02672v1.pdf).
+Takes `mean` and `stdev` of the normal distribution as constructor arguments.
+Default values for mean and standard deviation are 0 and 0.1 respectively.
+With `module:training()`, Gaussian noise is added during `forward`.
+During `backward` gradients are passed as is.
+With `module:evaluate()` the `mean` is added to the input.
