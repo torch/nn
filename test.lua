@@ -8538,6 +8538,16 @@ function nntest.OneHot()
    end
 end
 
+function nntest.ZeroGrad()
+   local input = torch.randn(3,4)
+   local zg = nn.ZeroGrad()
+   local output = zg:forward(input)
+   mytester:assertTensorEq(input, output, 0.00000001)
+   local gradInput = zg:backward(input, input)
+   local gradInput2 = gradInput:clone():zero()
+   mytester:assertTensorEq(gradInput, gradInput2, 0.0000001)
+end
+
 
 mytester:add(nntest)
 

@@ -61,6 +61,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [WhiteNoise](#nn.WhiteNoise) : adds isotropic Gaussian noise to the signal when in training mode;
     * [OneHot](#nn.OneHot) : transforms a tensor of indices into [one-hot](https://en.wikipedia.org/wiki/One-hot) encoding;
     * [PrintSize](#nn.PrintSize) : prints the size of `input` and `gradOutput` (useful for debugging);
+    * [ZeroGrad](#nn.ZeroGrad) : forwards the `input` as-is, yet zeros the `gradInput`.
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1763,3 +1764,23 @@ This module is useful for debugging complicated module composites.
 It prints the size of the `input` and `gradOutput` during `forward`
 and `backward` propagation respectively.
 The `name` is a string used to identify the module along side the printed size.
+
+<a name='nn.ZeroGrad'></a>
+## ZeroGrad ##
+
+```lua
+module = nn.ZeroGrad()
+input = torch.Tensor{1,2}
+gradOutput = torch.Tensor{3,4}
+print(module:forward(input))
+ 1
+ 2
+[torch.DoubleTensor of size 2]
+
+print(module:backward(input, gradOutput))
+ 0
+ 0
+[torch.DoubleTensor of size 2]
+```
+
+The module zeros the `gradInput` but forwards the `input` as-is.
