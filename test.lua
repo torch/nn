@@ -8423,6 +8423,122 @@ function nntest.WhiteNoise()
    mytester:assertTensorEq(gradOutput, gradInput, 0.000001, "WhiteNoise backward err")
 end
 
+function nntest.OneHot()
+   local nClass = 10
+
+   -- batch mode
+   local batchSize = 3
+   local input = torch.LongTensor(batchSize):random(1, nClass)
+   local gradOutput = torch.randn(batchSize, nClass)
+
+   local oh = nn.OneHot(nClass)
+
+   local output = oh:forward(input)
+   local output2 = torch.Tensor(batchSize, nClass):zero()
+   local eye = torch.eye(nClass)
+   output2:index(eye, 1, input)
+   mytester:assertTensorEq(output, output2, 0.000001, "OneHot forward batch err")
+   mytester:assert(output:dim() == 2)
+
+   -- non-batch mode (number input)
+   local num = 3
+   local output3 = torch.zeros(nClass)
+   output3[num] = 1.0
+   mytester:assertTensorEq(oh:forward(num), output3, 0.000001, "OneHot forward number err")
+
+   local gradInput = oh:backward(input, gradOutput)
+   mytester:assertTensorEq(gradInput, input:double():zero(), 0.000001, "OneHot backward batch err")
+
+   if pcall(function() require 'cunn' end) then
+      oh:cuda()
+
+      -- test with long input
+      local output = oh:forward(input)
+      mytester:assert(torch.type(output) == 'torch.CudaTensor')
+      mytester:assertTensorEq(output:double(), output2, 0.000001, "OneHot forward batch long-cuda err")
+
+      -- test with cuda input
+      local input = input:cuda()
+      gradOutput = gradOutput:cuda()
+
+      local output = oh:forward(input)
+      mytester:assert(torch.type(output) == 'torch.CudaTensor')
+      mytester:assertTensorEq(output:double(), output2, 0.000001, "OneHot forward batch cuda err")
+
+      local gradInput2 = oh:backward(input, gradOutput)
+      mytester:assertTensorEq(gradInput, gradInput2:double(), 0.000001, "OneHot backward batch err")
+      cutorch.synchronize()
+
+      -- non-batch mode (number input)
+      mytester:assertTensorEq(oh:forward(num), output3:cuda(), 0.000001, "OneHot forward number err")
+   end
+
+   -- multi-dimensional input
+   local inputSize = 2
+   local input = torch.LongTensor(batchSize, inputSize):random(1, nClass)
+   local gradOutput = torch.randn(batchSize, inputSize, nClass)
+
+   local oh = nn.OneHot(nClass, 2)
+
+   local output = oh:forward(input)
+   local output2 = torch.Tensor(batchSize*inputSize, nClass):zero()
+   local eye = torch.eye(nClass)
+   output2:index(eye, 1, input:view(-1))
+   output2:resize(batchSize, inputSize, nClass)
+   mytester:assertTensorEq(output, output2, 0.000001, "OneHot 2d forward batch err")
+   mytester:assert(output:dim() == 3)
+
+   local gradInput = oh:backward(input, gradOutput)
+   mytester:assertTensorEq(gradInput, input:double():zero(), 0.000001, "OneHot 2d backward batch err")
+
+   if pcall(function() require 'cunn' end) then
+      oh:cuda()
+
+      -- test with long input
+      local output = oh:forward(input)
+      mytester:assert(torch.type(output) == 'torch.CudaTensor')
+      mytester:assertTensorEq(output:double(), output2, 0.000001, "OneHot 2d forward batch long-cuda err")
+
+      -- test with cuda input
+      local input = input:cuda()
+      gradOutput = gradOutput:cuda()
+
+      local output = oh:forward(input)
+      mytester:assert(torch.type(output) == 'torch.CudaTensor')
+      mytester:assertTensorEq(output:double(), output2, 0.000001, "OneHot 2d forward batch cuda err")
+
+      local gradInput2 = oh:backward(input, gradOutput)
+      mytester:assertTensorEq(gradInput, gradInput2:double(), 0.000001, "OneHot 2d backward batch err")
+
+      local benchmark = false
+      if benchmark then
+         local input = torch.FloatTensor(50, 50):random(1,65):cuda()
+
+         local oh = nn.OneHot(65):cuda()
+
+         oh:forward(input)
+         cutorch.synchronize()
+         local a = torch.Timer()
+         for i=1,10 do
+            oh:forward(input)
+         end
+         cutorch.synchronize()
+         local gputime = a:time().real
+
+         oh:float()
+         input = input:float()
+         oh:forward(input)
+         a = torch.Timer()
+         for i=1,10 do
+            oh:forward(input)
+         end
+         local cputime = a:time().real
+         print("Onehot GPU vs CPU time", gputime, cputime)
+      end
+   end
+end
+
+
 mytester:add(nntest)
 
 jac = nn.Jacobian

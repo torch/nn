@@ -59,6 +59,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [TemporalDynamicKMaxPooling](#nn.TemporalDynamicKMaxPooling) : selects the k highest values in a sequence. k can be calculated based on sequence length ;
     * [Constant](#nn.Constant) : outputs a constant value given an input (which is ignored);
     * [WhiteNoise](#nn.WhiteNoise) : adds isotropic Gaussian noise to the signal when in training mode;
+    * [OneHot](#nn.OneHot) : transforms a tensor of indices into [one-hot](https://en.wikipedia.org/wiki/One-hot) encoding;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1703,3 +1704,49 @@ Default values for mean and standard deviation are 0 and 0.1 respectively.
 With `module:training()`, Gaussian noise is added during `forward`.
 During `backward` gradients are passed as is.
 With `module:evaluate()` the `mean` is added to the input.
+
+
+<a name = 'nn.OneHot'></a>
+## OneHot ##
+
+```lua
+module = nn.OneHot(outputSize)
+```
+
+Transforms a tensor of `input` indices having integer values between 1 and `outputSize` into
+a tensor of one-hot vectors of size `outputSize`.
+
+Forward an index to get a one-hot vector :
+
+```lua
+> module = nn.OneHot(5) -- 5 classes
+> module:forward(torch.LongTensor{3})
+ 0  0  1  0  0
+[torch.DoubleTensor of size 1x5]
+```
+
+Forward a batch of 3 indices. Notice that these need not be stored as `torch.LongTensor` :
+
+```lua
+> module:forward(torch.Tensor{3,2,1})
+ 0  0  1  0  0
+ 0  1  0  0  0
+ 1  0  0  0  0
+[torch.DoubleTensor of size 3x5]
+```
+
+Forward batch of `2 x 3` indices :
+
+```lua
+oh:forward(torch.Tensor{{3,2,1},{1,2,3}})
+(1,.,.) =
+  0  0  1  0  0
+  0  1  0  0  0
+  1  0  0  0  0
+
+(2,.,.) =
+  1  0  0  0  0
+  0  1  0  0  0
+  0  0  1  0  0
+[torch.DoubleTensor of size 2x3x5]
+```
