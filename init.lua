@@ -63,6 +63,7 @@ require('nn.VolumetricDropout')
 require('nn.WhiteNoise')
 require('nn.OneHot')
 require('nn.PrintSize')
+require('nn.ZeroGrad')
 
 require('nn.CAddTable')
 require('nn.CDivTable')
