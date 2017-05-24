@@ -60,6 +60,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Constant](#nn.Constant) : outputs a constant value given an input (which is ignored);
     * [WhiteNoise](#nn.WhiteNoise) : adds isotropic Gaussian noise to the signal when in training mode;
     * [OneHot](#nn.OneHot) : transforms a tensor of indices into [one-hot](https://en.wikipedia.org/wiki/One-hot) encoding;
+    * [PrintSize](#nn.PrintSize) : prints the size of `input` and `gradOutput` (useful for debugging);
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1750,3 +1751,15 @@ oh:forward(torch.Tensor{{3,2,1},{1,2,3}})
   0  0  1  0  0
 [torch.DoubleTensor of size 2x3x5]
 ```
+
+<a name='nn.PrintSize'></a>
+## PrintSize ##
+
+```lua
+module = nn.PrintSize(name)
+```
+
+This module is useful for debugging complicated module composites.
+It prints the size of the `input` and `gradOutput` during `forward`
+and `backward` propagation respectively.
+The `name` is a string used to identify the module along side the printed size.
