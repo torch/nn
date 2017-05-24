@@ -57,6 +57,9 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [GradientReversal](#nn.GradientReversal) : reverses the gradient (to maximize an objective function) ;
     * [GPU](#nn.GPU) : decorates a module so that it can be executed on a specific GPU device.
     * [TemporalDynamicKMaxPooling](#nn.TemporalDynamicKMaxPooling) : selects the k highest values in a sequence. k can be calculated based on sequence length ;
+    * [Constant](#nn.Constant) : outputs a constant value given an input (which is ignored);
+    * [WhiteNoise](#nn.WhiteNoise) : adds isotropic Gaussian noise to the signal when in training mode;
+    * [OneHot](#nn.OneHot) : transforms a tensor of indices into [one-hot](https://en.wikipedia.org/wiki/One-hot) encoding;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1662,4 +1665,88 @@ Selects the highest `k` values for each feature in the feature map sequence prov
 If `factor` is not provided, `k = minK`, else the value of k is calculated with:
 ```lua
 k = math.max(minK, math.ceil(factor*nInputFrame)))
+```
+
+<a name='nn.Constant'></a>
+## Constant ##
+
+```lua
+module = nn.Constant(value, nInputDim)
+```
+
+This module outputs a constant value given an input.
+If `nInputDim` is specified, it uses the input to determine the size of the batch.
+The `value` is then replicated over the batch.
+Otherwise, the `value` Tensor is output as is.
+During `backward`, the returned `gradInput` is a zero Tensor of the same size as the `input`.
+This module has no trainable parameters.
+
+You can use this with nn.ConcatTable() to append constant inputs to an input :
+
+```lua
+nn.ConcatTable():add(nn.Constant(v)):add(nn.Identity())
+```
+
+This is useful when you want to output a value that is independent of the
+input to the neural network.
+
+<a name='nn.WhiteNoise'></a>
+## WhiteNoise ##
+
+```lua
+module = nn.WhiteNoise([mean, stdev])
+```
+
+This module adds isotropic Gaussian noise to the `input`.
+This can be useful for training [Denoising Autoencoders](http://arxiv.org/pdf/1507.02672v1.pdf).
+Takes `mean` and `stdev` of the normal distribution as constructor arguments.
+Default values for mean and standard deviation are 0 and 0.1 respectively.
+With `module:training()`, Gaussian noise is added during `forward`.
+During `backward` gradients are passed as is.
+With `module:evaluate()` the `mean` is added to the input.
+
+
+<a name = 'nn.OneHot'></a>
+## OneHot ##
+
+```lua
+module = nn.OneHot(outputSize)
+```
+
+Transforms a tensor of `input` indices having integer values between 1 and `outputSize` into
+a tensor of one-hot vectors of size `outputSize`.
+
+Forward an index to get a one-hot vector :
+
+```lua
+> module = nn.OneHot(5) -- 5 classes
+> module:forward(torch.LongTensor{3})
+ 0  0  1  0  0
+[torch.DoubleTensor of size 1x5]
+```
+
+Forward a batch of 3 indices. Notice that these need not be stored as `torch.LongTensor` :
+
+```lua
+> module:forward(torch.Tensor{3,2,1})
+ 0  0  1  0  0
+ 0  1  0  0  0
+ 1  0  0  0  0
+[torch.DoubleTensor of size 3x5]
+```
+
+Forward batch of `2 x 3` indices :
+
+```lua
+oh:forward(torch.Tensor{{3,2,1},{1,2,3}})
+(1,.,.) =
+  0  0  1  0  0
+  0  1  0  0  0
+  1  0  0  0  0
+
+(2,.,.) =
+  1  0  0  0  0
+  0  1  0  0  0
+  0  0  1  0  0
+[torch.DoubleTensor of size 2x3x5]
 ```

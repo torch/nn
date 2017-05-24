@@ -59,6 +59,7 @@ require('nn.AddConstant')
 require('nn.Dropout')
 require('nn.SpatialDropout')
 require('nn.VolumetricDropout')
+require('nn.OneHot')
 
 require('nn.CAddTable')
 require('nn.CDivTable')
