@@ -57,6 +57,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [GradientReversal](#nn.GradientReversal) : reverses the gradient (to maximize an objective function) ;
     * [GPU](#nn.GPU) : decorates a module so that it can be executed on a specific GPU device.
     * [TemporalDynamicKMaxPooling](#nn.TemporalDynamicKMaxPooling) : selects the k highest values in a sequence. k can be calculated based on sequence length ;
+    * [Constant](#nn.Constant) : outputs a constant value given an input (which is ignored);
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1663,3 +1664,26 @@ If `factor` is not provided, `k = minK`, else the value of k is calculated with:
 ```lua
 k = math.max(minK, math.ceil(factor*nInputFrame)))
 ```
+
+<a name='nn.Constant'></a>
+## Constant ##
+
+```lua
+module = nn.Constant(value, nInputDim)
+```
+
+This module outputs a constant value given an input.
+If `nInputDim` is specified, it uses the input to determine the size of the batch.
+The `value` is then replicated over the batch.
+Otherwise, the `value` Tensor is output as is.
+During `backward`, the returned `gradInput` is a zero Tensor of the same size as the `input`.
+This module has no trainable parameters.
+
+You can use this with nn.ConcatTable() to append constant inputs to an input :
+
+```lua
+nn.ConcatTable():add(nn.Constant(v)):add(nn.Identity())
+```
+
+This is useful when you want to output a value that is independent of the
+input to the neural network (see [this example](https://github.com/Element-Research/rnn/blob/master/examples/recurrent-visual-attention.lua)).

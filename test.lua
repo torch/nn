@@ -8387,6 +8387,18 @@ function nntest.SpatialDepthWiseConvolution()
    mytester:assert(torch.all(abs_diff:lt(epsilon)))
 end
 
+function nntest.Constant()
+   local input = torch.randn(20,3,7)
+   local gradOutput = torch.randn(20,30,6)
+   local value = torch.randn(30,6)
+   local const = nn.Constant(value:clone(), 2)
+   local output = const:forward(input)
+   local gradInput = const:backward(input, output)
+   local output2 = value:view(1,30,6):expand(20,30,6)
+   mytester:assertTensorEq(output2, output, 0.000001, "Constant forward err")
+   mytester:assertTensorEq(gradInput, input:zero(), 0.000001, "Constant backward err")
+end
+
 mytester:add(nntest)
 
 jac = nn.Jacobian
