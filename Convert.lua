@@ -54,7 +54,6 @@ function Convert:buildConverter(input)
    assert(torch.isTensor(self.output), "Expecting Tensor output")
 
    self.converter:type(torch.type(self.output))
-   self.converter:serialMode(self.dpnn_serialEmpty, self.dpnn_serialType)
 
    self.modules[1] = self.converter
 end
@@ -231,14 +230,16 @@ function Convert:findAxis(axis_char, shape, silent)
    return axis_pos
 end
 
+function Convert:clearState()
+   self._input = nil
+   self._gradInput = nil
+   self.__input = nil
+   self.__output = nil
+   self.__gradInput = nil
+   self.__gradOutput =  nil
+end
+
 function Convert:type(type)
-   if not torch.isTypeOf(self.output, type) then
-      self._input = nil
-      self._gradInput = nil
-      self.__input = nil
-      self.__output = nil
-      self.__gradInput = nil
-      self.__gradOutput =  nil
-   end
+   self:clearState()
    return parent.type(self, type)
 end
