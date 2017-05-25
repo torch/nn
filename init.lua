@@ -71,6 +71,7 @@ require('nn.CMulTable')
 require('nn.CSubTable')
 require('nn.CMaxTable')
 require('nn.CMinTable')
+require('nn.CAddTensorTable')
 
 require('nn.Euclidean')
 require('nn.WeightedEuclidean')

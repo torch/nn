@@ -28,6 +28,7 @@ This allows one to build very rich architectures:
     * [`CDivTable`](#nn.CDivTable): division of input `Tensor`s;
     * [`CMaxTable`](#nn.CMaxTable): max of input `Tensor`s;
     * [`CMinTable`](#nn.CMinTable): min of input `Tensor`s;
+    * [`CAddTensorTable`](#nn.CAddTensorTable): adds a tensor to a table of tensors of the same size;
   * `Table` of Criteria:
     * [`CriterionTable`](#nn.CriterionTable): wraps a [Criterion](criterion.md#nn.Criterion) so that it can accept a `table` of inputs.
 
@@ -1350,4 +1351,19 @@ m = nn.CMinTable()
  2
  1
 [torch.DoubleTensor of size 3]
+```
+
+<a name='nn.CAddTensorTable'></a>
+## CAddTensorTable ##
+
+```lua
+module = nn.CAddTensorTable()
+```
+
+Adds the first element `el` of the input table `tab` to each tensor contained in the second element of `tab`, which is itself a table
+
+Example:
+```lua
+print(module:forward{ (0,1,1), {(0,0,0),(1,1,1)} })
+{ (0,1,1), (1,2,2) }
 ```
