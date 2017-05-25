@@ -172,6 +172,7 @@ require('nn.NarrowTable')
 require('nn.MapTable')
 require('nn.ZipTable')
 require('nn.ZipTableOneToMany')
+require('nn.Collapse')
 
 require('nn.Criterion')
 require('nn.MSECriterion')
