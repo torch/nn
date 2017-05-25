@@ -170,6 +170,8 @@ require('nn.CriterionTable')
 require('nn.FlattenTable')
 require('nn.NarrowTable')
 require('nn.MapTable')
+require('nn.ZipTable')
+require('nn.ZipTableOneToMany')
 
 require('nn.Criterion')
 require('nn.MSECriterion')

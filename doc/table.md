@@ -15,6 +15,8 @@ This allows one to build very rich architectures:
     * [`SelectTable`](#nn.SelectTable): select one element from a `table`;
     * [`NarrowTable`](#nn.NarrowTable): select a slice of elements from a `table`;
     * [`FlattenTable`](#nn.FlattenTable): flattens a nested `table` hierarchy;
+    * [`ZipTable`](#nn.ZipTable) : zip a table of tables into a table of tables;
+    * [`ZipTableOneToMany`](#nn.ZipTableOneToMany) : zip a table to a single tensor;
   * Pair Modules compute a measure like distance or similarity from a pair (`table`) of input `Tensor`s:
     * [`PairwiseDistance`](#nn.PairwiseDistance): outputs the `p`-norm. distance between inputs;
     * [`DotProduct`](#nn.DotProduct): outputs the dot product (similarity) between inputs;
@@ -692,7 +694,7 @@ Forwarding a batch of 2 examples gives us something like this:
 
 `module` = `SelectTable(index)`
 
-Creates a module that takes a (nested) `table` as input and outputs the element at index `index`. `index` can be strings or integers (positive or negative). 
+Creates a module that takes a (nested) `table` as input and outputs the element at index `index`. `index` can be strings or integers (positive or negative).
 This can be either a `table` or a [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
 
 The gradients of the non-`index` elements are zeroed `Tensor`s of the same size. This is true regardless of the
@@ -731,7 +733,7 @@ Exmaple 2:
 
 > gradInput = nn.SelectTable("A"):backward(input, torch.randn(2, 3))
 
-> gradInput 
+> gradInput
 {
   A : DoubleTensor - size: 2x3
   B : DoubleTensor - size: 2x1
@@ -811,11 +813,11 @@ Example 3:
 
 `module` = `NarrowTable(offset [, length])`
 
-Creates a module that takes a `table` as input and outputs the subtable 
+Creates a module that takes a `table` as input and outputs the subtable
 starting at index `offset` having `length` elements (defaults to 1 element).
 The elements can be either a `table` or a [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
 
-The gradients of the elements not included in the subtable are zeroed `Tensor`s of the same size. 
+The gradients of the elements not included in the subtable are zeroed `Tensor`s of the same size.
 This is true regardless of the depth of the encapsulated `Tensor` as the function used internally to do so is recursive.
 
 Example:
@@ -881,6 +883,36 @@ gives the output:
   3 : DoubleTensor - size: 3
   4 : DoubleTensor - size: 4
 }
+```
+
+<a name='nn.ZipTable'></a>
+## ZipTable ##
+
+```lua
+module = nn.ZipTable()
+```
+
+Zips a table of tables into a table of tables.
+
+Example:
+```lua
+print(module:forward{ {'a1','a2'}, {'b1','b2'}, {'c1','c2'} })
+{ {'a1','b1','c1'}, {'a2','b2','c2'} }
+```
+
+<a name='nn.ZipTableOneToMany'></a>
+## ZipTableOneToMany ##
+
+```lua
+module = nn.ZipTableOneToMany()
+```
+
+Zips a table of element `el` and table of elements `tab` into a table of tables, where the i-th table contains the element `el` and the i-th element in table `tab`
+
+Example:
+```lua
+print(module:forward{ 'el', {'a','b','c'} })
+{ {'el','a'}, {'el','b'}, {'el','c'} }
 ```
 
 <a name="nn.PairwiseDistance"></a>
