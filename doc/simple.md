@@ -61,7 +61,8 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [WhiteNoise](#nn.WhiteNoise) : adds isotropic Gaussian noise to the signal when in training mode;
     * [OneHot](#nn.OneHot) : transforms a tensor of indices into [one-hot](https://en.wikipedia.org/wiki/One-hot) encoding;
     * [PrintSize](#nn.PrintSize) : prints the size of `input` and `gradOutput` (useful for debugging);
-    * [ZeroGrad](#nn.ZeroGrad) : forwards the `input` as-is, yet zeros the `gradInput`.
+    * [ZeroGrad](#nn.ZeroGrad) : forwards the `input` as-is, yet zeros the `gradInput`;
+    * [Collapse](#nn.Collapse) : just like `nn.View(-1)`.
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1029,6 +1030,8 @@ Example 2:
 [torch.LongStorage of size 2]
 ```
 
+For collapsing non-batch dims, check out [nn.Collapse](#nn.Collapse).
+
 <a name="nn.Contiguous"></a>
 ## Contiguous ##
 
@@ -1784,3 +1787,20 @@ print(module:backward(input, gradOutput))
 ```
 
 The module zeros the `gradInput` but forwards the `input` as-is.
+
+<a name='nn.Collapse'></a>
+## Collapse ##
+
+```lua
+module = nn.Collapse(nInputDim)
+```
+
+This module is the equivalent of:
+```
+view = nn.View(-1)
+view:setNumInputDim(nInputDim)
+```
+
+It collapses all non-batch dimensions. This is useful for converting
+a spatial feature map to the single dimension required by a dense
+hidden layer like Linear.
