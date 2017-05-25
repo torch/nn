@@ -62,7 +62,8 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [OneHot](#nn.OneHot) : transforms a tensor of indices into [one-hot](https://en.wikipedia.org/wiki/One-hot) encoding;
     * [PrintSize](#nn.PrintSize) : prints the size of `input` and `gradOutput` (useful for debugging);
     * [ZeroGrad](#nn.ZeroGrad) : forwards the `input` as-is, yet zeros the `gradInput`;
-    * [Collapse](#nn.Collapse) : just like `nn.View(-1)`.
+    * [Collapse](#nn.Collapse) : just like `nn.View(-1)`;
+    * [Convert](#nn.Convert) : convert between different tensor types or shapes;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -1804,3 +1805,74 @@ view:setNumInputDim(nInputDim)
 It collapses all non-batch dimensions. This is useful for converting
 a spatial feature map to the single dimension required by a dense
 hidden layer like Linear.
+
+<a name='nn.Convert'></a>
+## Convert ##
+
+```lua
+module = nn.Convert([inputShape, outputShape])
+```
+Module to convert between different data formats.
+For example, we can flatten images by using :
+```lua
+module = nn.Convert('bchw', 'bf')
+```
+or equivalently
+```lua
+module = nn.Convert('chw', 'f')
+```
+Lets try it with an input:
+```lua
+print(module:forward(torch.randn(3,2,3,1)))
+ 0.5692 -0.0190  0.5243  0.7530  0.4230  1.2483
+-0.9142  0.6013  0.5608 -1.0417 -1.4014  1.0177
+-1.5207 -0.1641 -0.4166  1.4810 -1.1725 -1.0037
+[torch.DoubleTensor of size 3x6]
+```
+You could also try:
+
+```lua
+module = nn.Convert('chw', 'hwc')
+input = torch.randn(1,2,3,2)
+input:select(2,1):fill(1)
+input:select(2,2):fill(2)
+print(input)
+(1,1,.,.) =
+  1  1
+  1  1
+  1  1
+(1,2,.,.) =
+  2  2
+  2  2
+  2  2
+[torch.DoubleTensor of size 1x2x3x2]
+print(module:forward(input))
+(1,1,.,.) =
+  1  2
+  1  2
+
+(1,2,.,.) =
+  1  2
+  1  2
+
+(1,3,.,.) =
+  1  2
+  1  2
+[torch.DoubleTensor of size 1x3x2x2]
+```
+
+
+Furthermore, it automatically converts the `input` to have the same type as `self.output`
+(i.e. the type of the module).
+So you can also just use is for automatic input type converions:
+```lua
+module = nn.Convert()
+print(module.output) -- type of module
+[torch.DoubleTensor with no dimension]
+input = torch.FloatTensor{1,2,3}
+print(module:forward(input))
+ 1
+ 2
+ 3
+[torch.DoubleTensor of size 3]
+```
