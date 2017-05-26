@@ -8668,6 +8668,81 @@ function nntest.CAddTensorTable()
    mytester:assertTensorEq(output[1]+output[2]+output[3], gradInput[1], 0.000001, "CAddTensorTable gradInput1")
 end
 
+-- Unit Test Kmeans layer
+function nntest.Kmeans()
+   local k = 3
+   local dim = 5
+   local batchSize = 200
+   local input = torch.Tensor(batchSize, dim)
+   for i=1, batchSize do
+      input[i]:fill(torch.random(1, k))
+   end
+
+   local verbose = false
+
+   local attempts = 10
+   local iter = 100
+   local bestLoss = 100000000
+   local bestKm = nil
+   local tempLoss = 0
+   local learningRate = 1
+
+   local initTypes = {'random', 'kmeans++'}
+   local useCudas = {false}
+   if pcall(function() require 'cunn' end) then
+      useCudas[2] = true
+   end
+   for _, initType in pairs(initTypes) do
+      for _, useCuda in pairs(useCudas) do
+
+         if useCuda then
+            input = input:cuda()
+         else
+            input = input:double()
+         end
+
+         local timer = torch.Timer()
+         for j=1, attempts do
+            local km = nn.Kmeans(k, dim)
+            if useCuda then km:cuda() end
+
+            if initType == 'kmeans++' then
+               km:initKmeansPlus(input)
+            else
+               km:initRandom(input)
+            end
+
+            for i=1, iter do
+               km:zeroGradParameters()
+
+               km:forward(input)
+               km:backward(input, gradOutput)
+
+               -- Gradient descent
+               km.weight:add(-learningRate, km.gradWeight)
+               tempLoss = km.loss
+            end
+            if verbose then print("Attempt Loss " .. j ..": " .. tempLoss) end
+            if tempLoss < bestLoss then
+               bestLoss = tempLoss
+            end
+            if (initType == 'kmeans++' and bestLoss < 0.00001) or (initType == 'random' and bestLoss < 500) then
+               break
+            end
+         end
+         if verbose then
+            print("InitType: " .. initType .. " useCuda: " .. tostring(useCuda))
+            print("Best Loss: " .. bestLoss)
+            print("Total time: " .. timer:time().real)
+         end
+         if initType == 'kmeans++' then
+            mytester:assert(bestLoss < 0.00001, "Kmeans++ error ("..(useCuda and 'cuda' or 'double')..")")
+         else
+            mytester:assert(bestLoss < 500, "Kmeans error ("..(useCuda and 'cuda' or 'double')..")")
+         end
+      end
+   end
+end
 
 mytester:add(nntest)
 

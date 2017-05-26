@@ -80,6 +80,7 @@ require('nn.CosineDistance')
 require('nn.DotProduct')
 require('nn.Normalize')
 require('nn.Cosine')
+require('nn.Kmeans')
 
 require('nn.Exp')
 require('nn.Log')
