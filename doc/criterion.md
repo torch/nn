@@ -29,6 +29,7 @@ target, they compute a gradient according to a given loss function.
     * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
     * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
     * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
+    * [`ModuleCriterion`](#nn.ModuleCriterion) : adds an optional `inputModule` and `targetModule` before a decorated criterion;
 
 <a name="nn.Criterion"></a>
 ## Criterion ##
@@ -877,3 +878,17 @@ for i = 1, 100 do
    end
 end
 ```
+
+<a name='nn.ModuleCriterion'></a>
+## ModuleCriterion ##
+
+```lua
+criterion = nn.ModuleCriterion(criterion [, inputModule, targetModule, castTarget])
+```
+
+This criterion decorates a `criterion` by allowing the `input` and `target` to be
+fed through an optional `inputModule` and `targetModule` before being passed to the
+`criterion`. The `inputModule` must not contain parameters as these would not be updated.
+
+When `castTarget = true` (the default), the `targetModule` is cast along with the `inputModule` and
+`criterion`. Otherwise, the `targetModule` isn't.
