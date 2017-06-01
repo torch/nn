@@ -29,6 +29,7 @@ target, they compute a gradient according to a given loss function.
     * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
     * [`ParallelCriterion`](#nn.ParallelCriterion) : a weighted sum of other criterions each applied to a different input and target;
     * [`MarginRankingCriterion`](#nn.MarginRankingCriterion): ranks two inputs;
+    * [`ModuleCriterion`](#nn.ModuleCriterion) : adds an optional `inputModule` and `targetModule` before a decorated criterion;
 
 <a name="nn.Criterion"></a>
 ## Criterion ##
@@ -95,10 +96,10 @@ criterion.sizeAverage = false
 ## ClassNLLCriterion ##
 
 ```lua
-criterion = nn.ClassNLLCriterion([weights])
+criterion = nn.ClassNLLCriterion([weights, sizeAverage, ignoreIndex])
 ```
 
-The negative log likelihood criterion. It is useful to train a classification problem with `n` classes.
+The negative log likelihood (NLL) criterion. It is useful to train a classification problem with `n` classes.
 If provided, the optional argument `weights` should be a 1D `Tensor` assigning weight to each of the classes.
 This is particularly useful when you have an unbalanced training set.
 
@@ -113,11 +114,21 @@ The loss can be described as:
 loss(x, class) = -x[class]
 ```
 
-or in the case of the `weights` argument it is specified as follows:
+or in the case of the `weights` argument, it is specified as follows:
 ```lua
 loss(x, class) = -weights[class] * x[class]
 ```
-Due to the behaviour of the backend code, it is necessary to set sizeAverage to false when calculating losses *in non-batch mode*.
+
+or in the case of the `ignoreIndex` argument:
+```
+loss(x, class) = class != ignoreIndex ? -weights[class] * x[class] : 0
+```
+
+Indeed, the `ignoreIndex` (defaults to -100) specifies a value for targets to be ignored.
+The commensurate `gradInput` for that target will be zero.
+When `sizeAverage=true` (the default), the `gradInput` and `output` are averaged over non-ignored targets.
+
+Due to the behaviour of the backend code, it is necessary to set `sizeAverage` to false when calculating losses *in non-batch mode*.
 
 The following is a code fragment showing how to make a gradient step given an input `x`, a desired output `y` (an integer `1` to `n`, in this case `n = 2` classes), a network `mlp` and a learning rate `learningRate`:
 
@@ -133,7 +144,7 @@ function gradUpdate(mlp, x, y, learningRate)
 end
 ```
 
-By default, the losses are averaged over observations for each minibatch. However, if the field `sizeAverage` is set to `false`, the losses are instead summed for each minibatch.
+By default, the losses are averaged over observations for each minibatch. However, if the argument `sizeAverage` is set to `false`, the losses are instead summed for each minibatch.
 
 
 <a name="nn.CrossEntropyCriterion"></a>
@@ -758,7 +769,7 @@ Sample example
 
    tripleModel = nn.ParallelTable()
    tripleModel:add(embeddingModel)
-   tripleModel:add(embeddingModel:clone('weight', 'bias', 
+   tripleModel:add(embeddingModel:clone('weight', 'bias',
                                         'gradWeight', 'gradBias'))
    tripleModel:add(embeddingModel:clone('weight', 'bias',
                                         'gradWeight', 'gradBias'))
@@ -867,3 +878,17 @@ for i = 1, 100 do
    end
 end
 ```
+
+<a name='nn.ModuleCriterion'></a>
+## ModuleCriterion ##
+
+```lua
+criterion = nn.ModuleCriterion(criterion [, inputModule, targetModule, castTarget])
+```
+
+This criterion decorates a `criterion` by allowing the `input` and `target` to be
+fed through an optional `inputModule` and `targetModule` before being passed to the
+`criterion`. The `inputModule` must not contain parameters as these would not be updated.
+
+When `castTarget = true` (the default), the `targetModule` is cast along with the `inputModule` and
+`criterion`. Otherwise, the `targetModule` isn't.
