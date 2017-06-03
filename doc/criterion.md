@@ -23,7 +23,7 @@ target, they compute a gradient according to a given loss function.
   * Embedding criterions (measuring whether two inputs are similar or dissimilar):
     * [`HingeEmbeddingCriterion`](#nn.HingeEmbeddingCriterion): takes a distance as input;
     * [`L1HingeEmbeddingCriterion`](#nn.L1HingeEmbeddingCriterion): L1 distance between two inputs;
-    * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine distance between two inputs;
+    * [`CosineEmbeddingCriterion`](#nn.CosineEmbeddingCriterion): cosine similarity between two inputs;
     * [`DistanceRatioCriterion`](#nn.DistanceRatioCriterion): Probabilistic criterion for training siamese model with triplets.
   * Miscelaneus criterions:
     * [`MultiCriterion`](#nn.MultiCriterion) : a weighted sum of other criterions each applied to the same input and target;
@@ -724,7 +724,7 @@ criterion = nn.CosineEmbeddingCriterion([margin])
 ```
 
 Creates a criterion that measures the loss given  an input `x` = `{x1, x2}`, a table of two `Tensor`s, and a `Tensor` label `y`  with values 1 or -1.
-This is used for measuring whether two inputs are similar or dissimilar, using the cosine distance, and is typically used for learning nonlinear embeddings or semi-supervised learning.
+This is used for measuring whether two inputs are similar or dissimilar, using the cosine similarity, and is typically used for learning nonlinear embeddings or semi-supervised learning.
 
 `margin` should be a number from `-1` to `1`, `0` to `0.5` is suggested.
 `Forward` and `Backward` have to be used alternately. If `margin` is missing, the default value is `0`.
