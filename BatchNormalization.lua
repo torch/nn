@@ -74,12 +74,15 @@ function BN:reset()
 end
 
 function BN:checkInputDim(input)
-   assert(input:dim() == self.nDim, string.format(
+   local iDim = input:dim()
+   assert(iDim == self.nDim or
+              (iDim == self.nDim - 1 and self.train == false), string.format(
       'only mini-batch supported (%dD tensor), got %dD tensor instead',
-      self.nDim, input:dim()))
-   assert(input:size(2) == self.running_mean:nElement(), string.format(
+      self.nDim, iDim))
+   local featDim = (iDim == self.nDim - 1) and 1 or 2
+   assert(input:size(featDim) == self.running_mean:nElement(), string.format(
       'got %d-feature tensor, expected %d',
-      input:size(2), self.running_mean:nElement()))
+      input:size(featDim), self.running_mean:nElement()))
 end
 
 local function makeContiguous(self, input, gradOutput)
@@ -98,12 +101,21 @@ local function makeContiguous(self, input, gradOutput)
    return input, gradOutput
 end
 
+local function makeBatch(self, input)
+    local iDim = input:dim()
+    if self.train == false and iDim == self.nDim - 1 then
+        return nn.utils.addSingletonDimension(input, input, 1)
+    else
+        return input
+    end
+end
+
 function BN:updateOutput(input)
    self:checkInputDim(input)
 
    input = makeContiguous(self, input)
+   input = makeBatch(self, input)
 
-   self.output:resizeAs(input)
    self.save_mean = self.save_mean or input.new()
    self.save_mean:resizeAs(self.running_mean)
    self.save_std = self.save_std or input.new()
@@ -131,6 +143,8 @@ local function backward(self, input, gradOutput, scale, gradInput, gradWeight, g
    assert(self.save_mean and self.save_std, 'must call :updateOutput() first')
 
    input, gradOutput = makeContiguous(self, input, gradOutput)
+   input = makeBatch(self, input)
+   gradOutput = makeBatch(self, gradOutput)
 
    scale = scale or 1
    if gradInput then
@@ -192,4 +206,8 @@ function BN:clearState()
       'save_std',
    })
    return parent.clearState(self)
+end
+
+function BN:__tostring__()
+   return string.format('%s (%dD) (%d)', torch.type(self), self.nDim, self.running_mean:nElement())
 end

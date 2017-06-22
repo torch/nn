@@ -1,7 +1,7 @@
 <a name="nn.convlayers.dok"></a>
 # Convolutional layers #
 
-A convolution is an integral that expresses the amount of overlap of one function `g` as it is shifted over another function `f`. It therefore "blends" one function with another. The neural network package supports convolution, pooling, subsampling and other relevant facilities. These are divided base on the dimensionality of the input and output [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor):
+A convolution is an integral that expresses the amount of overlap of one function `g` as it is shifted over another function `f`. It therefore "blends" one function with another. The neural network package supports convolution, pooling, subsampling and other relevant facilities. These are divided based on the dimensionality of the input and output [Tensors](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor):
 
   * [Temporal Modules](#nn.TemporalModules) apply to sequences with a one-dimensional relationship
 (e.g. sequences of words, phonemes and letters. Strings of some kind).
@@ -9,33 +9,42 @@ A convolution is an integral that expresses the amount of overlap of one functio
     * [TemporalSubSampling](#nn.TemporalSubSampling) : a 1D sub-sampling over an input sequence ;
     * [TemporalMaxPooling](#nn.TemporalMaxPooling) : a 1D max-pooling operation over an input sequence ;
     * [LookupTable](#nn.LookupTable) : a convolution of width `1`, commonly used for word embeddings ;
+    * [TemporalRowConvolution](#nn.TemporalRowConvolution) : a row-oriented 1D convolution over an input sequence ;
   * [Spatial Modules](#nn.SpatialModules) apply to inputs with two-dimensional relationships (e.g. images):
     * [SpatialConvolution](#nn.SpatialConvolution) : a 2D convolution over an input image ;
     * [SpatialFullConvolution](#nn.SpatialFullConvolution) : a 2D full convolution over an input image ;
     * [SpatialDilatedConvolution](#nn.SpatialDilatedConvolution) : a 2D dilated convolution over an input image ;
+    * [SpatialDepthWiseConvolution](#nn.SpatialDepthWiseConvolution) : a 2D depth-wise convolution over an input image ;
     * [SpatialConvolutionLocal](#nn.SpatialConvolutionLocal) : a 2D locally-connected layer over an input image ;
     * [SpatialSubSampling](#nn.SpatialSubSampling) : a 2D sub-sampling over an input image ;
     * [SpatialMaxPooling](#nn.SpatialMaxPooling) : a 2D max-pooling operation over an input image ;
+    * [SpatialDilatedMaxPooling](#nn.SpatialDilatedMaxPooling) : a 2D dilated max-pooling operation over an input image ;
     * [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling) : a 2D fractional max-pooling operation over an input image ;
     * [SpatialAveragePooling](#nn.SpatialAveragePooling) : a 2D average-pooling operation over an input image ;
     * [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling) : a 2D max-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
+    * [SpatialAdaptiveAveragePooling](#nn.SpatialAdaptiveAveragePooling) : a 2D average-pooling operation which adapts its parameters dynamically such that the output is of fixed size ;
     * [SpatialMaxUnpooling](#nn.SpatialMaxUnpooling) : a 2D max-unpooling operation ;
     * [SpatialLPPooling](#nn.SpatialLPPooling) : computes the `p` norm in a convolutional manner on a set of input images ;
     * [SpatialConvolutionMap](#nn.SpatialConvolutionMap) : a 2D convolution that uses a generic connection table ;
-    * [SpatialZeroPadding](#nn.SpatialZeroPadding) : padds a feature map with specified number of zeros ;
-    * [SpatialReflectionPadding](#nn.SpatialReflectionPadding) : padds a feature map with the reflection of the input ;
-    * [SpatialReplicationPadding](#nn.SpatialReplicationPadding) : padds a feature map with the value at the edge of the input borders ;
+    * [SpatialZeroPadding](#nn.SpatialZeroPadding) : pads a feature map with specified number of zeros ;
+    * [SpatialReflectionPadding](#nn.SpatialReflectionPadding) : pads a feature map with the reflection of the input ;
+    * [SpatialReplicationPadding](#nn.SpatialReplicationPadding) : pads a feature map with the value at the edge of the input borders ;
     * [SpatialSubtractiveNormalization](#nn.SpatialSubtractiveNormalization) : a spatial subtraction operation on a series of 2D inputs using
     * [SpatialCrossMapLRN](#nn.SpatialCrossMapLRN) : a spatial local response normalization between feature maps ;
     * [SpatialBatchNormalization](#nn.SpatialBatchNormalization): mean/std normalization over the mini-batch inputs and pixels, with an optional affine transform that follows
 a kernel for computing the weighted average in a neighborhood ;
-    * [SpatialUpsamplingNearest](#nn.SpatialUpSamplingNearest): A simple upsampler applied to every channel of the feature map.
+    * [SpatialUpSamplingNearest](#nn.SpatialUpSamplingNearest): A simple nearest neighbor upsampler applied to every channel of the feature map.
+    * [SpatialUpSamplingBilinear](#nn.SpatialUpSamplingBilinear): A simple bilinear upsampler applied to every channel of the feature map.
   * [Volumetric Modules](#nn.VolumetricModules) apply to inputs with three-dimensional relationships (e.g. videos) :
     * [VolumetricConvolution](#nn.VolumetricConvolution) : a 3D convolution over an input video (a sequence of images) ;
     * [VolumetricFullConvolution](#nn.VolumetricFullConvolution) : a 3D full convolution over an input video (a sequence of images) ;
+    * [VolumetricDilatedConvolution](#nn.VolumetricDilatedConvolution) : a 3D dilated convolution over an input image ;
     * [VolumetricMaxPooling](#nn.VolumetricMaxPooling) : a 3D max-pooling operation over an input video.
+    * [VolumetricDilatedMaxPooling](#nn.VolumetricDilatedMaxPooling) : a 3D dilated max-pooling operation over an input video ;
+    * [VolumetricFractionalMaxPooling](#nn.VolumetricFractionalMaxPooling) : a 3D fractional max-pooling operation over an input image ;
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
-    * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation ;
+    * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation.
+    * [VolumetricReplicationPadding](#nn.VolumetricReplicationPadding) : Pads a volumetric feature map with the value at the edge of the input borders. ;
 
 
 <a name="nn.TemporalModules"></a>
@@ -78,14 +87,14 @@ If the input sequence is a 3D tensor of dimension `nBatchFrame x nInputFrame x i
 `nBatchFrame x nOutputFrame x outputFrameSize`.
 
 The parameters of the convolution can be found in `self.weight` (Tensor of
-size `outputFrameSize x (inputFrameSize x kW) `) and `self.bias` (Tensor of
+size `outputFrameSize x (kW x inputFrameSize) `) and `self.bias` (Tensor of
 size `outputFrameSize`). The corresponding gradients can be found in
 `self.gradWeight` and `self.gradBias`.
 
 For a 2D input, the output value of the layer can be precisely described as:
 ```lua
 output[t][i] = bias[i]
-  + sum_j sum_{k=1}^kW weight[i][j][k]
+  + sum_j sum_{k=1}^kW weight[i][k][j]
                                 * input[dW*(t-1)+k)][j]
 ```
 
@@ -185,7 +194,7 @@ size `inputFrameSize`). The corresponding gradients can be found in
 
 The output value of the layer can be precisely described as:
 ```lua
-output[i][t] = bias[i] + weight[i] * sum_{k=1}^kW input[i][dW*(t-1)+k)]
+output[t][i] = bias[i] + weight[i] * sum_{k=1}^kW input[dW*(t-1)+k][i]
 ```
 
 <a name="nn.LookupTable"></a>
@@ -317,6 +326,65 @@ Outputs something like:
 Note that the 1st, 2nd and 10th rows of the module.weight are updated to
 obey the max-norm constraint, since their indices appear in the "input".
 
+<a name="nn.TemporalRowConvolution"></a>
+### TemporalRowConvolution ###
+
+```lua
+module = nn.TemporalRowConvolution(inputFrameSize, kW, [dW], [featFirst]))
+```
+
+Applies a 1D row-oriented convolution over an input sequence composed of `nInputFrame` frames. The input tensor in `forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`). The layer can be used without a bias by `module:noBias()`.
+
+The parameters are the following:
+  * `inputFrameSize`: The input frame size expected in sequences given into `forward()`.
+  * `kW`: The kernel width of the convolution.
+  * `dW`: The step of the convolution Default is `1`.
+  * `featFirst`: Expects input to be in the form `nBatchFrame x inputFrameSize x nInputFrame` is `true`. Default is `false`.
+
+  If the input sequence is a 2D tensor of dimension `nInputFrame x inputFrameSize`, the output sequence will be `nOutputFrame x inputFrameSize` where
+
+  ```lua
+  nOutputFrame = (nInputFrame - kW) / dW + 1
+  ```
+
+  If the input sequence is a 3D tensor of dimension `nBatchFrame x nInputFrame x inputFrameSize`, the output sequence will be `nBatch x nOutputFrame x outputFrameSize`.
+
+  The parameters are the convolution can be found in `self.weight` (Tensor of size `inputFrameSize x kW`) and `self.bias` (Tensor of size `inputFrameSize`). The corresponding gradients can be found in `self.gradWeight` and `self.gradBias`.
+
+  For a 2D input, the output value of the layer can be precisely described as:
+
+  ```lua
+  output[t][i] = bias[i] + sum_{k=1}^kW weight[i][k] * input[dW(t-1)+k][i]
+  ```
+
+  Here is a simple example:
+  ```lua
+  inp = 5;
+  kw = 3;
+  dw = 1;
+
+  -- row convolution with a kernel width of 3 (future context of 2)
+  module = nn.TemporalRowConvolution(inp, kw, dw)
+
+  x = torch.rand(8, inp)
+  print(module:forward(x))
+  ```
+
+  which gives
+
+  ```lua
+  0.1188  0.1945  0.1065 -0.0077 -0.3433
+  0.0630  0.4354  0.1954 -0.2103 -0.3506
+  0.0340  0.2222  0.3039 -0.2012 -0.3814
+  0.0820  0.3489  0.2533 -0.0940 -0.3298
+  0.1964  0.1533  0.1750 -0.1493 -0.3059
+  0.2651  0.2474  0.0521 -0.1134 -0.4024
+  [torch.Tensor of dimension 8x5]
+  ```
+
+  More information about the layer can be found [here](http://www.cs.cmu.edu/~dyogatam/papers/wang+etal.iclrworkshop2016.pdf).
+
+
 <a name="nn.SpatialModules"></a>
 ## Spatial Modules ##
 Excluding an optional batch dimension, spatial layers expect a 3D Tensor as input. The
@@ -340,8 +408,8 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `padW`, a good number is `(kH-1)/2`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
@@ -422,7 +490,7 @@ module = nn.SpatialFullConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH]
 Applies a 2D full convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D or 4D tensor. Note that instead of setting `adjW` and `adjH`, SpatialFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution
 is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
-will ignore the `adjW` and `adjH` values used to construct the module.
+will ignore the `adjW` and `adjH` values used to construct the module. The layer can be used without a bias by module:noBias().
 
 Other frameworks call this operation "In-network Upsampling", "Fractionally-strided convolution", "Backwards Convolution," "Deconvolution", or "Upconvolution."
 
@@ -433,8 +501,8 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
   * `adjW`: Extra width to add to the output image. Default is `0`. Cannot be greater than dW-1.
   * `adjH`: Extra height to add to the output image. Default is `0`. Cannot be greater than dH-1.
 
@@ -454,6 +522,7 @@ Further information about the full convolution can be found in the following pap
 module = nn.SpatialDilatedConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH], [dilationW], [dilationH])
 ```
 
+Also sometimes referred to as **atrous convolution**.
 Applies a 2D dilated convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D or 4D tensor.
 
@@ -464,19 +533,64 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
   * `dilationW`: The number of pixels to skip. Default is `1`. `1` makes it a SpatialConvolution
   * `dilationH`: The number of pixels to skip. Default is `1`. `1` makes it a SpatialConvolution
 
 If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
 will be `nOutputPlane x oheight x owidth` where
 ```lua
-owidth  = width + 2 * padW - dilationW * (kW-1) + 1 / dW + 1
-oheight = height + 2 * padH - dilationH * (kH-1) + 1 / dH + 1
+owidth  = floor((width + 2 * padW - dilationW * (kW-1) - 1) / dW) + 1
+oheight = floor((height + 2 * padH - dilationH * (kH-1) - 1) / dH) + 1
 ```
 
 Further information about the dilated convolution can be found in the following paper: [Multi-Scale Context Aggregation by Dilated Convolutions](http://arxiv.org/abs/1511.07122).
+
+<a name="nn.SpatialDepthWiseConvolution"></a>
+### SpatialDepthWiseConvolution ###
+
+```lua
+module = nn.SpatialDepthWiseConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH])
+```
+
+Applies a 2D depth-wise convolution over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`).
+
+It is similar to `SpatialConvolution`, but here a spatial convolution is performed independently over each channel of an input. The most noticiable difference is the output dimension of `SpatialConvolution` is `nOutputPlane x oheight x owidth`, while for `SpatialDepthWiseConvolution` it is  `(nOutputPlane x nInputPlane) x oheight x owidth`.
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `nOutputPlane`: The number of output planes the convolution layer will produce.
+  * `kW`: The kernel width of the convolution
+  * `kH`: The kernel height of the convolution
+  * `dW`: The step of the convolution in the width dimension. Default is `1`.
+  * `dH`: The step of the convolution in the height dimension. Default is `1`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
+
+Note that depending of the size of your kernel, several (of the last)
+columns or rows of the input image might be lost. It is up to the user to
+add proper padding in images.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output image size
+will be a 3D tensor `(nOutputPlane x nInputPlane) x oheight x owidth` where
+```lua
+owidth  = floor((width  + 2*padW - kW) / dW + 1)
+oheight = floor((height + 2*padH - kH) / dH + 1)
+```
+
+The parameters of the convolution can be found in `self.weight` (Tensor of
+size `nOutputPlane x nInputPlane x kH x kW`) and `self.bias` (Tensor of
+size `nOutputPlane x nInputPlane`). The corresponding gradients can be found in
+`self.gradWeight` and `self.gradBias`.
+
+The output value of the layer can be described as:
+```
+output[i][j] = input[j] * weight[i][j] + b[i][j], i = 1, ..., nOutputPlane, j = 1, ..., nInputPlane
+```
+
+Further information about the dilated convolution can be found in the following paper: [Xception: Deep Learning with Depthwise Separable Convolutions](https://arxiv.org/abs/1610.02357).
 
 <a name="nn.SpatialConvolutionLocal"></a>
 ### SpatialConvolutionLocal ###
@@ -499,8 +613,8 @@ The parameters are the following:
   * `kH`: The kernel height.
   * `dW`: The step in the width dimension. Default is `1`.
   * `dH`: The step in the height dimension. Default is `1`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`.
 
 If the input image is a 3D tensor `nInputPlane x iH x iW`, the output image size
 will be `nOutputPlane x oH x oW` where
@@ -535,6 +649,29 @@ image size will be `nOutputPlane x oheight x owidth` where
 ```lua
 owidth  = op((width  + 2*padW - kW) / dW + 1)
 oheight = op((height + 2*padH - kH) / dH + 1)
+```
+
+`op` is a rounding operator. By default, it is `floor`. It can be changed
+by calling `:ceil()` or `:floor()` methods.
+
+<a name="nn.SpatialDilatedMaxPooling"></a>
+### SpatialDilatedMaxPooling ###
+
+```lua
+module = nn.SpatialDilatedMaxPooling(kW, kH [, dW, dH, padW, padH, dilationW, dilationH])
+```
+
+Also sometimes referred to as **atrous pooling**.
+Applies 2D dilated max-pooling operation in `kWxkH` regions by step size
+`dWxdH` steps. The number of output features is equal to the number of
+input planes. If `dilationW` and `dilationH` are not provided, this is equivalent to performing normal `nn.SpatialMaxPooling`.
+
+If the input image is a 3D tensor `nInputPlane x height x width`, the output
+image size will be `nOutputPlane x oheight x owidth` where
+
+```lua
+owidth  = op((width - (dilationW * (kW - 1) + 1) + 2*padW) / dW + 1)
+oheight = op((height - (dilationH * (kH - 1) + 1) + 2*padH) / dH + 1)
 ```
 
 `op` is a rounding operator. By default, it is `floor`. It can be changed
@@ -633,6 +770,19 @@ y_i_start = floor((i   /oheight) * iheight)
 y_i_end   = ceil(((i+1)/oheight) * iheight)
 ```
 
+<a name="nn.SpatialAdaptiveAveragePooling"></a>
+### SpatialAdaptiveAveragePooling ###
+
+```lua
+module = nn.SpatialAdaptiveAveragePooling(W, H)
+```
+
+Applies 2D average-pooling operation in an image such that the output is of
+size `WxH`, for any input size. The number of output features is equal
+to the number of input planes.
+
+The pooling region algorithm is the same as that in [SpatialAdaptiveMaxPooling](#nn.SpatialAdaptiveMaxPooling).
+
 <a name="nn.SpatialMaxUnpooling"></a>
 ### SpatialMaxUnpooling ###
 
@@ -715,6 +865,30 @@ output(u,v) = input(floor((u-1)/scale)+1, floor((v-1)/scale)+1)
 ```
 
 Where `u` and `v` are index from 1 (as per lua convention).  There are no learnable parameters.
+
+<a name="nn.SpatialUpSamplingBilinear"></a>
+### SpatialUpSamplingBilinear ###
+
+```lua
+module = nn.SpatialUpSamplingBilinear(scale)
+module = nn.SpatialUpSamplingBilinear({oheight=H, owidth=W})
+```
+
+Applies a 2D up-sampling over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 3D or 4D tensor (i.e. for 4D: `nBatchPlane x nInputPlane x height x width`). The number of output planes will be the same. The v dimension is assumed to be the second last dimension (i.e. for 4D it will be the 3rd dim), and the u dimension is assumed to be the last dimension.
+
+The parameters are the following:
+  * `scale`: The upscale ratio.  Must be a positive integer
+  * Or a table `{oheight=H, owidth=W}`: The required output height and width, should be positive integers.
+
+The up-scaling method is bilinear.
+If `scale` is specified, given an input of height iH and width iW, output height and width will be:
+```lua
+oH = (iH - 1)(scale - 1) + iH
+oW = (iW - 1)(scale - 1) + iW
+```
+
+There are no learnable parameters.
 
 <a name="nn.SpatialZeroPadding"></a>
 ### SpatialZeroPadding ###
@@ -827,7 +1001,7 @@ The learning of gamma and beta is optional.
 
    In training time, this layer keeps a running estimate of it's computed mean and std.
    The running sum is kept with a default momentup of 0.1 (unless over-ridden)
-   In test time, this running mean/std is used to normalize.
+   In test time, this running mean/std is used to normalize. (**Note that the running mean/std will not be saved if one only checkpoints a model's parameters. In order to correctly use the calculated running mean/std, one needs to checkpoint the model itself (call [clearState()](https://github.com/torch/nn/blob/master/doc/module.md#clearstate) first to save space).**)
 
 
 
@@ -870,17 +1044,16 @@ The parameters are the following:
   * `dT`: The step of the convolution in the time dimension. Default is `1`.
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padT`: The additional zeros added per time to the input planes. Default is `0`, a good number is `(kT-1)/2`.
-  * `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-  * `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
-
+  * `padT`: Additional zeros added to the input plane data on both sides of time axis. Default is `0`. `(kT-1)/2` is often used here.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
 
 Note that depending of the size of your kernel, several (of the last)
 columns or rows of the input image might be lost. It is up to the user to
-add proper padding in images.
+add proper padding in images. This layer can be used without a bias by module:noBias().
 
 If the input image is a 4D tensor `nInputPlane x time x height x width`, the output image size
-will be `nOutputPlane x otime x owidth x oheight` where
+will be `nOutputPlane x otime x oheight x owidth` where
 ```lua
 otime  = floor((time  + 2*padT - kT) / dT + 1)
 owidth  = floor((width  + 2*padW - kW) / dW + 1)
@@ -896,12 +1069,14 @@ size `nOutputPlane`). The corresponding gradients can be found in
 ### VolumetricFullConvolution ###
 
 ```lua
-module = nn.VolumetricFullConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH])
+module = nn.VolumetricFullConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH], [adjT], [adjW], [adjH])
 ```
 
 Applies a 3D full convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 4D or 5D tensor. Note that instead of setting `adjT`, `adjW` and `adjH`, VolumetricFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
 will ignore the `adjT`, `adjW` and `adjH` values used to construct the module.
+
+This can be used as 3D deconvolution, or 3D upsampling. So that the 3D FCN can be easly implemented. This layer can be used without a bias by module:noBias().
 
 The parameters are the following:
 * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
@@ -912,17 +1087,56 @@ The parameters are the following:
 * `dT`: The step of the convolution in the depth dimension. Default is `1`.
 * `dW`: The step of the convolution in the width dimension. Default is `1`.
 * `dH`: The step of the convolution in the height dimension. Default is `1`.
-* `padT`: The additional zeros added per depth to the input planes. Default is `0`, a good number is `(kT-1)/2`.
-* `padW`: The additional zeros added per width to the input planes. Default is `0`, a good number is `(kW-1)/2`.
-* `padH`: The additional zeros added per height to the input planes. Default is `0`, a good number is `(kH-1)/2`.
+* `padT`: Additional zeros added to the input plane data on both sides of time (depth) axis. Default is `0`. `(kT-1)/2` is often used here.
+* `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+* `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
+* `adjT`: Extra depth to add to the output image. Default is `0`.  Cannot be greater than dT-1.
+* `adjW`: Extra width to add to the output image. Default is `0`. Cannot be greater than dW-1.
+* `adjH`: Extra height to add to the output image. Default is `0`. Cannot be greater than dH-1.
 
 If the input image is a 3D tensor `nInputPlane x depth x height x width`, the output image size
 will be `nOutputPlane x odepth x oheight x owidth` where
 ```lua
-odepth  = (depth  - 1) * dT - 2*padT + kT
-owidth  = (width  - 1) * dW - 2*padW + kW
-oheight = (height - 1) * dH - 2*padH + kH
+odepth  = (depth  - 1) * dT - 2*padT + kT + adjT
+owidth  = (width  - 1) * dW - 2*padW + kW + adjW
+oheight = (height - 1) * dH - 2*padH + kH + adjH
 ```
+
+<a name="nn.VolumetricDilatedConvolution"></a>
+### VolumetricDilatedConvolution ###
+
+```lua
+module = nn.VolumetricDilatedConvolution(nInputPlane, nOutputPlane, kT, kW, kH, [dT], [dW], [dH], [padT], [padW], [padH], [dilationT], [dilationW], [dilationH])
+```
+
+Applies a 3D dilated convolution over an input image composed of several input planes. The `input` tensor in
+`forward(input)` is expected to be a 4D or 5D tensor.
+
+The parameters are the following:
+  * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
+  * `nOutputPlane`: The number of output planes the convolution layer will produce.
+  * `kT`: The kernel depth of the convolution
+  * `kW`: The kernel width of the convolution
+  * `kH`: The kernel height of the convolution
+  * `dT`: The step of the convolution in the depth dimension. Default is `1`.
+  * `dW`: The step of the convolution in the width dimension. Default is `1`.
+  * `dH`: The step of the convolution in the height dimension. Default is `1`.
+  * `padT`: Additional zeros added to the input plane data on both sides of time (depth) axis. Default is `0`. `(kT-1)/2` is often used here.
+  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
+  * `dilationT`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
+  * `dilationW`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
+  * `dilationH`: The number of pixels to skip. Default is `1`. `1` makes it a VolumetricConvolution
+
+If the input image is a 4D tensor `nInputPlane x depth x height x width`, the output image size
+will be `nOutputPlane x odepth x oheight x owidth` where
+```lua
+odepth  = floor((depth + 2 * padT - dilationT * (kT-1) + 1) / dT) + 1
+owidth  = floor((width + 2 * padW - dilationW * (kW-1) + 1) / dW) + 1
+oheight = floor((height + 2 * padH - dilationH * (kH-1) + 1) / dH) + 1
+```
+
+Further information about the dilated convolution can be found in the following paper: [Multi-Scale Context Aggregation by Dilated Convolutions](http://arxiv.org/abs/1511.07122).
 
 <a name="nn.VolumetricMaxPooling"></a>
 ### VolumetricMaxPooling ###
@@ -934,6 +1148,70 @@ module = nn.VolumetricMaxPooling(kT, kW, kH [, dT, dW, dH, padT, padW, padH])
 Applies 3D max-pooling operation in `kTxkWxkH` regions by step size
 `dTxdWxdH` steps. The number of output features is equal to the number of
 input planes / dT. The input can optionally be padded with zeros. Padding should be smaller than half of kernel size.  That is, `padT < kT/2`, `padW < kW/2` and `padH < kH/2`.
+
+<a name="nn.VolumetricDilatedMaxPooling"></a>
+### VolumetricDilatedMaxPooling ###
+
+```lua
+module = nn.VolumetricDilatedMaxPooling(kT, kW, kH [, dT, dW, dH, padT, padW, padH, dilationT, dilationW, dilationH])
+```
+
+Also sometimes referred to as **atrous pooling**.
+Applies 3D dilated max-pooling operation in `kTxkWxkH` regions by step size
+`dTxdWxdH` steps. The number of output features is equal to the number of
+input planes. If `dilationT`, `dilationW` and `dilationH` are not provided, this is equivalent to performing normal `nn.VolumetricMaxPooling`.
+
+If the input image is a 4D tensor `nInputPlane x depth x height x width`, the output
+image size will be `nOutputPlane x otime x oheight x owidth` where
+
+```lua
+otime  = op((depth - (dilationT * (kT - 1) + 1) + 2*padT) / dT + 1)
+owidth  = op((width - (dilationW * (kW - 1) + 1) + 2*padW) / dW + 1)
+oheight = op((height - (dilationH * (kH - 1) + 1) + 2*padH) / dH + 1)
+```
+
+`op` is a rounding operator. By default, it is `floor`. It can be changed
+by calling `:ceil()` or `:floor()` methods.
+
+<a name="nn.VolumetricFractionalMaxPooling"></a>
+### VolumetricFractionalMaxPooling ###
+
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, outT, outW, outH)
+--   the output should be the exact size (outH x outW x outT)
+OR
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, ratioT, ratioW, ratioH)
+--   the output should be the size (floor(inH x ratioH) x floor(inW x ratioW) x floor(inT x ratioT))
+--   ratios are numbers between (0, 1) exclusive
+```
+
+Applies 3D Fractional max-pooling operation in the "pseudorandom" mode, analogous to [SpatialFractionalMaxPooling](#nn.SpatialFractionalMaxPooling).
+
+The max-pooling operation is applied in `kTxkWxkH` regions by a stochastic step size determined by the target output size.
+The number of output features is equal to the number of input planes.
+
+There are two constructors available.
+
+Constructor 1:
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, outT, outW, outH)
+```
+
+Constructor 2:
+```lua
+module = nn.VolumetricFractionalMaxPooling(kT, kW, kH, ratioT, ratioW, ratioH)
+```
+If the input image is a 4D tensor `nInputPlane x height x width x time`, the output
+image size will be `nOutputPlane x oheight x owidth x otime`
+
+ where
+
+```lua
+otime  = floor(time * ratioT)
+owidth  = floor(width * ratioW)
+oheight = floor(height * ratioH)
+```
+ratios are numbers between (0, 1) exclusive
 
 <a name="nn.VolumetricAveragePooling"></a>
 ### VolumetricAveragePooling ###
@@ -962,3 +1240,13 @@ values (corresponding to their position within each map) are stored:
 If `C` is a tensor of same size as `B`, `module:updateOutput(C)` outputs a
 tensor `D` of same size as `A` such that:
 `D[{n,k,indices[{n,k,t}],indices[{n,k,i}],indices[{n,k,j}]}] = C[{n,k,t,i,j}]`.
+
+<a name="nn.VolumetricReplicationPadding"></a>
+### VolumetricReplicationPadding ###
+
+```lua
+module = nn.VolumetricReplicationPadding(padLeft, padRight, padTop, padBottom,
+                                         padFront, padBack)
+```
+
+Each feature map of a given input is padded with the replication of the input boundary.

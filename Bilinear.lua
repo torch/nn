@@ -84,6 +84,11 @@ function Bilinear:updateGradInput(input, gradOutput)
    assert(self)
    if self.gradInput then
       self:__assertInputGradOutput(input, gradOutput)
+
+      if #self.gradInput == 0 then
+          for i = 1, 2 do self.gradInput[i] = input[1].new() end
+      end
+
       -- compute d output / d input:
       self.gradInput[1]:resizeAs(input[1]):fill(0)
       self.gradInput[2]:resizeAs(input[2]):fill(0)
@@ -137,8 +142,10 @@ function Bilinear:accGradParameters(input, gradOutput, scale)
    if self.bias then self.gradBias:add(scale, gradOutput:sum(1)) end
 end
 
--- we do not need to accumulate parameters when sharing:
-Bilinear.sharedAccUpdateGradParameters = Bilinear.accUpdateGradParameters
+function Bilinear:sharedAccUpdateGradParameters(input, gradOutput, lr)
+   -- we do not need to accumulate parameters when sharing:
+   self:defaultAccUpdateGradParameters(input, gradOutput, lr)
+end
 
 function Bilinear:__tostring__()
   return torch.type(self) ..

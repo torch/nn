@@ -293,10 +293,12 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
    minval = minval or -2
    maxval = maxval or 2
    local inrange = maxval - minval
+   local inputclone = input:clone()
 
    -- run module
    module:forward(input)
    local go = module.output:clone():copy(torch.rand(module.output:nElement()):mul(inrange):add(minval))
+   local goclone = go:clone()
    module:zeroGradParameters()
    module:updateGradInput(input,go)
    module:accGradParameters(input,go)
@@ -307,15 +309,16 @@ function nn.Jacobian.testIO(module,input, minval, maxval)
    -- write module
    local filename = os.tmpname()
    local f = torch.DiskFile(filename, 'w'):binary()
-   module:clearState()
+   -- call clearState and check that it returns itself
+   assert(module == module:clearState(),'clearState did not return self')
    f:writeObject(module)
    f:close()
    -- read module
    local m = torch.DiskFile(filename):binary():readObject()
-   m:forward(input)
+   m:forward(inputclone)
    m:zeroGradParameters()
-   m:updateGradInput(input,go)
-   m:accGradParameters(input,go)
+   m:updateGradInput(inputclone,goclone)
+   m:accGradParameters(inputclone,goclone)
    -- cleanup
    os.remove(filename)
 

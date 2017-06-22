@@ -57,6 +57,60 @@ static void THNN_(col2im)(const real* data_col, const int channels,
   }
 }
 
+static inline void THNN_(SpatialFullConvolution_shapeCheck)(
+	THTensor *input, THTensor *gradOutput,
+	THTensor *weight, THTensor *bias,
+	int kH, int kW, int dH, int dW, int padH, int padW, int adjH, int adjW) {
+
+  THArgCheck(kW > 0 && kH > 0, 9,
+	       "kernel size should be greater than zero, but got kH: %d kW: %d", kH, kW);
+  THArgCheck(dW > 0 && dH > 0, 11,
+	     "stride should be greater than zero, but got dH: %d dW: %d", dH, dW);
+  THArgCheck(adjW < dW && adjH < dH, 15,
+        "output adjustment must be smaller than stride, but got adjH: %d adjW: %d dH: %d dW: %d",
+        adjH, adjW, dH, dW);
+  THNN_ARGCHECK(weight->nDimension == 2 || weight->nDimension == 4, 5, weight,
+		"2D or 4D weight tensor expected, but got: %s");
+
+  if (bias != NULL) {
+    THNN_CHECK_DIM_SIZE(bias, 1, 0, weight->size[1]);
+  }
+
+  int ndim = input->nDimension;
+  int dimf = 0;
+  int dimh = 1;
+  int dimw = 2;
+
+  if (ndim == 4) {
+    dimf++;
+    dimh++;
+    dimw++;
+  }
+
+  THNN_ARGCHECK(ndim == 3 || ndim == 4, 2, input,
+		"3D or 4D input tensor expected but got: %s");
+
+  long nInputPlane  = weight->size[0];
+  long inputHeight  = input->size[dimh];
+  long inputWidth   = input->size[dimw];
+  long nOutputPlane = weight->size[1];
+  long outputHeight = (inputHeight - 1) * dH - 2*padH + kH + adjH;
+  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW + adjW;
+
+  if (outputWidth < 1 || outputHeight < 1)
+    THError("Given input size: (%d x %d x %d). "
+	    "Calculated output size: (%d x %d x %d). Output size is too small",
+	    nInputPlane,inputHeight,inputWidth,nOutputPlane,outputHeight,outputWidth);
+
+  THNN_CHECK_DIM_SIZE(input, ndim, dimf, nInputPlane);
+
+  if (gradOutput != NULL) {
+    THNN_CHECK_DIM_SIZE(gradOutput, ndim, dimf, nOutputPlane);
+    THNN_CHECK_DIM_SIZE(gradOutput, ndim, dimh, outputHeight);
+    THNN_CHECK_DIM_SIZE(gradOutput, ndim, dimw, outputWidth);
+  }
+}
+
 void THNN_(SpatialFullConvolution_updateOutput)(
     THNNState *state,
     THTensor *input,
@@ -70,25 +124,26 @@ void THNN_(SpatialFullConvolution_updateOutput)(
     int padW, int padH,
     int adjW, int adjH)
 {
+  THNN_(SpatialFullConvolution_shapeCheck)
+    (input, NULL, weight, bias, kH, kW, dH, dW, padH, padW, adjH, adjW);
+
   int nInputPlane = THTensor_(size)(weight,0);
   int nOutputPlane = THTensor_(size)(weight,1);
 
-  THArgCheck(input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D (batch mode) tensor is expected");
-
+  input = THTensor_(newContiguous)(input);
+  weight = THTensor_(newContiguous)(weight);
+  bias = bias ? THTensor_(newContiguous)(bias) : bias;
   int batch = 1;
   if (input->nDimension == 3) {
-    THArgCheck(input->size[0] == nInputPlane, 2, "input channels and nInputPlane dont match");
     // Force batch
     batch = 0;
     THTensor_(resize4d)(input, 1, input->size[0], input->size[1], input->size[2]);
-  } else {
-    THArgCheck(input->size[1] == nInputPlane, 2, "input channels and nInputPlane dont match");
   }
 
-  long inputWidth   = input->size[3];
   long inputHeight  = input->size[2];
-  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW + adjW;
+  long inputWidth   = input->size[3];
   long outputHeight = (inputHeight - 1) * dH - 2*padH + kH + adjH;
+  long outputWidth  = (inputWidth - 1) * dW - 2*padW + kW + adjW;
 
   // Batch size + input planes
   long batchSize = input->size[0];
@@ -98,6 +153,7 @@ void THNN_(SpatialFullConvolution_updateOutput)(
 
   // Resize temporary columns
   THTensor_(resize2d)(columns, nOutputPlane*kW*kH, inputHeight*inputWidth);
+  THTensor_(zero)(columns);
 
   // Define a buffer of ones, for bias accumulation
   // Note: this buffer can be shared with other modules, it only ever gets increased,
@@ -152,16 +208,17 @@ void THNN_(SpatialFullConvolution_updateOutput)(
     long k_ = 1;
 
     // Do GEMM (note: this is a bit confusing because gemm assumes column-major matrices)
-    THBlas_(gemm)(
-        't', 'n',
-        n_, m_, k_,
-        1,
-        THTensor_(data)(ones), k_,
-        THTensor_(data)(bias), k_,
-        1,
-        THTensor_(data)(output_n), n_
-    );
-
+    if (bias) {
+      THBlas_(gemm)(
+          't', 'n',
+          n_, m_, k_,
+          1,
+          THTensor_(data)(ones), k_,
+          THTensor_(data)(bias), k_,
+          1,
+          THTensor_(data)(output_n), n_
+      );
+    }
   }
 
   // Free
@@ -173,6 +230,10 @@ void THNN_(SpatialFullConvolution_updateOutput)(
     THTensor_(resize3d)(output, nOutputPlane, outputHeight, outputWidth);
     THTensor_(resize3d)(input, nInputPlane, inputHeight, inputWidth);
   }
+
+  THTensor_(free)(input);
+  THTensor_(free)(weight);
+  if (bias) THTensor_(free)(bias);
 }
 
 void THNN_(SpatialFullConvolution_updateGradInput)(
@@ -187,11 +248,15 @@ void THNN_(SpatialFullConvolution_updateGradInput)(
     int padW, int padH,
     int adjW, int adjH)
 {
+  THNN_(SpatialFullConvolution_shapeCheck)
+    (input, gradOutput, weight, NULL, kH, kW, dH, dW, padH, padW, adjH, adjW);
+
   int nInputPlane = THTensor_(size)(weight,0);
   int nOutputPlane = THTensor_(size)(weight,1);
 
-  THArgCheck(input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D (batch mode) tensor is expected");
-
+  input = THTensor_(newContiguous)(input);
+  gradOutput = THTensor_(newContiguous)(gradOutput);
+  weight = THTensor_(newContiguous)(weight);
   int batch = 1;
   if (input->nDimension == 3) {
     // Force batch
@@ -210,6 +275,7 @@ void THNN_(SpatialFullConvolution_updateGradInput)(
 
   // Resize output
   THTensor_(resize4d)(gradInput, batchSize, nInputPlane, inputHeight, inputWidth);
+  THTensor_(zero)(gradInput);
 
   // Resize temporary columns
   THTensor_(resize2d)(gradColumns, nOutputPlane*kW*kH, inputHeight*inputWidth);
@@ -263,6 +329,10 @@ void THNN_(SpatialFullConvolution_updateGradInput)(
     THTensor_(resize3d)(input, nInputPlane, inputHeight, inputWidth);
     THTensor_(resize3d)(gradInput, nInputPlane, inputHeight, inputWidth);
   }
+
+  THTensor_(free)(input);
+  THTensor_(free)(gradOutput);
+  THTensor_(free)(weight);
 }
 
 
@@ -278,13 +348,20 @@ void THNN_(SpatialFullConvolution_accGradParameters)(
     int dW, int dH,
     int padW, int padH,
     int adjW, int adjH,
-    real scale)
+    accreal scale_)
 {
+  real scale = TH_CONVERT_ACCREAL_TO_REAL(scale_);
+  THNN_(SpatialFullConvolution_shapeCheck)
+    (input, gradOutput, gradWeight, gradBias, kH, kW, dH, dW, padH, padW, adjH, adjW);
+
   int nInputPlane = THTensor_(size)(gradWeight,0);
   int nOutputPlane = THTensor_(size)(gradWeight,1);
 
-  THArgCheck(input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D (batch mode) tensor is expected");
-
+  input = THTensor_(newContiguous)(input);
+  gradOutput = THTensor_(newContiguous)(gradOutput);
+  THArgCheck(THTensor_(isContiguous)(gradWeight), 4, "gradWeight needs to be contiguous");
+  if (gradBias)
+    THArgCheck(THTensor_(isContiguous)(gradBias), 5, "gradBias needs to be contiguous");
   int batch = 1;
   if (input->nDimension == 3) {
     // Force batch
@@ -355,15 +432,17 @@ void THNN_(SpatialFullConvolution_accGradParameters)(
     long k_ = outputHeight * outputWidth;
 
     // Do GEMV (note: this is a bit confusing because gemv assumes column-major matrices)
-    THBlas_(gemv)(
-        't',
-        k_, m_,
-        scale,
-        THTensor_(data)(gradOutput_n), k_,
-        THTensor_(data)(ones), 1,
-        1,
-        THTensor_(data)(gradBias), 1
-    );
+    if (gradBias) {
+      THBlas_(gemv)(
+          't',
+          k_, m_,
+          scale,
+          THTensor_(data)(gradOutput_n), k_,
+          THTensor_(data)(ones), 1,
+          1,
+          THTensor_(data)(gradBias), 1
+      );
+    }
   }
 
   // Free
@@ -375,6 +454,9 @@ void THNN_(SpatialFullConvolution_accGradParameters)(
     THTensor_(resize3d)(gradOutput, nOutputPlane, outputHeight, outputWidth);
     THTensor_(resize3d)(input, nInputPlane, inputHeight, inputWidth);
   }
+
+  THTensor_(free)(input);
+  THTensor_(free)(gradOutput);
 }
 
 #endif

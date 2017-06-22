@@ -7,6 +7,7 @@ This allows one to build very rich architectures:
   * `table` Container Modules encapsulate sub-Modules:
     * [`ConcatTable`](#nn.ConcatTable): applies each member module to the same input     [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor) and outputs a `table`;
     * [`ParallelTable`](#nn.ParallelTable): applies the `i`-th member module to the `i`-th input and outputs a `table`;
+    * [`MapTable`](#nn.MapTable): applies a single module to every input and outputs a `table`;
   * Table Conversion Modules convert between `table`s and `Tensor`s or `table`s:
     * [`SplitTable`](#nn.SplitTable): splits a `Tensor` into a `table` of `Tensor`s;
     * [`JoinTable`](#nn.JoinTable): joins a `table` of `Tensor`s into a `Tensor`;
@@ -14,6 +15,8 @@ This allows one to build very rich architectures:
     * [`SelectTable`](#nn.SelectTable): select one element from a `table`;
     * [`NarrowTable`](#nn.NarrowTable): select a slice of elements from a `table`;
     * [`FlattenTable`](#nn.FlattenTable): flattens a nested `table` hierarchy;
+    * [`ZipTable`](#nn.ZipTable) : zip a table of tables into a table of tables;
+    * [`ZipTableOneToMany`](#nn.ZipTableOneToMany) : zip a table to a single tensor;
   * Pair Modules compute a measure like distance or similarity from a pair (`table`) of input `Tensor`s:
     * [`PairwiseDistance`](#nn.PairwiseDistance): outputs the `p`-norm. distance between inputs;
     * [`DotProduct`](#nn.DotProduct): outputs the dot product (similarity) between inputs;
@@ -23,6 +26,9 @@ This allows one to build very rich architectures:
     * [`CSubTable`](#nn.CSubTable): substraction of input `Tensor`s;
     * [`CMulTable`](#nn.CMulTable): multiplication of input `Tensor`s;
     * [`CDivTable`](#nn.CDivTable): division of input `Tensor`s;
+    * [`CMaxTable`](#nn.CMaxTable): max of input `Tensor`s;
+    * [`CMinTable`](#nn.CMinTable): min of input `Tensor`s;
+    * [`CAddTensorTable`](#nn.CAddTensorTable): adds a tensor to a table of tensors of the same size;
   * `Table` of Criteria:
     * [`CriterionTable`](#nn.CriterionTable): wraps a [Criterion](criterion.md#nn.Criterion) so that it can accept a `table` of inputs.
 
@@ -162,6 +168,57 @@ which gives the output:
 -0.1657
 -0.7383
 [torch.Tensor of dimension 3]
+```
+
+
+<a name="nn.MapTable"></a>
+## MapTable ##
+
+```lua
+module = nn.MapTable(m, share)
+```
+
+`MapTable` is a container for a single module which will be applied to all input elements. The member module is cloned as necessary to process all input elements. Call `resize(n)` to set the number of clones manually or call `clearState()` to discard all clones.
+
+Optionally, the module can be initialized with the contained module and a boolean `share`. It indicates whether parameters are shared across all clones or not. By default it is set to true. The shared parameters are `weight`, `bias`, `gradWeight` and `gradBias`.
+
+```
++----------+         +-----------+
+| {input1, +---------> {member,  |
+|          |         |           |
+|  input2, +--------->  clone,   |
+|          |         |           |
+|  input3} +--------->  clone}   |
++----------+         +-----------+
+```
+
+### Example
+
+```lua
+map = nn.MapTable()
+map:add(nn.Linear(10, 3))
+
+x1 = torch.rand(10)
+x2 = torch.rand(10)
+y = map:forward{x1, x2}
+
+for i, k in pairs(y) do print(i, k) end
+```
+
+which gives the output:
+
+```lua
+1
+ 0.0345
+ 0.8695
+ 0.6502
+[torch.DoubleTensor of size 3]
+
+2
+ 0.0269
+ 0.4953
+ 0.2691
+[torch.DoubleTensor of size 3]
 ```
 
 
@@ -638,7 +695,7 @@ Forwarding a batch of 2 examples gives us something like this:
 
 `module` = `SelectTable(index)`
 
-Creates a module that takes a `table` as input and outputs the element at index `index` (positive or negative). 
+Creates a module that takes a (nested) `table` as input and outputs the element at index `index`. `index` can be strings or integers (positive or negative).
 This can be either a `table` or a [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
 
 The gradients of the non-`index` elements are zeroed `Tensor`s of the same size. This is true regardless of the
@@ -665,10 +722,36 @@ Example 1:
 0
 0
 [torch.DoubleTensor of dimension 2x1]
-
 ```
 
-Example 2:
+Exmaple 2:
+```lua
+> input = { A=torch.randn(2, 3), B=torch.randn(2, 1) }
+> =nn.SelectTable("A"):forward(input)
+-0.3060  0.1398  0.2707
+ 0.0576  1.5455  0.0610
+[torch.DoubleTensor of dimension 2x3]
+
+> gradInput = nn.SelectTable("A"):backward(input, torch.randn(2, 3))
+
+> gradInput
+{
+  A : DoubleTensor - size: 2x3
+  B : DoubleTensor - size: 2x1
+}
+
+> gradInput["A"]
+-0.4891 -0.3495 -0.3182
+-2.0999  0.7381 -0.5312
+[torch.DoubleTensor of dimension 2x3]
+
+> gradInput["B"]
+0
+0
+[torch.DoubleTensor of dimension 2x1]
+```
+
+Example 3:
 ```lua
 > input = {torch.randn(2, 3), {torch.randn(2, 1), {torch.randn(2, 2)}}}
 
@@ -731,11 +814,11 @@ Example 2:
 
 `module` = `NarrowTable(offset [, length])`
 
-Creates a module that takes a `table` as input and outputs the subtable 
+Creates a module that takes a `table` as input and outputs the subtable
 starting at index `offset` having `length` elements (defaults to 1 element).
 The elements can be either a `table` or a [`Tensor`](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor).
 
-The gradients of the elements not included in the subtable are zeroed `Tensor`s of the same size. 
+The gradients of the elements not included in the subtable are zeroed `Tensor`s of the same size.
 This is true regardless of the depth of the encapsulated `Tensor` as the function used internally to do so is recursive.
 
 Example:
@@ -801,6 +884,36 @@ gives the output:
   3 : DoubleTensor - size: 3
   4 : DoubleTensor - size: 4
 }
+```
+
+<a name='nn.ZipTable'></a>
+## ZipTable ##
+
+```lua
+module = nn.ZipTable()
+```
+
+Zips a table of tables into a table of tables.
+
+Example:
+```lua
+print(module:forward{ {'a1','a2'}, {'b1','b2'}, {'c1','c2'} })
+{ {'a1','b1','c1'}, {'a2','b2','c2'} }
+```
+
+<a name='nn.ZipTableOneToMany'></a>
+## ZipTableOneToMany ##
+
+```lua
+module = nn.ZipTableOneToMany()
+```
+
+Zips a table of element `el` and table of elements `tab` into a table of tables, where the i-th table contains the element `el` and the i-th element in table `tab`
+
+Example:
+```lua
+print(module:forward{ 'el', {'a','b','c'} })
+{ {'el','a'}, {'el','b'}, {'el','c'} }
 ```
 
 <a name="nn.PairwiseDistance"></a>
@@ -1212,3 +1325,45 @@ m = nn.CDivTable()
 [torch.DoubleTensor of dimension 5]
 ```
 
+<a name="nn.CMaxTable"></a>
+## CMaxTable ##
+
+Takes a `table` of `Tensor`s and outputs the max of all of them.
+
+```lua
+m = nn.CMaxTable()
+=m:forward({{torch.Tensor{1,2,3}, torch.Tensor{3,2,1}})
+ 3
+ 2
+ 3
+[torch.DoubleTensor of size 3]
+```
+
+<a name="nn.CMinTable"></a>
+## CMinTable ##
+
+Takes a `table` of `Tensor`s and outputs the min of all of them.
+
+```lua
+m = nn.CMinTable()
+=m:forward({{torch.Tensor{1,2,3}, torch.Tensor{3,2,1}})
+ 1
+ 2
+ 1
+[torch.DoubleTensor of size 3]
+```
+
+<a name='nn.CAddTensorTable'></a>
+## CAddTensorTable ##
+
+```lua
+module = nn.CAddTensorTable()
+```
+
+Adds the first element `el` of the input table `tab` to each tensor contained in the second element of `tab`, which is itself a table
+
+Example:
+```lua
+print(module:forward{ (0,1,1), {(0,0,0),(1,1,1)} })
+{ (0,1,1), (1,2,2) }
+```

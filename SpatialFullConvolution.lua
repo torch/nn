@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local SpatialFullConvolution, parent = torch.class('nn.SpatialFullConvolution','nn.Module')
 
 function SpatialFullConvolution:__init(nInputPlane, nOutputPlane,
@@ -33,6 +34,12 @@ function SpatialFullConvolution:__init(nInputPlane, nOutputPlane,
    self:reset()
 end
 
+function SpatialFullConvolution:noBias()
+	self.bias = nil
+	self.gradBias = nil
+	return self
+end
+
 function SpatialFullConvolution:reset(stdv)
    if stdv then
       stdv = stdv * math.sqrt(3)
@@ -43,23 +50,9 @@ function SpatialFullConvolution:reset(stdv)
       stdv = 1/math.sqrt(kW*kH*nInputPlane)
    end
    self.weight:uniform(-stdv, stdv)
-   self.bias:uniform(-stdv, stdv)
-end
-
-local function makeContiguous(self, input, gradOutput)
-  if not input:isContiguous() then
-    self._input = self._input or input.new()
-    self._input:resizeAs(input):copy(input)
-    input = self._input
-  end
-  if gradOutput then
-    if not gradOutput:isContiguous() then
-      self._gradOutput = self._gradOutput or gradOutput.new()
-      self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-      gradOutput = self._gradOutput
-    end
-  end
-  return input, gradOutput
+   if self.bias then
+      self.bias:uniform(-stdv, stdv)
+   end
 end
 
 local function calculateAdj(targetSize, ker, pad, stride)
@@ -94,12 +87,11 @@ function SpatialFullConvolution:updateOutput(input)
     self.fgradInput = self.fgradInput or input.new()
   end
 
-  inputTensor = makeContiguous(self, inputTensor)
   inputTensor.THNN.SpatialFullConvolution_updateOutput(
     inputTensor:cdata(),
     self.output:cdata(),
     self.weight:cdata(),
-    self.bias:cdata(),
+    THNN.optionalTensor(self.bias),
     self.finput:cdata(),
     self.fgradInput:cdata(),
     self.kW, self.kH,
@@ -131,11 +123,10 @@ function SpatialFullConvolution:updateGradInput(input, gradOutput)
       adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
       -- Momentarily extract the gradInput tensor
       if type(self.gradInput) == 'table' then
-        self.gradInput = self.gradInput[1]
+        self.gradInput = self.gradInput[1] or inputTensor.new()
       end
     end
 
-    inputTensor, gradOutput = makeContiguous(self, inputTensor, gradOutput)
     inputTensor.THNN.SpatialFullConvolution_updateGradInput(
       inputTensor:cdata(),
       gradOutput:cdata(),
@@ -181,12 +172,11 @@ function SpatialFullConvolution:accGradParameters(input, gradOutput, scale)
     adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
   end
 
-  inputTensor, gradOutput = makeContiguous(self, inputTensor, gradOutput)
   inputTensor.THNN.SpatialFullConvolution_accGradParameters(
     inputTensor:cdata(),
     gradOutput:cdata(),
     self.gradWeight:cdata(),
-    self.gradBias:cdata(),
+    THNN.optionalTensor(self.gradBias),
     self.finput:cdata(),
     self.fgradInput:cdata(),
     self.kW, self.kH,
@@ -215,7 +205,11 @@ function SpatialFullConvolution:__tostring__()
   if (self.adjW or self.adjH) and (self.adjW ~= 0 or self.adjH ~= 0) then
     s = s .. ', ' .. self.adjW .. ',' .. self.adjH
   end
-  return s .. ')'
+  if self.bias then
+     return s .. ')'
+  else
+     return s .. ') without bias'
+ end
 end
 
 function SpatialFullConvolution:clearState()

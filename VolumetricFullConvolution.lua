@@ -1,3 +1,4 @@
+local THNN = require 'nn.THNN'
 local VolumetricFullConvolution, parent = torch.class('nn.VolumetricFullConvolution','nn.Module')
 
 function VolumetricFullConvolution:__init(nInputPlane, nOutputPlane,
@@ -57,22 +58,6 @@ function VolumetricFullConvolution:reset(stdv)
    self.bias:uniform(-stdv, stdv)
 end
 
-local function makeContiguous(self, input, gradOutput)
-   if not input:isContiguous() then
-      self._input = self._input or input.new()
-      self._input:resizeAs(input):copy(input)
-      input = self._input
-   end
-   if gradOutput then
-      if not gradOutput:isContiguous() then
-         self._gradOutput = self._gradOutput or gradOutput.new()
-         self._gradOutput:resizeAs(gradOutput):copy(gradOutput)
-         gradOutput = self._gradOutput
-     end
-   end
-   return input, gradOutput
-end
-
 local function calculateAdj(targetSize, ker, pad, stride)
   return (targetSize + 2 * pad - ker) % stride
 end
@@ -91,6 +76,13 @@ function VolumetricFullConvolution:backCompatibility()
    self.adjW = self.adjW or 0
    self.adjH = self.adjH or 0
    self.adjT = self.adjT or 0
+end
+
+
+function VolumetricFullConvolution:noBias()
+   self.bias = nil
+   self.gradBias = nil
+   return self
 end
 
 function VolumetricFullConvolution:updateOutput(input)
@@ -113,12 +105,11 @@ function VolumetricFullConvolution:updateOutput(input)
     adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
   end
 
-   inputTensor = makeContiguous(self, inputTensor)
    inputTensor.THNN.VolumetricFullConvolution_updateOutput(
       inputTensor:cdata(),
       self.output:cdata(),
       self.weight:cdata(),
-      self.bias:cdata(),
+      THNN.optionalTensor(self.bias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,
@@ -153,7 +144,6 @@ function VolumetricFullConvolution:updateGradInput(input, gradOutput)
       end
     end
 
-   inputTensor, gradOutput = makeContiguous(self, inputTensor, gradOutput)
    inputTensor.THNN.VolumetricFullConvolution_updateGradInput(
       inputTensor:cdata(),
       gradOutput:cdata(),
@@ -199,12 +189,11 @@ function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
     adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
   end
 
-   inputTensor, gradOutput = makeContiguous(self, inputTensor, gradOutput)
    inputTensor.THNN.VolumetricFullConvolution_accGradParameters(
       inputTensor:cdata(),
       gradOutput:cdata(),
       self.gradWeight:cdata(),
-      self.gradBias:cdata(),
+      THNN.optionalTensor(self.gradBias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.dT, self.dW, self.dH,

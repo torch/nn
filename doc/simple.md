@@ -4,15 +4,19 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
 
   * Parameterized Modules :
     * [Linear](#nn.Linear) : a linear transformation ;
+    * [LinearWeightNorm](#nn.LinearWeightNorm) : a weight normalized linear transformation ;
     * [SparseLinear](#nn.SparseLinear) : a linear transformation with sparse inputs ;
+    * [IndexLinear](#nn.IndexLinear) : an alternative linear transformation with for sparse inputs and max normalization ;
     * [Bilinear](#nn.Bilinear) : a bilinear transformation with sparse inputs ;
     * [PartialLinear](#nn.PartialLinear) : a linear transformation with sparse inputs with the option of only computing a subset ;
     * [Add](#nn.Add) : adds a bias term to the incoming data ;
+    * [CAdd](#nn.CAdd) : a component-wise addition to the incoming data ;
     * [Mul](#nn.Mul) : multiply a single scalar factor to the incoming data ;
     * [CMul](#nn.CMul) : a component-wise multiplication to the incoming data ;
     * [Euclidean](#nn.Euclidean) : the euclidean distance of the input to `k` mean centers ;
     * [WeightedEuclidean](#nn.WeightedEuclidean) : similar to [Euclidean](#nn.Euclidean), but additionally learns a diagonal covariance matrix ;
     * [Cosine](#nn.Cosine) : the cosine similarity of the input to `k` mean centers ;
+    * [Kmeans](#nn.Kmeans) : [Kmeans](https://en.wikipedia.org/wiki/K-means_clustering) clustering layer;
   * Modules that adapt basic Tensor methods :
     * [Copy](#nn.Copy) : a [copy](https://github.com/torch/torch7/blob/master/doc/tensor.md#torch.Tensor.copy) of the input with [type](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-or-string-typetype) casting ;
     * [Narrow](#nn.Narrow) : a [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation over a given dimension ;
@@ -24,11 +28,11 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [MaskedSelect](#nn.MaskedSelect) : a [masked select](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselect-index) module performs the torch.maskedSelect operation ;
     * [Index](#nn.Index) : a [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) over a given dimension ;
     * [Squeeze](#nn.Squeeze) : [squeezes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) the input;
-    * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;  
+    * [Unsqueeze](#nn.Unsqueeze) : unsqueeze the input, i.e., insert singleton dimension;
     * [Transpose](#nn.Transpose) : [transposes](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-transposedim1-dim2) the input ;
   * Modules that adapt mathematical Tensor methods :
-    * [AddConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#nn.AddConstant) : adding a constant ;
-    * [MulConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#nn.MulConstant) : multiplying a constant ;
+    * [AddConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#addconstant) : adding a constant ;
+    * [MulConstant](https://github.com/torch/nn/blob/master/doc/transfer.md#mulconstant) : multiplying a constant ;
     * [Max](#nn.Max) : a [max](https://github.com/torch/torch7/blob/master/doc/maths.md#torch.max) operation over a given dimension ;
     * [Min](#nn.Min) : a [min](https://github.com/torch/torch7/blob/master/doc/maths.md#torchminresval-resind-x) operation over a given dimension ;
     * [Mean](#nn.Mean) : a [mean](https://github.com/torch/torch7/blob/master/doc/maths.md#res-torchmeanres-x-dim) operation over a given dimension ;
@@ -44,6 +48,7 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [MM](#nn.MM) : matrix-matrix multiplication (also supports batches of matrices) ;
   * Miscellaneous Modules :
     * [BatchNormalization](#nn.BatchNormalization) : mean/std normalization over the mini-batch inputs (with an optional affine transform) ;
+    * [PixelShuffle](#nn.PixelShuffle) : Rearranges elements in a tensor of shape `[C*r, H, W]` to a tensor of shape `[C, H*r, W*r]` ;
     * [Identity](#nn.Identity) : forward input as-is to output (useful with [ParallelTable](table.md#nn.ParallelTable)) ;
     * [Dropout](#nn.Dropout) : masks parts of the `input` using binary samples from a [bernoulli](http://en.wikipedia.org/wiki/Bernoulli_distribution) distribution ;
     * [SpatialDropout](#nn.SpatialDropout) : same as Dropout but for spatial inputs where adjacent pixels are strongly correlated ;
@@ -51,6 +56,15 @@ Simple Modules are used for various tasks like adapting Tensor methods and provi
     * [Padding](#nn.Padding) : adds padding to a dimension ;
     * [L1Penalty](#nn.L1Penalty) : adds an L1 penalty to an input (for sparsity) ;
     * [GradientReversal](#nn.GradientReversal) : reverses the gradient (to maximize an objective function) ;
+    * [GPU](#nn.GPU) : decorates a module so that it can be executed on a specific GPU device.
+    * [TemporalDynamicKMaxPooling](#nn.TemporalDynamicKMaxPooling) : selects the k highest values in a sequence. k can be calculated based on sequence length ;
+    * [Constant](#nn.Constant) : outputs a constant value given an input (which is ignored);
+    * [WhiteNoise](#nn.WhiteNoise) : adds isotropic Gaussian noise to the signal when in training mode;
+    * [OneHot](#nn.OneHot) : transforms a tensor of indices into [one-hot](https://en.wikipedia.org/wiki/One-hot) encoding;
+    * [PrintSize](#nn.PrintSize) : prints the size of `input` and `gradOutput` (useful for debugging);
+    * [ZeroGrad](#nn.ZeroGrad) : forwards the `input` as-is, yet zeros the `gradInput`;
+    * [Collapse](#nn.Collapse) : just like `nn.View(-1)`;
+    * [Convert](#nn.Convert) : convert between different tensor types or shapes;
 
 <a name="nn.Linear"></a>
 ## Linear ##
@@ -95,6 +109,19 @@ x = torch.Tensor(10) -- 10 inputs
 y = module:forward(x)
 ```
 
+<a name="nn.LinearWeightNorm"></a>
+## LinearWeightNorm ##
+
+```lua
+module = nn.LinearWeightNorm(inputDimension, outputDimension, [bias = true])
+```
+
+LinearWeightNorm implements the reparametrization presented in [Weight Normalization](https://arxiv.org/pdf/1602.07868v3.pdf), which decouples the length of neural network weight vectors from their direction. The weight vector `w` is determined instead by parameters `g` and `v` such that `w = g * v / ||v||`, where `||v||` is the euclidean norm of vector `v`. In all other respects this layer behaves like `nn.Linear`.
+
+To convert between `nn.Linear` and `nn.LinearWeightNorm` you can use the `nn.LinearWeightNorm.fromLinear(linearModule)` and `weightNormModule:toLinear()` functions.
+
+Other layer types can make use of weight normalization through the [nn.WeightNorm](https://github.com/torch/nn/blob/master/doc/containers.md#nn.WeightNorm) container.
+
 <a name="nn.SparseLinear"></a>
 ## SparseLinear ##
 
@@ -129,6 +156,66 @@ x = torch.Tensor({ {1, 0.1}, {2, 0.3}, {10, 0.3}, {31, 0.2} })
 
 The first column contains indices, the second column contains values in a a vector where all other elements are zeros. The indices should not exceed the stated dimensions of the input to the layer (10000 in the example).
 
+<a name="nn.IndexLinear"></a>
+## IndexLinear ##
+
+```lua
+module = nn.IndexLinear(inputSize, outputSize, doGradInput, keysOffset, weight, bias, normalize)
+```
+
+Applies the following transformation to the incoming (optionally) normalized sparse input data:
+`z = Weight * y + bias`, where
+- `y_i = normalize and (x_i *  (1 / x_i_max) + b_i) or x_i`
+- `x_i` is the `i'th` feature of the input,
+- `b_i` is a per-feature bias,
+- `x_i_max` is the maximum absolute value seen so far during training for feature `i`.
+
+The normalization of input features is very useful to avoid explosions during training if sparse input values are really high. It also helps ditinguish between the presence and the absence of a given feature.
+
+#### Parameters ####
+- `inputSize` is the maximum number of features.
+- `outputSize` is the number of output neurons.
+- `doGradInput`, if  `false` (the default), the gradInput will not be computed.
+- `keysOffset` lets you specify input keys are in the `[1+keysOffset, N+keysOffset]` range. (defaults to `0`)
+- `weight` and `bias` allow you to create the module with existing weights without using additional memory.
+  When passing `weight` and `bias`, `inputSize` and `outputSize` are inferred from the weights.
+- `normalize` will activate the normalization of the input feature values. (`false` by default)
+
+You can create an `IndexLinear` layer the following way:
+
+```lua
+-- 10000 inputs, 2 outputs, no grad input, no offset, no input weight/bias, max-norm on
+module = nn.IndexLinear(10000, 2, nil, 0, nil, nil, true)
+```
+
+#### Differences from SparseLinear ####
+- The layout of `weight` is transposed compared to `SparseLinear`. This was done for performance considerations.
+- The `gradWeight` that is computed for in-place updates is a sparse representation of the whole gradWeight matrix. Its size changes from one
+backward pass to another. This was done for performance considerations.
+- The input format differs from the [SparseLinear](#nn.SparseLinear) input format by accepting keys and values as a table of tensors. This enables `IndexLinear` to have a larger range for keys than `SparseLinear`.
+
+The `input` tensors must be in one of the following formats.
+
+- An array of size 2 containing a batch of `keys` followed by a batch of `values`.
+```lua
+x = {
+      { torch.LongTensor({ 1, 200 }), torch.LongTensor({ 100, 200, 1000 }) },
+      { torch.Tensor({ 1, 0.1 }), torch.Tensor({ 10, 0.5, -0.5 }) }
+}
+```
+
+- an array of size 3 containing a flattened (pre-concatenated) batch of `keys`, followed by `values`, and `sizes`.
+```lua
+-- Equivalent to the input shown above
+x = {
+      torch.LongTensor({ 1, 200, 100, 200, 1000 }),
+      torch.Tensor({ 1, 0.1, 10, .5, -0.5 }),
+      torch.LongTensor({ 2, 3 })
+}
+```
+
+Note: The tensors representing `keys` and `sizes` must always be of type `LongTensor` / `CudaLongTensor`. The values can be either `FloatTensor`or `DoubleTensor` or their cutorch equivalents.
+
 <a name="nn.Bilinear"></a>
 ## Bilinear ##
 
@@ -137,7 +224,7 @@ module = nn.Bilinear(inputDimension1, inputDimension2, outputDimension, [bias = 
 ```
 
 Applies a bilinear transformation to the incoming data, i.e. `\forall k: y_k = x_1 A_k x_2 + b`. The `input` tensor given in `forward(input)` is a table containing both inputs `x_1` and `x_2`, which are tensors of size `N x inputDimension1`
-and `N x inputDimension1`, respectively. The layer can be trained without biases by setting `bias = false`.
+and `N x inputDimension2`, respectively. The layer can be trained without biases by setting `bias = false`.
 
 You can create a layer in the following way:
 
@@ -245,6 +332,19 @@ During [evaluation](module.md#evaluate), `Dropout` does nothing more than forwar
 [torch.DoubleTensor of dimension 2x4]
 ```
 
+There is also an option for stochastic [evaluation](module.md#evaluate) which drops the `outputs` just like how it is done during [training](module.md#training):
+
+```lua
+module_stochastic_evaluation = nn.Dropout(nil, nil, nil, true)
+
+> module_stochastic_evaluation:evaluate()
+
+> module_stochastic_evaluation:forward(x)
+  2   4   6   0
+  0  12  14   0
+[torch.DoubleTensor of dimension 2x4]
+```
+
 We can return to training our model by first calling [Module:training()](module.md#training):
 
 ```lua
@@ -280,6 +380,7 @@ As described in the paper "Efficient Object Localization Using Convolutional Net
 
 ```nn.VolumetricDropout``` accepts 4D or 5D inputs.  If the input is 4D than a layout of (features x time x height x width) is assumed and for 5D (batch x features x time x height x width) is assumed.
 
+
 <a name="nn.Abs"></a>
 ## Abs ##
 
@@ -307,7 +408,7 @@ gnuplot.grid(true)
 module = nn.Add(inputDimension, scalar)
 ```
 
-Applies a bias term to the incoming data, i.e. `yi = x_i + b_i`,  or if `scalar = true` then uses a single bias term, `yi = x_i + b`.
+Applies a bias term to the incoming data, i.e. `yi = x_i + b_i`,  or if `scalar = true` then uses a single bias term, `yi = x_i + b`. So if `scalar = true` then `inputDimension` value will be disregarded.
 
 Example:
 
@@ -349,6 +450,57 @@ gives the output:
 
 i.e. the network successfully learns the input `x` has been shifted to produce the output `y`.
 
+<a name='nn.CAdd'></a>
+## CAdd ##
+
+```lua
+module = nn.CAdd(size)
+```
+
+Applies a component-wise addition to the incoming data, i.e. `y_i = x_i + b_i`. Argument `size` can be one or many numbers (sizes) or a `torch.LongStorage`. For example, `nn.CAdd(3,4,5)` is equivalent to `nn.CAdd(torch.LongStorage{3,4,5})`. If the size for a particular dimension is 1, the addition will be expanded along the entire axis.
+
+Example:
+
+```lua
+mlp = nn.Sequential()
+mlp:add(nn.CAdd(5, 1))
+
+y = torch.Tensor(5, 4)
+bf = torch.Tensor(5, 4)
+for i = 1, 5 do bf[i] = i; end -- scale input with this
+
+function gradUpdate(mlp, x, y, criterion, learningRate)
+   local pred = mlp:forward(x)
+   local err = criterion:forward(pred, y)
+   local gradCriterion = criterion:backward(pred, y)
+   mlp:zeroGradParameters()
+   mlp:backward(x, gradCriterion)
+   mlp:updateParameters(learningRate)
+   return err
+end
+
+for i = 1, 10000 do
+   x = torch.rand(5, 4)
+   y:copy(x)
+   y:add(bf)
+   err = gradUpdate(mlp, x, y, nn.MSECriterion(), 0.01)
+end
+
+print(mlp:get(1).bias)
+```
+
+gives the output:
+
+```lua
+ 1.0000
+ 2.0000
+ 3.0000
+ 4.0000
+ 5.0000
+[torch.Tensor of dimension 5x1]
+```
+
+i.e. the network successfully learns the input `x` has been shifted by those bias factors to produce the output `y`.
 
 <a name="nn.Mul"></a>
 ## Mul ##
@@ -403,15 +555,16 @@ module = nn.CMul(size)
 ```
 
 Applies a component-wise multiplication to the incoming data, i.e. `y_i = w_i * x_i`. Argument `size` can be one or many numbers (sizes) or a `torch.LongStorage`. For example, `nn.CMul(3,4,5)` is equivalent to `nn.CMul(torch.LongStorage{3,4,5})`.
+If the size for a particular dimension is 1, the multiplication will be expanded along the entire axis.
 
 Example:
 
 ```lua
 mlp = nn.Sequential()
-mlp:add(nn.CMul(5))
+mlp:add(nn.CMul(5, 1))
 
-y = torch.Tensor(5)
-sc = torch.Tensor(5)
+y = torch.Tensor(5, 4)
+sc = torch.Tensor(5, 4)
 for i = 1, 5 do sc[i] = i; end -- scale input with this
 
 function gradUpdate(mlp, x, y, criterion, learningRate)
@@ -425,7 +578,7 @@ function gradUpdate(mlp, x, y, criterion, learningRate)
 end
 
 for i = 1, 10000 do
-   x = torch.rand(5)
+   x = torch.rand(5, 4)
    y:copy(x)
    y:cmul(sc)
    err = gradUpdate(mlp, x, y, nn.MSECriterion(), 0.01)
@@ -442,7 +595,7 @@ gives the output:
  3.0000
  4.0000
  5.0000
-[torch.Tensor of dimension 5]
+[torch.Tensor of dimension 5x1]
 ```
 
 i.e. the network successfully learns the input `x` has been scaled by those scaling factors to produce the output `y`.
@@ -486,11 +639,11 @@ This module is based on [nn.Sum](#nn.Sum).
 ## Sum ##
 
 ```lua
-module = nn.Sum(dimension, nInputDim, sizeAverage)
+module = nn.Sum(dimension, nInputDim, sizeAverage, squeeze)
 ```
 
 Applies a sum operation over dimension `dimension`.
-Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output.
+Hence, if an `nxpxq` Tensor was given as input, and `dimension` = `2` then an `nxq` matrix would be output. If argument `squeeze` is set to `false` then the output would be of size `nx1xq`.
 When `nInputDim` is provided , inputs larger than that value will be considered batches where the actual `dimension` to apply the sum operation will be dimension `dimension + 1`.
 Negative indexing is allowed by providing a negative value to `nInputDim`.
 When `sizeAverage` is provided, the sum is divided by the size of the input in this `dimension`. This is equivalent to the mean operation performed by the [nn.Mean](#nn.Mean) module.
@@ -530,6 +683,54 @@ Outputs the [cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity)
 
 The distance `y_j` between center `j` and input `x` is formulated as `y_j = (x · w_j) / ( || w_j || * || x || )`.
 
+<a name='nn.Kmeans'></a>
+## Kmeans ##
+
+```lua
+km = nn.Kmeans(k, dim)
+```
+
+`k` is the number of centroids and `dim` is the dimensionality of samples.
+The `forward` pass computes distances with respect to centroids and returns index of closest centroid.
+Centroids can be updated using gradient descent.
+Centroids can be initialized randomly or by using [kmeans++](https://en.wikipedia.org/wiki/K-means%2B%2B) algoirthm:
+
+```lua
+km:initRandom(samples) -- Randomly initialize centroids from input samples.
+km:initKmeansPlus(samples) -- Use Kmeans++ to initialize centroids.
+```
+
+Example showing how to use Kmeans module to do standard Kmeans clustering.
+
+```lua
+attempts = 10
+iter = 100 -- Number of iterations
+bestKm = nil
+bestLoss = math.huge
+learningRate = 1
+for j=1, attempts do
+   local km = nn.Kmeans(k, dim)
+   km:initKmeansPlus(samples)
+   for i=1, iter do
+      km:zeroGradParameters()
+      km:forward(samples) -- sets km.loss
+      km:backward(samples, gradOutput) -- gradOutput is ignored
+
+      -- Gradient Descent weight/centroids update
+      km:updateParameters(learningRate)
+   end
+
+   if km.loss < bestLoss then
+      bestLoss = km.loss
+      bestKm = km:clone()
+   end
+end
+```
+`nn.Kmeans()` module maintains loss only for the latest forward. If you want to maintain loss over the whole dataset then you who would need do it my adding the module loss for every forward.
+
+You can also use `nn.Kmeans()` as an auxillary layer in your network.
+A call to `forward` will generate an `output` containing the index of the nearest cluster for each sample in the batch.
+The `gradInput` generated by `updateGradInput` will be zero.
 
 <a name="nn.Identity"></a>
 ## Identity ##
@@ -560,7 +761,7 @@ gives the output:
 [torch.Tensor of dimension 5x2]
 ```
 
-Here is a more useful example, where one can implement a network which also computes a Criterion using this module:
+Here is a more useful example, where one can implement a network which also computes a `Criterion` using this module:
 
 ```lua
 pred_mlp = nn.Sequential()  -- A network that makes predictions given x.
@@ -597,8 +798,10 @@ end
 module = nn.Copy(inputType, outputType, [forceCopy, dontCast])
 ```
 
-This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transfered as the output. The default `forceCopy` is false.
-When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module's `output` and `gradInput` Tensors to the new type. The default is false.
+This layer copies the input to output with type casting from `inputType` to `outputType`. Unless `forceCopy` is true, when the first two arguments are the same, the input isn't copied, only transferred as the output.
+The default `forceCopy` is false.
+When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module's `output` and `gradInput` `Tensor`s to the new type.
+The default is false.
 
 <a name="nn.Narrow"></a>
 ## Narrow ##
@@ -607,7 +810,54 @@ When `dontCast` is true, a call to `nn.Copy:type(type)` will not cast the module
 module = nn.Narrow(dimension, offset, length)
 ```
 
-Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module.
+Narrow is application of [narrow](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-narrowdim-index-size) operation in a module. The module further supports negative `length`, `dim` and `offset` to handle inputs of unknown size.
+
+```lua
+> x = torch.rand(4, 5)
+
+> x
+ 0.3695  0.2017  0.4485  0.4638  0.0513
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 4x5]
+
+> nn.Narrow(1, 2, 3):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 3x5]
+
+> nn.Narrow(1, 2, -1):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+ 0.2290  0.7971  0.2113  0.1097  0.3166
+[torch.DoubleTensor of size 3x5]
+
+> nn.Narrow(1, 2, 2):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+[torch.DoubleTensor of size 2x5]
+
+> nn.Narrow(1, 2, -2):forward(x)
+ 0.9222  0.1877  0.3388  0.6265  0.5659
+ 0.8785  0.7394  0.8265  0.9212  0.0129
+[torch.DoubleTensor of size 2x5]
+
+> nn.Narrow(2, 2, 3):forward(x)
+ 0.2017  0.4485  0.4638
+ 0.1877  0.3388  0.6265
+ 0.7394  0.8265  0.9212
+ 0.7971  0.2113  0.1097
+[torch.DoubleTensor of size 4x3]
+
+> nn.Narrow(2, 2, -2):forward(x)
+ 0.2017  0.4485  0.4638
+ 0.1877  0.3388  0.6265
+ 0.7394  0.8265  0.9212
+ 0.7971  0.2113  0.1097
+[torch.DoubleTensor of size 4x3]
+```
 
 <a name="nn.Replicate"></a>
 ## Replicate ##
@@ -662,9 +912,12 @@ module = nn.Reshape(dimension1, dimension2, ... [, batchMode])
 ```
 
 
-Reshapes an `nxpxqx..`  Tensor into a `dimension1xdimension2x...` Tensor, taking the elements row-wise.
+Reshapes an `nxpxqx..` `Tensor` into a `dimension1xdimension2x...` `Tensor`, taking the elements row-wise.
 
-The optional last argument `batchMode`, when `true` forces the first dimension of the input to be considered the batch dimension, and thus keep its size fixed. This is necessary when dealing with batch sizes of one. When `false`, it forces the entire input (including the first dimension) to be reshaped to the input size. Default `batchMode=nil`, which means that the module considers inputs with more elements than the produce of provided sizes, i.e. `dimension1xdimension2x...`, to be batches.
+The optional last argument `batchMode`, when `true` forces the first dimension of the input to be considered the batch dimension, and thus keep its size fixed.
+This is necessary when dealing with batch sizes of one.
+When `false`, it forces the entire input (including the first dimension) to be reshaped to the input size.
+Default `batchMode=nil`, which means that the module considers inputs with more elements than the produce of provided sizes, i.e. `dimension1xdimension2x...`, to be batches.
 
 Example:
 
@@ -750,7 +1003,8 @@ module = nn.View(sizes)
 ```
 
 This module creates a new view of the input tensor using the `sizes` passed to the constructor. The parameter `sizes` can either be a `LongStorage` or numbers.
-The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules. This makes it possible to use minibatch inputs when using a size `-1` for one of the dimensions.
+The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules.
+This makes it possible to use minibatch inputs when using a size `-1` for one of the dimensions.
 The method `resetSize(sizes)` allows to reset the view size of the module after initialization.
 
 Example 1:
@@ -826,12 +1080,17 @@ Example 2:
 [torch.LongStorage of size 2]
 ```
 
+For collapsing non-batch dims, check out [nn.Collapse](#nn.Collapse).
+
 <a name="nn.Contiguous"></a>
 ## Contiguous ##
 
-Is used to make `input`, `gradOutput` or both contiguous, corresponds to
-`torch.contiguous` function. Only does copy and allocation if `input` or
-`gradOutput` is not contiguous, otherwise passes the same tensor.
+```lua
+module = nn.Contiguous()
+```
+
+Is used to make `input`, `gradOutput` or both contiguous, corresponds to `torch.contiguous` function.
+Only does copy and allocation if `input` or `gradOutput` is not contiguous, otherwise passes the same `Tensor`.
 
 <a name="nn.Select"></a>
 ## Select ##
@@ -840,7 +1099,7 @@ Is used to make `input`, `gradOutput` or both contiguous, corresponds to
 module = nn.Select(dim, index)
 ```
 
-Selects a dimension and index of a  `nxpxqx..`  Tensor.
+Selects a dimension and index of a  `nxpxqx..`  `Tensor`.
 
 Example:
 
@@ -915,7 +1174,8 @@ end
 module = nn.MaskedSelect()
 ```
 
-Performs a [torch.MaskedSelect](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselectmask) on a Tensor.  The mask is supplied as a tabular argument with the input on the forward and backward passes.
+Performs a [torch.MaskedSelect](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-maskedselectmask) on a `Tensor`.
+The mask is supplied as a tabular argument with the input on the forward and backward passes.
 
 Example:
 
@@ -958,7 +1218,7 @@ Gives the output:
 module = nn.Index(dim)
 ```
 
-Applies the Tensor [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) operation along the given dimension. So
+Applies the `Tensor` [index](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-indexdim-index) operation along the given dimension. So
 
 ```lua
 nn.Index(dim):forward{t,i}
@@ -974,7 +1234,7 @@ t:index(dim, i)
 ```lua
 module = nn.Squeeze([dim, numInputDims])
 ```
-Applies the Tensor [squeeze](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) operation. So
+Applies the `Tensor` [squeeze](https://github.com/torch/torch7/blob/master/doc/tensor.md#tensor-squeezedim) operation. So
 
 ```lua
 nn.Squeeze():forward(t)
@@ -991,9 +1251,9 @@ Setting `numInputDims` allows to use this module on batches.
 ```lua
 module = nn.Unsqueeze(pos [, numInputDims])
 ```
-Insert singleton dim (i.e., dimension 1) at position `pos`. 
+Insert singleton dim (i.e., dimension 1) at position `pos`.
 For an `input` with `dim = input:dim()`, there are `dim + 1` possible positions to insert the singleton dimension.
-For example, if `input` is `3` dimensional tensor in size `p x q x r`, then the singleton dim can be inserted at the following `4` positions
+For example, if `input` is `3` dimensional `Tensor` in size `p x q x r`, then the singleton dim can be inserted at the following `4` positions
 ```
 pos = 1: 1 x p x q x r
 pos = 2: p x 1 x q x r
@@ -1022,7 +1282,7 @@ input2 = torch.Tensor(3, 5, 7) -- input2: 3 x 5 x 7
 m:forward(input2) -- output: 3 x 1 x 5 x 7
 ```
 
-Indicate the expected input feature map dimension by specifying `numInputDims`. 
+Indicate the expected input feature map dimension by specifying `numInputDims`.
 This allows the module to work with mini-batch. Example:
 ```lua
 b = 5 -- batch size 5
@@ -1056,6 +1316,19 @@ t:transpose(dim1, dim2)
 t:transpose(dim3, dim4)
 ```
 
+The method `setNumInputDims()` allows to specify the expected number of dimensions of the inputs of the modules. This makes it possible to use minibatch inputs. Example:
+```lua
+b = 5 -- batch size 5
+input = torch.Tensor(b, 2, 4, 3) -- input: b x 2 x 4 x 3
+
+m = nn.Transpose({1,3})
+m:forward(input) -- output: 4 x 2 x b x 3 x 1
+
+numInputDims = 3 -- input feature map should be the last 3 dims
+m = nn.Transpose({1,3}):setNumInputDims(numInputDims)
+m:forward(input) -- output: b x 3 x 4 x 2
+```
+
 <a name="nn.Exp"></a>
 ## Exp ##
 
@@ -1063,7 +1336,7 @@ t:transpose(dim3, dim4)
 module = nn.Exp()
 ```
 
-Applies the `exp` function element-wise to the input Tensor, thus outputting a Tensor of the same dimension.
+Applies the `exp` function element-wise to the input `Tensor`, thus outputting a `Tensor` of the same dimension.
 
 ```lua
 ii = torch.linspace(-2, 2)
@@ -1085,7 +1358,7 @@ gnuplot.grid(true)
 module = nn.Log()
 ```
 
-Applies the `log` function element-wise to the input Tensor, thus outputting a Tensor of the same dimension.
+Applies the `log` function element-wise to the input `Tensor`, thus outputting a Tensor of the same dimension.
 
 
 <a name="nn.Square"></a>
@@ -1185,7 +1458,7 @@ print(B)  -- output
 ```lua
 module = nn.Normalize(p, [eps])
 ```
-Normalizes the input Tensor to have unit `L_p` norm. The smoothing parameter `eps` prevents division by zero when the input contains all zero elements (default = `1e-10`).
+Normalizes the input `Tensor` to have unit `L_p` norm. The smoothing parameter `eps` prevents division by zero when the input contains all zero elements (default = `1e-10`).
 
 Input can be 1D or 2D (in which case it's considered as in batch mode)
 
@@ -1269,6 +1542,37 @@ model = nn.BatchNormalization(m, nil, nil, false)
 A = torch.randn(b, m)
 C = model:forward(A)  -- C will be of size `b x m`
 ```
+
+
+<a name="nn.PixelShuffle"></a>
+## PixelShuffle ##
+```module = nn.PixelShuffle(r)```
+
+Rearranges elements in a tensor of shape `[C*r*r, H, W]` to a tensor of shape `[C, H*r, W*r]`. This is useful for implementing efficient sub-pixel convolution with a stride of `1/r` (see [Shi et. al](https://arxiv.org/abs/1609.05158)). Below we show how the `PixelShuffle` module can be used to learn upscaling filters to transform a low-resolution input to a high resolution one, with a 3x upscale factor. This is useful for tasks such as super-resolution, see ["Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel Convolutional Neural Network" - Shi et al.](https://arxiv.org/abs/1609.05158) for further details.
+
+```
+upscaleFactor = 3
+inputChannels = 1
+
+model = nn.Sequential()
+model:add(nn.SpatialConvolution(inputChannels, 64, 5, 5, 1, 1, 2, 2))
+model:add(nn.ReLU())
+
+model:add(nn.SpatialConvolution(64, 32, 3, 3, 1, 1, 1, 1))
+model:add(nn.ReLU())
+
+model:add(nn.SpatialConvolution(32, inputChannels * upscaleFactor * upscaleFactor, 3, 3, 1, 1, 1, 1))
+model:add(nn.PixelShuffle(upscaleFactor))
+
+input = torch.Tensor(1, 192, 256);
+out = model:forward(input)
+out:size()
+   1
+ 576
+ 768
+[torch.LongStorage of size 3]
+```
+
 
 <a name="nn.Padding"></a>
 ## Padding ##
@@ -1357,3 +1661,267 @@ One can also call:
 module:setLambda(lambda)
 ```
 to set the hyper-parameter `lambda` dynamically during training.
+
+<a name="nn.GPU"></a>
+## GPU ##
+
+```lua
+gpu = nn.GPU(module, device, [outdevice])
+require 'cunn'
+gpu:cuda()
+```
+
+Decorates an encapsulated `module` so that it can be executed on a specific GPU `device`.
+The decorated module's `parameters` are thus hosted on the specified GPU `device`.
+All operations on the `gpu` module are executed on that device.
+Calls to `forward`/`backward` will transfer arguments `input` and `gradOutput` to the specified `device`,
+which are then fed as arguments to the decorated `module`.
+Returned `output` is located on the specified `outdevice` (defaults to `device`).
+Returned `gradInput` is allocated on the same device as the `input`.
+
+When serialized/deserialized, the `gpu` module will be run on the same `device` that it was serialized with.
+To prevent this from happening, the module can be converted to float/double before serialization:
+
+```lua
+gpu:float()
+gpustr = torch.serialize(gpu)
+```
+
+The module is located in the __nn__ package instead of __cunn__ as this allows
+it to be used in CPU-only environments, which are common for production models.
+
+The module supports nested table `input` and `gradOutput` tensors originating from multiple devices.
+Each nested tensor in the returned `gradInput` will be transferred to the device its commensurate tensor in the `input`.
+
+The intended use-case is not for model-parallelism where the models are executed in parallel on multiple devices, but
+for sequential models where a single GPU doesn't have enough memory.
+
+Example using 4 GPUs:
+
+```lua
+mlp = nn.Sequential()
+   :add(nn.GPU(nn.Linear(10000,10000), 1))
+   :add(nn.GPU(nn.Linear(10000,10000), 2))
+   :add(nn.GPU(nn.Linear(10000,10000), 3))
+   :add(nn.GPU(nn.Linear(10000,10000), 4, cutorch.getDevice()))
+```
+
+Note how the last `GPU` instance will return an `output` tensor on the same device as the current device (`cutorch.getDevice`).
+
+<a name="nn.TemporalDynamicKMaxPooling"></a>
+## TemporalDynamicKMaxPooling ##
+
+```lua
+module = nn.TemporalDynamicKMaxPooling(minK, [factor])
+```
+
+Selects the highest `k` values for each feature in the feature map sequence provided. The input sequence is composed of `nInputFrame` frames (i.e. `nInputFrame` is sequence length). The `input` tensor in `forward(input)` is expected to be a 2D tensor (`nInputFrame x inputFrameSize`) or a 3D tensor (`nBatchFrame x nInputFrame x inputFrameSize`), where `inputFrameSize` is the number of features across the sequence.
+
+If `factor` is not provided, `k = minK`, else the value of k is calculated with:
+```lua
+k = math.max(minK, math.ceil(factor*nInputFrame)))
+```
+
+<a name='nn.Constant'></a>
+## Constant ##
+
+```lua
+module = nn.Constant(value, nInputDim)
+```
+
+This module outputs a constant value given an input.
+If `nInputDim` is specified, it uses the input to determine the size of the batch.
+The `value` is then replicated over the batch.
+Otherwise, the `value` Tensor is output as is.
+During `backward`, the returned `gradInput` is a zero Tensor of the same size as the `input`.
+This module has no trainable parameters.
+
+You can use this with nn.ConcatTable() to append constant inputs to an input :
+
+```lua
+nn.ConcatTable():add(nn.Constant(v)):add(nn.Identity())
+```
+
+This is useful when you want to output a value that is independent of the
+input to the neural network.
+
+<a name='nn.WhiteNoise'></a>
+## WhiteNoise ##
+
+```lua
+module = nn.WhiteNoise([mean, stdev])
+```
+
+This module adds isotropic Gaussian noise to the `input`.
+This can be useful for training [Denoising Autoencoders](http://arxiv.org/pdf/1507.02672v1.pdf).
+Takes `mean` and `stdev` of the normal distribution as constructor arguments.
+Default values for mean and standard deviation are 0 and 0.1 respectively.
+With `module:training()`, Gaussian noise is added during `forward`.
+During `backward` gradients are passed as is.
+With `module:evaluate()` the `mean` is added to the input.
+
+
+<a name = 'nn.OneHot'></a>
+## OneHot ##
+
+```lua
+module = nn.OneHot(outputSize)
+```
+
+Transforms a tensor of `input` indices having integer values between 1 and `outputSize` into
+a tensor of one-hot vectors of size `outputSize`.
+
+Forward an index to get a one-hot vector :
+
+```lua
+> module = nn.OneHot(5) -- 5 classes
+> module:forward(torch.LongTensor{3})
+ 0  0  1  0  0
+[torch.DoubleTensor of size 1x5]
+```
+
+Forward a batch of 3 indices. Notice that these need not be stored as `torch.LongTensor` :
+
+```lua
+> module:forward(torch.Tensor{3,2,1})
+ 0  0  1  0  0
+ 0  1  0  0  0
+ 1  0  0  0  0
+[torch.DoubleTensor of size 3x5]
+```
+
+Forward batch of `2 x 3` indices :
+
+```lua
+oh:forward(torch.Tensor{{3,2,1},{1,2,3}})
+(1,.,.) =
+  0  0  1  0  0
+  0  1  0  0  0
+  1  0  0  0  0
+
+(2,.,.) =
+  1  0  0  0  0
+  0  1  0  0  0
+  0  0  1  0  0
+[torch.DoubleTensor of size 2x3x5]
+```
+
+<a name='nn.PrintSize'></a>
+## PrintSize ##
+
+```lua
+module = nn.PrintSize(name)
+```
+
+This module is useful for debugging complicated module composites.
+It prints the size of the `input` and `gradOutput` during `forward`
+and `backward` propagation respectively.
+The `name` is a string used to identify the module along side the printed size.
+
+<a name='nn.ZeroGrad'></a>
+## ZeroGrad ##
+
+```lua
+module = nn.ZeroGrad()
+input = torch.Tensor{1,2}
+gradOutput = torch.Tensor{3,4}
+print(module:forward(input))
+ 1
+ 2
+[torch.DoubleTensor of size 2]
+
+print(module:backward(input, gradOutput))
+ 0
+ 0
+[torch.DoubleTensor of size 2]
+```
+
+The module zeros the `gradInput` but forwards the `input` as-is.
+
+<a name='nn.Collapse'></a>
+## Collapse ##
+
+```lua
+module = nn.Collapse(nInputDim)
+```
+
+This module is the equivalent of:
+```
+view = nn.View(-1)
+view:setNumInputDim(nInputDim)
+```
+
+It collapses all non-batch dimensions. This is useful for converting
+a spatial feature map to the single dimension required by a dense
+hidden layer like Linear.
+
+<a name='nn.Convert'></a>
+## Convert ##
+
+```lua
+module = nn.Convert([inputShape, outputShape])
+```
+Module to convert between different data formats.
+For example, we can flatten images by using :
+```lua
+module = nn.Convert('bchw', 'bf')
+```
+or equivalently
+```lua
+module = nn.Convert('chw', 'f')
+```
+Lets try it with an input:
+```lua
+print(module:forward(torch.randn(3,2,3,1)))
+ 0.5692 -0.0190  0.5243  0.7530  0.4230  1.2483
+-0.9142  0.6013  0.5608 -1.0417 -1.4014  1.0177
+-1.5207 -0.1641 -0.4166  1.4810 -1.1725 -1.0037
+[torch.DoubleTensor of size 3x6]
+```
+You could also try:
+
+```lua
+module = nn.Convert('chw', 'hwc')
+input = torch.randn(1,2,3,2)
+input:select(2,1):fill(1)
+input:select(2,2):fill(2)
+print(input)
+(1,1,.,.) =
+  1  1
+  1  1
+  1  1
+(1,2,.,.) =
+  2  2
+  2  2
+  2  2
+[torch.DoubleTensor of size 1x2x3x2]
+print(module:forward(input))
+(1,1,.,.) =
+  1  2
+  1  2
+
+(1,2,.,.) =
+  1  2
+  1  2
+
+(1,3,.,.) =
+  1  2
+  1  2
+[torch.DoubleTensor of size 1x3x2x2]
+```
+
+
+Furthermore, it automatically converts the `input` to have the same type as `self.output`
+(i.e. the type of the module).
+So you can also just use is for automatic input type converions:
+```lua
+module = nn.Convert()
+print(module.output) -- type of module
+[torch.DoubleTensor with no dimension]
+input = torch.FloatTensor{1,2,3}
+print(module:forward(input))
+ 1
+ 2
+ 3
+[torch.DoubleTensor of size 3]
+```

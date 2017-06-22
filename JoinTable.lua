@@ -11,7 +11,7 @@ end
 function JoinTable:_getPositiveDimension(input)
    local dimension = self.dimension
    if dimension < 0 then
-      dimension = input:dim() + dimension + 1
+      dimension = input[1]:dim() + dimension + 1
    elseif self.nInputDims and input[1]:dim()==(self.nInputDims+1) then
       dimension = dimension + 1
    end

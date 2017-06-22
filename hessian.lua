@@ -53,7 +53,7 @@ function nn.hessian.enable()
          error('Number of weights is not equal to number of weights squares')
       end
       module.diagHessianInput = module.diagHessianInput or input.new()
-      module.diagHessianInput:resizeAs(input)
+      module.diagHessianInput:resizeAs(input):zero()
 
       local gi = module.gradInput
       module.gradInput = module.diagHessianInput

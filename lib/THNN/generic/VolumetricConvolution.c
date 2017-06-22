@@ -19,9 +19,8 @@ void THNN_(VolumetricConvolution_updateOutput)(
 {
   THArgCheck(pT != 0 || pW != 0 || pH != 0, 9, "padding not supported by CPU backend");   // sharing signature with CUDA version
 
-  THArgCheck(input->nDimension == 4 || input->nDimension == 5, 2,
-    "4D or 5D (batch-mode) tensor expected"
-  );
+  THNN_ARGCHECK(input->nDimension == 4 || input->nDimension == 5, 2, input,
+		"4D or 5D (batch mode) tensor expected for input, but got: %s");
 
   int dimt = 1;
   int dimh = 2;
@@ -51,10 +50,14 @@ void THNN_(VolumetricConvolution_updateOutput)(
     THTensor_(resize4d)(output, nOutputPlane, outputDepth, outputHeight, outputWidth);
 
     /* add bias */
-    for (i = 0; i < bias->size[0]; i++)
-    {
-      THTensor_(select)(outn, output, 0, i);
-      THTensor_(fill)(outn, THTensor_(get1d)(bias, i));
+    if (bias) {
+      for (i = 0; i < bias->size[0]; i++)
+      {
+        THTensor_(select)(outn, output, 0, i);
+        THTensor_(fill)(outn, THTensor_(get1d)(bias, i));
+      }
+    } else {
+      THTensor_(zero)(output);
     }
 
     /* do convolutions */
@@ -74,10 +77,14 @@ void THNN_(VolumetricConvolution_updateOutput)(
       THTensor_(select)(outb, output, 0, j);
 
       /* add bias */
-      for (i = 0; i < bias->size[0]; i++)
-      {
-        THTensor_(select)(outn, outb, 0, i);
-        THTensor_(fill)(outn, THTensor_(get1d)(bias, i));
+      if (bias) {
+        for (i = 0; i < bias->size[0]; i++)
+        {
+          THTensor_(select)(outn, outb, 0, i);
+          THTensor_(fill)(outn, THTensor_(get1d)(bias, i));
+        }
+      } else {
+        THTensor_(zero)(outb);
       }
 
       /* do convolutions */
@@ -106,15 +113,15 @@ void THNN_(VolumetricConvolution_updateGradInput)(
 {
   THArgCheck(pT != 0 || pW != 0 || pH != 0, 9, "padding not supported by CPU backend");   // sharing signature with CUDA version
 
-  THArgCheck(weight->nDimension == 5, 4,
-    "5D weight tensor is expected (nOutputPlane x nInputPlane x kT x kH x kW)"
-  );
+  THNN_ARGCHECK(weight->nDimension == 5, 4, weight,
+		"5D (nOutputPlane x nInputPlane x kT x kH x kW) tensor "
+		"expected for weight, but got: %s");
 
   int nOutputPlane = (int)weight->size[0];
 
-  THArgCheck(gradOutput->nDimension == 4 || gradOutput->nDimension == 5, 3,
-    "4D or 5D (batch-mode) tensor expected"
-  );
+  THNN_ARGCHECK(gradOutput->nDimension == 4 || gradOutput->nDimension == 5, 3,
+		gradOutput,
+		"4D or 5D (batch mode) tensor expected for gradOutput, but got: %s");
 
   int dimPlane = 0;
   if (gradOutput->nDimension == 5)
@@ -171,19 +178,21 @@ void THNN_(VolumetricConvolution_accGradParameters)(
           int pT,
           int pW,
           int pH,
-          real scale)
+          accreal scale_)
 {
+  real scale = TH_CONVERT_ACCREAL_TO_REAL(scale_);
   THArgCheck(pT != 0 || pW != 0 || pH != 0, 9, "padding not supported by CPU backend");   // sharing signature with CUDA version
 
-  THArgCheck(gradWeight->nDimension == 5, 4,
-    "5D gradWeight tensor is expected (nOutputPlane x nInputPlane x kT x kH x kW)"
-  );
+  THNN_ARGCHECK(gradWeight->nDimension == 5, 4, gradWeight,
+		"5D (nOutputPlane x nInputPlane x kT x kH x kW) tensor "
+		"expected for gradWeight, but got: %s");
 
   int nOutputPlane = (int)gradWeight->size[0];
-
-  THArgCheck(gradBias->nDimension == 1 && gradBias->size[0] == nOutputPlane, 5,
-    "gradBias tensor has wrong size"
-  );
+  if (gradBias) {
+    THArgCheck(gradBias->nDimension == 1 && gradBias->size[0] == nOutputPlane, 5,
+      "gradBias tensor has wrong size"
+    );
+  }
 
   long k;
   real *gradBias_data;
@@ -201,14 +210,16 @@ void THNN_(VolumetricConvolution_accGradParameters)(
   if (gradOutput->nDimension == 4) /* non-batch mode */
   {
     /* gradient to bias */
-    gradBias_data = THTensor_(data)(gradBias);
-    gradOutSlice = THTensor_(new)();
-    for (k = 0; k < nOutputPlane; k++)
-    {
-      THTensor_(select)(gradOutSlice, gradOutput, 0, k);
-      gradBias_data[k] += scale * THTensor_(sumall)(gradOutSlice);
+    if (gradBias) {
+      gradBias_data = THTensor_(data)(gradBias);
+      gradOutSlice = THTensor_(new)();
+      for (k = 0; k < nOutputPlane; k++)
+      {
+        THTensor_(select)(gradOutSlice, gradOutput, 0, k);
+        gradBias_data[k] += scale * THTensor_(sumall)(gradOutSlice);
+      }
+      THTensor_(free)(gradOutSlice);
     }
-    THTensor_(free)(gradOutSlice);
 
     /* gradient to kernels */
     THTensor_(conv3DRevger)(gradWeight, 1.0, scale, input, gradOutput, dT, dH, dW);
@@ -227,14 +238,16 @@ void THNN_(VolumetricConvolution_accGradParameters)(
       THTensor_(select)(goutb, gradOutput, 0, j);
 
       /* gradient to bias */
-      gradBias_data = THTensor_(data)(gradBias);
-      gradOutSlice = THTensor_(new)();
-      for (k = 0; k < nOutputPlane; k++)
-      {
-        THTensor_(select)(gradOutSlice, goutb, 0, k);
-        gradBias_data[k] += scale * THTensor_(sumall)(gradOutSlice);
+      if (gradBias) {
+        gradBias_data = THTensor_(data)(gradBias);
+        gradOutSlice = THTensor_(new)();
+        for (k = 0; k < nOutputPlane; k++)
+        {
+          THTensor_(select)(gradOutSlice, goutb, 0, k);
+          gradBias_data[k] += scale * THTensor_(sumall)(gradOutSlice);
+        }
+        THTensor_(free)(gradOutSlice);
       }
-      THTensor_(free)(gradOutSlice);
 
       /* gradient to kernels */
       THTensor_(conv3DRevger)(gradWeight, 1.0, scale, inpb, goutb, dT, dH, dW);

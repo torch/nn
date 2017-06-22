@@ -42,7 +42,7 @@ function Linear:reset(stdv)
    return self
 end
 
-local function updateAddBuffer(self, input)
+function Linear:updateAddBuffer(input)
    local nframe = input:size(1)
    self.addBuffer = self.addBuffer or input.new()
    if self.addBuffer:nElement() ~= nframe then
@@ -62,7 +62,7 @@ function Linear:updateOutput(input)
       if self.output:nElement() ~= nElement then
          self.output:zero()
       end
-      updateAddBuffer(self, input)
+      self:updateAddBuffer(input)
       self.output:addmm(0, self.output, 1, input, self.weight:t())
       if self.bias then self.output:addr(1, self.addBuffer, self.bias) end
    else
@@ -99,14 +99,16 @@ function Linear:accGradParameters(input, gradOutput, scale)
       self.gradWeight:addmm(scale, gradOutput:t(), input)
       if self.bias then
          -- update the size of addBuffer if the input is not the same size as the one we had in last updateGradInput
-         updateAddBuffer(self, input)
+         self:updateAddBuffer(input)
          self.gradBias:addmv(scale, gradOutput:t(), self.addBuffer)
       end
    end
 end
 
--- we do not need to accumulate parameters when sharing
-Linear.sharedAccUpdateGradParameters = Linear.accUpdateGradParameters
+function Linear:sharedAccUpdateGradParameters(input, gradOutput, lr)
+   -- we do not need to accumulate parameters when sharing:
+   self:defaultAccUpdateGradParameters(input, gradOutput, lr)
+end
 
 function Linear:clearState()
    if self.addBuffer then self.addBuffer:set() end
