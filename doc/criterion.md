@@ -181,7 +181,7 @@ crit.nll.sizeAverage = false
 ```
 The losses are averaged across observations for each minibatch.
 
-<a name="nn.ClassSimplexCriterion"/>
+<a name="nn.ClassSimplexCriterion"></a>
 ## ClassSimplexCriterion ##
 
 ```lua
