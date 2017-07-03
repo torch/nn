@@ -127,19 +127,21 @@ end
 
 function Container:clearState()
    -- don't call set because it might reset referenced tensors
-   local function clear(f)
-      if self[f] then
-         if torch.isTensor(self[f]) then
-            self[f] = self[f].new()
-         elseif type(self[f]) == 'table' then
-            self[f] = {}
-         else
-            self[f] = nil
+   local function clear(t)
+      if torch.isTensor(t) then
+         return t.new()
+      elseif type(t) == 'table' then
+         local cleared = {}
+         for k,v in pairs(t) do
+            cleared[k] = clear(v)
          end
+         return cleared
+      else
+         return nil
       end
    end
-   clear('output')
-   clear('gradInput')
+   if self.output then self.output = clear(self.output) end
+   if self.gradInput then self.gradInput = clear(self.gradInput) end
    if self.modules then
       for i,module in pairs(self.modules) do
          module:clearState()

@@ -205,18 +205,20 @@ function nn.utils.clear(self, ...)
    if #arg > 0 and type(arg[1]) == 'table' then
       arg = arg[1]
    end
-   local function clear(f)
-      if self[f] then
-         if torch.isTensor(self[f]) then
-            self[f]:set()
-         elseif type(self[f]) == 'table' then
-            self[f] = {}
-         else
-            self[f] = nil
+   local function clear(t)
+      if torch.isTensor(t) then
+         return t:set()
+      elseif type(t) == 'table' then
+         local cleared = {}
+         for k,v in pairs(t) do
+            cleared[k] = clear(v)
          end
+         return cleared
+      else
+         return nil
       end
    end
-   for i,v in ipairs(arg) do clear(v) end
+   for i,v in ipairs(arg) do if self[v] then self[v] = clear(self[v]) end end
    return self
 end
 
