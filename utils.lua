@@ -87,7 +87,7 @@ function nn.utils.recursiveResizeAs(t1,t2)
       end
    elseif torch.isTensor(t2) then
       t1 = torch.isTensor(t1) and t1 or t2.new()
-      t1:resizeAs(t2)
+      t1:resize(t2:size())
    else
       error("expecting nested tensors or tables. Got "..
             torch.type(t1).." and "..torch.type(t2).." instead")
@@ -130,15 +130,20 @@ function nn.utils.recursiveAdd(t1, val, t2)
    return t1, t2
 end
 
-function nn.utils.recursiveCopy(t1,t2)
+function nn.utils.recursiveCopy(t1,t2,async)
    if torch.type(t2) == 'table' then
       t1 = (torch.type(t1) == 'table') and t1 or {t1}
       for key,_ in pairs(t2) do
-         t1[key], t2[key] = nn.utils.recursiveCopy(t1[key], t2[key])
+         t1[key], t2[key] = nn.utils.recursiveCopy(t1[key], t2[key], async)
       end
    elseif torch.isTensor(t2) then
       t1 = torch.isTensor(t1) and t1 or t2.new()
-      t1:resizeAs(t2):copy(t2)
+      t1:resize(t2:size())
+      if async then
+        t1:copyAsync(t2)
+      else
+        t1:copy(t2)
+      end
    else
       error("expecting nested tensors or tables. Got "..
             torch.type(t1).." and "..torch.type(t2).." instead")
@@ -185,7 +190,7 @@ function nn.utils.contiguousView(output, input, ...)
   if input:isContiguous() then
     output:view(input, ...)
   else
-    output:resizeAs(input)
+    output:resize(input:size())
     output:copy(input)
     output:view(output, ...)
   end
