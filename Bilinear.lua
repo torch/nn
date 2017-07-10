@@ -2,7 +2,7 @@ local Bilinear, parent = torch.class('nn.Bilinear', 'nn.Module')
 
 local function isint(x) return type(x) == 'number' and x == math.floor(x) end
 function Bilinear:__assertInput(input)
-   assert(input and type(input) == 'table' and #input == 2,
+   assert(input and torch.type(input) == 'table' and #input == 2,
       'input should be a table containing two data Tensors')
    assert(input[1]:nDimension() == 2 and input[2]:nDimension() == 2,
       'input Tensors should be two-dimensional')

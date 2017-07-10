@@ -105,7 +105,7 @@ end
 
 function Container:parameters()
     local function tinsert(to, from)
-        if type(from) == 'table' then
+        if torch.type(from) == 'table' then
             for i=1,#from do
                 tinsert(to,from[i])
             end
@@ -131,7 +131,7 @@ function Container:clearState()
       if self[f] then
          if torch.isTensor(self[f]) then
             self[f] = self[f].new()
-         elseif type(self[f]) == 'table' then
+         elseif torch.type(self[f]) == 'table' then
             self[f] = {}
          else
             self[f] = nil
