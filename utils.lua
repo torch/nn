@@ -158,7 +158,7 @@ function nn.utils.addSingletonDimension(...)
   else
     view, t, dim = select(1,...)
     assert(torch.isTensor(view),
-           "output tensor expected, got " .. type(view))
+           "output tensor expected, got " .. torch.type(view))
   end
 
   assert(torch.isTensor(t), "input tensor expected")
@@ -202,14 +202,14 @@ end
 -- nn.utils.clearState(self, '_buffer', '_buffer2')
 function nn.utils.clear(self, ...)
    local arg = {...}
-   if #arg > 0 and type(arg[1]) == 'table' then
+   if #arg > 0 and torch.type(arg[1]) == 'table' then
       arg = arg[1]
    end
    local function clear(f)
       if self[f] then
          if torch.isTensor(self[f]) then
             self[f]:set()
-         elseif type(self[f]) == 'table' then
+         elseif torch.type(self[f]) == 'table' then
             self[f] = {}
          else
             self[f] = nil

@@ -216,7 +216,7 @@ function nn.hessian.enable()
    function nn.SpatialConvolution.initDiagHessianParameters(self)
       initDiagHessianParameters(self,{'gradWeight','gradBias'},{'diagHessianWeight','diagHessianBias'})
    end
-   
+
    ----------------------------------------------------------------------
    -- SpatialConvolutionLocal
    ----------------------------------------------------------------------
@@ -361,7 +361,7 @@ function nn.hessian.enable()
 
    function nn.Sequential.parameters(self)
       local function tinsert(to, from)
-         if type(from) == 'table' then
+         if torch.type(from) == 'table' then
             for i=1,#from do
                tinsert(to,from[i])
             end
