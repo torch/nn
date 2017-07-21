@@ -45,6 +45,7 @@ a kernel for computing the weighted average in a neighborhood ;
     * [VolumetricAveragePooling](#nn.VolumetricAveragePooling) : a 3D average-pooling operation over an input video.
     * [VolumetricMaxUnpooling](#nn.VolumetricMaxUnpooling) : a 3D max-unpooling operation.
     * [VolumetricReplicationPadding](#nn.VolumetricReplicationPadding) : Pads a volumetric feature map with the value at the edge of the input borders. ;
+    * [UpSampling](#nn.UpSampling): Upsampling for either spatial or volumetric inputs using nearest neighbor or linear interpolation.   
 
 
 <a name="nn.TemporalModules"></a>
@@ -1250,3 +1251,37 @@ module = nn.VolumetricReplicationPadding(padLeft, padRight, padTop, padBottom,
 ```
 
 Each feature map of a given input is padded with the replication of the input boundary.
+
+<a name="nn.UpSampling"></a>
+### UpSampling ###
+
+```lua
+module = nn.UpSampling(scale, 'nearest')
+module = nn.UpSampling(scale, 'linear')
+module = nn.UpSampling({[odepth=D,] oheight=H, owidth=W}, 'linear')
+```
+
+Applies a 2D (spatial) or 3D (volumetric) up-sampling over an input image composed of several input planes. Available interpolation modes are nearest neighbor or linear (i.e. bilinear or trilinear depending on the input dimensions).  The `input` tensor in `forward(input)` is expected to be of the form `minibatch x channels x [depth] x height x width`. I.e. for 4D input the final two dimensions will be upsampled, for 5D output the final three dimensions will be upsampled. The number of output planes will be the same.
+
+The parameters are the following:
+  * `scale`: The upscale ratio.  Must be a positive integer. Required if using nearest neighbor.
+  * Or a table `{[odepth=D,] oheight=H, owidth=W}`: The required output depth, height and width, should be positive integers.
+  * `mode`: The method of interpolation, either `'nearest'` or `'linear'`. Default is `'nearest'`
+
+If `scale` is specified, given an input of depth iD, height iH and width iW, output depth, height and width will be, for nearest neighbor:
+
+```lua
+oD = iD * scale
+oH = iH * scale
+oW = iW * scale
+```
+
+For linear interpolation:
+
+```lua
+oD = (iD - 1)(scale - 1) + iD
+oH = (iH - 1)(scale - 1) + iH
+oW = (iW - 1)(scale - 1) + iW
+```
+
+There are no learnable parameters.
