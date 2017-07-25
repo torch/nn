@@ -160,6 +160,8 @@ require('nn.VolumetricAveragePooling')
 require('nn.VolumetricBatchNormalization')
 require('nn.VolumetricReplicationPadding')
 
+require('nn.FeatureLPPooling')
+
 require('nn.GPU')
 
 require('nn.ParallelTable')
