@@ -7609,9 +7609,9 @@ function nntest.Replicate()
    mytester:assertTensorEq(vOutput2, expected2, precision, 'Wrong tiling of data when replicating batch vector.')
 end
 
-local function testBatchNormalization(moduleName, dim, k)
+local function testBatchNormalization(moduleName, dim, k, batchsize)
    local planes = torch.random(1,k)
-   local size = { torch.random(2, k), planes }
+   local size = { batchsize or torch.random(2, k), planes }
    for i=1,dim do
       table.insert(size, torch.random(1,k))
    end
@@ -7670,6 +7670,7 @@ end
 
 function nntest.BatchNormalization()
    testBatchNormalization('BatchNormalization', 0, 20)
+   testBatchNormalization('BatchNormalization', 0, 20, 1) -- test batchsize=1
 end
 
 function nntest.SpatialBatchNormalization()
