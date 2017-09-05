@@ -1,14 +1,17 @@
 local THNN = require 'nn.THNN'
 local SpatialDepthWiseConvolution, parent = torch.class('nn.SpatialDepthWiseConvolution', 'nn.Module')
 
-function SpatialDepthWiseConvolution:__init(nInputPlane, nOutputPlane, kW, kH, dW, dH, padW, padH)
+SpatialDepthWiseConvolution.__version = 2
+
+function SpatialDepthWiseConvolution:__init(nInputPlane, depthwiseMultiplier, kW, kH, dW, dH, padW, padH)
    parent.__init(self)
 
    dW = dW or 1
    dH = dH or 1
 
    self.nInputPlane = nInputPlane
-   self.nOutputPlane = nOutputPlane
+   self.depthwiseMultiplier = depthwiseMultiplier
+   self.nOutputPlane = nInputPlane * depthwiseMultiplier;
    self.kW = kW
    self.kH = kH
 
@@ -17,10 +20,10 @@ function SpatialDepthWiseConvolution:__init(nInputPlane, nOutputPlane, kW, kH, d
    self.padW = padW or 0
    self.padH = padH or self.padW
 
-   self.weight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
-   self.bias = torch.Tensor(nOutputPlane, nInputPlane)
-   self.gradWeight = torch.Tensor(nOutputPlane, nInputPlane*kH*kW)
-   self.gradBias = torch.Tensor(nOutputPlane, nInputPlane)
+   self.weight = torch.Tensor(depthwiseMultiplier, nInputPlane*kH*kW)
+   self.bias = torch.Tensor(depthwiseMultiplier, nInputPlane)
+   self.gradWeight = torch.Tensor(depthwiseMultiplier, nInputPlane*kH*kW)
+   self.gradBias = torch.Tensor(depthwiseMultiplier, nInputPlane)
 
    self:reset()
 end
@@ -60,11 +63,15 @@ function SpatialDepthWiseConvolution:updateOutput(input)
       self.padH = self.padding
       self.padding = nil
    end
+   local _bias = nil
+   if self.bias ~= nil then
+      _bias = self.bias:view(self.nOutputPlane)
+   end
    input.THNN.SpatialDepthWiseConvolution_updateOutput(
       input:cdata(),
       self.output:cdata(),
       self.weight:cdata(),
-      THNN.optionalTensor(self.bias),
+      THNN.optionalTensor(_bias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.kW, self.kH,
@@ -96,11 +103,15 @@ function SpatialDepthWiseConvolution:accGradParameters(input, gradOutput, scale)
    assert(input.THNN, torch.type(input)..'.THNN backend not imported')
    scale = scale or 1
    assert((self.bias and self.gradBias) or (self.bias == nil and self.gradBias == nil))
+   local _gradBias = nil
+   if self.gradBias ~= nil then
+      _gradBias = self.gradBias:view(self.nOutputPlane)
+   end
    input.THNN.SpatialDepthWiseConvolution_accGradParameters(
       input:cdata(),
       gradOutput:cdata(),
       self.gradWeight:cdata(),
-      THNN.optionalTensor(self.gradBias),
+      THNN.optionalTensor(_gradBias),
       self.finput:cdata(),
       self.fgradInput:cdata(),
       self.kW, self.kH,
@@ -118,7 +129,7 @@ end
 
 function SpatialDepthWiseConvolution:__tostring__()
    local s = string.format('%s(%d -> %d, %dx%d', torch.type(self),
-         self.nInputPlane, self.nOutputPlane, self.kW, self.kH)
+         self.nInputPlane, self.depthwiseMultiplier, self.kW, self.kH)
    if self.dW ~= 1 or self.dH ~= 1 or self.padW ~= 0 or self.padH ~= 0 then
      s = s .. string.format(', %d,%d', self.dW, self.dH)
    end
@@ -129,6 +140,14 @@ function SpatialDepthWiseConvolution:__tostring__()
       return s .. ')'
    else
       return s .. ') without bias'
+   end
+end
+
+function SpatialDepthWiseConvolution:read(file, version)
+   parent.read(self, file)
+   if version < 2 then
+      self.depthwiseMultiplier = self.nOutputPlane
+      self.nOutputPlane = self.depthwiseMultiplier * self.nInputPlane
    end
 end
 
