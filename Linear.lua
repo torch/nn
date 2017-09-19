@@ -62,9 +62,12 @@ function Linear:updateOutput(input)
       if self.output:nElement() ~= nElement then
          self.output:zero()
       end
-      self:updateAddBuffer(input)
       self.output:addmm(0, self.output, 1, input, self.weight:t())
-      if self.bias then self.output:addr(1, self.addBuffer, self.bias) end
+      if self.bias then
+         -- only update buffer if bias
+         self:updateAddBuffer(input)
+         self.output:addr(1, self.addBuffer, self.bias)
+      end
    else
       error('input must be vector or matrix')
    end
