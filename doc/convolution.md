@@ -488,12 +488,15 @@ number of outgoing connections to each input node if possible.
 module = nn.SpatialFullConvolution(nInputPlane, nOutputPlane, kW, kH, [dW], [dH], [padW], [padH], [adjW], [adjH])
 ```
 
-Applies a 2D full convolution over an input image composed of several input planes. The `input` tensor in
-`forward(input)` is expected to be a 3D or 4D tensor. Note that instead of setting `adjW` and `adjH`, SpatialFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution
-is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
-will ignore the `adjW` and `adjH` values used to construct the module. The layer can be used without a bias by module:noBias().
+Applies a 2D full convolution over an input image composed of several input planes. The `input` tensor in `forward(input)` is expected to be a 3D or 4D tensor.
 
-Other frameworks call this operation "In-network Upsampling", "Fractionally-strided convolution", "Backwards Convolution," "Deconvolution", or "Upconvolution."
+Other frameworks call this operation "In-network Upsampling", "Fractionally-strided convolution", "Backwards Convolution," "Deconvolution", or "Upconvolution." It is essentially a convolution applied in reverse. In a traditional convolution, a kernel is applied over many pixels of the input to produce one pixel of the output; this module applies the kernel to each pixel of the input, producing an output of the size of the kernel from each of those pixels.
+
+During a normal convolution, padding is often added to the input image. When this layer is used to invert a convolution with such padding, the `padW` and `padH` parameters will help determine how many of those output pixels are to be treated like padding.
+
+There is usually a pre-determined output size that one would like to get from this layer. The `adjW` and `adjH` parameters allow you to add on extra pixels to the output image to get that desired output size. Initially this adds back the values lost due to `padW` and `padH`; once that is exhausted, the added values will simply equal the bias of the kernel. Alternatively, one could send in a table of tensors, `{convInput, sizeTensor}`, where `convInput` is what the usual input to this layer would be and `sizeTensor` specifies the desired size of the output. Using this two-input version of forward will ignore the `adjW` and `adjH` values used to construct this module.
+
+The layer can be used without bias by running module:noBias().
 
 The parameters are the following:
   * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
@@ -502,8 +505,8 @@ The parameters are the following:
   * `kH`: The kernel height of the convolution
   * `dW`: The step of the convolution in the width dimension. Default is `1`.
   * `dH`: The step of the convolution in the height dimension. Default is `1`.
-  * `padW`: Additional zeros added to the input plane data on both sides of width axis. Default is `0`. `(kW-1)/2` is often used here.
-  * `padH`: Additional zeros added to the input plane data on both sides of height axis. Default is `0`. `(kH-1)/2` is often used here.
+  * `padW`: The number of pixels on each side along the width of the output that will be absent in the final output Tensor. Default is `0`. `(kW-1)/2` is often used here.
+  * `padH`: The number of pixels on each side along the height of the output that will be absent in the final output Tensor. Default is `0`. `(kH-1)/2` is often used here.
   * `adjW`: Extra width to add to the output image. Default is `0`. Cannot be greater than dW-1.
   * `adjH`: Extra height to add to the output image. Default is `0`. Cannot be greater than dH-1.
 
