@@ -109,6 +109,7 @@ function SpatialSubtractiveNormalization:updateGradInput(input, gradOutput)
 end
 
 function SpatialSubtractiveNormalization:clearState()
+   self._inpsz = nil
    if self.ones then self.ones:set() end
    if self._coef then self._coef:set() end
    self.meanestimator:clearState()
