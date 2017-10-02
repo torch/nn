@@ -223,3 +223,8 @@ function VolumetricFullConvolution:__tostring__()
    end
    return s .. ')'
 end
+
+function VolumetricFullConvolution:clearState()
+   nn.utils.clear(self, 'finput', 'fgradInput', '_input', '_gradOutput')
+   return parent.clearState(self)
+end
