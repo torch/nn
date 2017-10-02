@@ -93,7 +93,7 @@ function VolumetricFullConvolution:updateOutput(input)
 
   -- The input can be a table where the second element indicates the target
   -- output size, in which case the adj factors are computed automatically
-  if type(inputTensor) == 'table' then
+  if torch.type(inputTensor) == 'table' then
     inputTensor = input[1]
     local targetTensor = input[2]
     local tDims = targetTensor:dim()
@@ -128,7 +128,7 @@ function VolumetricFullConvolution:updateGradInput(input, gradOutput)
 
     -- The input can be a table where the second element indicates the target
     -- output size, in which case the adj factors are computed automatically
-    if type(inputTensor) == 'table' then
+    if torch.type(inputTensor) == 'table' then
       inputTensor = input[1]
       local targetTensor = input[2]
       local tDims = targetTensor:dim()
@@ -139,7 +139,7 @@ function VolumetricFullConvolution:updateGradInput(input, gradOutput)
       adjW = calculateAdj(tW, self.kW, self.padW, self.dW)
       adjH = calculateAdj(tH, self.kH, self.padH, self.dH)
       -- Momentarily extract the gradInput tensor
-      if type(self.gradInput) == 'table' then
+      if torch.type(self.gradInput) == 'table' then
         self.gradInput = self.gradInput[1]
       end
     end
@@ -156,7 +156,7 @@ function VolumetricFullConvolution:updateGradInput(input, gradOutput)
       adjT, adjW, adjH
    )
 
-    if type(input) == 'table' then
+    if torch.type(input) == 'table' then
      -- Create a zero tensor to be expanded and used as gradInput[2].
       self.zeroScalar = self.zeroScalar or input[2].new(1):zero()
       self.ones:resize(input[2]:dim()):fill(1)
@@ -177,7 +177,7 @@ function VolumetricFullConvolution:accGradParameters(input, gradOutput, scale)
 
   -- The input can be a table where the second element indicates the target
   -- output size, in which case the adj factors are computed automatically
-  if type(inputTensor) == 'table' then
+  if torch.type(inputTensor) == 'table' then
     inputTensor = input[1]
     local targetTensor = input[2]
     local tDims = targetTensor:dim()

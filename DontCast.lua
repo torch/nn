@@ -19,7 +19,7 @@ local function recursiveTypeCopy(dst, src, type_str)
 end
 
 local function tableTensorType(src)
-   if type(src) == 'table' then
+   if type(src) == 'table' then -- Note: don't use torch.type here
       local type_str, found
       for k,v in pairs(src) do
          type_str, found = tableTensorType(v)

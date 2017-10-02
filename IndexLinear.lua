@@ -73,7 +73,7 @@ function IndexLinear:reset(stdv)
 end
 
 function IndexLinear:reshapeInput(input)
-   assert(type(input) == 'table')
+   assert(torch.type(input) == 'table')
 
    local ninputs = 0
    for _, v in ipairs(input) do
@@ -108,7 +108,7 @@ function IndexLinear:reshapeInput(input)
    --   { torch.LongTensor(size1), torch.LongTensor(size2), ..., torch.LongTensor(sizeN) }, -- batch of keys
    --   { torch.Tensor(size1), torch.Tensor(size2), ..., torch.Tensor(sizeN) }, -- batch of values,
    -- }
-   if type(keys) == 'table' and type(values) == 'table' then
+   if torch.type(keys) == 'table' and torch.type(values) == 'table' then
       lkeys, lvalues = keys, values
       self.isFlat = false
       self.noBatch = false

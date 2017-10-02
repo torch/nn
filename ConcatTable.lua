@@ -44,7 +44,7 @@ local function backward(self, method, input, gradOutput, scale)
             retable(self.gradInput, currentGradInput,
                function(t, k, v)
                   t[k] = t[k] or v:clone()
-                  t[k]:resizeAs(v)
+                  t[k]:resize(v:size())
                   t[k]:copy(v)
                end
             )
@@ -65,7 +65,7 @@ local function backward(self, method, input, gradOutput, scale)
       for i,module in ipairs(self.modules) do
          local currentGradInput = self:rethrowErrors(module, i, method, input, gradOutput[i], scale)
          if i == 1 then
-            self.gradInput:resizeAs(currentGradInput):copy(currentGradInput)
+            self.gradInput:resize(currentGradInput:size()):copy(currentGradInput)
          else
             self.gradInput:add(currentGradInput)
          end

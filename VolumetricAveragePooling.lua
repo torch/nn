@@ -21,7 +21,9 @@ function VolumetricAveragePooling:updateOutput(input)
       input:cdata(),
       self.output:cdata(),
       self.kT, self.kW, self.kH,
-      self.dT, self.dW, self.dH
+      self.dT, self.dW, self.dH,
+      0, 0, 0,
+      false, true
    )
    return self.output
 end
@@ -32,7 +34,9 @@ function VolumetricAveragePooling:updateGradInput(input, gradOutput)
       gradOutput:cdata(),
       self.gradInput:cdata(),
       self.kT, self.kW, self.kH,
-      self.dT, self.dW, self.dH
+      self.dT, self.dW, self.dH,
+      0, 0, 0,
+      false, true
    )
    return self.gradInput
 end

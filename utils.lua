@@ -87,7 +87,7 @@ function nn.utils.recursiveResizeAs(t1,t2)
       end
    elseif torch.isTensor(t2) then
       t1 = torch.isTensor(t1) and t1 or t2.new()
-      t1:resizeAs(t2)
+      t1:resize(t2:size())
    else
       error("expecting nested tensors or tables. Got "..
             torch.type(t1).." and "..torch.type(t2).." instead")
@@ -130,15 +130,20 @@ function nn.utils.recursiveAdd(t1, val, t2)
    return t1, t2
 end
 
-function nn.utils.recursiveCopy(t1,t2)
+function nn.utils.recursiveCopy(t1,t2,async)
    if torch.type(t2) == 'table' then
       t1 = (torch.type(t1) == 'table') and t1 or {t1}
       for key,_ in pairs(t2) do
-         t1[key], t2[key] = nn.utils.recursiveCopy(t1[key], t2[key])
+         t1[key], t2[key] = nn.utils.recursiveCopy(t1[key], t2[key], async)
       end
    elseif torch.isTensor(t2) then
       t1 = torch.isTensor(t1) and t1 or t2.new()
-      t1:resizeAs(t2):copy(t2)
+      t1:resize(t2:size())
+      if async then
+        t1:copyAsync(t2)
+      else
+        t1:copy(t2)
+      end
    else
       error("expecting nested tensors or tables. Got "..
             torch.type(t1).." and "..torch.type(t2).." instead")
@@ -153,7 +158,7 @@ function nn.utils.addSingletonDimension(...)
   else
     view, t, dim = select(1,...)
     assert(torch.isTensor(view),
-           "output tensor expected, got " .. type(view))
+           "output tensor expected, got " .. torch.type(view))
   end
 
   assert(torch.isTensor(t), "input tensor expected")
@@ -185,7 +190,7 @@ function nn.utils.contiguousView(output, input, ...)
   if input:isContiguous() then
     output:view(input, ...)
   else
-    output:resizeAs(input)
+    output:resize(input:size())
     output:copy(input)
     output:view(output, ...)
   end
@@ -197,14 +202,14 @@ end
 -- nn.utils.clearState(self, '_buffer', '_buffer2')
 function nn.utils.clear(self, ...)
    local arg = {...}
-   if #arg > 0 and type(arg[1]) == 'table' then
+   if #arg > 0 and torch.type(arg[1]) == 'table' then
       arg = arg[1]
    end
    local function clear(f)
       if self[f] then
          if torch.isTensor(self[f]) then
             self[f]:set()
-         elseif type(self[f]) == 'table' then
+         elseif torch.type(self[f]) == 'table' then
             self[f] = {}
          else
             self[f] = nil

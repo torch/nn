@@ -15,7 +15,7 @@ function SparseLinear:__init(inputSize, outputSize, doGradInput)
    self.gradWeight = torch.Tensor(outputSize, inputSize):zero()
    self.gradBias = torch.Tensor(outputSize):zero()
 
-   assert(type(self.doGradInput) == type(true))
+   assert(type(self.doGradInput) == 'boolean')
 
    self.lastInput = nil
    self.sparseUpdate = NO_LAST_INPUT
@@ -39,7 +39,7 @@ function SparseLinear:reset(stdv)
 end
 
 function SparseLinear:reshapeInput(input)
-   if type(input) == 'table' then
+   if torch.type(input) == 'table' then
       return input, true, false
    else
       if input:dim() == 2 then
@@ -57,7 +57,7 @@ function SparseLinear:updateOutput(input)
    local input, batchMode, legacyMode = self:reshapeInput(input)
    self.legacyMode = legacyMode
 
-   if legacyMode then 
+   if legacyMode then
       input.THNN.SparseLinear_legacyUpdateOutput(
          input:cdata(),
          self.output:cdata(),
@@ -149,8 +149,8 @@ function SparseLinear:accGradParameters(input, gradOutput, scale)
 end
 
 function SparseLinear:updateGradInput(input, gradOutput)
-   if self.legacyMode then 
-      if type(self.gradInput) ~= type(gradOutput) then self.gradInput = gradOutput.new() end
+   if self.legacyMode then
+      if torch.type(self.gradInput) ~= torch.type(gradOutput) then self.gradInput = gradOutput.new() end
       self.gradInput:resizeAs(input)
    else
       self.gradInput = {}
@@ -185,7 +185,7 @@ function SparseLinear:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
--- These functions do sparse updates / zeros. However, if we accumulated 
+-- These functions do sparse updates / zeros. However, if we accumulated
 -- gradients multiple times, we can't depend on the last input to do sparse
 -- updates.
 function SparseLinear:updateParameters(learningRate)
