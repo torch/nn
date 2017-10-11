@@ -1322,7 +1322,7 @@ b = 5 -- batch size 5
 input = torch.Tensor(b, 2, 4, 3) -- input: b x 2 x 4 x 3
 
 m = nn.Transpose({1,3})
-m:forward(input) -- output: 4 x 2 x b x 3 x 1
+m:forward(input) -- output: 4 x 2 x b x 3
 
 numInputDims = 3 -- input feature map should be the last 3 dims
 m = nn.Transpose({1,3}):setNumInputDims(numInputDims)
