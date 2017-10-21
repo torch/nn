@@ -152,7 +152,7 @@ pred = mlp:forward(torch.randn(10,3)) -- 2D Tensor of size 10x3 goes through the
                                       -- Each Linear+Reshape module receives a slice of dimension 1
                                       -- which corresponds to a 1D Tensor of size 3.
                                       -- Eventually all the Linear+Reshape modules' outputs of size 2x1
-                                      -- are concatenated alond the 2nd dimension (column space)
+                                      -- are concatenated along the 2nd dimension (column space)
                                       -- to form pred, a 2D Tensor of size 2x10.
 
 > pred
