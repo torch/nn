@@ -558,7 +558,7 @@ module = nn.SpatialDepthWiseConvolution(nInputPlane, nOutputPlane, kW, kH, [dW],
 Applies a 2D depth-wise convolution over an input image composed of several input planes. The `input` tensor in
 `forward(input)` is expected to be a 3D tensor (`nInputPlane x height x width`).
 
-It is similar to `SpatialConvolution`, but here a spatial convolution is performed independently over each channel of an input. The most noticiable difference is the output dimension of `SpatialConvolution` is `nOutputPlane x oheight x owidth`, while for `SpatialDepthWiseConvolution` it is  `(nOutputPlane x nInputPlane) x oheight x owidth`.
+It is similar to `SpatialConvolution`, but here a spatial convolution is performed independently over each channel of an input. The most noticeable difference is the output dimension of `SpatialConvolution` is `nOutputPlane x oheight x owidth`, while for `SpatialDepthWiseConvolution` it is  `(nOutputPlane x nInputPlane) x oheight x owidth`.
 
 The parameters are the following:
   * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
@@ -1077,7 +1077,7 @@ Applies a 3D full convolution over an input image composed of several input plan
 `forward(input)` is expected to be a 4D or 5D tensor. Note that instead of setting `adjT`, `adjW` and `adjH`, VolumetricFullConvolution also accepts a table input with two tensors: `{convInput, sizeTensor}` where `convInput` is the standard input on which the full convolution is applied, and the size of `sizeTensor` is used to set the size of the output. Using the two-input version of forward
 will ignore the `adjT`, `adjW` and `adjH` values used to construct the module.
 
-This can be used as 3D deconvolution, or 3D upsampling. So that the 3D FCN can be easly implemented. This layer can be used without a bias by module:noBias().
+This can be used as 3D deconvolution, or 3D upsampling. So that the 3D FCN can be easily implemented. This layer can be used without a bias by module:noBias().
 
 The parameters are the following:
 * `nInputPlane`: The number of expected input planes in the image given into `forward()`.
