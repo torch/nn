@@ -143,6 +143,9 @@
 #include "generic/SoftMax.c"
 #include "THGenerateFloatTypes.h"
 
+#include "generic/LenSoftMax.c"
+#include "THGenerateFloatTypes.h"
+
 #include "generic/SoftPlus.c"
 #include "THGenerateFloatTypes.h"
 
