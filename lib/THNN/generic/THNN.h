@@ -431,6 +431,19 @@ TH_API void THNN_(SoftMax_updateGradInput)(
           THTensor *gradInput,
           THTensor *output);
 
+TH_API void THNN_(LenSoftMax_updateOutput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *output,
+          THIndexTensor *len);
+TH_API void THNN_(LenSoftMax_updateGradInput)(
+          THNNState *state,
+          THTensor *input,
+          THTensor *gradOutput,
+          THTensor *gradInput,
+          THTensor *output,
+          THIndexTensor *len);
+
 TH_API void THNN_(SoftPlus_updateOutput)(
           THNNState *state,
           THTensor *input,
