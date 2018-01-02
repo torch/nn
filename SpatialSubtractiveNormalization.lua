@@ -109,9 +109,10 @@ function SpatialSubtractiveNormalization:updateGradInput(input, gradOutput)
 end
 
 function SpatialSubtractiveNormalization:clearState()
-   self._inpsz = nil
-   if self.ones then self.ones:set() end
-   if self._coef then self._coef:set() end
-   self.meanestimator:clearState()
-   return parent.clearState(self)
+  nn.utils.clear(self, '_inpsz', 'ones', '_coef')
+  self.coef = torch.Tensor(1,1,1)
+  self.subtractor:clearState()
+  self.divider:clearState()
+  self.meanestimator:clearState()
+  return parent.clearState(self)
 end
