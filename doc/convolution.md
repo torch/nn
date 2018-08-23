@@ -1001,7 +1001,7 @@ and where gamma and beta are learnable parameter vectors of size N (where N = nu
 The learning of gamma and beta is optional.
 
    In training time, this layer keeps a running estimate of it's computed mean and std.
-   The running sum is kept with a default momentup of 0.1 (unless over-ridden)
+   The running sum is kept with a default momentum of 0.1 (unless over-ridden)
    In test time, this running mean/std is used to normalize. (**Note that the running mean/std will not be saved if one only checkpoints a model's parameters. In order to correctly use the calculated running mean/std, one needs to checkpoint the model itself (call [clearState()](https://github.com/torch/nn/blob/master/doc/module.md#clearstate) first to save space).**)
 
 
