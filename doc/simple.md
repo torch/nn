@@ -170,7 +170,7 @@ Applies the following transformation to the incoming (optionally) normalized spa
 - `b_i` is a per-feature bias,
 - `x_i_max` is the maximum absolute value seen so far during training for feature `i`.
 
-The normalization of input features is very useful to avoid explosions during training if sparse input values are really high. It also helps ditinguish between the presence and the absence of a given feature.
+The normalization of input features is very useful to avoid explosions during training if sparse input values are really high. It also helps distinguish between the presence and the absence of a given feature.
 
 #### Parameters ####
 - `inputSize` is the maximum number of features.

@@ -657,7 +657,7 @@ prl:add(p1_mlp)
 prl:add(p2_mlp)
 
 -- now we define our top level network that takes this parallel table
--- and computes the pairwise distance betweem the pair of outputs
+-- and computes the pairwise distance between the pair of outputs
 mlp = nn.Sequential()
 mlp:add(prl)
 mlp:add(nn.PairwiseDistance(1))
